@@ -109,7 +109,12 @@ export function getTeamLogo(teamName: string): string {
   }
 
   if (KNOWN_LOGOS.has(clean)) {
-    return `/logos/${clean}.png`
+    const baseUrl = import.meta.env.BASE_URL || '/'
+    // Strip trailing slash if any
+    const base = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl
+    return `${base}/logos/${clean}.png`
   }
-  return '/logos/unknown.png'
+  const baseUrl = import.meta.env.BASE_URL || '/'
+  const base = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl
+  return `${base}/logos/unknown.png`
 }

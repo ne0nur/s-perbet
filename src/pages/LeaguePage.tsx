@@ -491,9 +491,9 @@ export function LeaguePage() {
                     className={`px-3 py-1.5 text-xs font-medium rounded-md whitespace-nowrap transition-all flex items-center gap-2 ${viewTournament === t ? 'bg-primary text-on-primary font-bold shadow-md' : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container/50'}`}
                   >
                     {t === 'Champions League' ? (
-                      <img src="/logos/UEFA_Champions_League_logo.png" alt="CL" className="w-6 h-6 object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.6)] brightness-110" />
+                      <img src={`${import.meta.env.BASE_URL}logos/UEFA_Champions_League_logo.png`} alt="CL" className="w-6 h-6 object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.6)] brightness-110" />
                     ) : t === 'Süper Lig' ? (
-                      <img src="/logos/Süper_Lig.png" alt="SL" className="w-6 h-6 object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.6)] brightness-110" />
+                      <img src="${import.meta.env.BASE_URL}logos/Süper_Lig.png" alt="SL" className="w-6 h-6 object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.6)] brightness-110" />
                     ) : null}
                     {t}
                   </button>
@@ -761,7 +761,7 @@ export function LeaguePage() {
                   className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 cursor-pointer transition-colors relative overflow-hidden ${editTurniere.includes('Süper Lig') ? 'border-primary bg-primary/10' : 'border-surface-container-high bg-surface-container-lowest hover:border-surface-variant'}`}
                 >
                   {editTurniere.includes('Süper Lig') && <div className="absolute top-2 right-2 w-4 h-4 bg-primary rounded-full flex items-center justify-center text-on-primary"><Check size={10} strokeWidth={4} /></div>}
-                  <img src="/logos/Süper_Lig.png" alt="SL" className="w-10 h-10 object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.6)] brightness-110 mb-3" />
+                  <img src="${import.meta.env.BASE_URL}logos/Süper_Lig.png" alt="SL" className="w-10 h-10 object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.6)] brightness-110 mb-3" />
                   <span className={`text-xs font-bold ${editTurniere.includes('Süper Lig') ? 'text-primary' : 'text-on-surface'}`}>Süper Lig</span>
                 </motion.div>
                 
@@ -775,7 +775,7 @@ export function LeaguePage() {
                   className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 cursor-pointer transition-colors relative overflow-hidden ${editTurniere.includes('Champions League') ? 'border-primary bg-primary/10' : 'border-surface-container-high bg-surface-container-lowest hover:border-surface-variant'}`}
                 >
                   {editTurniere.includes('Champions League') && <div className="absolute top-2 right-2 w-4 h-4 bg-primary rounded-full flex items-center justify-center text-on-primary"><Check size={10} strokeWidth={4} /></div>}
-                  <img src="/logos/UEFA_Champions_League_logo.png" alt="CL" className="w-10 h-10 object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.6)] brightness-110 mb-3" />
+                  <img src={`${import.meta.env.BASE_URL}logos/UEFA_Champions_League_logo.png`} alt="CL" className="w-10 h-10 object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.6)] brightness-110 mb-3" />
                   <span className={`text-xs font-bold text-center ${editTurniere.includes('Champions League') ? 'text-primary' : 'text-on-surface'}`}>Champions League</span>
                 </motion.div>
               </div>
@@ -871,7 +871,7 @@ export function LeaguePage() {
                         className={`flex flex-col items-center justify-center p-3 rounded-xl border-2 cursor-pointer transition-colors relative overflow-hidden ${neueLigaTurniere.includes('Süper Lig') ? 'border-primary bg-primary/10' : 'border-surface-container-high bg-surface-container-lowest hover:border-surface-variant'}`}
                       >
                         {neueLigaTurniere.includes('Süper Lig') && <div className="absolute top-2 right-2 w-4 h-4 bg-primary rounded-full flex items-center justify-center text-on-primary"><Check size={10} strokeWidth={4} /></div>}
-                        <img src="/logos/Süper_Lig.png" alt="SL" className="w-8 h-8 object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.6)] brightness-110 mb-2" />
+                        <img src="${import.meta.env.BASE_URL}logos/Süper_Lig.png" alt="SL" className="w-8 h-8 object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.6)] brightness-110 mb-2" />
                         <span className={`text-xs font-bold ${neueLigaTurniere.includes('Süper Lig') ? 'text-primary' : 'text-on-surface'}`}>Süper Lig</span>
                       </motion.div>
                       
@@ -885,7 +885,7 @@ export function LeaguePage() {
                         className={`flex flex-col items-center justify-center p-3 rounded-xl border-2 cursor-pointer transition-colors relative overflow-hidden ${neueLigaTurniere.includes('Champions League') ? 'border-primary bg-primary/10' : 'border-surface-container-high bg-surface-container-lowest hover:border-surface-variant'}`}
                       >
                         {neueLigaTurniere.includes('Champions League') && <div className="absolute top-2 right-2 w-4 h-4 bg-primary rounded-full flex items-center justify-center text-on-primary"><Check size={10} strokeWidth={4} /></div>}
-                        <img src="/logos/UEFA_Champions_League_logo.png" alt="CL" className="w-8 h-8 object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.6)] brightness-110 mb-2" />
+                        <img src={`${import.meta.env.BASE_URL}logos/UEFA_Champions_League_logo.png`} alt="CL" className="w-8 h-8 object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.6)] brightness-110 mb-2" />
                         <span className={`text-xs font-bold text-center ${neueLigaTurniere.includes('Champions League') ? 'text-primary' : 'text-on-surface'}`}>Champions League</span>
                       </motion.div>
                     </div>

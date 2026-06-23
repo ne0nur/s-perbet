@@ -10,7 +10,7 @@ import { useAuthStore } from '../stores/authStore'
 import { TIPPS_FREIGESCHALTET } from '../config'
 
 export function DashboardPage() {
-  const { matches, aktuellerSpieltag, isLaden, setSpieltag, ladeMatches, initialisiereSpieltag, letztesUpdate, abonnierenRealtimeMatches } = useMatchStore()
+  const { matches, aktuellerSpieltag, aktuelleSaison, isLaden, setSpieltag, ladeMatches, initialisiereSpieltag, letztesUpdate, abonnierenRealtimeMatches } = useMatchStore()
   const ladeMeineTipps = useTipStore(s => s.ladeMeineTipps)
   const meineTipps = useTipStore(s => s.meineTipps)
   const getTippFuerMatch = useTipStore(s => s.getTippFuerMatch)
@@ -20,6 +20,7 @@ export function DashboardPage() {
   const [filter, setFilter] = useState<'alle' | 'live'>('alle')
   const [spieltagInfo, setSpieltagInfo] = useState<Record<number, { fullyTipped: boolean; isLive: boolean }>>({})
   const [selectedMatchId, setSelectedMatchId] = useState<string | null>(null)
+  const [selectedTournament, setSelectedTournament] = useState<string>('Süper Lig')
   const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 1024)
   const sliderRef = useRef<HTMLDivElement>(null)
   const initialized = useRef(false)
@@ -47,9 +48,10 @@ export function DashboardPage() {
   }, [aktuellerSpieltag])
 
   useEffect(() => {
-    supabase.from('matches').select('spieltag').order('spieltag', { ascending: false }).limit(1)
-      .then(({ data }) => { if (data?.length) setMaxSpieltag(data[0].spieltag) })
-  }, [])
+    let query = supabase.from('matches').select('spieltag').order('spieltag', { ascending: false }).limit(1)
+    if (aktuelleSaison) query = query.eq('season', aktuelleSaison)
+    query.then(({ data }) => { if (data?.length) setMaxSpieltag(data[0].spieltag) })
+  }, [aktuelleSaison])
 
   // Auto-scroll zum aktuellen Spieltag
   useEffect(() => {
@@ -164,7 +166,7 @@ export function DashboardPage() {
       <header className="sticky top-16 md:top-0 z-30 bg-surface/60 backdrop-blur-xl shrink-0">
         <div className="max-w-[1600px] mx-auto w-full">
           {/* Spieltag-Slider */}
-          <div className="px-4 pt-5 pb-3 border-b border-white/5 relative">
+          <div className="px-4 pt-2 md:pt-5 pb-3 border-b border-white/5 relative">
             <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-background to-transparent z-10 pointer-events-none" />
             <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-background to-transparent z-10 pointer-events-none" />
             <div ref={sliderRef} className="flex overflow-x-auto no-scrollbar gap-2 px-2 relative z-0">
@@ -206,27 +208,50 @@ export function DashboardPage() {
           </div>
 
           {/* Filter-Toggle + Letztes Update Badge */}
-          <div className="flex px-4 py-2 gap-2 justify-between items-center">
-            <div className="flex gap-2">
-              {(['alle', 'live'] as const).map(f => (
-                <button
-                  key={f}
-                  onClick={() => setFilter(f)}
-                  className={`text-[11px] font-mono font-medium uppercase tracking-wider px-3 py-1 rounded-full border transition-all ${
-                    filter === f
-                      ? 'bg-primary-container/20 border-primary-container/50 text-primary'
-                      : 'border-white/10 text-on-surface-variant hover:border-white/20'
-                  }`}
-                >
-                  {f === 'alle' ? 'Alle' : 'Nur Live'}
-                </button>
-              ))}
+          <div className="flex flex-col gap-3 px-4 py-3 border-b border-white/5">
+            <div className="flex justify-between items-center">
+              <div className="flex gap-2">
+                {(['alle', 'live'] as const).map(f => (
+                  <button
+                    key={f}
+                    onClick={() => setFilter(f)}
+                    className={`text-[11px] font-mono font-medium uppercase tracking-wider px-3 py-1 rounded-full border transition-all ${
+                      filter === f
+                        ? 'bg-primary-container/20 border-primary-container/50 text-primary'
+                        : 'border-white/10 text-on-surface-variant hover:border-white/20'
+                    }`}
+                  >
+                    {f === 'alle' ? 'Alle' : 'Nur Live'}
+                  </button>
+                ))}
+              </div>
+              
+              {letztesUpdate && (
+                <div className="flex items-center gap-1.2 px-2 py-0.5 rounded-full bg-white/5 border border-white/5 text-[9px] font-mono text-on-surface-variant/60 animate-pulse-slow">
+                  <span className="w-1.2 h-1.2 rounded-full bg-green-500 shrink-0" />
+                  <span>Live ({letztesUpdate})</span>
+                </div>
+              )}
             </div>
-            
-            {letztesUpdate && (
-              <div className="flex items-center gap-1.2 px-2 py-0.5 rounded-full bg-white/5 border border-white/5 text-[9px] font-mono text-on-surface-variant/60 animate-pulse-slow">
-                <span className="w-1.2 h-1.2 rounded-full bg-green-500 shrink-0" />
-                <span>Live ({letztesUpdate})</span>
+
+            {/* Tournament Tabs */}
+            {Object.keys(matchesByTournament).length > 1 && (
+              <div className="flex overflow-x-auto no-scrollbar gap-2 pb-1">
+                {Object.keys(matchesByTournament).map(t => (
+                  <button
+                    key={t}
+                    onClick={() => setSelectedTournament(t)}
+                    className={`flex-shrink-0 px-3 py-1.5 rounded-lg border text-[11px] font-bold uppercase transition-all flex items-center gap-1.5 ${
+                      selectedTournament === t
+                        ? 'bg-surface-container-high border-white/20 text-on-surface'
+                        : 'bg-transparent border-transparent text-on-surface-variant hover:bg-white/5'
+                    }`}
+                  >
+                    {t === 'Süper Lig' && <img src={`${import.meta.env.BASE_URL}logos/Süper_Lig.png`} className="w-3.5 h-3.5" alt="SL" />}
+                    {t === 'Champions League' && <img src={`${import.meta.env.BASE_URL}logos/UEFA_Champions_League_logo.png`} className="w-3.5 h-3.5" alt="CL" />}
+                    {t}
+                  </button>
+                ))}
               </div>
             )}
           </div>
@@ -240,8 +265,8 @@ export function DashboardPage() {
             <Lock size={14} className="text-amber-400" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-[11px] font-mono font-bold uppercase tracking-wider text-amber-400/80 mb-0.5">Tippabgabe gesperrt</p>
-            <p className="text-[11px] text-amber-400/50 font-mono">
+            <p className="text-[11px] font-mono font-bold uppercase tracking-wider text-amber-400/80 mb-0.5 whitespace-normal break-words">Tippabgabe gesperrt</p>
+            <p className="text-[11px] text-amber-400/50 font-mono whitespace-normal break-words leading-snug">
               Freischaltung nach Veröffentlichung des offiziellen Spielplans 2026/27
             </p>
           </div>
@@ -285,17 +310,24 @@ export function DashboardPage() {
               </div>
             ) : (
               <div className="space-y-8">
-                {(Object.entries(matchesByTournament) as [string, Match[]][]).map(([tournamentName, tourneyMatches]) => (
+                {Object.entries(matchesByTournament)
+                  .filter(([tournamentName]) => {
+                    // Falls nur ein Turnier da ist, immer anzeigen
+                    if (Object.keys(matchesByTournament).length <= 1) return true;
+                    // Ansonsten nach ausgewähltem Turnier filtern
+                    return tournamentName === selectedTournament;
+                  })
+                  .map(([tournamentName, tourneyMatches]) => (
                   <div key={tournamentName} className="mb-6">
                     <h2 className="text-sm font-bold text-on-surface mb-4 border-b border-white/10 pb-2 uppercase tracking-wide">
                       {tournamentName === 'Süper Lig' ? (
                         <span className="flex items-center gap-2">
-                          <img src="/logos/Süper_Lig.png" alt="SL" className="w-5 h-5 object-contain brightness-110 drop-shadow-[0_0_8px_rgba(255,255,255,0.6)]" />
+                          <img src={`${import.meta.env.BASE_URL}logos/Süper_Lig.png`} alt="SL" className="w-5 h-5 object-contain brightness-110 drop-shadow-[0_0_8px_rgba(255,255,255,0.6)]" />
                           {tournamentName}
                         </span>
                       ) : tournamentName === 'Champions League' ? (
                         <span className="flex items-center gap-2">
-                          <img src="/logos/UEFA_Champions_League_logo.png" alt="CL" className="w-5 h-5 object-contain brightness-110 drop-shadow-[0_0_8px_rgba(255,255,255,0.6)]" />
+                          <img src={`${import.meta.env.BASE_URL}logos/UEFA_Champions_League_logo.png`} alt="CL" className="w-5 h-5 object-contain brightness-110 drop-shadow-[0_0_8px_rgba(255,255,255,0.6)]" />
                           {tournamentName}
                         </span>
                       ) : (

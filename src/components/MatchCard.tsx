@@ -139,7 +139,7 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
           <span>{formatDatum(match.anpfiff)} · {formatUhrzeit(match.anpfiff)}</span>
           {match.tournament === 'Champions League' && (
             <span className="text-amber-400 bg-amber-400/10 px-1 py-0.5 rounded text-[9px] font-bold flex items-center gap-1" title="Champions League">
-              <img src="/logos/UEFA_Champions_League_logo.png" alt="CL" className="w-5 h-5 object-contain drop-shadow-[0_0_6px_rgba(255,255,255,0.6)] brightness-110" />
+              <img src={`${import.meta.env.BASE_URL}logos/UEFA_Champions_League_logo.png`} alt="CL" className="w-5 h-5 object-contain drop-shadow-[0_0_6px_rgba(255,255,255,0.6)] brightness-110" />
               CL
             </span>
           )}
