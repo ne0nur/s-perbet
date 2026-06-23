@@ -84,6 +84,18 @@ export function LoginPage() {
     
     try {
       const cleanCode = inviteCode.trim().toUpperCase()
+
+      // Try the secure RPC endpoint first (bypasses RLS for unauthenticated users safely)
+      const { data: rpcData, error: rpcError } = await supabase
+        .rpc('check_invite_code', { p_invite_code: cleanCode })
+
+      if (!rpcError && rpcData && rpcData.length > 0) {
+        setInviteLeague({ id: rpcData[0].league_id, name: rpcData[0].league_name })
+        setView('ask-account')
+        return
+      }
+      
+      // Fallback to direct select query if RPC does not exist
       const { data: league, error } = await supabase
         .from('leagues')
         .select('id, name')
@@ -98,7 +110,7 @@ export function LoginPage() {
       setInviteLeague(league)
       setView('ask-account')
     } catch (err) {
-      setLocalFehler('Fehler bei der Validierung. Bitte erneut versuchen.')
+      setLocalFehler('Dieser Einladungscode existiert nicht oder ist ungültig.')
     } finally {
       setValidatingCode(false)
     }
