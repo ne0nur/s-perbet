@@ -511,6 +511,19 @@ export function LeaguePage() {
             <div className="grid grid-cols-1 md:grid-cols-12 gap-6 lg:gap-8 xl:gap-10 px-4 md:px-0 flex-1 min-h-0 items-start">
               {/* Left Column: Spieltag-Tabs, Table, Invite Info */}
               <div className="md:col-span-8 flex flex-col min-h-0 space-y-4 w-full">
+                
+                {/* Admin-Zuschauermodus Banner */}
+                {user && mitglieder.length > 0 && !mitglieder.some(m => m.id === user.id) && (
+                  <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-xl flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center shrink-0">
+                      <span className="text-blue-400 text-sm">👀</span>
+                    </div>
+                    <div>
+                      <p className="text-[11px] font-bold text-blue-400 uppercase tracking-wider mb-0.5">Admin-Zuschauermodus</p>
+                      <p className="text-[10px] text-blue-400/70 font-mono">Du bist kein Mitglied dieser Liga und siehst sie nur als Admin. Du spielst hier nicht mit.</p>
+                    </div>
+                  </div>
+                )}
                 {/* Spieltag-Tabs */}
                 <div className="flex items-stretch -mx-4 px-4 md:mx-0 md:px-0">
                   {/* Sticky "Gesamt" Button */}
