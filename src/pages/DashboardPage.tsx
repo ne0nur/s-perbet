@@ -125,7 +125,7 @@ export function DashboardPage() {
       }
 
       const infoMap: Record<number, { fullyTipped: boolean; isLive: boolean }> = {}
-      const maxSt = matchesData ? Math.max(...matchesData.map(m => m.spieltag), 1) : 38
+      const maxSt = matchesData && matchesData.length > 0 ? Math.max(...matchesData.map(m => m.spieltag), 1) : 38
       for (let st = 1; st <= maxSt; st++) {
         const totalMatches = matchCounts[st] || 0
         const totalTips = tipCounts[st] || 0
@@ -161,16 +161,64 @@ export function DashboardPage() {
   const spieltage = Array.from({ length: maxSpieltag }, (_, i) => i + 1)
   const offeneTipps = matches.filter(m => m.status === 'upcoming' && !getTippFuerMatch(m.id)).length
 
+  const getPhaseLabel = (st: number, tournament: string) => {
+    if (tournament === 'Champions League') {
+      if (st <= 8) return `${st}. Liga`
+      if (st === 9) return `Play-offs`
+      if (st === 10) return `Achtelfinale`
+      if (st === 11) return `Viertelfinale`
+      if (st === 12) return `Halbfinale`
+      if (st === 13) return `Finale`
+    }
+    return `${st}. Spieltag`
+  }
+
+  // Bestimme wie viele Tabs gezeigt werden
+  const getTabsCount = () => {
+    if (selectedTournament === 'Champions League') return 13
+    return maxSpieltag || 38
+  }
+
   return (
-    <div className="min-h-full flex flex-col pb-24 md:pb-6">
-      <header className="sticky top-16 md:top-0 z-30 bg-surface/60 backdrop-blur-xl shrink-0">
+    <div className="min-h-full flex flex-col pb-24 md:pb-6 px-3 md:px-6 lg:px-8 pt-4 md:pt-6 animate-page-enter">
+      {/* Turnier-Filter & Saison-Selector */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 md:mb-6 max-w-[1600px] mx-auto w-full gap-3">
+        <div className="flex bg-surface-container border border-surface-container-high p-1 rounded-lg">
+          <button
+            onClick={() => { setSelectedTournament('Süper Lig'); setSpieltag(1); }}
+            className={`px-3 py-1.5 text-xs font-medium rounded-md whitespace-nowrap transition-all flex items-center gap-2 ${selectedTournament === 'Süper Lig' ? 'bg-primary text-on-primary font-bold shadow-md' : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container/50'}`}
+          >
+            <img src={`${import.meta.env.BASE_URL}logos/Süper_Lig.png`} alt="SL" className="w-6 h-6 object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.6)] brightness-110" />
+            Süper Lig
+          </button>
+          <button
+            onClick={() => { setSelectedTournament('Champions League'); setSpieltag(1); }}
+            className={`px-3 py-1.5 text-xs font-medium rounded-md whitespace-nowrap transition-all flex items-center gap-2 ${selectedTournament === 'Champions League' ? 'bg-primary text-on-primary font-bold shadow-md' : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container/50'}`}
+          >
+            <img src={`${import.meta.env.BASE_URL}logos/UEFA_Champions_League_logo.png`} alt="CL" className="w-6 h-6 object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.6)] brightness-110" />
+            Champions League
+          </button>
+        </div>
+
+        <select
+          value={useMatchStore.getState().aktuelleSaison || 2026}
+          onChange={(e) => useMatchStore.getState().setSaison(parseInt(e.target.value))}
+          className="bg-surface-container border border-surface-container-high rounded-lg px-3 py-1.5 text-xs text-on-surface focus:outline-none focus:border-primary-container font-mono"
+        >
+          <option value={2026}>Saison 2026/27</option>
+          <option value={2025}>Saison 2025/26</option>
+          <option value={2024}>Saison 2024/25</option>
+        </select>
+      </div>
+
+      <header className="sticky top-0 z-30 bg-surface/60 backdrop-blur-xl shrink-0 -mx-3 md:-mx-6 lg:-mx-8 px-3 md:px-6 lg:px-8">
         <div className="max-w-[1600px] mx-auto w-full">
           {/* Spieltag-Slider */}
-          <div className="px-4 pt-2 md:pt-5 pb-3 border-b border-white/5 relative">
+          <div className="pt-2 pb-3 border-b border-white/5 relative">
             <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-background to-transparent z-10 pointer-events-none" />
             <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-background to-transparent z-10 pointer-events-none" />
             <div ref={sliderRef} className="flex overflow-x-auto no-scrollbar gap-2 px-2 relative z-0">
-              {spieltage.map(st => {
+              {Array.from({ length: getTabsCount() }, (_, i) => i + 1).map(st => {
                 const isActive = st === aktuellerSpieltag
                 const info = spieltagInfo[st]
                 const isLive = info?.isLive
@@ -194,7 +242,7 @@ export function DashboardPage() {
                     onClick={() => setSpieltag(st)}
                     className={`flex-shrink-0 px-3 py-2 rounded-full border text-[11px] font-mono font-medium transition-all relative flex items-center gap-1 ${btnStyle}`}
                   >
-                    {st}. Spieltag
+                    {getPhaseLabel(st, selectedTournament)}
                     {fullyTipped && st < aktuellerSpieltag && !isActive && (
                       <Check size={11} className="text-green-400" />
                     )}
@@ -234,24 +282,7 @@ export function DashboardPage() {
               )}
             </div>
 
-            {/* Tournament Tabs */}
-            <div className="flex overflow-x-auto no-scrollbar gap-2 pb-1">
-              {['Süper Lig', 'Champions League'].map(t => (
-                <button
-                  key={t}
-                  onClick={() => setSelectedTournament(t)}
-                  className={`flex-shrink-0 px-3 py-1.5 rounded-lg border text-[11px] font-bold uppercase transition-all flex items-center gap-1.5 ${
-                    selectedTournament === t
-                      ? 'bg-surface-container-high border-white/20 text-on-surface'
-                      : 'bg-transparent border-transparent text-on-surface-variant hover:bg-white/5'
-                  }`}
-                >
-                  {t === 'Süper Lig' && <img src={`${import.meta.env.BASE_URL}logos/Süper_Lig.png`} className="w-3.5 h-3.5" alt="SL" />}
-                  {t === 'Champions League' && <img src={`${import.meta.env.BASE_URL}logos/UEFA_Champions_League_logo.png`} className="w-3.5 h-3.5" alt="CL" />}
-                  {t}
-                </button>
-              ))}
-            </div>
+            {/* Tournament Tabs (REMOVED) */}
           </div>
         </div>
       </header>
