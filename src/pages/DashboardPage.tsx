@@ -235,25 +235,23 @@ export function DashboardPage() {
             </div>
 
             {/* Tournament Tabs */}
-            {Object.keys(matchesByTournament).length > 1 && (
-              <div className="flex overflow-x-auto no-scrollbar gap-2 pb-1">
-                {Object.keys(matchesByTournament).map(t => (
-                  <button
-                    key={t}
-                    onClick={() => setSelectedTournament(t)}
-                    className={`flex-shrink-0 px-3 py-1.5 rounded-lg border text-[11px] font-bold uppercase transition-all flex items-center gap-1.5 ${
-                      selectedTournament === t
-                        ? 'bg-surface-container-high border-white/20 text-on-surface'
-                        : 'bg-transparent border-transparent text-on-surface-variant hover:bg-white/5'
-                    }`}
-                  >
-                    {t === 'Süper Lig' && <img src={`${import.meta.env.BASE_URL}logos/Süper_Lig.png`} className="w-3.5 h-3.5" alt="SL" />}
-                    {t === 'Champions League' && <img src={`${import.meta.env.BASE_URL}logos/UEFA_Champions_League_logo.png`} className="w-3.5 h-3.5" alt="CL" />}
-                    {t}
-                  </button>
-                ))}
-              </div>
-            )}
+            <div className="flex overflow-x-auto no-scrollbar gap-2 pb-1">
+              {['Süper Lig', 'Champions League'].map(t => (
+                <button
+                  key={t}
+                  onClick={() => setSelectedTournament(t)}
+                  className={`flex-shrink-0 px-3 py-1.5 rounded-lg border text-[11px] font-bold uppercase transition-all flex items-center gap-1.5 ${
+                    selectedTournament === t
+                      ? 'bg-surface-container-high border-white/20 text-on-surface'
+                      : 'bg-transparent border-transparent text-on-surface-variant hover:bg-white/5'
+                  }`}
+                >
+                  {t === 'Süper Lig' && <img src={`${import.meta.env.BASE_URL}logos/Süper_Lig.png`} className="w-3.5 h-3.5" alt="SL" />}
+                  {t === 'Champions League' && <img src={`${import.meta.env.BASE_URL}logos/UEFA_Champions_League_logo.png`} className="w-3.5 h-3.5" alt="CL" />}
+                  {t}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       </header>
@@ -312,9 +310,6 @@ export function DashboardPage() {
               <div className="space-y-8">
                 {Object.entries(matchesByTournament)
                   .filter(([tournamentName]) => {
-                    // Falls nur ein Turnier da ist, immer anzeigen
-                    if (Object.keys(matchesByTournament).length <= 1) return true;
-                    // Ansonsten nach ausgewähltem Turnier filtern
                     return tournamentName === selectedTournament;
                   })
                   .map(([tournamentName, tourneyMatches]) => (

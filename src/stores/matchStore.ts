@@ -64,10 +64,9 @@ export const useMatchStore = create<MatchState>()(
         const now = Date.now()
 
         if (cached && cached.length > 0) {
-          // We rely purely on Realtime for live updates, so we don't need background revalidation 
-          // that could overwrite fresh realtime data with stale HTTP responses.
+          // Zeige Cache sofort an
           set({ matches: cached, isLaden: false })
-          return
+          // Führe trotzdem einen Hintergrund-Fetch aus (Stale-While-Revalidate)
         } else {
           // Keine Daten vorhanden: Ladespinner anzeigen
           set({ isLaden: true })
