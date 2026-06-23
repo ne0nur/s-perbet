@@ -15,6 +15,7 @@ interface RanglisteEintrag {
   gesamt_punkte: number
   exakte_treffer: number
   achievements_count?: number
+  is_admin?: boolean
 }
 
 interface BonusStat {
@@ -80,7 +81,12 @@ function LeaderboardSection({
                   {calculateLevel(top3[1]?.gesamt_punkte || 0, top3[1]?.achievements_count || 0)}
                 </div>
               </div>
-              <span className="text-[9px] text-on-surface-variant font-mono truncate w-full text-center">{top3[1]?.username}</span>
+              <span className="text-[9px] text-on-surface-variant font-mono truncate w-full text-center flex items-center justify-center gap-1">
+                {top3[1]?.username}
+                {top3[1]?.is_admin && (
+                  <span className="inline-flex shrink-0 px-1 py-0.2 rounded text-[7px] font-black bg-amber-500/20 text-amber-400 border border-amber-500/30 font-mono tracking-wide scale-90">ADM</span>
+                )}
+              </span>
               <div className="w-full h-16 bg-gradient-to-t from-slate-400/20 to-transparent rounded-t-lg border-x border-t border-slate-400/30 flex flex-col items-center justify-start pt-2 relative overflow-hidden">
                 <div className="absolute inset-0 bg-surface-container-low/50 backdrop-blur-[2px] -z-10" />
                 <span className="text-xs font-bold font-mono text-on-surface">{top3[1]?.gesamt_punkte}</span>
@@ -113,7 +119,12 @@ function LeaderboardSection({
                 {calculateLevel(top3[0]?.gesamt_punkte || 0, top3[0]?.achievements_count || 0)}
               </div>
             </div>
-            <span className="text-[9px] text-primary-fixed-dim font-mono font-bold truncate w-full text-center">{top3[0]?.username}</span>
+            <span className="text-[9px] text-primary-fixed-dim font-mono font-bold truncate w-full text-center flex items-center justify-center gap-1">
+              {top3[0]?.username}
+              {top3[0]?.is_admin && (
+                <span className="inline-flex shrink-0 px-1 py-0.2 rounded text-[7px] font-black bg-amber-500/20 text-amber-400 border border-amber-500/30 font-mono tracking-wide scale-90">ADM</span>
+              )}
+            </span>
             <div className="w-full h-24 bg-gradient-to-t from-primary/30 to-transparent rounded-t-lg border-x border-t border-primary/40 flex flex-col items-center justify-start pt-2 relative overflow-hidden">
               <div className="absolute inset-0 bg-surface-container-low/30 backdrop-blur-[2px] -z-10" />
               <span className="text-sm font-bold font-mono text-primary-fixed-dim">{top3[0]?.gesamt_punkte}</span>
@@ -146,7 +157,12 @@ function LeaderboardSection({
                   {calculateLevel(top3[2]?.gesamt_punkte || 0, top3[2]?.achievements_count || 0)}
                 </div>
               </div>
-              <span className="text-[9px] text-on-surface-variant font-mono truncate w-full text-center">{top3[2]?.username}</span>
+              <span className="text-[9px] text-on-surface-variant font-mono truncate w-full text-center flex items-center justify-center gap-1">
+                {top3[2]?.username}
+                {top3[2]?.is_admin && (
+                  <span className="inline-flex shrink-0 px-1 py-0.2 rounded text-[7px] font-black bg-amber-500/20 text-amber-400 border border-amber-500/30 font-mono tracking-wide scale-90">ADM</span>
+                )}
+              </span>
               <div className="w-full h-12 bg-gradient-to-t from-amber-700/20 to-transparent rounded-t-lg border-x border-t border-amber-700/30 flex flex-col items-center justify-start pt-2 relative overflow-hidden">
                 <div className="absolute inset-0 bg-surface-container-low/50 backdrop-blur-[2px] -z-10" />
                 <span className="text-xs font-bold font-mono text-on-surface">{top3[2]?.gesamt_punkte}</span>
@@ -183,7 +199,12 @@ function LeaderboardSection({
                     {calculateLevel(e.gesamt_punkte, e.achievements_count || 0)}
                   </div>
                 </div>
-                <span className="flex-1 text-sm text-on-surface truncate font-semibold">{e.username}</span>
+                <span className="flex-1 text-sm text-on-surface truncate font-semibold flex items-center gap-1.5">
+                  {e.username}
+                  {e.is_admin && (
+                    <span className="inline-flex px-1.5 py-0.5 rounded text-[8px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30 font-mono uppercase tracking-wider">Admin</span>
+                  )}
+                </span>
                 <span className="font-mono text-sm text-on-surface font-bold shrink-0">{e.gesamt_punkte} P</span>
                 {e.exakte_treffer > 0 && (
                   <div className="flex items-center gap-1 shrink-0 bg-primary-container/20 px-2 py-0.5 rounded-full border border-primary/20">

@@ -1,6 +1,8 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useMemo } from 'react'
 import { supabase } from '../lib/supabase'
 import { ArrowLeft, Trophy, BarChart2, Award, X } from 'lucide-react'
+import { calculateLevelDetails, getLevelBadgeStyle } from '../lib/utils'
+import { evaluateAchievements } from '../utils/achievementEvaluator'
 
 interface Profil {
   id: string
@@ -8,6 +10,7 @@ interface Profil {
   avatar_url: string | null
   gesamt_punkte: number
   exakte_treffer: number
+  is_admin?: boolean
 }
 
 interface TippMitMatch {
@@ -70,6 +73,63 @@ export function RivalInspector({ userId, onClose }: RivalInspectorProps) {
     }
   }
 
+  const derivedStats = useMemo(() => {
+    if (!profil || !tipps) return null
+
+    const finishedTips = tipps.filter(t => t.match?.status === 'finished')
+    const totalFinished = finishedTips.length
+    const totalPoints = profil.gesamt_punkte || 0
+    const avgPoints = totalFinished > 0 ? (totalPoints / totalFinished).toFixed(2) : '0.00'
+
+    // Format for evaluator
+    const formattedTips = tipps.map(t => ({
+      id: t.id,
+      tipp_heim: t.tipp_heim,
+      tipp_gast: t.tipp_gast,
+      punkte: t.punkte,
+      created_at: '',
+      updated_at: '',
+      match: {
+        id: '',
+        spieltag: t.match?.spieltag || 1,
+        status: t.match?.status || 'scheduled',
+        heim_team: t.match?.heim_team || '',
+        gast_team: t.match?.gast_team || '',
+        anpfiff: '',
+        tore_heim: t.match?.tore_heim ?? null,
+        tore_gast: t.match?.tore_gast ?? null,
+        tournament: ''
+      }
+    }))
+
+    const unlockedSet = evaluateAchievements(
+      formattedTips as any,
+      {
+        gesamt_punkte: profil.gesamt_punkte || 0,
+        exakte_treffer: profil.exakte_treffer || 0,
+        is_admin: profil.is_admin || false,
+        rang: null,
+        league_count: 0
+      },
+      profil.avatar_url,
+      profil.username
+    )
+
+    const achievementsCount = unlockedSet.size
+    const lvlDetails = calculateLevelDetails(totalPoints, achievementsCount)
+
+    return {
+      totalTips: tipps.length,
+      totalFinished,
+      avgPoints,
+      achievementsCount,
+      level: lvlDetails.level,
+      xpCurrent: lvlDetails.xpCurrent,
+      xpRequired: lvlDetails.xpRequired,
+      xpPct: lvlDetails.xpPct
+    }
+  }, [profil, tipps])
+
   const spieltagPunkte: Record<number, number> = {}
   tipps.forEach(t => {
     if (t.match?.status === 'finished' && t.match?.spieltag) {
@@ -104,7 +164,12 @@ export function RivalInspector({ userId, onClose }: RivalInspectorProps) {
             </div>
           )}
           <div>
-            <h2 className="text-xs font-mono font-bold text-white uppercase tracking-wider">{profil.username}</h2>
+            <div className="flex items-center gap-1.5">
+              <h2 className="text-xs font-mono font-bold text-white uppercase tracking-wider">{profil.username}</h2>
+              {profil.is_admin && (
+                <span className="inline-flex px-1.5 py-0.5 rounded text-[7px] font-black bg-amber-500/20 text-amber-400 border border-amber-500/30 font-mono tracking-wide scale-90">ADMIN</span>
+              )}
+            </div>
             <div className="flex gap-2.5 mt-0.5">
               <span className="text-[9px] text-primary font-mono font-bold">{profil.gesamt_punkte} Pkt</span>
               <span className="text-[9px] text-on-surface-variant/65 font-mono">🎯 {profil.exakte_treffer} exakt</span>
@@ -123,6 +188,49 @@ export function RivalInspector({ userId, onClose }: RivalInspectorProps) {
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 space-y-5">
+        {/* Generelle Statistiken & Level */}
+        {derivedStats && (
+          <div className="space-y-3">
+            {/* Level Card */}
+            <div className="bg-surface-container-lowest/70 border border-surface-container-high/60 rounded-xl p-3 flex flex-col gap-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold shadow ${getLevelBadgeStyle(derivedStats.level)}`}>
+                    {derivedStats.level}
+                  </div>
+                  <div className="text-left">
+                    <div className="text-[10px] font-mono font-bold text-on-surface uppercase tracking-wider">Level {derivedStats.level}</div>
+                    <div className="text-[7px] font-mono text-on-surface-variant">Rang-Aufstieg durch Punkte & Erfolge</div>
+                  </div>
+                </div>
+                <span className="text-[10px] font-mono text-primary font-bold">{derivedStats.xpCurrent} / {derivedStats.xpRequired} XP</span>
+              </div>
+              <div className="h-1.5 w-full bg-surface-container rounded-full overflow-hidden p-[1px] border border-white/5">
+                <div className="h-full bg-primary rounded-full transition-all duration-500" style={{ width: `${derivedStats.xpPct}%` }} />
+              </div>
+            </div>
+
+            {/* Statistiken Grid */}
+            <div className="grid grid-cols-2 gap-2">
+              <div className="bg-surface-container-lowest/50 border border-white/5 rounded-xl p-2.5 text-center">
+                <div className="text-[7px] font-mono text-on-surface-variant/70 uppercase tracking-wider mb-0.5">Tipps Gesamt</div>
+                <div className="font-mono text-xs font-black text-on-surface">{derivedStats.totalTips}</div>
+              </div>
+              <div className="bg-surface-container-lowest/50 border border-white/5 rounded-xl p-2.5 text-center">
+                <div className="text-[7px] font-mono text-on-surface-variant/70 uppercase tracking-wider mb-0.5">Ø-Punkte (ST)</div>
+                <div className="font-mono text-xs font-black text-on-surface">{derivedStats.avgPoints}</div>
+              </div>
+              <div className="bg-surface-container-lowest/50 border border-white/5 rounded-xl p-2.5 text-center">
+                <div className="text-[7px] font-mono text-on-surface-variant/70 uppercase tracking-wider mb-0.5">Volltreffer (🎯)</div>
+                <div className="font-mono text-xs font-black text-on-surface">{profil.exakte_treffer}</div>
+              </div>
+              <div className="bg-surface-container-lowest/50 border border-white/5 rounded-xl p-2.5 text-center">
+                <div className="text-[7px] font-mono text-on-surface-variant/70 uppercase tracking-wider mb-0.5">Erfolge (🏆)</div>
+                <div className="font-mono text-xs font-black text-on-surface">{derivedStats.achievementsCount}</div>
+              </div>
+            </div>
+          </div>
+        )}
         {/* Formkurve */}
         {letzte.length > 0 && (
           <div className="space-y-2">
