@@ -10,10 +10,11 @@
     <link rel="manifest" href="%BASE_URL%manifest.json" />
     <script>
       if ('serviceWorker' in navigator && !window.location.hostname.includes('localhost') && !window.location.hostname.includes('127.0.0.1')) {
-        // Auto-refresh when a new service worker takes over
+        // Auto-refresh when a new service worker takes over, but ONLY if the page was already controlled
         let refreshing = false;
+        const alreadyControlled = !!navigator.serviceWorker.controller;
         navigator.serviceWorker.addEventListener('controllerchange', () => {
-          if (!refreshing) {
+          if (alreadyControlled && !refreshing) {
             refreshing = true;
             window.location.reload();
           }

@@ -39,25 +39,37 @@ self.addEventListener('fetch', (e) => {
     return;
   }
 
-  // For navigate / HTML requests, use Network-First to immediately fetch new assets/builds
+  // For navigate / HTML requests, use Network-First with a fast timeout fallback
   const isNavigation = e.request.mode === 'navigate' || 
                        e.request.headers.get('accept')?.includes('text/html');
 
   if (isNavigation) {
+    const timeoutPromise = new Promise((resolve) => 
+      setTimeout(() => resolve(null), 2000)
+    );
+
     e.respondWith(
-      fetch(e.request)
-        .then((response) => {
-          if (response.status === 200) {
+      Promise.race([
+        fetch(e.request).then((response) => {
+          if (response && response.status === 200) {
             const responseClone = response.clone();
             caches.open(CACHE_NAME).then((cache) => {
               cache.put(e.request, responseClone);
             });
           }
           return response;
-        })
-        .catch(() => {
-          return caches.match(e.request) || caches.match('./index.html') || caches.match('./');
-        })
+        }),
+        timeoutPromise
+      ]).then((response) => {
+        if (response) {
+          return response;
+        }
+        throw new Error('Network timeout');
+      }).catch(() => {
+        const absoluteIndex = new URL('./index.html', self.location.href).href;
+        const absoluteRoot = new URL('./', self.location.href).href;
+        return caches.match(e.request) || caches.match(absoluteIndex) || caches.match(absoluteRoot);
+      })
     );
   } else {
     // For static assets, use Cache-First with network fallback
