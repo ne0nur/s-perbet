@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <circle cx="256" cy="256" r="240" fill="#021C3C" />
+  <path fill="#ffffff" d="M256 60 l30 90 h90 l-75 55 l30 90 l-75 -55 l-75 55 l30 -90 l-75 -55 h90 z" />
+  <path fill="#ffffff" transform="scale(0.6) translate(80, 80)" d="M256 60 l30 90 h90 l-75 55 l30 90 l-75 -55 l-75 55 l30 -90 l-75 -55 h90 z" />
+  <path fill="#ffffff" transform="scale(0.6) translate(480, 80)" d="M256 60 l30 90 h90 l-75 55 l30 90 l-75 -55 l-75 55 l30 -90 l-75 -55 h90 z" />
+  <path fill="#ffffff" transform="scale(0.6) translate(80, 480)" d="M256 60 l30 90 h90 l-75 55 l30 90 l-75 -55 l-75 55 l30 -90 l-75 -55 h90 z" />
+  <path fill="#ffffff" transform="scale(0.6) translate(480, 480)" d="M256 60 l30 90 h90 l-75 55 l30 90 l-75 -55 l-75 55 l30 -90 l-75 -55 h90 z" />
+</svg>

@@ -1,0 +1,3 @@
+ALTER TABLE public.matches ADD COLUMN IF NOT EXISTS is_aet BOOLEAN DEFAULT false;
+ALTER TABLE public.matches ADD COLUMN IF NOT EXISTS penalty_heim INTEGER;
+ALTER TABLE public.matches ADD COLUMN IF NOT EXISTS penalty_gast INTEGER;

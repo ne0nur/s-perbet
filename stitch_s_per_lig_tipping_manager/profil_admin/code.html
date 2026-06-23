@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Profile &amp; Admin</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;600;700;800&amp;family=JetBrains+Mono:wght@500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "error": "#ffb4ab",
+                        "on-error": "#690005",
+                        "surface-tint": "#f9bd22",
+                        "on-primary-fixed-variant": "#5c4300",
+                        "inverse-surface": "#dde2f3",
+                        "on-tertiary-container": "#465469",
+                        "outline-variant": "#4f4633",
+                        "secondary": "#bcc7de",
+                        "on-primary-container": "#6c4f00",
+                        "inverse-on-surface": "#2b303d",
+                        "on-primary-fixed": "#261a00",
+                        "secondary-fixed": "#d8e3fb",
+                        "tertiary-fixed-dim": "#b9c7e0",
+                        "on-tertiary-fixed-variant": "#3a485c",
+                        "tertiary-container": "#bbc9e2",
+                        "surface-container-lowest": "#080e1a",
+                        "surface": "#0e131f",
+                        "surface-container-highest": "#2f3542",
+                        "on-background": "#dde2f3",
+                        "primary-container": "#fbbf24",
+                        "on-primary": "#402d00",
+                        "surface-bright": "#343946",
+                        "surface-dim": "#0e131f",
+                        "on-secondary-fixed-variant": "#3c475a",
+                        "on-secondary-fixed": "#111c2d",
+                        "on-surface-variant": "#d3c5ac",
+                        "secondary-container": "#3e495d",
+                        "surface-variant": "#2f3542",
+                        "on-error-container": "#ffdad6",
+                        "on-tertiary-fixed": "#0d1c2f",
+                        "error-container": "#93000a",
+                        "tertiary": "#d7e5ff",
+                        "tertiary-fixed": "#d5e3fd",
+                        "on-secondary-container": "#aeb9d0",
+                        "background": "#0e131f",
+                        "inverse-primary": "#795900",
+                        "surface-container-high": "#242a36",
+                        "on-surface": "#dde2f3",
+                        "primary-fixed-dim": "#f9bd22",
+                        "surface-container": "#1a202c",
+                        "on-tertiary": "#233144",
+                        "primary-fixed": "#ffdf9f",
+                        "on-secondary": "#263143",
+                        "secondary-fixed-dim": "#bcc7de",
+                        "primary": "#ffe1a7",
+                        "outline": "#9c8f79",
+                        "surface-container-low": "#161c28"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "xs": "4px",
+                        "md": "16px",
+                        "base": "4px",
+                        "sm": "8px",
+                        "xl": "40px",
+                        "margin-desktop": "48px",
+                        "lg": "24px",
+                        "margin-mobile": "16px",
+                        "gutter": "16px"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Geist"],
+                        "headline-lg-mobile": ["Geist"],
+                        "headline-md": ["Geist"],
+                        "score-display": ["JetBrains Mono"],
+                        "display-lg": ["Geist"],
+                        "body-md": ["Geist"],
+                        "data-label": ["JetBrains Mono"]
+                    },
+                    "fontSize": {
+                        "headline-lg": ["32px", { "lineHeight": "1.2", "fontWeight": "700" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "1.2", "fontWeight": "700" }],
+                        "headline-md": ["20px", { "lineHeight": "1.4", "fontWeight": "600" }],
+                        "score-display": ["36px", { "lineHeight": "1", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "display-lg": ["48px", { "lineHeight": "1.1", "letterSpacing": "-0.04em", "fontWeight": "800" }],
+                        "body-md": ["16px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                        "data-label": ["12px", { "lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "500" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .glass-panel {
+            background-color: rgba(30, 41, 59, 0.2);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .input-stadium {
+            background-color: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: border-color 0.2s;
+        }
+        .input-stadium:focus {
+            border-color: #fbbf24; /* primary-container */
+            outline: none;
+        }
+        .btn-gold {
+            background-color: #fbbf24;
+            color: #030712;
+            box-shadow: 0 0 15px rgba(251, 191, 36, 0.25);
+            transition: transform 0.1s, box-shadow 0.2s;
+        }
+        .btn-gold:active {
+            transform: scale(0.98);
+            box-shadow: 0 0 5px rgba(251, 191, 36, 0.5);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background min-h-screen pb-24 font-body-md text-body-md antialiased selection:bg-primary-container selection:text-on-primary">
+<!-- TopAppBar from JSON -->
+<header class="bg-surface/60 dark:bg-surface/60 fixed top-0 w-full z-50 backdrop-blur-xl shadow-none">
+<div class="flex items-center justify-between px-margin-mobile h-16 w-full">
+<button class="text-primary-fixed-dim hover:opacity-80 transition-opacity active:scale-95 duration-150 p-2 -ml-2 rounded-full">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile text-primary-fixed-dim uppercase tracking-tighter">Süper Lig</h1>
+<div class="text-primary-fixed-dim font-headline-md text-headline-md hover:opacity-80 transition-opacity active:scale-95 duration-150">
+                User Profile
+            </div>
+</div>
+</header>
+<main class="pt-24 px-margin-mobile md:px-margin-desktop max-w-4xl mx-auto space-y-lg">
+<!-- Profile Card (Top) -->
+<section class="glass-panel rounded-xl p-6 flex flex-col md:flex-row items-center gap-6 relative overflow-hidden">
+<!-- Subtle light leak -->
+<div class="absolute -top-20 -right-20 w-64 h-64 bg-primary-container/10 rounded-full blur-3xl pointer-events-none"></div>
+<div class="relative group cursor-pointer">
+<div class="w-24 h-24 rounded-full bg-surface-container-high border-2 border-outline-variant overflow-hidden">
+<img class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" data-alt="A cinematic, high-contrast avatar placeholder image featuring an abstract, glowing amber geometric silhouette against a deep obsidian background, evoking a premium athletic aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB-IPTihzVRpEJIZYfrKultqKVVPBfUNFgBsweS7om3_aIPjI0jNZ5_6fu_VxFe77aVKe60iHRcT7vJ-PBBI9YwAKXPbHr2BQPmFuHIpDQ8nzuiRGoiLy7m6BGSdpCdtxbdzFShGt5sbqVSr8fIKALxaktxk1wk68zwpJhesA5UgDPCphCp7V6KUvEGXLBgA_zvY4DEo6TltuI4Y4RtMRDJ_gbm6dYZYRbMZm3Ebm1m4F_naIWAhoG4SI65LYjd4dQa_2E5xz_X-5AH"/>
+</div>
+<div class="absolute bottom-0 right-0 bg-primary-container text-on-primary rounded-full p-1.5 shadow-[0_0_10px_rgba(251,191,36,0.4)]">
+<span class="material-symbols-outlined text-[16px]">upload</span>
+</div>
+</div>
+<div class="text-center md:text-left flex-1">
+<h2 class="font-headline-md text-headline-md text-on-surface mb-1">Alex Mercer</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">Tier 1 Tipper</p>
+</div>
+<div class="bg-surface-container/50 rounded-lg p-4 border border-outline-variant/30 text-center min-w-[140px]">
+<div class="font-data-label text-data-label text-on-surface-variant uppercase tracking-widest mb-1">Total Points</div>
+<div class="font-score-display text-score-display text-primary-container text-[42px]">2,450</div>
+</div>
+</section>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-lg">
+<!-- Section 1: Security -->
+<section class="glass-panel rounded-xl p-6 flex flex-col gap-6">
+<div class="flex items-center gap-3 border-b border-outline-variant/20 pb-4">
+<span class="material-symbols-outlined text-primary-fixed-dim">lock</span>
+<h3 class="font-headline-md text-headline-md text-on-surface">Security</h3>
+</div>
+<form class="space-y-4">
+<div class="space-y-2">
+<label class="font-data-label text-data-label text-on-surface-variant">Current Password</label>
+<input class="input-stadium w-full rounded p-3 text-on-surface font-body-md text-body-md" placeholder="••••••••" type="password"/>
+</div>
+<div class="space-y-2">
+<label class="font-data-label text-data-label text-on-surface-variant">New Password</label>
+<input class="input-stadium w-full rounded p-3 text-on-surface font-body-md text-body-md" placeholder="••••••••" type="password"/>
+</div>
+<button class="btn-gold w-full rounded py-3 mt-2 font-headline-md text-headline-md flex justify-center items-center gap-2" type="button">
+<span>Update Security</span>
+</button>
+</form>
+</section>
+<!-- Section 2: Notifications -->
+<section class="glass-panel rounded-xl p-6 flex flex-col gap-6">
+<div class="flex items-center gap-3 border-b border-outline-variant/20 pb-4">
+<span class="material-symbols-outlined text-primary-fixed-dim">notifications</span>
+<h3 class="font-headline-md text-headline-md text-on-surface">Notifications</h3>
+</div>
+<div class="space-y-4">
+<div class="flex items-center justify-between p-3 rounded-lg bg-surface-container/30 border border-outline-variant/20">
+<div>
+<div class="font-body-md text-body-md text-on-surface font-semibold">Match Start Alerts</div>
+<div class="font-data-label text-data-label text-on-surface-variant mt-1">Push notifications for tipped games</div>
+</div>
+<div class="w-12 h-6 bg-primary-container/20 rounded-full relative cursor-pointer border border-primary-container/50">
+<div class="w-4 h-4 bg-primary-container rounded-full absolute top-1 right-1 shadow-[0_0_8px_rgba(251,191,36,0.8)]"></div>
+</div>
+</div>
+<div class="flex items-center justify-between p-3 rounded-lg bg-surface-container/30 border border-outline-variant/20 opacity-60 pointer-events-none">
+<div>
+<div class="font-body-md text-body-md text-on-surface font-semibold flex items-center gap-2">
+                                Goal Highlights
+                                <span class="bg-surface-bright text-on-surface font-data-label text-data-label px-2 py-0.5 rounded text-[10px]">SOON</span>
+</div>
+<div class="font-data-label text-data-label text-on-surface-variant mt-1">Video clips directly to device</div>
+</div>
+<div class="w-12 h-6 bg-surface-variant rounded-full relative border border-outline-variant/50">
+<div class="w-4 h-4 bg-on-surface-variant rounded-full absolute top-1 left-1"></div>
+</div>
+</div>
+</div>
+</section>
+</div>
+<!-- Section 3: Admin Console (Results Entry) -->
+<section class="border border-error/20 bg-surface-container-low/80 backdrop-blur-xl rounded-xl p-6 mt-lg relative overflow-hidden">
+<div class="absolute top-0 left-0 w-full h-1 bg-error/40"></div>
+<div class="flex items-center gap-3 mb-6">
+<span class="material-symbols-outlined text-error" style="font-variation-settings: 'FILL' 1;">admin_panel_settings</span>
+<h3 class="font-headline-md text-headline-md text-error">Admin Console: Results Entry</h3>
+</div>
+<div class="glass-panel rounded-lg p-4 mb-4">
+<div class="flex items-center justify-between gap-4">
+<div class="flex-1 text-right font-headline-md text-headline-md text-on-surface">Galatasaray</div>
+<div class="flex items-center gap-2">
+<input class="input-stadium w-16 h-16 rounded text-center font-score-display text-score-display text-primary-container" type="number" value="2"/>
+<span class="font-score-display text-score-display text-on-surface-variant/50">-</span>
+<input class="input-stadium w-16 h-16 rounded text-center font-score-display text-score-display text-primary-container" type="number" value="1"/>
+</div>
+<div class="flex-1 text-left font-headline-md text-headline-md text-on-surface">Fenerbahçe</div>
+</div>
+</div>
+<div class="flex justify-end gap-4">
+<button class="px-6 py-2 rounded border border-outline-variant text-on-surface hover:bg-surface-variant transition-colors font-body-md text-body-md">Simulate</button>
+<button class="px-6 py-2 rounded bg-error text-on-error font-headline-md text-headline-md hover:opacity-90 transition-opacity shadow-[0_0_15px_rgba(255,180,171,0.2)]">Commit Result</button>
+</div>
+</section>
+</main>
+<!-- BottomNavBar from JSON -->
+<nav class="bg-surface/60 dark:bg-surface/60 fixed bottom-0 w-full z-50 backdrop-blur-xl border-t border-white/10 shadow-[0_-4px_20px_rgba(0,0,0,0.5)] flex justify-around items-center h-20 px-2 pb-safe md:hidden">
+<button class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-colors active:scale-90 duration-200 w-16">
+<span class="material-symbols-outlined mb-1 text-[24px]">sports_soccer</span>
+<span class="font-data-label text-data-label">Games</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-colors active:scale-90 duration-200 w-16">
+<span class="material-symbols-outlined mb-1 text-[24px]">leaderboard</span>
+<span class="font-data-label text-data-label">Table</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-colors active:scale-90 duration-200 w-16">
+<span class="material-symbols-outlined mb-1 text-[24px]">stars</span>
+<span class="font-data-label text-data-label">Bonus</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-colors active:scale-90 duration-200 w-16">
+<span class="material-symbols-outlined mb-1 text-[24px]">groups</span>
+<span class="font-data-label text-data-label">Groups</span>
+</button>
+<!-- Active Tab: Profile -->
+<button class="flex flex-col items-center justify-center text-primary-fixed-dim relative after:content-[''] after:absolute after:-bottom-1 after:w-1 after:h-1 after:bg-primary-fixed-dim after:rounded-full hover:text-primary transition-colors active:scale-90 duration-200 w-16">
+<span class="material-symbols-outlined mb-1 text-[24px]" style="font-variation-settings: 'FILL' 1;">person</span>
+<span class="font-data-label text-data-label">Profile</span>
+</button>
+</nav>
+</body></html>

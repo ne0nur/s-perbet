@@ -1,0 +1,17 @@
+{
+  "short_name": "SüperBET",
+  "name": "SüperBET — Süper Lig Tipprunde",
+  "icons": [
+    {
+      "src": "favicon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "./",
+  "background_color": "#0e131f",
+  "theme_color": "#0e131f",
+  "display": "standalone",
+  "orientation": "portrait"
+}
