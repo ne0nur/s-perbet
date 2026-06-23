@@ -2,6 +2,7 @@ import { useState, memo, useMemo, useEffect } from 'react'
 import { Award, ChevronDown, ChevronUp, Lock, Check, Target } from 'lucide-react'
 import { evaluateAchievements } from '../../utils/achievementEvaluator'
 import type { TipDetails } from '../../utils/achievementEvaluator'
+import { useAuthStore } from '../../stores/authStore'
 
 interface AchievementBadgeProps {
   id: string
@@ -14,7 +15,7 @@ const AchievementBadge = memo(function AchievementBadge({ id, unlocked, rarity }
   const rarityColors = {
     common: 'border-slate-500/30 text-slate-400 shadow-[0_0_8px_rgba(148,163,184,0.15)]',
     rare: 'border-blue-500/30 text-blue-400 shadow-[0_0_10px_rgba(59,130,246,0.2)]',
-    epic: 'border-purple-500/30 text-purple-400 shadow-[0_0_12px_rgba(168,85,247,0.25)]',
+    epic: 'border-purple-500/30 text-purple-400 shadow-[0_0_12px_rgba(16,185,129,0.25)]',
     legendary: 'border-yellow-500/40 text-yellow-400 shadow-[0_0_15px_rgba(234,179,8,0.35)]',
     toxic: 'border-red-500/30 text-red-400 shadow-[0_0_10px_rgba(239,68,68,0.2)]',
     local: 'border-emerald-500/45 text-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.3)]'
@@ -26,7 +27,7 @@ const AchievementBadge = memo(function AchievementBadge({ id, unlocked, rarity }
     return (
       <div className="relative w-14 h-14 p-1 flex items-center justify-center bg-black/85 border border-white/5 rounded-xl flex-shrink-0 shadow-inner opacity-30 grayscale hover:grayscale-0 hover:opacity-100 transition-all duration-300">
         <img 
-          src={`/achievements/${id}.png`} 
+          src={`${import.meta.env.BASE_URL}achievements/${id}.png`} 
           alt="" 
           className="w-full h-full object-contain rounded-lg" 
           loading="lazy"
@@ -41,7 +42,7 @@ const AchievementBadge = memo(function AchievementBadge({ id, unlocked, rarity }
       <div className="absolute -inset-0.5 rounded-xl border border-white/5 opacity-20" />
       {/* Image Loader */}
       <img 
-        src={`/achievements/${id}.png`} 
+        src={`${import.meta.env.BASE_URL}achievements/${id}.png`} 
         alt="" 
         className="relative z-10 w-full h-full object-contain rounded-lg drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)]" 
       />
@@ -76,6 +77,7 @@ export function AchievementsSection({
   unlockedSet,
   newlyUnlocked
 }: AchievementsSectionProps) {
+  const { user } = useAuthStore()
 
   const achievementsList = [
     // --- 1. Speyer Locals ---
@@ -89,243 +91,240 @@ export function AchievementsSection({
     {
       id: 'brezelfest_kral',
       name: 'Brezelfest-Kral',
-      desc: '5 exakte Tipps (4 Pkt.) in Folge richtig getippt. Purer Rausch!',
-      req: '5 exakte Tipps in Folge treffen',
+      desc: 'Du triffst 5 Spiele hintereinander exakt das richtige Ergebnis (4 Punkte).',
+      req: '5 exakte Tipps in Folge',
       rarity: 'local' as const
     },
     {
       id: 'maxi_flaneur',
       name: 'Maxi-Flaneur',
-      desc: 'Erreiche die krasse 100-Gesamtpunkte-Marke in der Liga.',
-      req: '100 Gesamtpunkte erreichen',
+      desc: 'Erreiche als Erster die Marke von 100 Gesamtpunkten in der Tipprunde.',
+      req: 'Erreiche 100 Gesamtpunkte',
       rarity: 'local' as const
     },
     {
-      id: 'schorle_und_cay',
+      id: 'schorle_cay',
       name: 'Schorle & Çay',
-      desc: 'An einem Freitagabend alle abgegebenen Spiele (mindestens 2) richtig getippt (Tendenz).',
-      req: 'Min. 2 Freitagsspiele erfolgreich tippen',
+      desc: 'Gib am Freitagabend für alle anstehenden Spiele den richtigen Tendenztipp ab.',
+      req: 'Alle Freitagsspiele Tendenz richtig (min. 2)',
       rarity: 'local' as const
     },
     {
       id: 'technik_museum',
       name: 'Technik-Museum',
-      desc: 'Frühaufsteher: 5 Mal deine Tipps mehr als 48 Stunden vor Anpfiff abgegeben.',
-      req: '5 Mal Tipps über 48h vor Anpfiff eintragen',
+      desc: 'Gib deinen Tipp in den letzten 5 Minuten vor dem Anpfiff ab.',
+      req: 'Tippabgabe 0-5 Min vor Anpfiff',
       rarity: 'local' as const
     },
     {
       id: 'altpoertel_sniper',
       name: 'Altpörtel-Sniper',
-      desc: '3 Auswärtssiege an einem einzigen Spieltag exakt (4 Pkt.) getippt.',
-      req: '3 Auswärtssiege exakt an einem Spieltag',
+      desc: 'Du tippst an einem Spieltag drei Auswärtssiege exakt richtig (4 Punkte).',
+      req: '3 exakte Auswärtssiege an einem Spieltag',
       rarity: 'local' as const
     },
     {
       id: 'speyer_boss',
       name: 'Speyer-Boss',
-      desc: 'Gesamtsieger (Platz 1) am Ende der Saison (über 300 absolvierte Spiele).',
-      req: 'Saison als Platz 1 beenden',
+      desc: 'Beende die gesamte Saison auf Platz 1 der Gesamttabelle.',
+      req: 'Gesamtsieger am Saisonende',
       rarity: 'local' as const
     },
-
     // --- 2. Trash-Talk & Fails ---
     {
       id: 'vallah_krise',
       name: 'Vallah Krise',
-      desc: 'Mindestens 3 Spiele an einem Spieltag getippt und am Ende exakt 0 Punkte geholt.',
-      req: '0 Punkte an einem kompletten Spieltag',
+      desc: 'Du holst an einem kompletten Spieltag exakt 0 Punkte (mindestens 3 Tipps abgegeben).',
+      req: '0 Punkte an einem Spieltag (min. 3 Tipps)',
       rarity: 'toxic' as const
     },
     {
       id: 'kupon_yirtan',
       name: 'Kupon Yırtan',
-      desc: 'Du tippst einen Sieg um 2+ Tore, aber dein favorisiertes Team verliert.',
-      req: 'Favorisiertes Team verliert trotz 2+ Tore Tipp',
+      desc: 'Du tippst auf einen Heimsieg mit mindestens 2 Toren Differenz, aber das Team verliert das Spiel.',
+      req: 'Sicherer Heimsieg-Tipp verliert (Differenz >= 2)',
       rarity: 'toxic' as const
     },
     {
       id: 'amk_modus',
       name: 'Amk-Modus',
-      desc: '3x in Folge die Tordifferenz um exakt 1 Tor verfehlt (nur Tendenz = 2 Pkt).',
-      req: '3x in Folge Tordifferenz um 1 Tor verpassen',
+      desc: 'Du liegst dreimal hintereinander um genau ein Tor daneben und bekommst nur die Tendenz.',
+      req: '3x Tendenz in Folge, aber knapp am exakten Tipp vorbei',
       rarity: 'toxic' as const
     },
     {
       id: 'ters_koese',
       name: 'Ters Köşe',
-      desc: 'Auf den klaren Heimsieg eines Big 4 Teams getippt und sie verlieren.',
-      req: 'Heimniederlage eines Topteams getippt',
+      desc: 'Du tippst auf einen Heimsieg eines der Big 4 (GAL, FEN, BES, TRA), aber sie verlieren das Heimspiel.',
+      req: 'Heimniederlage für Big 4 getippt & verloren',
       rarity: 'toxic' as const
     },
     {
       id: 'hayalet',
-      name: 'Hayalet (Gespenst)',
-      desc: '3 Spieltage in Folge komplett vergessen, deine Tipps abzugeben.',
-      req: 'Vergiss 3 Spieltage hintereinander das Tippen',
+      name: 'Hayalet',
+      desc: 'Du vergisst an drei aufeinanderfolgenden Spieltagen, deine Tipps abzugeben.',
+      req: '3 Spieltage in Folge keine Tipps abgegeben',
       rarity: 'toxic' as const
     },
     {
       id: 'ugursuz',
       name: 'Uğursuz',
-      desc: 'Pechvogel: 3x hintereinander ein exaktes Ergebnis um genau ein Tor verpasst.',
-      req: '3x hintereinander ein Tor am Exaktergebnis vorbei',
+      desc: 'Du liegst in 3 aufeinanderfolgenden Spielen um genau ein Tor daneben.',
+      req: '3x in Folge um genau 1 Tor daneben',
       rarity: 'toxic' as const
     },
     {
       id: 'kral_ciplak',
       name: 'Kral Çıplak',
-      desc: 'Höchstens 2 Punkte an einem Spieltag geholt, nachdem du zuvor zweistellig abgeräumt hast (abgestürzt).',
-      req: 'Max. 2 Punkte nach starkem Spieltag',
+      desc: 'Du holst an einem Spieltag weniger als 2 Punkte, nachdem du am vorherigen Spieltag mindestens 15 Punkte geholt hast.',
+      req: '<= 2 Punkte nach Spieltag mit >= 15 Punkten',
       rarity: 'toxic' as const
     },
     {
       id: 'finito',
       name: 'Finito',
-      desc: 'Die Saison (nach über 300 absolvierten Spielen) auf dem allerletzten Platz der Liga beendet.',
-      req: 'Letzter Platz am Ende der Saison',
+      desc: 'Beende die gesamte Saison auf dem allerletzten Platz der Tabelle.',
+      req: 'Letzter Platz am Saisonende',
       rarity: 'toxic' as const
     },
-
     // --- 3. Süper Lig Culture ---
     {
       id: 'derby_baba',
       name: 'Derby-Baba',
-      desc: 'Das Ergebnis bei Galatasaray vs. Fenerbahçe exakt (4 Pkt.) richtig getippt.',
-      req: 'Triff das Interkontinentale Derby exakt',
-      rarity: 'epic' as const
+      desc: 'Tippe das Ergebnis eines interkontinentalen Derbys (Galatasaray gegen Fenerbahçe) exakt richtig.',
+      req: 'Exakter Tipp bei GS - FB Derby',
+      rarity: 'rare' as const
     },
     {
       id: 'cim_bom_bom',
       name: 'Cim Bom Bom',
-      desc: '3 Mal den Sieg von Galatasaray exakt (4 Pkt.) richtig getippt.',
-      req: '3x Galatasaray-Sieg exakt treffen',
-      rarity: 'rare' as const
+      desc: 'Erziele 3 exakte Tipps auf Siege von Galatasaray.',
+      req: '3 exakte GS-Siege richtig getippt',
+      rarity: 'common' as const
     },
     {
       id: 'fener_aglama',
       name: 'Fener Ağlama',
-      desc: '3 Mal den Sieg von Fenerbahçe exakt (4 Pkt.) richtig getippt.',
-      req: '3x Fenerbahçe-Sieg exakt treffen',
-      rarity: 'rare' as const
+      desc: 'Erziele 3 exakte Tipps auf Siege von Fenerbahçe.',
+      req: '3 exakte FB-Siege richtig getippt',
+      rarity: 'common' as const
     },
     {
       id: 'kara_kartal',
       name: 'Kara Kartal',
-      desc: '3 Mal den Sieg von Beşiktaş exakt (4 Pkt.) richtig getippt.',
-      req: '3x Beşiktaş-Sieg exakt treffen',
-      rarity: 'rare' as const
+      desc: 'Erziele 3 exakte Tipps auf Siege von Beşiktaş.',
+      req: '3 exakte BJK-Siege richtig getippt',
+      rarity: 'common' as const
     },
     {
       id: 'bize_her_yer_trabzon',
       name: 'Bize Her Yer Trabzon',
-      desc: '3 Mal den Sieg von Trabzonspor exakt (4 Pkt.) richtig getippt.',
-      req: '3x Trabzonspor-Sieg exakt treffen',
-      rarity: 'rare' as const
+      desc: 'Erziele 3 exakte Tipps auf Siege von Trabzonspor.',
+      req: '3 exakte TS-Siege richtig getippt',
+      rarity: 'common' as const
     },
     {
       id: 'der_alman',
       name: 'Der Alman',
-      desc: 'Sicherheits-Abi: Du tippst bei jedem großen Derby immer Unentschieden.',
-      req: 'Tippe Unentschieden bei allen Derbies',
-      rarity: 'common' as const
+      desc: 'Tippe in den ersten 3 Derbys der Big 4 jeweils auf ein Unentschieden.',
+      req: 'Erste 3 Big-4 Derbies Unentschieden getippt',
+      rarity: 'rare' as const
     },
     {
       id: 'gurbetci',
       name: 'Gurbetçi',
-      desc: 'Lückenlos: Du hast die komplette Hinrunde (Spieltag 1 bis 19) komplett durchgetippt.',
-      req: 'Tippe alle Spiele der gesamten Hinrunde',
+      desc: 'Tippe jedes einzelne Spiel der gesamten Hinrunde (Spieltage 1-19).',
+      req: 'Alle Hinrundenspiele getippt',
       rarity: 'epic' as const
     },
     {
       id: 'hadi_lan',
       name: 'Hadi Lan!',
-      desc: 'Last-Minute: Tippe in den letzten 60 Sekunden vor Anpfiff und hole Punkte.',
-      req: 'Tippänderung in der allerletzten Minute',
+      desc: 'Gib einen Tipp in der allerletzten Minute vor Anpfiff ab und erhalte Punkte.',
+      req: 'Tippabgabe < 1 Min vor Anpfiff mit Punkten',
       rarity: 'rare' as const
     },
-
     // --- 4. Purer Flex ---
     {
-      id: 'hosgeldin_abi',
-      name: 'Hoşgeldin Abi',
-      desc: 'Profil komplett ausgefüllt und eigenes Profilbild hochgeladen.',
-      req: 'Profilbild & Benutzername einrichten',
+      id: 'ilk_kan',
+      name: 'İlk Kan',
+      desc: 'Gib deinen allerersten Tipp in dieser Saison ab.',
+      req: 'Erster abgegebener Tipp',
       rarity: 'common' as const
     },
     {
-      id: 'ilk_kan',
-      name: 'İlk Kan (First Blood)',
-      desc: 'Deinen allerersten Tipp in der Tipprunden-App abgegeben.',
-      req: 'Gib deinen ersten Tipp ab',
+      id: 'hosgeldin_abi',
+      name: 'Hoşgeldin Abi',
+      desc: 'Vervollständige dein Profil, indem du ein Benutzerbild (Avatar) hochlädst.',
+      req: 'Profilbild hochgeladen',
       rarity: 'common' as const
     },
     {
       id: 'macher',
       name: 'Macher',
-      desc: 'An 5 Spieltagen in Folge jedes einzelne Spiel getippt. Nur Taten zählen!',
-      req: '5 Spieltage am Stück voll tippen',
+      desc: 'Gib an 5 aufeinanderfolgenden Spieltagen Tipps für jedes einzelne Spiel ab.',
+      req: 'Alle Spiele an 5 Spieltagen in Folge getippt',
       rarity: 'epic' as const
     },
     {
       id: 'kahin',
-      name: 'Kahin (Der Seher)',
-      desc: 'Mindestens 3 exakte Ergebnisse an einem einzigen Spieltag richtig getippt.',
-      req: 'Hol 3x exakt 4 Punkte an einem Spieltag',
-      rarity: 'epic' as const
+      name: 'Kahin',
+      desc: 'Erziele an einem einzigen Spieltag mindestens 3 exakte Tippergebnisse (4 Punkte).',
+      req: '3 exakte Tipps an einem Spieltag',
+      rarity: 'legendary' as const
     },
     {
       id: 'son_dakika',
       name: 'Son Dakika',
-      desc: 'Tipp in den letzten 5 Minuten vor Anpfiff abgegeben und gepunktet.',
-      req: 'Tippe kurz vor Anpfiff und punkte',
+      desc: 'Gib deinen Tipp in den letzten 5 Minuten vor dem Anpfiff ab und hole Punkte.',
+      req: 'Last-Minute Tipp mit Punkten',
       rarity: 'rare' as const
     },
     {
       id: 'bereket',
       name: 'Bereket',
-      desc: '5x in Folge bei Spielen der Big 4 Mannschaften Punkte geholt. Segen!',
-      req: '5x hintereinander bei den Big 4 punkten',
-      rarity: 'legendary' as const
+      desc: 'Tippe 5 Spiele der Big 4 in Folge richtig mit mindestens 2 Punkten.',
+      req: '5x Big 4 in Folge richtig getippt (min. 2 Punkte)',
+      rarity: 'epic' as const
     },
     {
       id: 'psikopat',
       name: 'Psikopat',
-      desc: 'Triff ein wildes Ergebnis (insg. >= 6 Tore oder ein Team schießt >= 4 Tore) exakt.',
-      req: 'Triff ein wildes torfreiches Ergebnis exakt',
+      desc: 'Tippe ein wildes Ergebnis mit mindestens 6 Toren (z.B. 4:2, 3:3, 5:1) exakt richtig.',
+      req: 'Exakter Tipp bei Spiel mit >= 6 Toren oder Differenz >= 4',
       rarity: 'legendary' as const
     },
     {
       id: 'kebap_spiess',
       name: 'Kebap-Spieß',
-      desc: 'Gönnung: 4 Spiele an einem einzigen Spieltag exakt richtig getippt.',
-      req: 'Triff 4 Spiele an einem Spieltag exakt (16 Pkt.)',
+      desc: 'Erziele an einem einzigen Spieltag 4 exakte Tippergebnisse (4 Punkte).',
+      req: '4 exakte Tipps an einem Spieltag',
       rarity: 'legendary' as const
     },
     {
       id: 'sifir_sikinti',
       name: 'Sıfır Sıkıntı',
-      desc: 'Lauf: In 10 aufeinanderfolgenden Spielen jeweils Punkte mitgenommen.',
-      req: 'Punkte in 10 aufeinanderfolgenden Spielen',
+      desc: 'Hole in 10 aufeinanderfolgenden Spielen jeweils mindestens einen Punkt.',
+      req: '10 Spiele in Folge Punkte erzielt',
       rarity: 'epic' as const
     },
     {
       id: 'gegen_den_strom',
       name: 'Gegen den Strom',
-      desc: 'Tippe auf den Sieg des Underdogs gegen ein Big-Team und punkte damit.',
-      req: 'Erfolgreicher Außenseitertipp gegen Favoriten',
-      rarity: 'legendary' as const
+      desc: 'Tippe erfolgreich auf den Außenseiter gegen eines der Big 4 und hole Punkte.',
+      req: 'Erfolgreicher Außenseiter-Tipp gegen Big 4',
+      rarity: 'epic' as const
     },
     {
       id: 'kardesim_benim',
       name: 'Kardeşim Benim',
-      desc: 'Copycat: Tippe am selben Spieltag mindestens 3 Mal das exakt gleiche Ergebnis.',
-      req: 'Gib 3x das gleiche Spielergebnis ab (z.B. 2:1)',
-      rarity: 'epic' as const
+      desc: 'Tippe an einem Spieltag dreimal das exakt gleiche Ergebnis (z.B. 3x 2:1).',
+      req: '3x gleiches Ergebnis an einem Spieltag getippt',
+      rarity: 'common' as const
     }
   ]
 
-  const unlockedCount = achievementsList.filter(a => unlockedSet.has(a.id)).length
+  const unlockedCount = unlockedSet.size
 
   const sortedAchievementsList = useMemo(() => {
     return [...achievementsList].sort((a, b) => {
@@ -337,14 +336,16 @@ export function AchievementsSection({
     })
   }, [unlockedSet])
 
-
-
   // Speichere den Count im localStorage, damit andere Komponenten (wie AppShell) darauf zugreifen können
   useEffect(() => {
     localStorage.setItem('superbet_achievements_count', unlockedCount.toString())
+    if (user?.id) {
+      const storageKey = `superbet_unlocked_achievements_${user.id}`
+      localStorage.setItem(storageKey, JSON.stringify(Array.from(unlockedSet)))
+    }
     // Optional: Event dispatchen, falls AppShell sofort updaten soll
     window.dispatchEvent(new Event('achievements_updated'))
-  }, [unlockedCount])
+  }, [unlockedCount, unlockedSet, user])
 
   return (
     <div className="bg-surface-container-low border border-surface-container-high rounded-xl p-4 shadow-sm stagger-in">

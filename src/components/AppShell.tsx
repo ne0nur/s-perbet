@@ -100,7 +100,7 @@ export function AppShell() {
     // Background Check for New Achievements
     const checkNewAchievements = async () => {
       try {
-        const { data: profile } = await supabase.from('profiles').select('gesamt_punkte, exakte_treffer, is_admin').eq('id', user.id).single()
+        const { data: profile } = await supabase.from('profiles').select('gesamt_punkte, exakte_treffer, is_admin, avatar_url, username').eq('id', user.id).single()
         if (!profile) return
 
         const { data: allTips } = await supabase.from('tips')
@@ -129,22 +129,48 @@ export function AppShell() {
             is_admin: profile.is_admin || false,
             rang: null,
             league_count: 0
-          }, avatarUrl, user.email || '')
+          }, profile.avatar_url, profile.username || user.email || '')
           
-          const currentCount = parseInt(localStorage.getItem('superbet_achievements_count') || '0', 10)
+          const unlockedKey = `superbet_unlocked_achievements_${user.id}`
+          const savedStr = localStorage.getItem(unlockedKey)
           
-          if (unlockedSet.size > currentCount && currentCount > 0) { // currentCount > 0 prevents toast on very first fresh login where everything unlocks at once
-            const diff = unlockedSet.size - currentCount
-            window.dispatchEvent(new CustomEvent('show-toast', { 
-              detail: { 
-                message: `🏆 Du hast ${diff} neue${diff > 1 ? '' : 'n'} Erfolg${diff > 1 ? 'e' : ''} freigeschaltet! Schau in dein Profil.`, 
-                type: 'success' 
+          if (savedStr === null) {
+            // First time tracking for this user on this device. Just save the set and do not toast.
+            localStorage.setItem(unlockedKey, JSON.stringify(Array.from(unlockedSet)))
+            localStorage.setItem('superbet_achievements_count', unlockedSet.size.toString())
+            setAchievementsCount(unlockedSet.size)
+          } else {
+            const savedArray = JSON.parse(savedStr) || []
+            const savedSet = new Set(savedArray)
+            
+            // Find newly unlocked achievements
+            const newlyUnlocked = Array.from(unlockedSet).filter(id => !savedSet.has(id))
+            
+            if (newlyUnlocked.length > 0) {
+              const diff = newlyUnlocked.length
+              window.dispatchEvent(new CustomEvent('show-toast', { 
+                detail: { 
+                  message: `🏆 Du hast ${diff} neue${diff > 1 ? '' : 'n'} Erfolg${diff > 1 ? 'e' : ''} freigeschaltet! Schau in dein Profil.`, 
+                  type: 'success' 
+                }
+              }))
+              
+              // Save union to storage
+              const union = new Set([...savedSet, ...newlyUnlocked])
+              localStorage.setItem(unlockedKey, JSON.stringify(Array.from(union)))
+              localStorage.setItem('superbet_achievements_count', union.size.toString())
+              setAchievementsCount(union.size)
+              window.dispatchEvent(new Event('achievements_updated'))
+            } else {
+              // Sync count & union just in case
+              const union = new Set([...savedSet, ...unlockedSet])
+              if (union.size > savedSet.size) {
+                localStorage.setItem(unlockedKey, JSON.stringify(Array.from(union)))
               }
-            }))
+              localStorage.setItem('superbet_achievements_count', union.size.toString())
+              setAchievementsCount(union.size)
+            }
           }
-          // Immer aktuallisieren
-          localStorage.setItem('superbet_achievements_count', unlockedSet.size.toString())
-          setAchievementsCount(unlockedSet.size)
         }
       } catch (err) {
         console.error("Fehler beim Achievement-Check", err)

@@ -118,8 +118,26 @@ export function ProfilePage() {
 
   // Achievements Evaluation
   const unlockedSet = useMemo(() => {
-    return evaluateAchievements(userTips, profil, avatarUrl, username)
-  }, [userTips, profil, avatarUrl, username])
+    const evaluated = evaluateAchievements(userTips, profil, avatarUrl, username)
+    if (!user?.id) return evaluated
+
+    const storageKey = `superbet_unlocked_achievements_${user.id}`
+    const savedArr = JSON.parse(localStorage.getItem(storageKey) || '[]')
+    
+    // Union of evaluated and saved
+    const union = new Set([...savedArr, ...evaluated])
+    
+    // Save union if it changed
+    if (union.size > savedArr.length) {
+      localStorage.setItem(storageKey, JSON.stringify(Array.from(union)))
+      localStorage.setItem('superbet_achievements_count', union.size.toString())
+      setTimeout(() => {
+        window.dispatchEvent(new Event('achievements_updated'))
+      }, 0)
+    }
+    
+    return union
+  }, [userTips, profil, avatarUrl, username, user?.id])
 
   const [newlyUnlockedCount, setNewlyUnlockedCount] = useState(0)
   const [newlyUnlockedSet, setNewlyUnlockedSet] = useState<Set<string>>(new Set())
