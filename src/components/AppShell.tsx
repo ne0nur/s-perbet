@@ -8,7 +8,8 @@ import { supabase } from '../lib/supabase'
 import { calculateLevelDetails, getLevelBadgeStyle } from '../lib/utils'
 import { evaluateAchievements } from '../utils/achievementEvaluator'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ChevronLeft, ChevronRight, Trophy, Target, Sparkles, Award, Table2, BarChart2, Users, User, Gift, Rocket } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Trophy, Target, Sparkles, Award, Table2, BarChart2, Users, User, Gift, Rocket, Download } from 'lucide-react'
+import { usePwaStore } from '../stores/pwaStore'
 
 /** Nur der Page-Content animiert — AppShell & BottomNav bleiben stabil */
 function AnimatedOutlet() {
@@ -34,6 +35,7 @@ export function AppShell() {
   const navigate = useNavigate()
   const { user, avatarUrl } = useAuthStore()
   const [punkte, setPunkte] = useState(0)
+  const { isInstallable, triggerInstall } = usePwaStore()
   const [showOnboarding, setShowOnboarding] = useState(false)
   const [onboardingSlide, setOnboardingSlide] = useState(0)
 
@@ -205,6 +207,29 @@ export function AppShell() {
             })}
           </nav>
         </div>
+
+        {/* PWA Install Promo in Sidebar */}
+        {isInstallable && (
+          <div className="px-2 mt-2">
+            <button
+              onClick={async () => {
+                const success = await triggerInstall()
+                if (success) {
+                  window.dispatchEvent(new CustomEvent('show-toast', { 
+                    detail: { message: '🎉 App wurde erfolgreich installiert!', type: 'success' } 
+                  }))
+                }
+              }}
+              className="w-full bg-primary/5 hover:bg-primary/10 border border-primary/20 hover:border-primary/30 text-primary-fixed-dim p-3 rounded-xl flex items-center gap-2.5 transition-all text-left group cursor-pointer"
+            >
+              <Download size={14} className="shrink-0 group-hover:translate-y-0.5 transition-transform" />
+              <div className="min-w-0">
+                <p className="text-[10px] font-mono font-bold uppercase tracking-wider leading-none">App installieren</p>
+                <p className="text-[8px] text-on-surface-variant/80 font-mono mt-0.5 truncate leading-none">Direkt vom Desktop starten</p>
+              </div>
+            </button>
+          </div>
+        )}
 
         {/* Bottom User Section */}
         <div className="border-t border-white/5 pt-4">

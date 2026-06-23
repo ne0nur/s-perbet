@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuthStore } from '../stores/authStore'
 import { usePresenceStore } from '../stores/presenceStore'
-import { BookOpen, Sparkles } from 'lucide-react'
+import { BookOpen, Sparkles, Download } from 'lucide-react'
+import { usePwaStore } from '../stores/pwaStore'
 import { useToastStore } from '../stores/toastStore'
 import { calculateLevelDetails } from '../lib/utils'
 
@@ -103,6 +104,17 @@ export function ProfilePage() {
 
   // Profile Tabs
   const [activeTab, setActiveTab] = useState<'overview' | 'achievements' | 'bonus' | 'settings' | 'admin'>('overview')
+
+  const { isInstallable, triggerInstall } = usePwaStore()
+  const [isIosNotStandalone, setIsIosNotStandalone] = useState(false)
+
+  useEffect(() => {
+    const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+    if (isIos && !isStandalone) {
+      setIsIosNotStandalone(true)
+    }
+  }, [])
 
   // Achievements Evaluation
   const unlockedSet = useMemo(() => {
@@ -800,6 +812,36 @@ export function ProfilePage() {
                   <div className="text-[10px] text-on-surface-variant font-mono mt-0.5">Zeigt die Einleitungs-Tour erneut an</div>
                 </div>
               </button>
+
+              {isInstallable && (
+                <button
+                  onClick={async () => {
+                    const success = await triggerInstall()
+                    if (success) {
+                      window.dispatchEvent(new CustomEvent('show-toast', { 
+                        detail: { message: '🎉 App wurde erfolgreich installiert!', type: 'success' } 
+                      }))
+                    }
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-4 text-on-surface text-sm hover:bg-surface-container transition-colors font-medium border-t border-white/5 bg-primary/5 hover:bg-primary/10 group animate-pulse-slow cursor-pointer"
+                >
+                  <Download size={18} className="text-primary-fixed-dim group-hover:scale-110 transition-transform shrink-0" />
+                  <div className="flex-1 text-left">
+                    <div className="font-bold text-primary-fixed-dim">SüperBET App installieren</div>
+                    <div className="text-[10px] text-primary-fixed-dim/75 font-mono mt-0.5">Als App auf dem Startbildschirm speichern für offline Tippabgabe & schnelleren Start</div>
+                  </div>
+                </button>
+              )}
+
+              {isIosNotStandalone && (
+                <div className="w-full flex items-center gap-3 px-4 py-4 text-on-surface text-sm border-t border-white/5 bg-primary/5">
+                  <Download size={18} className="text-primary-fixed-dim shrink-0" />
+                  <div className="flex-1 text-left">
+                    <div className="font-bold text-primary-fixed-dim">Als App installieren (iOS)</div>
+                    <div className="text-[10px] text-on-surface-variant/80 font-mono mt-0.5">Tippe unten auf <span className="font-bold text-on-surface">Teilen</span> und wähle <span className="font-bold text-on-surface">„Zum Home-Bildschirm“</span>.</div>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="bg-surface-container-low border border-surface-container-high rounded-xl p-4 shadow-sm text-left mt-8">

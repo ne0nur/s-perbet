@@ -24,12 +24,41 @@ function PageLoader() {
   )
 }
 
+import { usePwaStore } from './stores/pwaStore'
+
 export default function App() {
   const { ladeUser } = useAuthStore()
 
   useEffect(() => {
     ladeUser()
   }, [ladeUser])
+
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e: Event) => {
+      // Prevent browser's default prompt banner
+      e.preventDefault()
+      // Save prompt event in store
+      usePwaStore.getState().setDeferredPrompt(e)
+    }
+
+    const handleAppInstalled = () => {
+      usePwaStore.getState().setDeferredPrompt(null)
+      console.log('App was successfully installed')
+    }
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
+    window.addEventListener('appinstalled', handleAppInstalled)
+
+    // Check display mode standalone
+    if (window.matchMedia('(display-mode: standalone)').matches) {
+      usePwaStore.getState().setIsInstallable(false)
+    }
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
+      window.removeEventListener('appinstalled', handleAppInstalled)
+    }
+  }, [])
 
   return (
     <HashRouter>
