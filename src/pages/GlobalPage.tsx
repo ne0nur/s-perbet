@@ -5,6 +5,7 @@ import { getTeamLogo } from '../lib/teamLogos'
 import { Trophy, Users, BarChart2, Gift, Award, Crown, Medal, Target } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { getLevelBadgeStyle, calculateLevel } from '../lib/utils'
+import { evaluateAchievements } from '../utils/achievementEvaluator'
 import { RivalInspector } from '../components/RivalInspector'
 
 interface RanglisteEintrag {
@@ -13,6 +14,7 @@ interface RanglisteEintrag {
   avatar_url: string | null
   gesamt_punkte: number
   exakte_treffer: number
+  achievements_count?: number
 }
 
 interface BonusStat {
@@ -74,8 +76,8 @@ function LeaderboardSection({
                     <span className="text-xs font-bold text-on-surface-variant">{top3[1]?.username?.charAt(0)?.toUpperCase() || '?'}</span>
                   )}
                 </div>
-                <div className={`absolute -bottom-1 -right-1 z-10 text-[7px] h-3.5 w-3.5 rounded-full flex items-center justify-center shadow select-none ${getLevelBadgeStyle(calculateLevel(top3[1]?.gesamt_punkte || 0))}`}>
-                  {calculateLevel(top3[1]?.gesamt_punkte || 0)}
+                <div className={`absolute -bottom-1 -right-1 z-10 text-[7px] h-3.5 w-3.5 rounded-full flex items-center justify-center shadow select-none ${getLevelBadgeStyle(calculateLevel(top3[1]?.gesamt_punkte || 0, top3[1]?.achievements_count || 0))}`}>
+                  {calculateLevel(top3[1]?.gesamt_punkte || 0, top3[1]?.achievements_count || 0)}
                 </div>
               </div>
               <span className="text-[9px] text-on-surface-variant font-mono truncate w-full text-center">{top3[1]?.username}</span>
@@ -107,8 +109,8 @@ function LeaderboardSection({
                   <span className="text-sm font-bold text-primary-fixed-dim">{top3[0]?.username?.charAt(0)?.toUpperCase() || '?'}</span>
                 )}
               </div>
-              <div className={`absolute -bottom-1 -right-1 z-10 text-[8px] h-4 w-4 rounded-full flex items-center justify-center shadow select-none ${getLevelBadgeStyle(calculateLevel(top3[0]?.gesamt_punkte || 0))}`}>
-                {calculateLevel(top3[0]?.gesamt_punkte || 0)}
+              <div className={`absolute -bottom-1 -right-1 z-10 text-[8px] h-4 w-4 rounded-full flex items-center justify-center shadow select-none ${getLevelBadgeStyle(calculateLevel(top3[0]?.gesamt_punkte || 0, top3[0]?.achievements_count || 0))}`}>
+                {calculateLevel(top3[0]?.gesamt_punkte || 0, top3[0]?.achievements_count || 0)}
               </div>
             </div>
             <span className="text-[9px] text-primary-fixed-dim font-mono font-bold truncate w-full text-center">{top3[0]?.username}</span>
@@ -140,8 +142,8 @@ function LeaderboardSection({
                     <span className="text-xs font-bold text-on-surface-variant">{top3[2]?.username?.charAt(0)?.toUpperCase() || '?'}</span>
                   )}
                 </div>
-                <div className={`absolute -bottom-1 -right-1 z-10 text-[7px] h-3.5 w-3.5 rounded-full flex items-center justify-center shadow select-none ${getLevelBadgeStyle(calculateLevel(top3[2]?.gesamt_punkte || 0))}`}>
-                  {calculateLevel(top3[2]?.gesamt_punkte || 0)}
+                <div className={`absolute -bottom-1 -right-1 z-10 text-[7px] h-3.5 w-3.5 rounded-full flex items-center justify-center shadow select-none ${getLevelBadgeStyle(calculateLevel(top3[2]?.gesamt_punkte || 0, top3[2]?.achievements_count || 0))}`}>
+                  {calculateLevel(top3[2]?.gesamt_punkte || 0, top3[2]?.achievements_count || 0)}
                 </div>
               </div>
               <span className="text-[9px] text-on-surface-variant font-mono truncate w-full text-center">{top3[2]?.username}</span>
@@ -177,8 +179,8 @@ function LeaderboardSection({
                       <span className="text-on-surface-variant text-xs font-bold">{e.username?.charAt(0)?.toUpperCase() || '?'}</span>
                     </div>
                   )}
-                  <div className={`absolute -bottom-1 -right-1 z-10 text-[7px] h-3.5 w-3.5 rounded-full flex items-center justify-center shadow select-none ${getLevelBadgeStyle(calculateLevel(e.gesamt_punkte))}`}>
-                    {calculateLevel(e.gesamt_punkte)}
+                  <div className={`absolute -bottom-1 -right-1 z-10 text-[7px] h-3.5 w-3.5 rounded-full flex items-center justify-center shadow select-none ${getLevelBadgeStyle(calculateLevel(e.gesamt_punkte, e.achievements_count || 0))}`}>
+                    {calculateLevel(e.gesamt_punkte, e.achievements_count || 0)}
                   </div>
                 </div>
                 <span className="flex-1 text-sm text-on-surface truncate font-semibold">{e.username}</span>
@@ -368,10 +370,74 @@ export function GlobalPage() {
       // 1. Leaderboard
       const { data: rangData } = await supabase
         .from('profiles')
-        .select('id,username,avatar_url,gesamt_punkte,exakte_treffer')
+        .select('id,username,avatar_url,gesamt_punkte,exakte_treffer,is_admin')
         .order('gesamt_punkte', { ascending: false })
         .limit(50)
-      if (rangData) setRangliste(rangData as RanglisteEintrag[])
+
+      if (rangData && rangData.length > 0) {
+        const userIds = rangData.map(r => r.id)
+        
+        // Fetch all tips for these top users to evaluate achievements
+        const { data: allUsersTips } = await supabase
+          .from('tips')
+          .select('*, matches(id, spieltag, status, tournament, heim_team, gast_team, tore_heim, tore_gast, anpfiff)')
+          .in('user_id', userIds)
+
+        const tipsByUser: Record<string, any[]> = {}
+        if (allUsersTips) {
+          allUsersTips.forEach(t => {
+            if (!tipsByUser[t.user_id]) {
+              tipsByUser[t.user_id] = []
+            }
+            tipsByUser[t.user_id].push(t)
+          })
+        }
+
+        const enrichedRangliste = rangData.map((userEntry, index) => {
+          const userTips = tipsByUser[userEntry.id] || []
+          const formattedTips = userTips.map(t => ({
+            id: t.id,
+            tipp_heim: t.tipp_heim,
+            tipp_gast: t.tipp_gast,
+            punkte: t.punkte,
+            created_at: t.created_at,
+            updated_at: t.updated_at,
+            match: {
+              id: t.matches?.id,
+              spieltag: t.matches?.spieltag,
+              status: t.matches?.status,
+              heim_team: t.matches?.heim_team,
+              gast_team: t.matches?.gast_team,
+              anpfiff: t.matches?.anpfiff,
+              tore_heim: t.matches?.tore_heim,
+              tore_gast: t.matches?.tore_gast,
+              tournament: t.matches?.tournament
+            }
+          }))
+
+          const unlockedSet = evaluateAchievements(
+            formattedTips as any,
+            {
+              gesamt_punkte: userEntry.gesamt_punkte || 0,
+              exakte_treffer: userEntry.exakte_treffer || 0,
+              is_admin: userEntry.is_admin || false,
+              rang: index + 1,
+              league_count: 0
+            },
+            userEntry.avatar_url,
+            userEntry.username || ''
+          )
+
+          return {
+            ...userEntry,
+            achievements_count: unlockedSet.size
+          }
+        })
+
+        setRangliste(enrichedRangliste as RanglisteEintrag[])
+      } else {
+        setRangliste([])
+      }
 
       // 2. Global Tipping Statistics
       const { count: usersCount } = await supabase
