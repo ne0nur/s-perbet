@@ -329,7 +329,7 @@ export function AppShell() {
                     <Sparkles size={32} className="text-primary-fixed-dim" />
                   </div>
                   <h2 className="text-xl font-black text-on-surface">
-                    Sali {user?.user_metadata?.username ? user.user_metadata.username : 'Bruder'}, willkommen bei <span className="text-primary-fixed-dim">SÜPERBET</span>! 🚀
+                    {user?.user_metadata?.username ? user.user_metadata.username : 'Bruder'}, willkommen bei <span className="text-primary-fixed-dim">SÜPERBET</span>! 🚀
                   </h2>
                   <p className="text-xs text-on-surface-variant leading-relaxed font-mono">
                     Hier tippst du die Süper Lig mit deinen Cousengs. Keine billigen Emojis, sondern echtes Premium-Feeling!
