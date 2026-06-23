@@ -8,7 +8,9 @@ const supabaseUrl = process.env.VITE_SUPABASE_URL
 const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 const apiFootballKey = process.env.API_FOOTBALL_KEY
 const leagueId = process.env.API_FOOTBALL_LEAGUE || '203'
-const season = process.env.API_FOOTBALL_SEASON || '2024'
+const season = parseInt(process.env.API_FOOTBALL_SEASON || '2026')
+
+const tournamentName = leagueId === '203' ? 'Süper Lig' : leagueId === '2' ? 'Champions League' : 'Unbekannt'
 
 if (!supabaseUrl || !serviceRoleKey) {
   console.error('❌ Supabase-Konfiguration fehlt in .env')
@@ -53,62 +55,10 @@ function mapStatus(apiStatus) {
 }
 
 async function syncAllFixtures() {
-  const shiftDates = process.argv.includes('--shift-to-future')
   const hasValidApiKey = apiFootballKey && apiFootballKey !== 'your-api-sports-key'
 
-  if (shiftDates) {
-    console.log('🔄 Modus: Verschiebe vorhandene Spiele in der DB um 2 Jahre in die Zukunft...')
-    
-    // Alle Spiele holen
-    const { data: dbMatches, error: fetchError } = await supabase
-      .from('matches')
-      .select('*')
-
-    if (fetchError) {
-      console.error('❌ Fehler beim Laden der Spiele:', fetchError.message)
-      return
-    }
-
-    console.log(`Loaded ${dbMatches.length} matches. Shifting dates...`)
-    let updatedCount = 0
-
-    for (const match of dbMatches) {
-      const originalAnpfiff = new Date(match.anpfiff)
-      // Add exactly 2 years (24 months)
-      const newAnpfiff = new Date(originalAnpfiff)
-      newAnpfiff.setFullYear(originalAnpfiff.getFullYear() + 2)
-
-      const isFuture = newAnpfiff > new Date()
-      const newStatus = isFuture ? 'upcoming' : match.status
-      const newToreHeim = isFuture ? null : match.tore_heim
-      const newToreGast = isFuture ? null : match.tore_gast
-
-      const { error: updateError } = await supabase
-        .from('matches')
-        .update({
-          anpfiff: newAnpfiff.toISOString(),
-          status: newStatus,
-          tore_heim: newToreHeim,
-          tore_gast: newToreGast
-        })
-        .eq('id', match.id)
-
-      if (updateError) {
-        console.error(`❌ Error updating match ${match.id}:`, updateError.message)
-      } else {
-        updatedCount++
-      }
-    }
-
-    console.log(`✅ Shifting complete. ${updatedCount} matches updated.`)
-    return
-  }
-
-  // Real API Sync
   if (!hasValidApiKey) {
     console.error('❌ Kein gültiger API_FOOTBALL_KEY in .env gefunden.')
-    console.log('Falls du die bestehenden Spiele einfach nur in die Zukunft verschieben willst, starte das Skript mit:')
-    console.log('  node scripts/import_fixtures.js --shift-to-future')
     return
   }
 
@@ -142,10 +92,11 @@ async function syncAllFixtures() {
       return
     }
 
-    // Vorhandene Spiele laden, um zu sehen was wir aktualisieren müssen
     const { data: dbMatches, error: dbError } = await supabase
       .from('matches')
       .select('*')
+      .eq('tournament', tournamentName)
+      .eq('season', season)
 
     if (dbError) {
       console.error('❌ Fehler beim Laden der DB-Spiele:', dbError.message)
@@ -156,7 +107,6 @@ async function syncAllFixtures() {
     let updateCount = 0
 
     for (const f of fixtures) {
-      // Spieltag ermitteln aus "Regular Season - 1" -> 1
       const roundStr = f.league.round || ''
       let spieltag = 1;
       if (roundStr.includes('Regular Season') || roundStr.includes('League Phase') || roundStr.includes('Group Stage')) {
@@ -179,16 +129,11 @@ async function syncAllFixtures() {
 
       const heim = f.teams.home.name
       const gast = f.teams.away.name
-      const originalAnpfiff = new Date(f.fixture.date)
-      const anpfiffDate = new Date(originalAnpfiff)
-      anpfiffDate.setFullYear(originalAnpfiff.getFullYear() + 2) // Shift 2 years to 2025/26
-      const anpfiff = anpfiffDate.toISOString()
-
+      const anpfiff = new Date(f.fixture.date).toISOString()
       const status = mapStatus(f.fixture.status.short)
       const toreHeim = f.goals.home
       const toreGast = f.goals.away
 
-      // Prüfen ob bereits in DB vorhanden
       const dbMatch = dbMatches.find(m => 
         m.spieltag === spieltag && 
         cleanName(m.heim_team) === cleanName(heim) && 
@@ -196,16 +141,13 @@ async function syncAllFixtures() {
       )
 
       if (dbMatch) {
-        // Update
         const { error: updateError } = await supabase
           .from('matches')
           .update({
             anpfiff,
             status,
             tore_heim: toreHeim,
-            tore_gast: toreGast,
-            season: 2025,
-            tournament: 'Champions League'
+            tore_gast: toreGast
           })
           .eq('id', dbMatch.id)
 
@@ -215,7 +157,6 @@ async function syncAllFixtures() {
           updateCount++
         }
       } else {
-        // Insert
         const { error: insertError } = await supabase
           .from('matches')
           .insert({
@@ -226,8 +167,8 @@ async function syncAllFixtures() {
             status,
             tore_heim: toreHeim,
             tore_gast: toreGast,
-            season: 2025,
-            tournament: 'Champions League'
+            season: season,
+            tournament: tournamentName
           })
 
         if (insertError) {
