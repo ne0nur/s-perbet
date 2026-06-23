@@ -180,41 +180,41 @@ export function DashboardPage() {
   }
 
   return (
-    <div className="min-h-full flex flex-col pb-24 md:pb-6 px-3 md:px-6 lg:px-8 pt-4 md:pt-6 animate-page-enter">
-      {/* Turnier-Filter & Saison-Selector */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 md:mb-6 max-w-[1600px] mx-auto w-full gap-3">
-        <div className="flex bg-surface-container border border-surface-container-high p-1 rounded-lg">
-          <button
-            onClick={() => { setSelectedTournament('Süper Lig'); setSpieltag(1); }}
-            className={`px-3 py-1.5 text-xs font-medium rounded-md whitespace-nowrap transition-all flex items-center gap-2 ${selectedTournament === 'Süper Lig' ? 'bg-primary text-on-primary font-bold shadow-md' : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container/50'}`}
-          >
-            <img src={`${import.meta.env.BASE_URL}logos/Süper_Lig.png`} alt="SL" className="w-6 h-6 object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.6)] brightness-110" />
-            Süper Lig
-          </button>
-          <button
-            onClick={() => { setSelectedTournament('Champions League'); setSpieltag(1); }}
-            className={`px-3 py-1.5 text-xs font-medium rounded-md whitespace-nowrap transition-all flex items-center gap-2 ${selectedTournament === 'Champions League' ? 'bg-primary text-on-primary font-bold shadow-md' : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container/50'}`}
-          >
-            <img src={`${import.meta.env.BASE_URL}logos/UEFA_Champions_League_logo.png`} alt="CL" className="w-6 h-6 object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.6)] brightness-110" />
-            Champions League
-          </button>
-        </div>
-
-        <select
-          value={useMatchStore.getState().aktuelleSaison || 2026}
-          onChange={(e) => useMatchStore.getState().setSaison(parseInt(e.target.value))}
-          className="bg-surface-container border border-surface-container-high rounded-lg px-3 py-1.5 text-xs text-on-surface focus:outline-none focus:border-primary-container font-mono"
-        >
-          <option value={2026}>Saison 2026/27</option>
-          <option value={2025}>Saison 2025/26</option>
-          <option value={2024}>Saison 2024/25</option>
-        </select>
-      </div>
-
-      <header className="sticky top-0 z-30 bg-surface/60 backdrop-blur-xl shrink-0 -mx-3 md:-mx-6 lg:-mx-8 px-3 md:px-6 lg:px-8">
+    <div className="min-h-full flex flex-col pb-24 md:pb-6 animate-page-enter">
+      <header className="sticky top-0 z-30 bg-background/95 backdrop-blur-xl shrink-0 border-b border-white/5 px-4 md:px-6 lg:px-8 pt-4 pb-1">
         <div className="max-w-[1600px] mx-auto w-full">
+          {/* Turnier-Filter & Saison-Selector */}
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-3">
+            <div className="flex bg-surface-container border border-surface-container-high p-1 rounded-lg">
+              <button
+                onClick={() => { setSelectedTournament('Süper Lig'); setSpieltag(1); }}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md whitespace-nowrap transition-all flex items-center gap-2 ${selectedTournament === 'Süper Lig' ? 'bg-primary text-on-primary font-bold shadow-md' : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container/50'}`}
+              >
+                <img src={`${import.meta.env.BASE_URL}logos/Süper_Lig.png`} alt="SL" className="w-6 h-6 object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.6)] brightness-110" />
+                Süper Lig
+              </button>
+              <button
+                onClick={() => { setSelectedTournament('Champions League'); setSpieltag(1); }}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md whitespace-nowrap transition-all flex items-center gap-2 ${selectedTournament === 'Champions League' ? 'bg-primary text-on-primary font-bold shadow-md' : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container/50'}`}
+              >
+                <img src={`${import.meta.env.BASE_URL}logos/UEFA_Champions_League_logo.png`} alt="CL" className="w-6 h-6 object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.6)] brightness-110" />
+                Champions League
+              </button>
+            </div>
+
+            <select
+              value={useMatchStore.getState().aktuelleSaison || 2026}
+              onChange={(e) => useMatchStore.getState().setSaison(parseInt(e.target.value))}
+              className="bg-surface-container border border-surface-container-high rounded-lg px-3 py-1.5 text-xs text-on-surface focus:outline-none focus:border-primary-container font-mono"
+            >
+              <option value={2026}>Saison 2026/27</option>
+              <option value={2025}>Saison 2025/26</option>
+              <option value={2024}>Saison 2024/25</option>
+            </select>
+          </div>
+
           {/* Spieltag-Slider */}
-          <div className="pt-2 pb-3 border-b border-white/5 relative">
+          <div className="pt-2 pb-3 border-t border-white/5 relative">
             <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-background to-transparent z-10 pointer-events-none" />
             <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-background to-transparent z-10 pointer-events-none" />
             <div ref={sliderRef} className="flex overflow-x-auto no-scrollbar gap-2 px-2 relative z-0">
@@ -256,64 +256,63 @@ export function DashboardPage() {
           </div>
 
           {/* Filter-Toggle + Letztes Update Badge */}
-          <div className="flex flex-col gap-3 px-4 py-3 border-b border-white/5">
-            <div className="flex justify-between items-center">
-              <div className="flex gap-2">
-                {(['alle', 'live'] as const).map(f => (
-                  <button
-                    key={f}
-                    onClick={() => setFilter(f)}
-                    className={`text-[11px] font-mono font-medium uppercase tracking-wider px-3 py-1 rounded-full border transition-all ${
-                      filter === f
-                        ? 'bg-primary-container/20 border-primary-container/50 text-primary'
-                        : 'border-white/10 text-on-surface-variant hover:border-white/20'
-                    }`}
-                  >
-                    {f === 'alle' ? 'Alle' : 'Nur Live'}
-                  </button>
-                ))}
-              </div>
-              
-              {letztesUpdate && (
-                <div className="flex items-center gap-1.2 px-2 py-0.5 rounded-full bg-white/5 border border-white/5 text-[9px] font-mono text-on-surface-variant/60 animate-pulse-slow">
-                  <span className="w-1.2 h-1.2 rounded-full bg-green-500 shrink-0" />
-                  <span>Live ({letztesUpdate})</span>
-                </div>
-              )}
+          <div className="flex justify-between items-center py-2.5 border-t border-white/5">
+            <div className="flex gap-2">
+              {(['alle', 'live'] as const).map(f => (
+                <button
+                  key={f}
+                  onClick={() => setFilter(f)}
+                  className={`text-[11px] font-mono font-medium uppercase tracking-wider px-3 py-1 rounded-full border transition-all ${
+                    filter === f
+                      ? 'bg-primary-container/20 border-primary-container/50 text-primary'
+                      : 'border-white/10 text-on-surface-variant hover:border-white/20'
+                  }`}
+                >
+                  {f === 'alle' ? 'Alle' : 'Nur Live'}
+                </button>
+              ))}
             </div>
-
-            {/* Tournament Tabs (REMOVED) */}
+            
+            {letztesUpdate && (
+              <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-white/5 border border-white/5 text-[9px] font-mono text-on-surface-variant/60 animate-pulse-slow">
+                <span className="w-1.5 h-1.5 rounded-full bg-green-500 shrink-0" />
+                <span>Live ({letztesUpdate})</span>
+              </div>
+            )}
           </div>
         </div>
       </header>
 
-      {/* Banner: Tipps gesperrt */}
-      {!TIPPS_FREIGESCHALTET && (
-        <div className="mx-4 mt-3 px-4 py-3 bg-amber-500/5 border border-amber-500/20 rounded-xl flex items-center gap-3 max-w-[1600px] lg:mx-auto lg:w-full">
-          <div className="flex-shrink-0 w-8 h-8 rounded-full bg-amber-500/10 flex items-center justify-center">
-            <Lock size={14} className="text-amber-400" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-[11px] font-mono font-bold uppercase tracking-wider text-amber-400/80 mb-0.5 whitespace-normal break-words">Tippabgabe gesperrt</p>
-            <p className="text-[11px] text-amber-400/50 font-mono whitespace-normal break-words leading-snug">
-              Freischaltung nach Veröffentlichung des offiziellen Spielplans 2026/27
-            </p>
-          </div>
-        </div>
-      )}
+      {/* Banners */}
+      {( !TIPPS_FREIGESCHALTET || (TIPPS_FREIGESCHALTET && offeneTipps > 0) ) && (
+        <div className="px-4 md:px-6 lg:px-8 max-w-[1600px] mx-auto w-full mt-4 flex flex-col gap-3">
+          {!TIPPS_FREIGESCHALTET && (
+            <div className="px-4 py-3 bg-amber-500/5 border border-amber-500/20 rounded-xl flex items-center gap-3">
+              <div className="flex-shrink-0 w-8 h-8 rounded-full bg-amber-500/10 flex items-center justify-center">
+                <Lock size={14} className="text-amber-400" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[11px] font-mono font-bold uppercase tracking-wider text-amber-400/80 mb-0.5 whitespace-normal break-words">Tippabgabe gesperrt</p>
+                <p className="text-[11px] text-amber-400/50 font-mono whitespace-normal break-words leading-snug">
+                  Freischaltung nach Veröffentlichung des offiziellen Spielplans 2026/27
+                </p>
+              </div>
+            </div>
+          )}
 
-      {/* Banner: Tipp-Erinnerung */}
-      {TIPPS_FREIGESCHALTET && offeneTipps > 0 && (
-        <div className="mx-4 mt-3 px-4 py-3 bg-amber-500/10 border border-amber-500/35 rounded-xl flex items-center gap-3 animate-glow-pulse max-w-[1600px] lg:mx-auto lg:w-full">
-          <div className="flex-shrink-0 w-8 h-8 rounded-full bg-amber-500/15 flex items-center justify-center">
-            <span className="text-sm">⏳</span>
-          </div>
-          <div className="flex-1 min-w-0 text-left">
-            <p className="text-[11px] font-mono font-black uppercase tracking-wider text-amber-400 mb-0.5">Tipp-Erinnerung</p>
-            <p className="text-[11px] text-on-surface-variant font-mono">
-              Du hast noch <span className="text-amber-400 font-bold">{offeneTipps} ungetippte</span> {offeneTipps === 1 ? 'Spiel' : 'Spiele'} an diesem Spieltag. Rasiere den Wettschein, bevor es zu spät ist!
-            </p>
-          </div>
+          {TIPPS_FREIGESCHALTET && offeneTipps > 0 && (
+            <div className="px-4 py-3 bg-amber-500/10 border border-amber-500/35 rounded-xl flex items-center gap-3 animate-glow-pulse">
+              <div className="flex-shrink-0 w-8 h-8 rounded-full bg-amber-500/15 flex items-center justify-center">
+                <span className="text-sm">⏳</span>
+              </div>
+              <div className="flex-1 min-w-0 text-left">
+                <p className="text-[11px] font-mono font-black uppercase tracking-wider text-amber-400 mb-0.5">Tipp-Erinnerung</p>
+                <p className="text-[11px] text-on-surface-variant font-mono">
+                  Du hast noch <span className="text-amber-400 font-bold">{offeneTipps} ungetippte</span> {offeneTipps === 1 ? 'Spiel' : 'Spiele'} an diesem Spieltag. Rasiere den Wettschein, bevor es zu spät ist!
+                </p>
+              </div>
+            </div>
+          )}
         </div>
       )}
 

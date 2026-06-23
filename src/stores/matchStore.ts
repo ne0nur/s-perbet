@@ -36,6 +36,7 @@ interface MatchState {
   subscription: any | null
   ladeMatches: (spieltag: number) => Promise<void>
   setSpieltag: (spieltag: number) => void
+  setSaison: (saison: number) => void
   getMatchesBySpieltag: (spieltag: number) => Match[]
   getLiveMatches: () => Match[]
   initialisiereSpieltag: () => Promise<number>
@@ -124,6 +125,12 @@ export const useMatchStore = create<MatchState>()(
 
       setSpieltag: (spieltag: number) => {
         set({ aktuellerSpieltag: spieltag })
+      },
+
+      setSaison: (saison: number) => {
+        set({ aktuelleSaison: saison, cacheMatches: {}, cacheTimestamps: {}, matches: [] })
+        const currentSpieltag = get().aktuellerSpieltag
+        get().ladeMatches(currentSpieltag)
       },
 
       getMatchesBySpieltag: (spieltag: number) => {

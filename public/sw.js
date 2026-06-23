@@ -1,4 +1,4 @@
-const CACHE_NAME = 'superbet-v1';
+const CACHE_NAME = 'superbet-v3';
 const PRECACHE_ASSETS = [
   './',
   './index.html',
@@ -33,28 +33,53 @@ self.addEventListener('fetch', (e) => {
   if (e.request.method !== 'GET' || e.request.url.includes('supabase.co')) {
     return;
   }
-  
-  e.respondWith(
-    caches.match(e.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        return cachedResponse;
-      }
-      
-      return fetch(e.request).then((response) => {
-        // Cache new successful requests for local assets
-        if (response.status === 200) {
-          const responseClone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(e.request, responseClone);
-          });
+
+  // Filter out unsupported schemes (like chrome-extension://, about:, data:)
+  if (!e.request.url.startsWith('http://') && !e.request.url.startsWith('https://')) {
+    return;
+  }
+
+  // For navigate / HTML requests, use Network-First to immediately fetch new assets/builds
+  const isNavigation = e.request.mode === 'navigate' || 
+                       e.request.headers.get('accept')?.includes('text/html');
+
+  if (isNavigation) {
+    e.respondWith(
+      fetch(e.request)
+        .then((response) => {
+          if (response.status === 200) {
+            const responseClone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(e.request, responseClone);
+            });
+          }
+          return response;
+        })
+        .catch(() => {
+          return caches.match(e.request) || caches.match('./index.html') || caches.match('./');
+        })
+    );
+  } else {
+    // For static assets, use Cache-First with network fallback
+    e.respondWith(
+      caches.match(e.request).then((cachedResponse) => {
+        if (cachedResponse) {
+          return cachedResponse;
         }
-        return response;
-      }).catch(() => {
-        // Fallback for navigation requests (SPA routing)
-        if (e.request.mode === 'navigate') {
-          return caches.match('./index.html') || caches.match('./');
-        }
-      });
-    })
-  );
+
+        return fetch(e.request).then((response) => {
+          if (response.status === 200) {
+            const responseClone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(e.request, responseClone);
+            });
+          }
+          return response;
+        }).catch(() => {
+          // Fallback if offline
+          return new Response('Offline', { status: 503, statusText: 'Offline' });
+        });
+      })
+    );
+  }
 });
