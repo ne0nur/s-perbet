@@ -62,6 +62,50 @@ export function AppShell() {
         setShowOnboarding(true)
       }
       initPresence()
+
+      // Auto-join pending league if set in localStorage
+      const pendingLeagueId = localStorage.getItem('superbet_pending_league_id')
+      if (pendingLeagueId) {
+        localStorage.removeItem('superbet_pending_league_id')
+        
+        // Check if already a member first
+        supabase
+          .from('league_members')
+          .select('league_id')
+          .eq('league_id', pendingLeagueId)
+          .eq('user_id', user.id)
+          .maybeSingle()
+          .then(({ data: member }) => {
+            if (!member) {
+              supabase
+                .from('league_members')
+                .insert({
+                  league_id: pendingLeagueId,
+                  user_id: user.id
+                })
+                .then(({ error: joinError }) => {
+                  if (joinError) {
+                    console.error('Auto-join league failed:', joinError)
+                  } else {
+                    // Fetch league name for custom toast message
+                    supabase
+                      .from('leagues')
+                      .select('name')
+                      .eq('id', pendingLeagueId)
+                      .single()
+                      .then(({ data: lg }) => {
+                        window.dispatchEvent(new CustomEvent('show-toast', {
+                          detail: {
+                            message: `🎉 Du bist erfolgreich der Liga "${lg?.name || 'Tipprunde'}" beigetreten!`,
+                            type: 'success'
+                          }
+                        }))
+                      })
+                  }
+                })
+            }
+          })
+      }
     } else {
       setShowOnboarding(false)
       cleanupPresence()

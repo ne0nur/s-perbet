@@ -91,6 +91,7 @@ export function LoginPage() {
 
       if (!rpcError && rpcData && rpcData.length > 0) {
         setInviteLeague({ id: rpcData[0].league_id, name: rpcData[0].league_name })
+        localStorage.setItem('superbet_pending_league_id', rpcData[0].league_id)
         setView('ask-account')
         return
       }
@@ -108,6 +109,7 @@ export function LoginPage() {
       }
 
       setInviteLeague(league)
+      localStorage.setItem('superbet_pending_league_id', league.id)
       setView('ask-account')
     } catch (err) {
       setLocalFehler('Dieser Einladungscode existiert nicht oder ist ungültig.')
@@ -381,6 +383,9 @@ export function LoginPage() {
               <button
                 onClick={() => {
                   setPendingLeagueId(inviteLeague.id)
+                  if (inviteLeague) {
+                    localStorage.setItem('superbet_pending_league_id', inviteLeague.id)
+                  }
                   setView('login')
                   useToastStore.getState().toast(`Logge dich ein, um "${inviteLeague.name}" beizutreten!`)
                 }}
