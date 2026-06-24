@@ -283,6 +283,28 @@ body {
   animation: float-up 3s ease-out infinite;
 }
 
+/* SÜPER: fällt von oben rein + hüpft */
+@keyframes super-drop {
+  0% { opacity: 0; transform: translateY(-40px) rotate(-2deg); }
+  60% { opacity: 1; transform: translateY(6px) rotate(1deg); }
+  80% { transform: translateY(-3px) rotate(-0.5deg); }
+  100% { opacity: 1; transform: translateY(0) rotate(0deg); }
+}
+.animate-super-drop {
+  animation: super-drop 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* BET: slidet von rechts rein + leichter Overshoot */
+@keyframes bet-slide {
+  0% { opacity: 0; transform: translateX(30px); }
+  70% { opacity: 1; transform: translateX(-4px); }
+  85% { transform: translateX(2px); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+.animate-bet-slide {
+  animation: bet-slide 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
 /* live-dot: pulsierender roter Kreis (für Live-Spiele) */
 .live-dot {
   display: inline-block;

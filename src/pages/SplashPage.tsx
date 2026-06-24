@@ -167,36 +167,44 @@ export function SplashPage() {
             />
           </g>
 
-          {/* === TEXT: SÜPER === */}
-          <text
-            x="140"
-            y="55"
-            fontFamily="'JetBrains Mono', monospace"
-            fontSize="38"
-            fontWeight="900"
-            letterSpacing="8"
-            fill="#F2C94C"
-            filter="url(#glow)"
+          {/* === TEXT: SÜPER (Drop + Bounce) === */}
+          <g
             opacity={phase >= 2 ? 1 : 0}
-            style={{ transition: 'opacity 0.5s ease-out', transitionDelay: '0s' }}
+            style={{ transition: 'none' }}
+            className={phase >= 2 ? 'animate-super-drop' : ''}
           >
-            SÜPER
-          </text>
+            <text
+              x="140"
+              y="55"
+              fontFamily="'JetBrains Mono', monospace"
+              fontSize="38"
+              fontWeight="900"
+              letterSpacing="8"
+              fill="#F2C94C"
+              filter="url(#glow)"
+            >
+              SÜPER
+            </text>
+          </g>
 
-          {/* === TEXT: BET === */}
-          <text
-            x="140"
-            y="95"
-            fontFamily="'JetBrains Mono', monospace"
-            fontSize="38"
-            fontWeight="200"
-            letterSpacing="14"
-            fill="#64748B"
+          {/* === TEXT: BET (Slide + Overshoot) === */}
+          <g
             opacity={phase >= 2 ? 1 : 0}
-            style={{ transition: 'opacity 0.5s ease-out', transitionDelay: '0.15s' }}
+            style={{ transition: 'none', animationDelay: '0.3s' }}
+            className={phase >= 2 ? 'animate-bet-slide' : ''}
           >
-            BET
-          </text>
+            <text
+              x="140"
+              y="95"
+              fontFamily="'JetBrains Mono', monospace"
+              fontSize="38"
+              fontWeight="200"
+              letterSpacing="14"
+              fill="#64748B"
+            >
+              BET
+            </text>
+          </g>
 
           {/* Gold underline */}
           <rect x="140" y="102" width="190" height="2.5" rx="1.5" fill="url(#gold)" opacity="0.5"
