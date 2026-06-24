@@ -59,14 +59,13 @@ function LeaderboardSection({
   // Tie-Erkennung für Podium
   const tie1_2 = top3[0] && top3[1] && top3[0].gesamt_punkte === top3[1].gesamt_punkte
   const tie2_3 = top3[1] && top3[2] && top3[1].gesamt_punkte === top3[2].gesamt_punkte
-  const tieAll = tie1_2 && tie2_3
 
   return (
     <div className="space-y-4">
       {/* Podium */}
       {top3.length > 0 && (
         <div className="flex items-end justify-center gap-2 mb-6">
-          {/* Silber (2.) */}
+          {/* Silber (2.) — teilt sich ggf. Platz 1 mit Gold */}
           {top3[1] && (
             <motion.div 
               initial={{opacity:0, y:20}} animate={{opacity:1, y:0}} transition={{delay: 0.1}}
@@ -77,28 +76,27 @@ function LeaderboardSection({
                   : 'border-transparent hover:bg-white/5'
               }`}
             >
-              <div className="w-8 h-8 flex items-center justify-center bg-gradient-to-br from-slate-200 to-slate-400 rounded-full shadow-[0_0_10px_rgba(148,163,184,0.5)] mb-1 relative">
-                <Medal size={16} className="text-slate-700" />
-                {(tie1_2 || tieAll) && <span className="absolute -top-1 -right-1 text-[7px] bg-amber-500 text-amber-900 font-bold px-1 rounded-full border border-amber-400">2×</span>}
+              <div className={`flex items-center justify-center rounded-full mb-1 ${
+                tie1_2
+                  ? 'w-12 h-12 bg-gradient-to-br from-yellow-300 via-amber-400 to-yellow-600 shadow-[0_0_15px_rgba(251,191,36,0.6)]'
+                  : 'w-8 h-8 bg-gradient-to-br from-slate-200 to-slate-400 shadow-[0_0_10px_rgba(148,163,184,0.5)]'
+              }`}>
+                {tie1_2 ? <Crown size={24} className="text-yellow-900" /> : <Medal size={16} className="text-slate-700" />}
               </div>
-              <AvatarLightbox
-                src={top3[1]?.avatar_url}
-                username={top3[1]?.username || ''}
-                size="sm"
-                showLevel
-                levelBadge={
-                  <div className={`absolute -bottom-1 -right-1 z-10 text-[7px] h-3.5 w-3.5 rounded-full flex items-center justify-center shadow select-none ${getLevelBadgeStyle(calculateLevel(top3[1]?.gesamt_punkte || 0, top3[1]?.achievements_count || 0))}`}>
-                    {calculateLevel(top3[1]?.gesamt_punkte || 0, top3[1]?.achievements_count || 0)}
-                  </div>
-                }
-              />
+              <AvatarLightbox src={top3[1]?.avatar_url} username={top3[1]?.username || ''} size="sm" showLevel levelBadge={
+                <div className={`absolute -bottom-1 -right-1 z-10 text-[7px] h-3.5 w-3.5 rounded-full flex items-center justify-center shadow select-none ${getLevelBadgeStyle(calculateLevel(top3[1]?.gesamt_punkte || 0, top3[1]?.achievements_count || 0))}`}>
+                  {calculateLevel(top3[1]?.gesamt_punkte || 0, top3[1]?.achievements_count || 0)}
+                </div>
+              } />
               <span className="text-[9px] text-on-surface-variant font-mono truncate w-full text-center flex items-center justify-center gap-1">
                 {top3[1]?.username}
-                {top3[1]?.is_admin && (
-                  <span className="inline-flex shrink-0 px-1 py-0.2 rounded text-[7px] font-black bg-amber-500/20 text-amber-400 border border-amber-500/30 font-mono tracking-wide scale-90">ADM</span>
-                )}
+                {top3[1]?.is_admin && <span className="inline-flex shrink-0 px-1 py-0.2 rounded text-[7px] font-black bg-amber-500/20 text-amber-400 border border-amber-500/30 font-mono tracking-wide scale-90">ADM</span>}
               </span>
-              <div className="w-full h-16 bg-gradient-to-t from-slate-400/20 to-transparent rounded-t-lg border-x border-t border-slate-400/30 flex flex-col items-center justify-start pt-2 relative overflow-hidden">
+              <div className={`w-full rounded-t-lg border-x border-t flex flex-col items-center justify-start pt-2 relative overflow-hidden ${
+                tie1_2
+                  ? 'h-24 bg-gradient-to-t from-primary/30 to-transparent border-primary/40'
+                  : 'h-16 bg-gradient-to-t from-slate-400/20 to-transparent border-slate-400/30'
+              }`}>
                 <div className="absolute inset-0 bg-surface-container-low/50 backdrop-blur-[2px] -z-10" />
                 <span className="text-xs font-bold font-mono text-on-surface">{top3[1]?.gesamt_punkte}</span>
                 <span className="text-[8px] font-mono text-on-surface-variant">{t('tableHeaderPoints')}</span>
@@ -115,26 +113,17 @@ function LeaderboardSection({
                 : 'border-transparent hover:bg-white/5'
             }`}
           >
-            <div className="w-12 h-12 flex items-center justify-center bg-gradient-to-br from-yellow-300 via-amber-400 to-yellow-600 rounded-full shadow-[0_0_15px_rgba(251,191,36,0.6)] mb-1 relative">
+            <div className="w-12 h-12 flex items-center justify-center bg-gradient-to-br from-yellow-300 via-amber-400 to-yellow-600 rounded-full shadow-[0_0_15px_rgba(251,191,36,0.6)] mb-1">
               <Crown size={24} className="text-yellow-900" />
-              {tie1_2 && <span className="absolute -top-1 -right-2 text-[7px] bg-amber-500 text-amber-900 font-bold px-1 rounded-full border border-amber-400">geteilt</span>}
             </div>
-            <AvatarLightbox
-              src={top3[0]?.avatar_url}
-              username={top3[0]?.username || ''}
-              size="md"
-              showLevel
-              levelBadge={
-                <div className={`absolute -bottom-1 -right-1 z-10 text-[8px] h-4 w-4 rounded-full flex items-center justify-center shadow select-none ${getLevelBadgeStyle(calculateLevel(top3[0]?.gesamt_punkte || 0, top3[0]?.achievements_count || 0))}`}>
-                  {calculateLevel(top3[0]?.gesamt_punkte || 0, top3[0]?.achievements_count || 0)}
-                </div>
-              }
-            />
+            <AvatarLightbox src={top3[0]?.avatar_url} username={top3[0]?.username || ''} size="md" showLevel levelBadge={
+              <div className={`absolute -bottom-1 -right-1 z-10 text-[8px] h-4 w-4 rounded-full flex items-center justify-center shadow select-none ${getLevelBadgeStyle(calculateLevel(top3[0]?.gesamt_punkte || 0, top3[0]?.achievements_count || 0))}`}>
+                {calculateLevel(top3[0]?.gesamt_punkte || 0, top3[0]?.achievements_count || 0)}
+              </div>
+            } />
             <span className="text-[9px] text-primary-fixed-dim font-mono font-bold truncate w-full text-center flex items-center justify-center gap-1">
               {top3[0]?.username}
-              {top3[0]?.is_admin && (
-                <span className="inline-flex shrink-0 px-1 py-0.2 rounded text-[7px] font-black bg-amber-500/20 text-amber-400 border border-amber-500/30 font-mono tracking-wide scale-90">ADM</span>
-              )}
+              {top3[0]?.is_admin && <span className="inline-flex shrink-0 px-1 py-0.2 rounded text-[7px] font-black bg-amber-500/20 text-amber-400 border border-amber-500/30 font-mono tracking-wide scale-90">ADM</span>}
             </span>
             <div className="w-full h-24 bg-gradient-to-t from-primary/30 to-transparent rounded-t-lg border-x border-t border-primary/40 flex flex-col items-center justify-start pt-2 relative overflow-hidden">
               <div className="absolute inset-0 bg-surface-container-low/30 backdrop-blur-[2px] -z-10" />
@@ -142,7 +131,7 @@ function LeaderboardSection({
               <span className="text-[8px] font-mono text-primary-fixed-dim/60">{t('tableHeaderPoints')}</span>
             </div>
           </motion.div>
-          {/* Bronze (3.) */}
+          {/* Bronze (3.) — teilt sich ggf. Platz 2 mit Silber */}
           {top3[2] && (
             <motion.div 
               initial={{opacity:0, y:20}} animate={{opacity:1, y:0}} transition={{delay: 0.2}}
@@ -153,28 +142,27 @@ function LeaderboardSection({
                   : 'border-transparent hover:bg-white/5'
               }`}
             >
-              <div className="w-8 h-8 flex items-center justify-center bg-gradient-to-br from-amber-600 to-amber-800 rounded-full shadow-[0_0_10px_rgba(217,119,6,0.5)] mb-1 relative">
-                <Medal size={16} className="text-amber-100" />
-                {(tie2_3 || tieAll) && <span className="absolute -top-1 -right-1 text-[7px] bg-amber-500 text-amber-900 font-bold px-1 rounded-full border border-amber-400">2×</span>}
+              <div className={`flex items-center justify-center rounded-full mb-1 ${
+                tie2_3
+                  ? 'w-8 h-8 bg-gradient-to-br from-slate-200 to-slate-400 shadow-[0_0_10px_rgba(148,163,184,0.5)]'
+                  : 'w-8 h-8 bg-gradient-to-br from-amber-600 to-amber-800 shadow-[0_0_10px_rgba(217,119,6,0.5)]'
+              }`}>
+                {tie2_3 ? <Medal size={16} className="text-slate-700" /> : <Medal size={16} className="text-amber-100" />}
               </div>
-              <AvatarLightbox
-                src={top3[2]?.avatar_url}
-                username={top3[2]?.username || ''}
-                size="sm"
-                showLevel
-                levelBadge={
-                  <div className={`absolute -bottom-1 -right-1 z-10 text-[7px] h-3.5 w-3.5 rounded-full flex items-center justify-center shadow select-none ${getLevelBadgeStyle(calculateLevel(top3[2]?.gesamt_punkte || 0, top3[2]?.achievements_count || 0))}`}>
-                    {calculateLevel(top3[2]?.gesamt_punkte || 0, top3[2]?.achievements_count || 0)}
-                  </div>
-                }
-              />
+              <AvatarLightbox src={top3[2]?.avatar_url} username={top3[2]?.username || ''} size="sm" showLevel levelBadge={
+                <div className={`absolute -bottom-1 -right-1 z-10 text-[7px] h-3.5 w-3.5 rounded-full flex items-center justify-center shadow select-none ${getLevelBadgeStyle(calculateLevel(top3[2]?.gesamt_punkte || 0, top3[2]?.achievements_count || 0))}`}>
+                  {calculateLevel(top3[2]?.gesamt_punkte || 0, top3[2]?.achievements_count || 0)}
+                </div>
+              } />
               <span className="text-[9px] text-on-surface-variant font-mono truncate w-full text-center flex items-center justify-center gap-1">
                 {top3[2]?.username}
-                {top3[2]?.is_admin && (
-                  <span className="inline-flex shrink-0 px-1 py-0.2 rounded text-[7px] font-black bg-amber-500/20 text-amber-400 border border-amber-500/30 font-mono tracking-wide scale-90">ADM</span>
-                )}
+                {top3[2]?.is_admin && <span className="inline-flex shrink-0 px-1 py-0.2 rounded text-[7px] font-black bg-amber-500/20 text-amber-400 border border-amber-500/30 font-mono tracking-wide scale-90">ADM</span>}
               </span>
-              <div className="w-full h-12 bg-gradient-to-t from-amber-700/20 to-transparent rounded-t-lg border-x border-t border-amber-700/30 flex flex-col items-center justify-start pt-2 relative overflow-hidden">
+              <div className={`w-full rounded-t-lg border-x border-t flex flex-col items-center justify-start pt-2 relative overflow-hidden ${
+                tie2_3
+                  ? 'h-16 bg-gradient-to-t from-slate-400/20 to-transparent border-slate-400/30'
+                  : 'h-12 bg-gradient-to-t from-amber-700/20 to-transparent border-amber-700/30'
+              }`}>
                 <div className="absolute inset-0 bg-surface-container-low/50 backdrop-blur-[2px] -z-10" />
                 <span className="text-xs font-bold font-mono text-on-surface">{top3[2]?.gesamt_punkte}</span>
                 <span className="text-[8px] font-mono text-on-surface-variant">{t('tableHeaderPoints')}</span>
