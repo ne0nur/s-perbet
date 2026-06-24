@@ -15,8 +15,9 @@ test('SüperBET v2 E2E user flow with auto-confirmed user', async ({ page }) => 
       env: process.env,
     });
     console.log(`User ${testUser} successfully created.`);
-  } catch (error: any) {
-    console.error('Failed to pre-create user:', error.message);
+  } catch (error) {
+    const errorObj = error as Error;
+    console.error('Failed to pre-create user:', errorObj.message);
     throw error;
   }
 

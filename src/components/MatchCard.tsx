@@ -3,7 +3,7 @@ import { useTipStore } from '../stores/tipStore'
 import { getTeamLogo } from '../lib/teamLogos'
 import { berechnePunkte } from '../lib/utils'
 import { ChevronRight, Check, Minus, Plus, Lock } from 'lucide-react'
-import { TIPPS_FREIGESCHALTET } from '../config'
+import { useSettingsStore } from '../stores/settingsStore'
 import type { Match } from '../stores/matchStore'
 
 function punkteFarbe(punkte: number): string {
@@ -81,6 +81,7 @@ interface MatchCardProps {
 export const MatchCard = memo(function MatchCard({ match, onNavigate, className = '' }: MatchCardProps) {
   const eigenerTipp = useTipStore(s => s.meineTipps.find(t => t.match_id === match.id))
   const tippSpeichern = useTipStore(s => s.tippSpeichern)
+  const tippsFreigeschaltet = useSettingsStore(s => s.tippsFreigeschaltet)
 
   const istVorbei  = match.status === 'finished'
   const istLive    = match.status === 'live'
@@ -110,7 +111,7 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
     ? berechnePunkte(eigenerTipp.tipp_heim, eigenerTipp.tipp_gast, match.tore_heim, match.tore_gast)
     : null
 
-  const kannTippen = istUpcoming && TIPPS_FREIGESCHALTET
+  const kannTippen = istUpcoming && tippsFreigeschaltet
 
   async function handleSpeichern(e: React.MouseEvent) {
     e.stopPropagation()
@@ -120,7 +121,9 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
       await tippSpeichern(match.id, tippHeim, tippGast, match.spieltag)
       setSaved(true)
       setTimeout(() => setSaved(false), 2500)
-    } catch {}
+    } catch (err) {
+      console.error(err)
+    }
     setIsSaving(false)
   }
 
@@ -212,7 +215,7 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
       <div className="pt-2 border-t border-white/5">
 
         {/* FALL A: Tipps noch nicht freigeschaltet (Saisonstart abwarten) */}
-        {istUpcoming && !TIPPS_FREIGESCHALTET && (
+        {istUpcoming && !tippsFreigeschaltet && (
           <div className="flex items-center justify-center gap-2 py-1.5">
             <Lock size={12} className="text-amber-400/50 flex-shrink-0" />
             <span className="text-[11px] text-amber-400/50 font-mono uppercase tracking-wider">

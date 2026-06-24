@@ -1,6 +1,7 @@
-import { useState, useEffect, useRef, useMemo } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuthStore } from '../stores/authStore'
+import { useToastStore } from '../stores/toastStore'
 import { Send, MessageCircle } from 'lucide-react'
 
 // ─── Typen ───────────────────────────────────────────
@@ -66,38 +67,12 @@ export function LeagueChat({ leagueId }: LeagueChatProps) {
   const [text, setText] = useState('')
   const [isLaden, setIsLaden] = useState(true)
   const [sendeState, setSendeState] = useState<'idle' | 'sending'>('idle')
-  const [profileCacheState, setProfileCacheState] = useState<Record<string, { username: string; avatar_url: string | null }>>({})
   const profileCacheRef = useRef<Record<string, { username: string; avatar_url: string | null }>>({})
   const scrollRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null)
 
-  // Cache updaten, damit die UI gerendert wird
-  const setProfileCache = (map: Record<string, { username: string; avatar_url: string | null }>) => {
-    profileCacheRef.current = { ...profileCacheRef.current, ...map }
-    setProfileCacheState(profileCacheRef.current)
-  }
-
-  // ─── Nachrichten laden ─────────────────────────────
-  useEffect(() => {
-    ladeNachrichten()
-    subscribeRealtime()
-    return () => {
-      if (channelRef.current) {
-        supabase.removeChannel(channelRef.current)
-        channelRef.current = null
-      }
-    }
-  }, [leagueId])
-
-  // ─── Auto-Scroll bei neuen Nachrichten ──────────────
-  useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight
-    }
-  }, [nachrichten])
-
-  async function ladeNachrichten() {
+  const ladeNachrichten = useCallback(async () => {
     setIsLaden(true)
     try {
       const { data, error } = await supabase
@@ -113,20 +88,19 @@ export function LeagueChat({ leagueId }: LeagueChatProps) {
       }
 
       const userIds = [...new Set(data.map(m => m.user_id))]
-      let profiles: any[] | null = null
+      let profiles: { id: string; username: string; avatar_url: string | null }[] | null = null
 
       if (userIds.length > 0) {
         const { data: pData } = await supabase
           .from('profiles')
           .select('id, username, avatar_url')
           .in('id', userIds)
-        profiles = pData
+        profiles = pData as { id: string; username: string; avatar_url: string | null }[] | null
       }
 
       const profileMap: Record<string, { username: string; avatar_url: string | null }> = {}
       profiles?.forEach(p => { profileMap[p.id] = { username: p.username, avatar_url: p.avatar_url } })
       profileCacheRef.current = { ...profileCacheRef.current, ...profileMap }
-      setProfileCacheState(profileCacheRef.current)
 
       const enriched: ChatMessage[] = data.map(m => ({
         ...m,
@@ -137,12 +111,13 @@ export function LeagueChat({ leagueId }: LeagueChatProps) {
       setNachrichten(enriched)
     } catch (err) {
       console.error('Fehler beim Laden der Nachrichten:', err)
+      useToastStore.getState().toast('Chat-Nachrichten konnten nicht geladen werden', 'error')
     } finally {
       setIsLaden(false)
     }
-  }
+  }, [leagueId])
 
-  function subscribeRealtime() {
+  const subscribeRealtime = useCallback(() => {
     if (channelRef.current) {
       supabase.removeChannel(channelRef.current)
     }
@@ -169,7 +144,6 @@ export function LeagueChat({ leagueId }: LeagueChatProps) {
               .single()
             prof = { username: profile?.username || 'Unbekannt', avatar_url: profile?.avatar_url || null }
             profileCacheRef.current[msg.user_id] = prof
-            setProfileCacheState({ ...profileCacheRef.current })
           }
 
           setNachrichten(prev => [...prev, {
@@ -182,7 +156,26 @@ export function LeagueChat({ leagueId }: LeagueChatProps) {
       .subscribe()
 
     channelRef.current = channel
-  }
+  }, [leagueId])
+
+  // ─── Nachrichten laden ─────────────────────────────
+  useEffect(() => {
+    ladeNachrichten()
+    subscribeRealtime()
+    return () => {
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current)
+        channelRef.current = null
+      }
+    }
+  }, [ladeNachrichten, subscribeRealtime])
+
+  // ─── Auto-Scroll bei neuen Nachrichten ──────────────
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+    }
+  }, [nachrichten])
 
   // ─── Senden ────────────────────────────────────────
   async function handleSenden() {

@@ -6,10 +6,11 @@ import { useAuthStore } from '../stores/authStore'
 import { usePresenceStore } from '../stores/presenceStore'
 import { supabase } from '../lib/supabase'
 import { calculateLevelDetails, getLevelBadgeStyle } from '../lib/utils'
-import { evaluateAchievements } from '../utils/achievementEvaluator'
+import { evaluateAchievements, type TipDetails } from '../utils/achievementEvaluator'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronLeft, ChevronRight, Trophy, Target, Sparkles, Award, Table2, BarChart2, Users, User, Gift, Rocket, Download } from 'lucide-react'
 import { usePwaStore } from '../stores/pwaStore'
+import { useTranslation } from '../utils/translations'
 
 /** Nur der Page-Content animiert — AppShell & BottomNav bleiben stabil */
 function AnimatedOutlet() {
@@ -31,6 +32,7 @@ function AnimatedOutlet() {
 }
 
 export function AppShell() {
+  const { t, language } = useTranslation()
   const location = useLocation()
   const navigate = useNavigate()
   const { user, avatarUrl } = useAuthStore()
@@ -96,7 +98,7 @@ export function AppShell() {
                       .then(({ data: lg }) => {
                         window.dispatchEvent(new CustomEvent('show-toast', {
                           detail: {
-                            message: `🎉 Du bist erfolgreich der Liga "${lg?.name || 'Tipprunde'}" beigetreten!`,
+                            message: t('leagueAutoJoinSuccess', { name: lg?.name || 'Tipprunde' }),
                             type: 'success'
                           }
                         }))
@@ -110,7 +112,7 @@ export function AppShell() {
       setShowOnboarding(false)
       cleanupPresence()
     }
-  }, [user])
+  }, [user, initPresence, cleanupPresence, t])
 
   useEffect(() => {
     const handleTrigger = () => {
@@ -148,26 +150,31 @@ export function AppShell() {
         if (!profile) return
 
         const { data: allTips } = await supabase.from('tips')
-          .select('*, matches(spieltag, status, tournament, heim_team, gast_team)')
+          .select('*, matches(spieltag, status, tournament, heim_team, gast_team, tore_heim, tore_gast, anpfiff)')
           .eq('user_id', user.id)
 
         if (allTips) {
           // Format for evaluator
-          const formattedTips = allTips.map(t => ({
-            score_team1: t.score_team1,
-            score_team2: t.score_team2,
-            points: t.points,
+          const formattedTips: TipDetails[] = allTips.map((t) => ({
+            id: t.id,
+            tipp_heim: t.tipp_heim,
+            tipp_gast: t.tipp_gast,
+            punkte: t.punkte || 0,
             created_at: t.created_at,
+            updated_at: t.updated_at || t.created_at,
             match: {
-              spieltag: t.matches?.spieltag,
-              status: t.matches?.status,
-              home_team_name: t.matches?.heim_team,
-              away_team_name: t.matches?.gast_team,
-              tournament: t.matches?.tournament
+              id: t.match_id,
+              spieltag: t.matches?.spieltag || 1,
+              status: t.matches?.status || 'upcoming',
+              heim_team: t.matches?.heim_team || '',
+              gast_team: t.matches?.gast_team || '',
+              anpfiff: t.matches?.anpfiff || '',
+              tore_heim: t.matches?.tore_heim ?? null,
+              tore_gast: t.matches?.tore_gast ?? null
             }
           }))
 
-          const unlockedSet = evaluateAchievements(formattedTips as any, {
+          const unlockedSet = evaluateAchievements(formattedTips, {
             gesamt_punkte: profile.gesamt_punkte || 0,
             exakte_treffer: profile.exakte_treffer || 0,
             is_admin: profile.is_admin || false,
@@ -194,7 +201,7 @@ export function AppShell() {
               const diff = newlyUnlocked.length
               window.dispatchEvent(new CustomEvent('show-toast', { 
                 detail: { 
-                  message: `🏆 Du hast ${diff} neue${diff > 1 ? '' : 'n'} Erfolg${diff > 1 ? 'e' : ''} freigeschaltet! Schau in dein Profil.`, 
+                  message: t('achievementsUnlockedToast', { count: diff }), 
                   type: 'success' 
                 }
               }))
@@ -223,27 +230,27 @@ export function AppShell() {
 
     setTimeout(checkNewAchievements, 3000)
 
-  }, [user, location.pathname])
+  }, [user, location.pathname, t])
 
   const mainTabPaths = ['/dashboard', '/tabelle', '/global', '/league', '/profile']
   const isMainTab = mainTabPaths.includes(location.pathname)
 
   // Map path to tab display name
   const tabNames: Record<string, string> = {
-    '/dashboard': 'Spiele',
-    '/tabelle': 'Tabelle',
-    '/global': 'Global',
-    '/league': 'Liga',
-    '/profile': 'Profil',
+    '/dashboard': t('games'),
+    '/tabelle': t('table'),
+    '/global': t('global'),
+    '/league': t('league'),
+    '/profile': t('profile'),
   }
   const tabName = tabNames[location.pathname] || ''
 
   const sidebarTabs = [
-    { to: '/dashboard', icon: Trophy, label: 'Spiele' },
-    { to: '/tabelle', icon: Table2, label: 'Tabelle' },
-    { to: '/global', icon: BarChart2, label: 'Global' },
-    { to: '/league', icon: Users, label: 'Liga' },
-    { to: '/profile', icon: User, label: 'Profil' },
+    { to: '/dashboard', icon: Trophy, label: t('games') },
+    { to: '/tabelle', icon: Table2, label: t('table') },
+    { to: '/global', icon: BarChart2, label: t('global') },
+    { to: '/league', icon: Users, label: t('league') },
+    { to: '/profile', icon: User, label: t('profile') },
   ]
 
   return (
@@ -286,7 +293,7 @@ export function AppShell() {
                 const success = await triggerInstall()
                 if (success) {
                   window.dispatchEvent(new CustomEvent('show-toast', { 
-                    detail: { message: '🎉 App wurde erfolgreich installiert!', type: 'success' } 
+                    detail: { message: language === 'tr' ? '🎉 Uygulama başarıyla yüklendi!' : language === 'en' ? '🎉 App installed successfully!' : '🎉 App wurde erfolgreich installiert!', type: 'success' } 
                   }))
                 }
               }}
@@ -294,8 +301,8 @@ export function AppShell() {
             >
               <Download size={14} className="shrink-0 group-hover:translate-y-0.5 transition-transform" />
               <div className="min-w-0">
-                <p className="text-[10px] font-mono font-bold uppercase tracking-wider leading-none">App installieren</p>
-                <p className="text-[8px] text-on-surface-variant/80 font-mono mt-0.5 truncate leading-none">Direkt vom Desktop starten</p>
+                <p className="text-[10px] font-mono font-bold uppercase tracking-wider leading-none">{t('pwaInstallBtn')}</p>
+                <p className="text-[8px] text-on-surface-variant/80 font-mono mt-0.5 truncate leading-none">{t('pwaInstallSubtitle')}</p>
               </div>
             </button>
           </div>
@@ -324,7 +331,7 @@ export function AppShell() {
               </div>
             </div>
             <div className="flex-1 min-w-0 text-left">
-              <p className="text-xs font-bold text-on-surface truncate">{user?.user_metadata?.username || 'Mein Profil'}</p>
+              <p className="text-xs font-bold text-on-surface truncate">{user?.user_metadata?.username || t('myProfile')}</p>
               <div className="flex items-center gap-1.5 mt-0.5">
                 <span className="text-[8px] text-on-surface-variant font-mono uppercase shrink-0">Lvl {level}</span>
                 <div className="flex-1 h-2 bg-black/50 border border-white/20 rounded-full overflow-hidden p-[1px] relative">
@@ -423,14 +430,15 @@ export function AppShell() {
                   <div className="w-16 h-16 rounded-full bg-primary-container/15 border border-primary-container/30 flex items-center justify-center mx-auto mb-2 animate-bounce">
                     <Sparkles size={32} className="text-primary-fixed-dim" />
                   </div>
-                  <h2 className="text-xl font-black text-on-surface">
-                    {user?.user_metadata?.username ? user.user_metadata.username : 'Bruder'}, willkommen bei <span className="text-primary-fixed-dim">SÜPERBET</span>! 🚀
-                  </h2>
+                  <h2 className="text-xl font-black text-on-surface" dangerouslySetInnerHTML={{
+                    __html: t('onboardingWelcomeTitle', { username: user?.user_metadata?.username || (language === 'de' ? 'Bruder' : language === 'tr' ? 'Kardeşim' : 'Brother') })
+                      .replace('SÜPERBET', '<span class="text-primary-fixed-dim">SÜPERBET</span>')
+                  }} />
                   <p className="text-xs text-on-surface-variant leading-relaxed font-mono">
-                    Hier tippst du die Süper Lig mit deinen Cousengs. Keine billigen Emojis, sondern echtes Premium-Feeling!
+                    {t('onboardingWelcomeDesc')}
                   </p>
                   <p className="text-[11px] text-primary-fixed-dim bg-primary-container/10 border border-primary-container/20 rounded-lg p-2.5 leading-normal">
-                    Gib deine Tipps ab, sammle XP, steig im Level auf und rasiere die Rangliste auf entspannt.
+                    {t('onboardingWelcomeAlert')}
                   </p>
                 </div>
               )}
@@ -441,27 +449,27 @@ export function AppShell() {
                     <Target size={24} className="text-blue-400" />
                   </div>
                   <h2 className="text-lg font-black text-on-surface">
-                    Der Ehren-Punkteschlüssel 🎯
+                    {t('onboardingPointsTitle')}
                   </h2>
                   <p className="text-[10px] text-on-surface-variant/80 font-mono mb-2">
-                    Jedes getippte Spiel bringt dir Punkte je nach Ergebnis:
+                    {t('onboardingPointsDesc')}
                   </p>
                   <div className="space-y-1.5 text-left max-w-[260px] mx-auto text-xs font-mono">
                     <div className="flex items-center gap-2 p-1.5 bg-green-500/5 border border-green-500/20 rounded-md">
                       <span className="w-2.5 h-2.5 rounded-full bg-green-500 shrink-0" />
-                      <span className="text-[11px] text-on-surface leading-none"><b>4 Punkte</b>: Exaktes Ergebnis (z.B. Tipp 2:1, Spiel 2:1)</span>
+                      <span className="text-[11px] text-on-surface leading-none" dangerouslySetInnerHTML={{ __html: t('onboardingPointsExact').replace('4 Punkte', '<b>4 Punkte</b>').replace('4 Points', '<b>4 Points</b>').replace('4 Puan', '<b>4 Puan</b>') }} />
                     </div>
                     <div className="flex items-center gap-2 p-1.5 bg-amber-500/5 border border-amber-500/20 rounded-md">
                       <span className="w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0" />
-                      <span className="text-[11px] text-on-surface leading-none"><b>3 Punkte</b>: Differenz (z.B. Tipp 2:1, Spiel 3:2)</span>
+                      <span className="text-[11px] text-on-surface leading-none" dangerouslySetInnerHTML={{ __html: t('onboardingPointsDiff').replace('3 Punkte', '<b>3 Punkte</b>').replace('3 Points', '<b>3 Points</b>').replace('3 Puan', '<b>3 Puan</b>') }} />
                     </div>
                     <div className="flex items-center gap-2 p-1.5 bg-blue-500/5 border border-blue-500/20 rounded-md">
                       <span className="w-2.5 h-2.5 rounded-full bg-blue-500 shrink-0" />
-                      <span className="text-[11px] text-on-surface leading-none"><b>2 Punkte</b>: Tendenz (Hauptsache Sieger stimmt)</span>
+                      <span className="text-[11px] text-on-surface leading-none" dangerouslySetInnerHTML={{ __html: t('onboardingPointsTend').replace('2 Punkte', '<b>2 Punkte</b>').replace('2 Points', '<b>2 Points</b>').replace('2 Puan', '<b>2 Puan</b>') }} />
                     </div>
                     <div className="flex items-center gap-2 p-1.5 bg-slate-650/5 border border-slate-600/20 rounded-md">
                       <span className="w-2.5 h-2.5 rounded-full bg-slate-500 shrink-0" />
-                      <span className="text-[11px] text-on-surface-variant leading-none"><b>0 Punkte</b>: Falscher Tipp. Such dir neues Hobby.</span>
+                      <span className="text-[11px] text-on-surface-variant leading-none" dangerouslySetInnerHTML={{ __html: t('onboardingPointsMiss').replace('0 Punkte', '<b>0 Punkte</b>').replace('0 Points', '<b>0 Points</b>').replace('0 Puan', '<b>0 Puan</b>') }} />
                     </div>
                   </div>
                 </div>
@@ -473,10 +481,10 @@ export function AppShell() {
                     <Trophy size={24} className="text-purple-400" />
                   </div>
                   <h2 className="text-lg font-black text-on-surface">
-                    Level Up & Status 🏆
+                    {t('onboardingLevelTitle')}
                   </h2>
                   <p className="text-xs text-on-surface-variant leading-relaxed font-mono">
-                    Für jeden Punkt erhältst du 1 XP. Je höher dein Level, desto farbiger und glühender wird dein Stufen-Badge:
+                    {t('onboardingLevelDesc')}
                   </p>
                   
                   <div className="grid grid-cols-4 gap-2 pt-2 max-w-[280px] mx-auto">
@@ -492,7 +500,9 @@ export function AppShell() {
                         <span className="text-[5px] font-mono font-bold leading-none">LVL</span>
                         <span className="text-xs font-black font-mono leading-none mt-0.5">5</span>
                       </div>
-                      <span className="text-[7px] font-mono text-on-surface-variant truncate w-full text-center">Legende</span>
+                      <span className="text-[7px] font-mono text-on-surface-variant truncate w-full text-center">
+                        {language === 'tr' ? 'Efsane' : language === 'en' ? 'Legend' : 'Legende'}
+                      </span>
                     </div>
                     <div className="flex flex-col items-center gap-1">
                       <div className={`h-8 w-8 rounded-lg flex flex-col items-center justify-center shadow border text-[8px] leading-none ${getLevelBadgeStyle(10)}`}>
@@ -510,7 +520,7 @@ export function AppShell() {
                     </div>
                   </div>
                   <p className="text-[10px] text-on-surface-variant/60 font-mono italic">
-                    Die Ränge kannst du jederzeit in deinem Profil einsehen!
+                    {t('onboardingLevelSub')}
                   </p>
                 </div>
               )}
@@ -521,14 +531,20 @@ export function AppShell() {
                     <Award size={24} className="text-emerald-400" />
                   </div>
                   <h2 className="text-lg font-black text-on-surface">
-                    Missionen & Erfolge 🎖️
+                    {t('onboardingAchTitle')}
                   </h2>
-                  <p className="text-xs text-on-surface-variant leading-relaxed font-mono">
-                    Neben Punkten kannst du auch über 30 exklusive <span className="text-emerald-400 font-bold">Erfolge (Badges)</span> freischalten.
-                  </p>
-                  <p className="text-[10px] text-on-surface-variant/70 leading-relaxed font-mono bg-surface-container/30 border border-surface-container-highest p-2.5 rounded-lg text-left">
-                    Jedes freigeschaltete Badge verleiht deinem Profil nicht nur mehr Glanz, sondern bringt dir direkt einen <span className="text-primary-fixed-dim font-bold">massiven EXP-Boost</span> für dein Level!
-                  </p>
+                  <p className="text-xs text-on-surface-variant leading-relaxed font-mono" dangerouslySetInnerHTML={{
+                    __html: t('onboardingAchDesc')
+                      .replace('Erfolge (Badges)', '<span class="text-emerald-400 font-bold">' + (language === 'tr' ? 'Başarılar (Rozetler)' : language === 'en' ? 'Achievements (Badges)' : 'Erfolge (Badges)') + '</span>')
+                      .replace('achievements (badges)', '<span class="text-emerald-400 font-bold">achievements (badges)</span>')
+                      .replace('başarının (rozeti)', '<span class="text-emerald-400 font-bold">başarının (rozeti)</span>')
+                  }} />
+                  <p className="text-[10px] text-on-surface-variant/70 leading-relaxed font-mono bg-surface-container/30 border border-surface-container-highest p-2.5 rounded-lg text-left" dangerouslySetInnerHTML={{
+                    __html: t('onboardingAchAlert')
+                      .replace('massiven EXP-Boost', '<span class="text-primary-fixed-dim font-bold">massiven EXP-Boost</span>')
+                      .replace('massive EXP boost', '<span class="text-primary-fixed-dim font-bold">massive EXP boost</span>')
+                      .replace('devasa bir EXP desteği', '<span class="text-primary-fixed-dim font-bold">devasa bir EXP desteği</span>')
+                  }} />
                 </div>
               )}
 
@@ -538,14 +554,20 @@ export function AppShell() {
                     <Gift size={24} className="text-orange-400" />
                   </div>
                   <h2 className="text-lg font-black text-on-surface">
-                    Vergiss die Bonus-Tipps nicht! 🎁
+                    {t('onboardingBonusTitle')}
                   </h2>
-                  <p className="text-xs text-on-surface-variant leading-relaxed font-mono">
-                    Solange der 2. Spieltag noch nicht angepfiffen wurde, kannst du noch <span className="text-orange-400 font-bold">Saison-Wetten</span> abgeben.
-                  </p>
-                  <p className="text-[10px] text-on-surface-variant/70 leading-relaxed font-mono bg-surface-container/30 border border-surface-container-highest p-2.5 rounded-lg text-left">
-                    Wer wird Meister? Wer schießt die meisten Tore? Sichere dir jetzt die <span className="text-primary-fixed-dim font-bold">fetten Zusatzpunkte & mächtig EXP</span> am Ende der Saison!
-                  </p>
+                  <p className="text-xs text-on-surface-variant leading-relaxed font-mono" dangerouslySetInnerHTML={{
+                    __html: t('onboardingBonusDesc')
+                      .replace('Saison-Wetten', '<span class="text-orange-400 font-bold">Saison-Wetten</span>')
+                      .replace('season bets', '<span class="text-orange-400 font-bold">season bets</span>')
+                      .replace('sezon tahminlerini', '<span class="text-orange-400 font-bold">sezon tahminlerini</span>')
+                  }} />
+                  <p className="text-[10px] text-on-surface-variant/70 leading-relaxed font-mono bg-surface-container/30 border border-surface-container-highest p-2.5 rounded-lg text-left" dangerouslySetInnerHTML={{
+                    __html: t('onboardingBonusAlert')
+                      .replace('fetten Zusatzpunkte & mächtig EXP', '<span class="text-primary-fixed-dim font-bold">fetten Zusatzpunkte & mächtig EXP</span>')
+                      .replace('fat extra points & huge EXP', '<span class="text-primary-fixed-dim font-bold">fat extra points & huge EXP</span>')
+                      .replace('bol ekstra puan & büyük EXP', '<span class="text-primary-fixed-dim font-bold">bol ekstra puan & büyük EXP</span>')
+                  }} />
                 </div>
               )}
 
@@ -555,13 +577,13 @@ export function AppShell() {
                     <Rocket size={32} className="text-primary-fixed-dim" />
                   </div>
                   <h2 className="text-xl font-black text-on-surface">
-                    Bist du bereit, Bruder? 🔥
+                    {t('onboardingReadyTitle')}
                   </h2>
                   <p className="text-xs text-on-surface-variant leading-relaxed font-mono">
-                    Die Ligen sind heiß, die Tipps geladen. Zeig den Cousengs, wer der wahre Boss-Macher ist und hol dir den Thron!
+                    {t('onboardingReadyDesc')}
                   </p>
                   <p className="text-[10px] text-on-surface-variant/40 font-mono">
-                    Tippe vor dem Anpfiff. Nachträgliche Tipps sind technisch gesperrt, also verpeil es nicht!
+                    {t('onboardingReadyAlert')}
                   </p>
                 </div>
               )}
@@ -600,7 +622,7 @@ export function AppShell() {
                     onClick={() => setOnboardingSlide(onboardingSlide + 1)}
                     className="flex-1 bg-primary-container text-on-primary-container py-3 rounded-lg font-mono text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 hover:opacity-90 active:scale-95 transition-all shadow-[0_0_15px_rgba(251,191,36,0.1)]"
                   >
-                    Weiter <ChevronRight size={14} />
+                    {t('onboardingNext')} <ChevronRight size={14} />
                   </button>
                 ) : (
                   <div className="flex-1 flex flex-col gap-2">
@@ -608,13 +630,13 @@ export function AppShell() {
                       onClick={() => finishOnboarding(true)}
                       className="w-full bg-orange-500/10 text-orange-400 border border-orange-500/20 py-2.5 rounded-lg text-[10px] font-bold uppercase tracking-wider hover:bg-orange-500/20 transition-colors"
                     >
-                      Zu den Bonus-Tipps 🎁
+                      {t('onboardingBonusTipsBtn')}
                     </button>
                     <button
                       onClick={() => finishOnboarding(false)}
                       className="w-full bg-primary-container text-on-primary text-xs font-black py-3 rounded-lg uppercase tracking-wider flex items-center justify-center gap-1.5 hover:opacity-90 active:scale-[0.97] transition-all shadow-[0_0_20px_rgba(251,191,36,0.25)]"
                     >
-                      Bruder, let's go! 🚀
+                      {t('onboardingStartBtn')}
                     </button>
                   </div>
                 )}

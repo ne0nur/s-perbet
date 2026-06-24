@@ -1,8 +1,10 @@
-import { useEffect, useState, useRef, useMemo } from 'react'
+import { useEffect, useState, useMemo, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
-import { ArrowLeft, Trophy, BarChart2, Award, X } from 'lucide-react'
+import { BarChart2, Award, X } from 'lucide-react'
 import { calculateLevelDetails, getLevelBadgeStyle } from '../lib/utils'
-import { evaluateAchievements } from '../utils/achievementEvaluator'
+import { evaluateAchievements, type TipDetails } from '../utils/achievementEvaluator'
+import { AvatarLightbox } from './AvatarLightbox'
+import { useTranslation } from '../utils/translations'
 
 interface Profil {
   id: string
@@ -41,23 +43,14 @@ interface RivalInspectorProps {
 }
 
 export function RivalInspector({ userId, onClose }: RivalInspectorProps) {
+  const { t } = useTranslation()
   const [profil, setProfil] = useState<Profil | null>(null)
   const [tipps, setTipps] = useState<TippMitMatch[]>([])
   const [isLaden, setIsLaden] = useState(true)
   const [barsVisible, setBarsVisible] = useState(false)
 
-  useEffect(() => {
+  const lade = useCallback(async () => {
     if (!userId) return
-    lade()
-  }, [userId])
-
-  useEffect(() => {
-    setBarsVisible(false)
-    const t = setTimeout(() => setBarsVisible(true), 150)
-    return () => clearTimeout(t)
-  }, [userId])
-
-  async function lade() {
     setIsLaden(true)
     try {
       const [{ data: p }, { data: t }] = await Promise.all([
@@ -71,7 +64,17 @@ export function RivalInspector({ userId, onClose }: RivalInspectorProps) {
     } finally {
       setIsLaden(false)
     }
-  }
+  }, [userId])
+
+  useEffect(() => {
+    lade()
+  }, [lade])
+
+  useEffect(() => {
+    setBarsVisible(false)
+    const t = setTimeout(() => setBarsVisible(true), 150)
+    return () => clearTimeout(t)
+  }, [userId])
 
   const derivedStats = useMemo(() => {
     if (!profil || !tipps) return null
@@ -103,7 +106,7 @@ export function RivalInspector({ userId, onClose }: RivalInspectorProps) {
     }))
 
     const unlockedSet = evaluateAchievements(
-      formattedTips as any,
+      formattedTips as unknown as TipDetails[],
       {
         gesamt_punkte: profil.gesamt_punkte || 0,
         exakte_treffer: profil.exakte_treffer || 0,
@@ -147,7 +150,7 @@ export function RivalInspector({ userId, onClose }: RivalInspectorProps) {
 
   if (!profil) return (
     <div className="flex flex-col items-center justify-center h-full min-h-[300px] text-center p-6 bg-surface-container-low border border-surface-container-high rounded-xl">
-      <p className="text-on-surface-variant/40 text-sm font-mono">Profil nicht gefunden.</p>
+      <p className="text-on-surface-variant/40 text-sm font-mono">{t('profileNotFound')}</p>
     </div>
   )
 
@@ -156,13 +159,11 @@ export function RivalInspector({ userId, onClose }: RivalInspectorProps) {
       {/* Panel Header */}
       <div className="bg-surface-container border-b border-surface-container-high p-4 flex items-center justify-between relative">
         <div className="flex items-center gap-3">
-          {profil.avatar_url ? (
-            <img src={profil.avatar_url} alt="" className="w-10 h-10 rounded-full object-cover border border-white/10 flex-shrink-0" />
-          ) : (
-            <div className="w-10 h-10 rounded-full bg-surface-container-high border border-white/5 flex items-center justify-center flex-shrink-0">
-              <span className="text-on-surface-variant font-bold text-base">{profil.username.slice(0, 1).toUpperCase()}</span>
-            </div>
-          )}
+          <AvatarLightbox
+            src={profil.avatar_url}
+            username={profil.username}
+            size="md"
+          />
           <div>
             <div className="flex items-center gap-1.5">
               <h2 className="text-xs font-mono font-bold text-white uppercase tracking-wider">{profil.username}</h2>
@@ -200,7 +201,7 @@ export function RivalInspector({ userId, onClose }: RivalInspectorProps) {
                   </div>
                   <div className="text-left">
                     <div className="text-[10px] font-mono font-bold text-on-surface uppercase tracking-wider">Level {derivedStats.level}</div>
-                    <div className="text-[7px] font-mono text-on-surface-variant">Rang-Aufstieg durch Punkte & Erfolge</div>
+                    <div className="text-[7px] font-mono text-on-surface-variant">{t('xpDesc')}</div>
                   </div>
                 </div>
                 <span className="text-[10px] font-mono text-primary font-bold">{derivedStats.xpCurrent} / {derivedStats.xpRequired} XP</span>
@@ -213,19 +214,19 @@ export function RivalInspector({ userId, onClose }: RivalInspectorProps) {
             {/* Statistiken Grid */}
             <div className="grid grid-cols-2 gap-2">
               <div className="bg-surface-container-lowest/50 border border-white/5 rounded-xl p-2.5 text-center">
-                <div className="text-[7px] font-mono text-on-surface-variant/70 uppercase tracking-wider mb-0.5">Tipps Gesamt</div>
+                <div className="text-[7px] font-mono text-on-surface-variant/70 uppercase tracking-wider mb-0.5">{t('totalTips')}</div>
                 <div className="font-mono text-xs font-black text-on-surface">{derivedStats.totalTips}</div>
               </div>
               <div className="bg-surface-container-lowest/50 border border-white/5 rounded-xl p-2.5 text-center">
-                <div className="text-[7px] font-mono text-on-surface-variant/70 uppercase tracking-wider mb-0.5">Ø-Punkte (ST)</div>
+                <div className="text-[7px] font-mono text-on-surface-variant/70 uppercase tracking-wider mb-0.5">{t('avgPointsPerMatchday')}</div>
                 <div className="font-mono text-xs font-black text-on-surface">{derivedStats.avgPoints}</div>
               </div>
               <div className="bg-surface-container-lowest/50 border border-white/5 rounded-xl p-2.5 text-center">
-                <div className="text-[7px] font-mono text-on-surface-variant/70 uppercase tracking-wider mb-0.5">Volltreffer (🎯)</div>
+                <div className="text-[7px] font-mono text-on-surface-variant/70 uppercase tracking-wider mb-0.5">{t('exactTipsCount')}</div>
                 <div className="font-mono text-xs font-black text-on-surface">{profil.exakte_treffer}</div>
               </div>
               <div className="bg-surface-container-lowest/50 border border-white/5 rounded-xl p-2.5 text-center">
-                <div className="text-[7px] font-mono text-on-surface-variant/70 uppercase tracking-wider mb-0.5">Erfolge (🏆)</div>
+                <div className="text-[7px] font-mono text-on-surface-variant/70 uppercase tracking-wider mb-0.5">{t('achievementsCountLabel')}</div>
                 <div className="font-mono text-xs font-black text-on-surface">{derivedStats.achievementsCount}</div>
               </div>
             </div>
@@ -235,7 +236,7 @@ export function RivalInspector({ userId, onClose }: RivalInspectorProps) {
         {letzte.length > 0 && (
           <div className="space-y-2">
             <div className="flex items-center gap-1 text-[9px] font-mono text-on-surface-variant uppercase tracking-wider">
-              <BarChart2 size={11} className="text-primary" /> Formkurve
+              <BarChart2 size={11} className="text-primary" /> {t('formCurve')}
             </div>
             <div className="bg-surface-container-lowest/40 border border-white/5 rounded-xl p-3 flex items-end gap-2 h-20 pt-5">
               {letzte.map((st, i) => {
@@ -249,13 +250,13 @@ export function RivalInspector({ userId, onClose }: RivalInspectorProps) {
                       <div
                         className={`w-full ${barColor} rounded-t-sm`}
                         style={{
-                          height: `${Math.max(heightPct, 8)}%`,
-                          transition: `height 0.6s cubic-bezier(0.34, 1.2, 0.64, 1)`,
-                          transitionDelay: `${i * 60}ms`,
+                           height: `${Math.max(heightPct, 8)}%`,
+                           transition: `height 0.6s cubic-bezier(0.34, 1.2, 0.64, 1)`,
+                           transitionDelay: `${i * 60}ms`,
                         }}
                       />
                     </div>
-                    <span className="text-[7px] font-mono text-on-surface-variant/40">ST{st}</span>
+                    <span className="text-[7px] font-mono text-on-surface-variant/40">{t('spieltagShort')}{st}</span>
                   </div>
                 )
               })}
@@ -266,13 +267,13 @@ export function RivalInspector({ userId, onClose }: RivalInspectorProps) {
         {/* Tipp-Historie */}
         <div className="space-y-2">
           <div className="flex items-center gap-1 text-[9px] font-mono text-on-surface-variant uppercase tracking-wider">
-            <Award size={11} className="text-primary" /> Tipp-Historie
+            <Award size={11} className="text-primary" /> {t('tipHistory')}
           </div>
           <div className="space-y-1.5">
-            {tipps.filter(t => t.match?.status === 'finished').map((tip, i) => (
+            {tipps.filter(t => t.match?.status === 'finished').map((tip) => (
               <div key={tip.id} className="bg-surface-container-lowest/60 border border-white/5 rounded-xl p-2.5 flex items-center justify-between text-xs font-mono">
                 <div className="flex flex-col gap-0.5">
-                  <span className="text-[8px] text-on-surface-variant/50 uppercase">ST {tip.match.spieltag}</span>
+                  <span className="text-[8px] text-on-surface-variant/50 uppercase">{t('spieltagShort')} {tip.match.spieltag}</span>
                   <span className="text-on-surface font-medium max-w-[150px] truncate">
                     {tip.match.heim_team} - {tip.match.gast_team}
                   </span>
@@ -280,9 +281,9 @@ export function RivalInspector({ userId, onClose }: RivalInspectorProps) {
                 <div className="flex items-center gap-3">
                   <div className="text-right">
                     <span className="font-bold text-[10px] text-on-surface bg-surface-container px-1.5 py-0.5 rounded border border-white/5">
-                      Tipp: {tip.tipp_heim}:{tip.tipp_gast}
+                      {t('tipColon')} {tip.tipp_heim}:{tip.tipp_gast}
                     </span>
-                    <div className="text-[9px] text-on-surface-variant/40 mt-0.5">Ende: {tip.match.tore_heim}:{tip.match.tore_gast}</div>
+                    <div className="text-[9px] text-on-surface-variant/40 mt-0.5">{t('endColon')} {tip.match.tore_heim}:{tip.match.tore_gast}</div>
                   </div>
                   <span className={`w-8 text-center font-bold text-[10px] ${PunkteFarbe(tip.punkte)} bg-surface-container px-1 py-0.5 rounded border border-white/5`}>
                     {tip.punkte > 0 ? `+${tip.punkte}P` : '0P'}
@@ -293,7 +294,7 @@ export function RivalInspector({ userId, onClose }: RivalInspectorProps) {
 
             {tipps.filter(t => t.match?.status === 'finished').length === 0 && (
               <div className="text-center py-8 text-xs font-mono text-on-surface-variant/30">
-                Keine beendeten Tipps in dieser Saison.
+                {t('noRivalTips')}
               </div>
             )}
           </div>

@@ -1,0 +1,408 @@
+
+/home/ne0nur/Projekte/fussball-tipprunde/src/App.tsx
+  41:53  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/ne0nur/Projekte/fussball-tipprunde/src/components/AppShell.tsx
+  115:6   warning  React Hook useEffect has missing dependencies: 'cleanupPresence', 'initPresence', and 't'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  172:69  error    Unexpected any. Specify a different type                                                                                                       @typescript-eslint/no-explicit-any
+  228:6   warning  React Hook useEffect has a missing dependency: 't'. Either include it or remove the dependency array                                           react-hooks/exhaustive-deps
+
+/home/ne0nur/Projekte/fussball-tipprunde/src/components/LeagueChat.tsx
+    1:39  error    'useMemo' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   @typescript-eslint/no-unused-vars
+   69:10  error    'profileCacheState' is assigned a value but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                @typescript-eslint/no-unused-vars
+   76:9   error    'setProfileCache' is assigned a value but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  @typescript-eslint/no-unused-vars
+   83:5   error    Error: Cannot access variable before it is declared
+
+`ladeNachrichten` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+/home/ne0nur/Projekte/fussball-tipprunde/src/components/LeagueChat.tsx:83:5
+  81 |   // ─── Nachrichten laden ─────────────────────────────
+  82 |   useEffect(() => {
+> 83 |     ladeNachrichten()
+     |     ^^^^^^^^^^^^^^^ `ladeNachrichten` accessed before it is declared
+  84 |     subscribeRealtime()
+  85 |     return () => {
+  86 |       if (channelRef.current) {
+
+/home/ne0nur/Projekte/fussball-tipprunde/src/components/LeagueChat.tsx:100:3
+   98 |   }, [nachrichten])
+   99 |
+> 100 |   async function ladeNachrichten() {
+      |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 101 |     setIsLaden(true)
+      | ^^^^^^^^^^^^^^^^^^^^
+> 102 |     try {
+      …
+      | ^^^^^^^^^^^^^^^^^^^^
+> 142 |     }
+      | ^^^^^^^^^^^^^^^^^^^^
+> 143 |   }
+      | ^^^^ `ladeNachrichten` is declared here
+  144 |
+  145 |   function subscribeRealtime() {
+  146 |     if (channelRef.current) {                                                                                                              react-hooks/immutability
+   84:5   error    Error: Cannot access variable before it is declared
+
+`subscribeRealtime` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+/home/ne0nur/Projekte/fussball-tipprunde/src/components/LeagueChat.tsx:84:5
+  82 |   useEffect(() => {
+  83 |     ladeNachrichten()
+> 84 |     subscribeRealtime()
+     |     ^^^^^^^^^^^^^^^^^ `subscribeRealtime` accessed before it is declared
+  85 |     return () => {
+  86 |       if (channelRef.current) {
+  87 |         supabase.removeChannel(channelRef.current)
+
+/home/ne0nur/Projekte/fussball-tipprunde/src/components/LeagueChat.tsx:145:3
+  143 |   }
+  144 |
+> 145 |   function subscribeRealtime() {
+      |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 146 |     if (channelRef.current) {
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 147 |       supabase.removeChannel(channelRef.current)
+      …
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 184 |     channelRef.current = channel
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 185 |   }
+      | ^^^^ `subscribeRealtime` is declared here
+  186 |
+  187 |   // ─── Senden ────────────────────────────────────────
+  188 |   async function handleSenden() {  react-hooks/immutability
+   91:6   warning  React Hook useEffect has missing dependencies: 'ladeNachrichten' and 'subscribeRealtime'. Either include them or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          react-hooks/exhaustive-deps
+  116:21  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              @typescript-eslint/no-explicit-any
+
+/home/ne0nur/Projekte/fussball-tipprunde/src/components/MatchCard.tsx
+  123:13  error  Empty block statement  no-empty
+
+/home/ne0nur/Projekte/fussball-tipprunde/src/components/MatchChat.tsx
+   1:39  error    'useMemo' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 @typescript-eslint/no-unused-vars
+  70:5   error    Error: Cannot access variable before it is declared
+
+`ladeNachrichten` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+/home/ne0nur/Projekte/fussball-tipprunde/src/components/MatchChat.tsx:70:5
+  68 |
+  69 |   useEffect(() => {
+> 70 |     ladeNachrichten()
+     |     ^^^^^^^^^^^^^^^ `ladeNachrichten` accessed before it is declared
+  71 |     subscribeRealtime()
+  72 |     return () => {
+  73 |       if (channelRef.current) {
+
+/home/ne0nur/Projekte/fussball-tipprunde/src/components/MatchChat.tsx:85:3
+   83 |   }, [nachrichten])
+   84 |
+>  85 |   async function ladeNachrichten() {
+      |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>  86 |     setIsLaden(true)
+      | ^^^^^^^^^^^^^^^^^^^^
+>  87 |     const { data } = await supabase
+      …
+      | ^^^^^^^^^^^^^^^^^^^^
+> 113 |     setIsLaden(false)
+      | ^^^^^^^^^^^^^^^^^^^^
+> 114 |   }
+      | ^^^^ `ladeNachrichten` is declared here
+  115 |
+  116 |   function subscribeRealtime() {
+  117 |     const channel = supabase                                                                                               react-hooks/immutability
+  71:5   error    Error: Cannot access variable before it is declared
+
+`subscribeRealtime` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+/home/ne0nur/Projekte/fussball-tipprunde/src/components/MatchChat.tsx:71:5
+  69 |   useEffect(() => {
+  70 |     ladeNachrichten()
+> 71 |     subscribeRealtime()
+     |     ^^^^^^^^^^^^^^^^^ `subscribeRealtime` accessed before it is declared
+  72 |     return () => {
+  73 |       if (channelRef.current) {
+  74 |         supabase.removeChannel(channelRef.current)
+
+/home/ne0nur/Projekte/fussball-tipprunde/src/components/MatchChat.tsx:116:3
+  114 |   }
+  115 |
+> 116 |   function subscribeRealtime() {
+      |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 117 |     const channel = supabase
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 118 |       .channel(`match-chat-${matchId}`)
+      …
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 149 |     channelRef.current = channel
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 150 |   }
+      | ^^^^ `subscribeRealtime` is declared here
+  151 |
+  152 |   async function handleSenden() {
+  153 |     if (!text.trim() || !user) return  react-hooks/immutability
+  77:6   warning  React Hook useEffect has missing dependencies: 'ladeNachrichten' and 'subscribeRealtime'. Either include them or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        react-hooks/exhaustive-deps
+
+/home/ne0nur/Projekte/fussball-tipprunde/src/components/MatchDetailPanel.tsx
+  35:5  error    Error: Cannot access variable before it is declared
+
+`ladeTipps` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+/home/ne0nur/Projekte/fussball-tipprunde/src/components/MatchDetailPanel.tsx:35:5
+  33 |   useEffect(() => {
+  34 |     if (!matchId || !user) return
+> 35 |     ladeTipps()
+     |     ^^^^^^^^^ `ladeTipps` accessed before it is declared
+  36 |   }, [matchId, user])
+  37 |
+  38 |   async function ladeTipps() {
+
+/home/ne0nur/Projekte/fussball-tipprunde/src/components/MatchDetailPanel.tsx:38:3
+  36 |   }, [matchId, user])
+  37 |
+> 38 |   async function ladeTipps() {
+     |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 39 |     setIsLaden(true)
+     | ^^^^^^^^^^^^^^^^^^^^
+> 40 |     try {
+     …
+     | ^^^^^^^^^^^^^^^^^^^^
+> 74 |     }
+     | ^^^^^^^^^^^^^^^^^^^^
+> 75 |   }
+     | ^^^^ `ladeTipps` is declared here
+  76 |
+  77 |   if (!match) {
+  78 |     return (  react-hooks/immutability
+  36:6  warning  React Hook useEffect has a missing dependency: 'ladeTipps'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  react-hooks/exhaustive-deps
+
+/home/ne0nur/Projekte/fussball-tipprunde/src/components/RivalInspector.tsx
+    1:31  error    'useRef' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   @typescript-eslint/no-unused-vars
+    3:10  error    'ArrowLeft' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                @typescript-eslint/no-unused-vars
+    3:21  error    'Trophy' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   @typescript-eslint/no-unused-vars
+   53:5   error    Error: Cannot access variable before it is declared
+
+`lade` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+/home/ne0nur/Projekte/fussball-tipprunde/src/components/RivalInspector.tsx:53:5
+  51 |   useEffect(() => {
+  52 |     if (!userId) return
+> 53 |     lade()
+     |     ^^^^ `lade` accessed before it is declared
+  54 |   }, [userId])
+  55 |
+  56 |   useEffect(() => {
+
+/home/ne0nur/Projekte/fussball-tipprunde/src/components/RivalInspector.tsx:62:3
+  60 |   }, [userId])
+  61 |
+> 62 |   async function lade() {
+     |   ^^^^^^^^^^^^^^^^^^^^^^^
+> 63 |     setIsLaden(true)
+     | ^^^^^^^^^^^^^^^^^^^^
+> 64 |     try {
+     …
+     | ^^^^^^^^^^^^^^^^^^^^
+> 75 |     }
+     | ^^^^^^^^^^^^^^^^^^^^
+> 76 |   }
+     | ^^^^ `lade` is declared here
+  77 |
+  78 |   const derivedStats = useMemo(() => {
+  79 |     if (!profil || !tipps) return null  react-hooks/immutability
+   54:6   warning  React Hook useEffect has a missing dependency: 'lade'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              react-hooks/exhaustive-deps
+  108:24  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             @typescript-eslint/no-explicit-any
+  274:74  error    'i' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        @typescript-eslint/no-unused-vars
+
+/home/ne0nur/Projekte/fussball-tipprunde/src/components/TeamInspector.tsx
+   3:10  error    'useMatchStore' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               @typescript-eslint/no-unused-vars
+   6:28  error    'Check' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       @typescript-eslint/no-unused-vars
+  81:5   error    Error: Cannot access variable before it is declared
+
+`ladeTeamMatches` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+/home/ne0nur/Projekte/fussball-tipprunde/src/components/TeamInspector.tsx:81:5
+  79 |
+  80 |   useEffect(() => {
+> 81 |     ladeTeamMatches()
+     |     ^^^^^^^^^^^^^^^ `ladeTeamMatches` accessed before it is declared
+  82 |   }, [teamName])
+  83 |
+  84 |   async function ladeTeamMatches() {
+
+/home/ne0nur/Projekte/fussball-tipprunde/src/components/TeamInspector.tsx:84:3
+   82 |   }, [teamName])
+   83 |
+>  84 |   async function ladeTeamMatches() {
+      |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>  85 |     setLoading(true)
+      | ^^^^^^^^^^^^^^^^^^^^
+>  86 |     try {
+      …
+      | ^^^^^^^^^^^^^^^^^^^^
+> 100 |     }
+      | ^^^^^^^^^^^^^^^^^^^^
+> 101 |   }
+      | ^^^^ `ladeTeamMatches` is declared here
+  102 |
+  103 |   // Derived Match lists
+  104 |   const finished = matches.filter(m => m.status === 'finished')  react-hooks/immutability
+  82:6   warning  React Hook useEffect has a missing dependency: 'ladeTeamMatches'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      react-hooks/exhaustive-deps
+
+/home/ne0nur/Projekte/fussball-tipprunde/src/components/TournamentBracket.tsx
+   1:17  error  'useMemo' is defined but never used                 @typescript-eslint/no-unused-vars
+  27:83  error  Unexpected any. Specify a different type            @typescript-eslint/no-explicit-any
+  37:11  error  'tieInfo' is never reassigned. Use 'const' instead  prefer-const
+  58:93  error  Unexpected any. Specify a different type            @typescript-eslint/no-explicit-any
+
+/home/ne0nur/Projekte/fussball-tipprunde/src/components/profile/AchievementsSection.tsx
+    1:10  error  'useState' is defined but never used              @typescript-eslint/no-unused-vars
+    2:17  error  'ChevronDown' is defined but never used           @typescript-eslint/no-unused-vars
+    2:30  error  'ChevronUp' is defined but never used             @typescript-eslint/no-unused-vars
+    3:10  error  'evaluateAchievements' is defined but never used  @typescript-eslint/no-unused-vars
+  183:3   error  'stats' is defined but never used                 @typescript-eslint/no-unused-vars
+  184:3   error  'exaktCount' is defined but never used            @typescript-eslint/no-unused-vars
+  185:3   error  'punkte' is defined but never used                @typescript-eslint/no-unused-vars
+  186:3   error  'userRank' is defined but never used              @typescript-eslint/no-unused-vars
+  187:3   error  'leagueCount' is defined but never used           @typescript-eslint/no-unused-vars
+  188:3   error  'isAdmin' is defined but never used               @typescript-eslint/no-unused-vars
+  189:3   error  'userTips' is defined but never used              @typescript-eslint/no-unused-vars
+  190:3   error  'avatarUrl' is defined but never used             @typescript-eslint/no-unused-vars
+  191:3   error  'username' is defined but never used              @typescript-eslint/no-unused-vars
+
+/home/ne0nur/Projekte/fussball-tipprunde/src/components/profile/AdminSection.tsx
+    2:34   error  'UserPlus' is defined but never used      @typescript-eslint/no-unused-vars
+    2:44   error  'Download' is defined but never used      @typescript-eslint/no-unused-vars
+    2:54   error  'Trash2' is defined but never used        @typescript-eslint/no-unused-vars
+    2:62   error  'BookOpen' is defined but never used      @typescript-eslint/no-unused-vars
+    2:72   error  'AlertCircle' is defined but never used   @typescript-eslint/no-unused-vars
+    2:85   error  'RefreshCw' is defined but never used     @typescript-eslint/no-unused-vars
+    2:96   error  'Send' is defined but never used          @typescript-eslint/no-unused-vars
+    2:102  error  'Link' is defined but never used          @typescript-eslint/no-unused-vars
+    2:108  error  'Trophy' is defined but never used        @typescript-eslint/no-unused-vars
+   48:55   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   48:127  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   67:46   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  114:52   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/ne0nur/Projekte/fussball-tipprunde/src/components/profile/BonusTippsCard.tsx
+  1:10  error  'useState' is defined but never used     @typescript-eslint/no-unused-vars
+  2:22  error  'ChevronDown' is defined but never used  @typescript-eslint/no-unused-vars
+  2:35  error  'ChevronUp' is defined but never used    @typescript-eslint/no-unused-vars
+
+/home/ne0nur/Projekte/fussball-tipprunde/src/components/profile/NotificationSettings.tsx
+  17:14  error  'language' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/home/ne0nur/Projekte/fussball-tipprunde/src/components/profile/StatsGrid.tsx
+   1:27  error  'Percent' is defined but never used            @typescript-eslint/no-unused-vars
+  21:14  error  'language' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/home/ne0nur/Projekte/fussball-tipprunde/src/components/profile/UserInfoSettings.tsx
+  27:14  error  'language' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/home/ne0nur/Projekte/fussball-tipprunde/src/pages/DashboardPage.tsx
+   14:14  error    'language' is assigned a value but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   @typescript-eslint/no-unused-vars
+   45:6   warning  React Hook useEffect has missing dependencies: 'abonnierenRealtimeMatches' and 'initialisiereSpieltag'. Either include them or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      react-hooks/exhaustive-deps
+   50:6   warning  React Hook useEffect has missing dependencies: 'ladeMatches' and 'ladeMeineTipps'. Either include them or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           react-hooks/exhaustive-deps
+   68:5   error    Error: Cannot access variable before it is declared
+
+`ladeSpieltagInfos` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+/home/ne0nur/Projekte/fussball-tipprunde/src/pages/DashboardPage.tsx:68:5
+  66 |   useEffect(() => {
+  67 |     if (!user) return
+> 68 |     ladeSpieltagInfos()
+     |     ^^^^^^^^^^^^^^^^^ `ladeSpieltagInfos` accessed before it is declared
+  69 |   }, [user])
+  70 |
+  71 |   // Auto-select first match on desktop when matches list changes
+
+/home/ne0nur/Projekte/fussball-tipprunde/src/pages/DashboardPage.tsx:98:3
+   96 |   }, [isDesktop, anzeigeMatches, selectedMatchId])
+   97 |
+>  98 |   async function ladeSpieltagInfos() {
+      |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>  99 |     try {
+      | ^^^^^^^^^
+> 100 |       const [{ data: matchesData }, { data: tipsData }] = await Promise.all([
+      …
+      | ^^^^^^^^^
+> 142 |     }
+      | ^^^^^^^^^
+> 143 |   }
+      | ^^^^ `ladeSpieltagInfos` is declared here
+  144 |
+  145 |   // Lokales Update der Spieltag-Info, wenn sich meineTipps (für den aktuellen Spieltag) ändern
+  146 |   useEffect(() => {  react-hooks/immutability
+   69:6   warning  React Hook useEffect has a missing dependency: 'ladeSpieltagInfos'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            react-hooks/exhaustive-deps
+  122:36  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        @typescript-eslint/no-explicit-any
+  161:6   warning  React Hook useEffect has a missing dependency: 'spieltagInfo'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 react-hooks/exhaustive-deps
+  163:9   error    'spieltage' is assigned a value but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  @typescript-eslint/no-unused-vars
+
+/home/ne0nur/Projekte/fussball-tipprunde/src/pages/GlobalPage.tsx
+  378:5   error  Error: Cannot access variable before it is declared
+
+`ladeGlobalDaten` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+/home/ne0nur/Projekte/fussball-tipprunde/src/pages/GlobalPage.tsx:378:5
+  376 |
+  377 |   useEffect(() => {
+> 378 |     ladeGlobalDaten()
+      |     ^^^^^^^^^^^^^^^ `ladeGlobalDaten` accessed before it is declared
+  379 |   }, [])
+  380 |
+  381 |   useEffect(() => {
+
+/home/ne0nur/Projekte/fussball-tipprunde/src/pages/GlobalPage.tsx:392:3
+  390 |   }, [isDesktop, rangliste, selectedUserId])
+  391 |
+> 392 |   async function ladeGlobalDaten() {
+      |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 393 |     setIsLaden(true)
+      | ^^^^^^^^^^^^^^^^^^^^
+> 394 |     try {
+      …
+      | ^^^^^^^^^^^^^^^^^^^^
+> 532 |     }
+      | ^^^^^^^^^^^^^^^^^^^^
+> 533 |   }
+      | ^^^^ `ladeGlobalDaten` is declared here
+  534 |
+  535 |   const top3 = rangliste.slice(0, 3)
+  536 |   const rest = rangliste.slice(3)  react-hooks/immutability
+  411:42  error  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          @typescript-eslint/no-explicit-any
+  444:30  error  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          @typescript-eslint/no-explicit-any
+
+/home/ne0nur/Projekte/fussball-tipprunde/src/pages/LeaguePage.tsx
+    4:10  error    'getTeamLogo' is defined but never used                                                                                                                                                                                                                   @typescript-eslint/no-unused-vars
+   52:14  error    'language' is assigned a value but never used                                                                                                                                                                                                             @typescript-eslint/no-unused-vars
+   54:9   error    'navigate' is assigned a value but never used                                                                                                                                                                                                             @typescript-eslint/no-unused-vars
+   62:10  error    'aktuellerSpieltag' is assigned a value but never used                                                                                                                                                                                                    @typescript-eslint/no-unused-vars
+   67:10  error    'zeigeBeitreten' is assigned a value but never used                                                                                                                                                                                                       @typescript-eslint/no-unused-vars
+   83:29  error    Unexpected any. Specify a different type                                                                                                                                                                                                                  @typescript-eslint/no-explicit-any
+   84:33  error    Unexpected any. Specify a different type                                                                                                                                                                                                                  @typescript-eslint/no-explicit-any
+   90:6   warning  React Hook useEffect has a missing dependency: 'ladeLigen'. Either include it or remove the dependency array                                                                                                                                              react-hooks/exhaustive-deps
+  112:6   warning  React Hook useEffect has missing dependencies: 'aktiveLiga' and 'ladeDaten'. Either include them or remove the dependency array                                                                                                                           react-hooks/exhaustive-deps
+  119:6   warning  React Hook useEffect has missing dependencies: 'aktiveLiga' and 'computeRows'. Either include them or remove the dependency array                                                                                                                         react-hooks/exhaustive-deps
+  129:6   warning  React Hook useMemo has an unnecessary dependency: 'allMatchesRef.current.length'. Either exclude it or remove the dependency array                                                                                                                        react-hooks/exhaustive-deps
+  144:20  error    Unexpected any. Specify a different type                                                                                                                                                                                                                  @typescript-eslint/no-explicit-any
+  261:38  error    Unexpected any. Specify a different type                                                                                                                                                                                                                  @typescript-eslint/no-explicit-any
+  274:24  error    Unexpected any. Specify a different type                                                                                                                                                                                                                  @typescript-eslint/no-explicit-any
+  289:50  error    Unexpected any. Specify a different type                                                                                                                                                                                                                  @typescript-eslint/no-explicit-any
+  395:6   warning  React Hook useMemo has an unnecessary dependency: 'allMatchesRef.current'. Either exclude it or remove the dependency array. Mutable values like 'allMatchesRef.current' aren't valid dependencies because mutating them doesn't re-render the component  react-hooks/exhaustive-deps
+
+/home/ne0nur/Projekte/fussball-tipprunde/src/pages/LoginPage.tsx
+    6:78  error  'Check' is defined but never used         @typescript-eslint/no-unused-vars
+    6:85  error  'X' is defined but never used             @typescript-eslint/no-unused-vars
+   79:13  error  Empty block statement                     no-empty
+  118:14  error  'err' is defined but never used           @typescript-eslint/no-unused-vars
+  196:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/ne0nur/Projekte/fussball-tipprunde/src/pages/ProfilePage.tsx
+    1:1   warning  Unused eslint-disable directive (no problems were reported from 'react-hooks/set-state-in-effect')
+  253:19  error    Unexpected any. Specify a different type                                                            @typescript-eslint/no-explicit-any
+
+/home/ne0nur/Projekte/fussball-tipprunde/src/pages/StandingsPage.tsx
+  1:1  warning  Unused eslint-disable directive (no problems were reported from 'react-hooks/set-state-in-effect')
+
+✖ 101 problems (83 errors, 18 warnings)
+  1 error and 2 warnings potentially fixable with the `--fix` option.
+

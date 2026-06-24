@@ -1,10 +1,10 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
-import { useMatchStore, type Match } from '../stores/matchStore'
+import type { Match } from '../stores/matchStore'
 import { useTipStore } from '../stores/tipStore'
 import { getTeamLogo } from '../lib/teamLogos'
-import { Trophy, Calendar, Check, Minus, Plus, Lock } from 'lucide-react'
-import { TIPPS_FREIGESCHALTET } from '../config'
+import { Trophy, Calendar, Minus, Plus, Lock } from 'lucide-react'
+import { useSettingsStore } from '../stores/settingsStore'
 
 // Custom club branding gradients
 const CLUB_GRADIENTS: Record<string, string> = {
@@ -67,6 +67,7 @@ interface TeamInspectorProps {
 export function TeamInspector({ teamName, onClose }: TeamInspectorProps) {
   const meineTipps = useTipStore(s => s.meineTipps)
   const tippSpeichern = useTipStore(s => s.tippSpeichern)
+  const tippsFreigeschaltet = useSettingsStore(s => s.tippsFreigeschaltet)
 
   const [matches, setMatches] = useState<Match[]>([])
   const [loading, setLoading] = useState(true)
@@ -77,11 +78,7 @@ export function TeamInspector({ teamName, onClose }: TeamInspectorProps) {
   const [isSaving, setIsSaving] = useState(false)
   const [saved, setSaved] = useState(false)
 
-  useEffect(() => {
-    ladeTeamMatches()
-  }, [teamName])
-
-  async function ladeTeamMatches() {
+  const ladeTeamMatches = useCallback(async () => {
     setLoading(true)
     try {
       const { data } = await supabase
@@ -98,7 +95,11 @@ export function TeamInspector({ teamName, onClose }: TeamInspectorProps) {
     } finally {
       setLoading(false)
     }
-  }
+  }, [teamName])
+
+  useEffect(() => {
+    ladeTeamMatches()
+  }, [ladeTeamMatches])
 
   // Derived Match lists
   const finished = matches.filter(m => m.status === 'finished')
@@ -189,7 +190,7 @@ export function TeamInspector({ teamName, onClose }: TeamInspectorProps) {
 
                 {/* Quick Tipp Input */}
                 <div className="border-t border-white/5 pt-2.5 mt-1.5 flex items-center justify-between gap-2">
-                  {TIPPS_FREIGESCHALTET ? (
+                  {tippsFreigeschaltet ? (
                     <>
                       <Stepper value={tippHeim} onChange={setTippHeim} disabled={isSaving} />
                       <button

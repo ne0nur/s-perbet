@@ -1,6 +1,9 @@
-import { useState } from 'react'
-import { Shield, Check, X, Copy, UserPlus, Download, Trash2, BookOpen, AlertCircle, RefreshCw, Send, Link, Trophy } from 'lucide-react'
+import { useState, type ChangeEvent } from 'react'
+import { Shield, Check, X, Copy } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
+import { useTranslation } from '../../utils/translations'
+import { TippsFreigabeToggle } from './TippsFreigabeToggle'
+import type { Match } from '../../stores/matchStore'
 
 interface League {
   id: string
@@ -44,15 +47,16 @@ interface AdminSectionProps {
   onlineUsers: Record<string, OnlineUser>
 }
 
-function AdminMatchRow({ m, handleUpdateMatch }: { m: any, handleUpdateMatch: (id: string, h: number|null, g: number|null, s: any) => void }) {
+function AdminMatchRow({ m, handleUpdateMatch }: { m: Match, handleUpdateMatch: (id: string, h: number|null, g: number|null, s: 'upcoming'|'live'|'finished'|'postponed') => void }) {
   const [heim, setHeim] = useState<string>(m.tore_heim !== null ? String(m.tore_heim) : '')
   const [gast, setGast] = useState<string>(m.tore_gast !== null ? String(m.tore_gast) : '')
-  const [status, setStatus] = useState<'upcoming'|'live'|'finished'>(m.status)
+  const [status, setStatus] = useState<'upcoming'|'live'|'finished'|'postponed'>(m.status)
+  const { t } = useTranslation()
   
   return (
     <div className="bg-surface-container-lowest border border-surface-container-high rounded-lg p-3 space-y-2">
       <div className="flex justify-between items-center text-[10px] text-on-surface-variant">
-        <span>{new Date(m.anpfiff).toLocaleDateString()} - ST {m.spieltag} - {m.tournament}</span>
+        <span>{new Date(m.anpfiff).toLocaleDateString()} - {t('spieltagShort')} {m.spieltag} - {m.tournament}</span>
       </div>
       <div className="flex items-center justify-between gap-2">
         <span className="text-xs font-bold text-on-surface truncate flex-1">{m.heim_team}</span>
@@ -62,16 +66,17 @@ function AdminMatchRow({ m, handleUpdateMatch }: { m: any, handleUpdateMatch: (i
         <span className="text-xs font-bold text-on-surface truncate flex-1 text-right">{m.gast_team}</span>
       </div>
       <div className="flex justify-between items-center mt-2 pt-2 border-t border-surface-container-high/50">
-        <select value={status} onChange={(e: any) => setStatus(e.target.value)} className="bg-surface-container border border-surface-container-high rounded px-1 py-1 text-[10px] outline-none">
-          <option value="upcoming">Upcoming</option>
-          <option value="live">Live</option>
-          <option value="finished">Finished</option>
+        <select value={status} onChange={(e: ChangeEvent<HTMLSelectElement>) => setStatus(e.target.value as 'upcoming'|'live'|'finished'|'postponed')} className="bg-surface-container border border-surface-container-high rounded px-1 py-1 text-[10px] outline-none">
+          <option value="upcoming">{t('upcomingMatchUpper')}</option>
+          <option value="live">{t('liveMatchUpper')}</option>
+          <option value="finished">{t('finishedMatchUpper')}</option>
+          <option value="postponed">{t('postponedMatchUpper')}</option>
         </select>
         <button 
           onClick={() => handleUpdateMatch(m.id, heim === '' ? null : parseInt(heim), gast === '' ? null : parseInt(gast), status)}
           className="bg-primary-container text-primary-fixed-dim px-3 py-1 rounded font-mono text-[9px] uppercase font-bold hover:opacity-90"
         >
-          Speichern
+          {t('save')}
         </button>
       </div>
     </div>
@@ -109,33 +114,34 @@ export function AdminSection({
 }: AdminSectionProps) {
   const [targetUsername, setTargetUsername] = useState('')
   const [resetPassword, setResetPassword] = useState('')
-  const [adminMatches, setAdminMatches] = useState<any[]>([])
+  const [adminMatches, setAdminMatches] = useState<Match[]>([])
   const [loadingMatches, setLoadingMatches] = useState(false)
+  const { t } = useTranslation()
   
   // Funktion um Spiele für den Admin zu laden
   const fetchAdminMatches = async () => {
     setLoadingMatches(true)
     const { data } = await supabase
       .from('matches')
-      .select('id, heim_team, gast_team, tore_heim, tore_gast, status, anpfiff, spieltag, tournament')
+      .select('id, heim_team, gast_team, tore_heim, tore_gast, status, anpfiff, spieltag, tournament, season')
       .order('anpfiff', { ascending: false })
       .limit(30)
-    if (data) setAdminMatches(data)
+    if (data) setAdminMatches(data as Match[])
     setLoadingMatches(false)
   }
 
   // Handle Match Update
-  const handleUpdateMatch = async (matchId: string, toreHeim: number | null, toreGast: number | null, setStatus: 'finished' | 'live' | 'upcoming') => {
+  const handleUpdateMatch = async (matchId: string, toreHeim: number | null, toreGast: number | null, setStatus: 'finished' | 'live' | 'upcoming' | 'postponed') => {
     const { error } = await supabase
       .from('matches')
       .update({ tore_heim: toreHeim, tore_gast: toreGast, status: setStatus })
       .eq('id', matchId)
       
     if (!error) {
-      setAdminMsg({ type: 'success', text: 'Spiel erfolgreich aktualisiert!' })
+      setAdminMsg({ type: 'success', text: t('adminMatchSaved') })
       fetchAdminMatches()
     } else {
-      setAdminMsg({ type: 'error', text: 'Fehler beim Aktualisieren des Spiels.' })
+      setAdminMsg({ type: 'error', text: t('adminMatchError') })
     }
   }
 
@@ -144,7 +150,7 @@ export function AdminSection({
       <div className="px-4 py-2.5 bg-surface-container border-b border-surface-container-high flex flex-col gap-2">
         <div className="flex items-center gap-2">
           <Shield size={14} className="text-primary" />
-          <span className="font-mono text-[9px] text-on-surface-variant uppercase tracking-wider">Admin-Zentrale</span>
+          <span className="font-mono text-[9px] text-on-surface-variant uppercase tracking-wider">{t('adminPanel')}</span>
         </div>
         <div className="flex bg-surface-container-lowest p-[2px] rounded-lg border border-surface-container-high overflow-x-auto hide-scrollbar">
           <button
@@ -153,7 +159,7 @@ export function AdminSection({
               adminTab === 'overview' ? 'bg-primary-container/20 text-primary border border-primary-container/30 font-bold' : 'text-on-surface-variant/60 hover:text-on-surface'
             }`}
           >
-            Übersicht
+            {t('adminOverview')}
           </button>
           <button
             onClick={() => { setAdminTab('create'); setAdminMsg(null); }}
@@ -161,7 +167,7 @@ export function AdminSection({
               adminTab === 'create' ? 'bg-primary-container/20 text-primary border border-primary-container/30 font-bold' : 'text-on-surface-variant/60 hover:text-on-surface'
             }`}
           >
-            User Erstellen
+            {t('adminCreateUser')}
           </button>
           <button
             onClick={() => { setAdminTab('manage_users'); setAdminMsg(null); }}
@@ -169,7 +175,7 @@ export function AdminSection({
               adminTab === 'manage_users' ? 'bg-primary-container/20 text-primary border border-primary-container/30 font-bold' : 'text-on-surface-variant/60 hover:text-on-surface'
             }`}
           >
-            User Verwalten
+            {t('adminManageUsers')}
           </button>
           <button
             onClick={() => { setAdminTab('manage_leagues'); setAdminMsg(null); }}
@@ -177,7 +183,7 @@ export function AdminSection({
               adminTab === 'manage_leagues' ? 'bg-primary-container/20 text-primary border border-primary-container/30 font-bold' : 'text-on-surface-variant/60 hover:text-on-surface'
             }`}
           >
-            Ligen Verwalten
+            {t('adminManageLeagues')}
           </button>
           <button
             onClick={() => { setAdminTab('manage_matches'); setAdminMsg(null); fetchAdminMatches(); }}
@@ -185,7 +191,7 @@ export function AdminSection({
               adminTab === 'manage_matches' ? 'bg-primary-container/20 text-primary border border-primary-container/30 font-bold' : 'text-on-surface-variant/60 hover:text-on-surface'
             }`}
           >
-            Spiele (Manuell)
+            {t('adminManageMatches')}
           </button>
         </div>
       </div>
@@ -196,19 +202,19 @@ export function AdminSection({
             <div className="grid grid-cols-2 gap-3">
               <div className="bg-surface-container border border-surface-container-high p-3 rounded-lg text-center">
                 <div className="text-2xl font-black text-primary">{totalUsers}</div>
-                <div className="text-[10px] font-mono text-on-surface-variant uppercase mt-1">Spieler Gesamt</div>
+                <div className="text-[10px] font-mono text-on-surface-variant uppercase mt-1">{t('adminPlayersTotal')}</div>
               </div>
               <div className="bg-surface-container border border-surface-container-high p-3 rounded-lg text-center relative overflow-hidden">
                 <div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-green-500 animate-pulse" />
                 <div className="text-2xl font-black text-green-400">{Object.keys(onlineUsers).length}</div>
-                <div className="text-[10px] font-mono text-on-surface-variant uppercase mt-1">Live Online</div>
+                <div className="text-[10px] font-mono text-on-surface-variant uppercase mt-1">{t('adminLiveOnline')}</div>
               </div>
             </div>
             
             <div className="border-t border-surface-container-high pt-3">
-              <p className="text-[10px] font-mono text-on-surface-variant uppercase tracking-wider mb-2">Aktive Spieler (Live):</p>
+              <p className="text-[10px] font-mono text-on-surface-variant uppercase tracking-wider mb-2">{t('adminActivePlayersLive')}</p>
               {Object.keys(onlineUsers).length === 0 ? (
-                <p className="text-xs text-on-surface-variant text-center py-4">Niemand online außer dir.</p>
+                <p className="text-xs text-on-surface-variant text-center py-4">{t('adminNoOneOnline')}</p>
               ) : (
                 <div className="space-y-2 max-h-48 overflow-y-auto pr-1 custom-scrollbar">
                   {Object.values(onlineUsers).map(u => (
@@ -227,19 +233,25 @@ export function AdminSection({
                 </div>
               )}
             </div>
+
+            {/* Globaler Tipp-Toggle */}
+            <div className="border-t border-surface-container-high pt-3">
+              <p className="text-[10px] font-mono text-on-surface-variant uppercase tracking-wider mb-2">⚙️ Tipp-Freigabe</p>
+              <TippsFreigabeToggle />
+            </div>
           </div>
         )}
 
         {adminTab === 'create' && (
           <>
             <div>
-              <label className="block text-[10px] font-mono text-on-surface-variant uppercase tracking-wider mb-1">Automatische Liga-Zuordnung (Optional)</label>
+              <label className="block text-[10px] font-mono text-on-surface-variant uppercase tracking-wider mb-1">{t('adminAutoLeagueAssignment')}</label>
               <select
                 value={selectedLeagueId}
                 onChange={e => setSelectedLeagueId(e.target.value)}
                 className="w-full bg-surface-container-lowest border border-surface-container-high rounded-lg px-3 py-2 text-xs text-on-surface focus:border-primary outline-none"
               >
-                <option value="">-- Keine Liga --</option>
+                <option value="">{t('adminNoLeagueOption')}</option>
                 {allLeagues.map(l => (
                   <option key={l.id} value={l.id}>{l.name}</option>
                 ))}
@@ -251,22 +263,22 @@ export function AdminSection({
                 onClick={() => setAdminCreateSubTab('manual')}
                 className={`flex-1 py-1 text-[10px] font-mono uppercase rounded-md transition-all ${adminCreateSubTab === 'manual' ? 'bg-surface-container-high text-on-surface' : 'text-on-surface-variant/60'}`}
               >
-                Manuell
+                {t('adminSubTabManual')}
               </button>
               <button
                 onClick={() => setAdminCreateSubTab('auto')}
                 className={`flex-1 py-1 text-[10px] font-mono uppercase rounded-md transition-all ${adminCreateSubTab === 'auto' ? 'bg-surface-container-high text-on-surface' : 'text-on-surface-variant/60'}`}
               >
-                Automatisch
+                {t('adminSubTabAuto')}
               </button>
             </div>
 
             {adminCreateSubTab === 'manual' ? (
               <div className="space-y-3">
-                <p className="text-xs text-on-surface font-medium">Neuen Benutzer manuell erstellen</p>
-                <input type="text" value={newUsername} onChange={e => setNewUsername(e.target.value)} placeholder="Benutzername" className="w-full bg-surface-container-lowest border border-surface-container-high rounded-lg px-3 py-2 text-sm text-on-surface focus:border-primary outline-none" />
-                <input type="text" value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="Passwort" className="w-full bg-surface-container-lowest border border-surface-container-high rounded-lg px-3 py-2 text-sm text-on-surface focus:border-primary outline-none font-mono" />
-                <button onClick={handleCreateUser} disabled={creatingUser || !newUsername.trim() || !newPassword.trim()} className="w-full bg-primary-container text-on-primary py-2.5 rounded-lg font-mono text-xs font-bold uppercase hover:opacity-90 disabled:opacity-30">{creatingUser ? 'Erstelle...' : 'Benutzer erstellen'}</button>
+                <p className="text-xs text-on-surface font-medium">{t('adminCreateUserManually')}</p>
+                <input type="text" value={newUsername} onChange={e => setNewUsername(e.target.value)} placeholder={t('adminPlaceholderUsername')} className="w-full bg-surface-container-lowest border border-surface-container-high rounded-lg px-3 py-2 text-sm text-on-surface focus:border-primary outline-none" />
+                <input type="text" value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder={t('adminPlaceholderPassword')} className="w-full bg-surface-container-lowest border border-surface-container-high rounded-lg px-3 py-2 text-sm text-on-surface focus:border-primary outline-none font-mono" />
+                <button onClick={handleCreateUser} disabled={creatingUser || !newUsername.trim() || !newPassword.trim()} className="w-full bg-primary-container text-on-primary py-2.5 rounded-lg font-mono text-xs font-bold uppercase hover:opacity-90 disabled:opacity-30">{creatingUser ? t('adminCreating') : t('adminBtnCreateUser')}</button>
               </div>
             ) : (
               <div className="space-y-3">
@@ -275,10 +287,10 @@ export function AdminSection({
                   disabled={creatingUser}
                   className="w-full bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-400 py-2.5 rounded-lg font-mono text-xs font-bold uppercase transition-all disabled:opacity-30"
                 >
-                  ⚡ 1-Klick Ersteller
+                  {t('adminBtnQuickCreate')}
                 </button>
                 <div className="border-t border-surface-container-high pt-3">
-                  <p className="text-[10px] text-on-surface-variant uppercase tracking-wider mb-2">Batch-Erstellung (Bis zu 20)</p>
+                  <p className="text-[10px] text-on-surface-variant uppercase tracking-wider mb-2">{t('adminBatchCreation')}</p>
                   <div className="flex gap-2">
                     <input
                       type="number" min="1" max="20" value={batchCount}
@@ -290,7 +302,7 @@ export function AdminSection({
                       disabled={creatingUser}
                       className="flex-1 bg-primary-container text-on-primary py-2.5 rounded-lg font-mono text-xs font-bold uppercase hover:opacity-90 disabled:opacity-30"
                     >
-                      👥 Batch Erstellen
+                      {t('adminBtnBatchCreate')}
                     </button>
                   </div>
                 </div>
@@ -302,27 +314,27 @@ export function AdminSection({
         {adminTab === 'manage_users' && (
           <div className="space-y-4">
             <div className="space-y-2">
-              <p className="text-[10px] font-mono text-on-surface-variant uppercase tracking-wider mb-1">Passwort Zurücksetzen</p>
-              <input type="text" value={targetUsername} onChange={e => setTargetUsername(e.target.value)} placeholder="Username des Spielers" className="w-full bg-surface-container-lowest border border-surface-container-high rounded-lg px-3 py-2 text-sm text-on-surface focus:border-primary outline-none" />
-              <input type="text" value={resetPassword} onChange={e => setResetPassword(e.target.value)} placeholder="Neues Passwort" className="w-full bg-surface-container-lowest border border-surface-container-high rounded-lg px-3 py-2 text-sm text-on-surface focus:border-primary outline-none font-mono" />
+              <p className="text-[10px] font-mono text-on-surface-variant uppercase tracking-wider mb-1">{t('adminResetPasswordTitle')}</p>
+              <input type="text" value={targetUsername} onChange={e => setTargetUsername(e.target.value)} placeholder={t('adminPlaceholderUserToReset')} className="w-full bg-surface-container-lowest border border-surface-container-high rounded-lg px-3 py-2 text-sm text-on-surface focus:border-primary outline-none" />
+              <input type="text" value={resetPassword} onChange={e => setResetPassword(e.target.value)} placeholder={t('adminPlaceholderNewPassword')} className="w-full bg-surface-container-lowest border border-surface-container-high rounded-lg px-3 py-2 text-sm text-on-surface focus:border-primary outline-none font-mono" />
               <button 
                 onClick={() => handleAdminResetPassword(targetUsername, resetPassword)} 
                 disabled={creatingUser || !targetUsername.trim() || !resetPassword.trim()} 
                 className="w-full bg-primary-container text-on-primary py-2.5 rounded-lg font-mono text-xs font-bold uppercase hover:opacity-90 disabled:opacity-30"
               >
-                Passwort überschreiben
+                {t('adminBtnOverwritePassword')}
               </button>
             </div>
             
             <div className="border-t border-surface-container-high pt-4 space-y-2">
-              <p className="text-[10px] font-mono text-red-400 uppercase tracking-wider mb-1">Gefahrenzone: User Löschen</p>
-              <input type="text" value={targetUsername} onChange={e => setTargetUsername(e.target.value)} placeholder="Username des Spielers" className="w-full bg-surface-container-lowest border border-red-500/30 rounded-lg px-3 py-2 text-sm text-on-surface focus:border-red-500 outline-none" />
+              <p className="text-[10px] font-mono text-red-400 uppercase tracking-wider mb-1">{t('adminDangerZone')}</p>
+              <input type="text" value={targetUsername} onChange={e => setTargetUsername(e.target.value)} placeholder={t('adminPlaceholderUserToReset')} className="w-full bg-surface-container-lowest border border-red-500/30 rounded-lg px-3 py-2 text-sm text-on-surface focus:border-red-500 outline-none" />
               <button 
                 onClick={() => handleAdminDeleteUser(targetUsername)} 
                 disabled={creatingUser || !targetUsername.trim()} 
                 className="w-full bg-red-500/10 text-red-400 border border-red-500/20 py-2.5 rounded-lg font-mono text-xs font-bold uppercase hover:bg-red-500/20 disabled:opacity-30"
               >
-                User Endgültig Löschen
+                {t('adminBtnDeleteUser')}
               </button>
             </div>
           </div>
@@ -330,9 +342,9 @@ export function AdminSection({
 
         {adminTab === 'manage_leagues' && (
           <div className="space-y-4">
-            <p className="text-[10px] font-mono text-on-surface-variant uppercase tracking-wider mb-1">Liga verwalten / Löschen</p>
+            <p className="text-[10px] font-mono text-on-surface-variant uppercase tracking-wider mb-1">{t('adminManageDeleteLeagues')}</p>
             {allLeagues.length === 0 ? (
-              <p className="text-xs text-on-surface-variant text-center py-4">Es gibt noch keine Ligen.</p>
+              <p className="text-xs text-on-surface-variant text-center py-4">{t('adminNoLeaguesYet')}</p>
             ) : (
               <div className="space-y-2 max-h-48 overflow-y-auto pr-1 custom-scrollbar">
                 {allLeagues.map(l => (
@@ -342,7 +354,7 @@ export function AdminSection({
                       onClick={() => handleAdminDeleteLeague(l.id, l.name)}
                       disabled={creatingUser}
                       className="p-1.5 text-red-400 hover:bg-red-500/10 rounded transition-colors"
-                      title="Liga löschen"
+                      title={t('close')}
                     >
                       <X size={14} />
                     </button>
@@ -356,8 +368,8 @@ export function AdminSection({
         {adminTab === 'manage_matches' && (
           <div className="space-y-4">
             <div className="flex justify-between items-center mb-1">
-              <p className="text-[10px] font-mono text-on-surface-variant uppercase tracking-wider">Letzte 30 Spiele manuell korrigieren</p>
-              <button onClick={fetchAdminMatches} className="text-[9px] font-mono uppercase text-primary hover:opacity-80">Neu laden</button>
+              <p className="text-[10px] font-mono text-on-surface-variant uppercase tracking-wider">{t('adminMatchCorrectionTitle')}</p>
+              <button onClick={fetchAdminMatches} className="text-[9px] font-mono uppercase text-primary hover:opacity-80">{t('adminReload')}</button>
             </div>
             
             {loadingMatches ? (
@@ -382,7 +394,7 @@ export function AdminSection({
         {/* Liste neu erstellter Benutzer */}
         {createdUsersList.length > 0 && (
           <div className="mt-3 border-t border-surface-container-high pt-3 space-y-2">
-            <p className="text-[10px] font-mono text-on-surface-variant uppercase tracking-wider">Erstellte Benutzer ({createdUsersList.length}):</p>
+            <p className="text-[10px] font-mono text-on-surface-variant uppercase tracking-wider">{t('adminCreatedUsersList', { count: createdUsersList.length })}</p>
             <div className="space-y-1.5 max-h-48 overflow-y-auto no-scrollbar">
               {createdUsersList.map((usr, index) => (
                 <div key={index} className="flex items-center justify-between p-2 rounded bg-surface-container-lowest border border-surface-container-high text-xs">
@@ -393,7 +405,7 @@ export function AdminSection({
                   <button
                     onClick={() => handleCopyUserCreds(usr.username, usr.password, index)}
                     className="p-1.5 hover:bg-surface-container rounded text-on-surface-variant hover:text-primary transition-all flex-shrink-0"
-                    title="Kopieren"
+                    title={t('copy')}
                   >
                     {copiedIndex === index ? <Check size={14} className="text-green-400" /> : <Copy size={14} />}
                   </button>

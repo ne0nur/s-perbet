@@ -1,16 +1,19 @@
 import { NavLink, useLocation } from 'react-router-dom'
 import { Trophy, Table2, BarChart2, Users, User } from 'lucide-react'
-
-const tabs = [
-  { to: '/dashboard', icon: Trophy, label: 'Spiele' },
-  { to: '/tabelle', icon: Table2, label: 'Tabelle' },
-  { to: '/global', icon: BarChart2, label: 'Global' },
-  { to: '/league', icon: Users, label: 'Liga' },
-  { to: '/profile', icon: User, label: 'Profil' },
-]
+import { useTranslation } from '../utils/translations'
 
 export function BottomNav() {
   const location = useLocation()
+  const { t } = useTranslation()
+
+  const tabs = [
+    { to: '/dashboard', icon: Trophy, label: t('games') },
+    { to: '/tabelle', icon: Table2, label: t('table') },
+    { to: '/global', icon: BarChart2, label: t('global') },
+    { to: '/league', icon: Users, label: t('league') },
+    { to: '/profile', icon: User, label: t('profile') },
+  ]
+
   const activeIndex = tabs.findIndex(tab => location.pathname === tab.to)
 
   return (

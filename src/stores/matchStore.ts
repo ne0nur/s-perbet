@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { supabase } from '../lib/supabase'
+import { RealtimeChannel } from '@supabase/supabase-js'
 
 // Typen
 export interface Match {
@@ -33,7 +34,7 @@ interface MatchState {
   cacheMatches: Record<number, Match[]>
   cacheTimestamps: Record<number, number>
   letztesUpdate: string | null
-  subscription: any | null
+  subscription: RealtimeChannel | null
   ladeMatches: (spieltag: number) => Promise<void>
   setSpieltag: (spieltag: number) => void
   setSaison: (saison: number) => void
@@ -61,8 +62,6 @@ export const useMatchStore = create<MatchState>()(
       ladeMatches: async (spieltag: number) => {
         const state = get()
         const cached = state.cacheMatches[spieltag]
-        const timestamp = state.cacheTimestamps[spieltag] || 0
-        const now = Date.now()
 
         if (cached && cached.length > 0) {
           // Zeige Cache sofort an
@@ -86,8 +85,12 @@ export const useMatchStore = create<MatchState>()(
           let query = supabase
             .from('matches')
             .select('*')
-            .eq('spieltag', spieltag)
             .order('anpfiff', { ascending: true })
+
+          // spieltag === 0 means load ALL matchdays
+          if (spieltag > 0) {
+            query = query.eq('spieltag', spieltag)
+          }
             
           if (currentSeason) {
             query = query.eq('season', currentSeason)
@@ -99,7 +102,7 @@ export const useMatchStore = create<MatchState>()(
             const fetchedMatches = data as Match[]
             const currentNow = Date.now()
             
-            // Race-Condition Schutz: Nur updaten, wenn der User nicht schon den Tab gewechselt hat
+            // Nur updaten, wenn der User nicht schon den Tab gewechselt hat
             if (get().aktuellerSpieltag === spieltag) {
               set((s) => ({
                 matches: fetchedMatches,

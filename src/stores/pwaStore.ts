@@ -1,9 +1,18 @@
 import { create } from 'zustand'
 
+export interface BeforeInstallPromptEvent extends Event {
+  readonly platforms: string[]
+  readonly userChoice: Promise<{
+    outcome: 'accepted' | 'dismissed'
+    platform: string
+  }>
+  prompt(): Promise<void>
+}
+
 interface PwaState {
-  deferredPrompt: any | null
+  deferredPrompt: BeforeInstallPromptEvent | null
   isInstallable: boolean
-  setDeferredPrompt: (prompt: any | null) => void
+  setDeferredPrompt: (prompt: BeforeInstallPromptEvent | null) => void
   setIsInstallable: (installable: boolean) => void
   triggerInstall: () => Promise<boolean>
 }

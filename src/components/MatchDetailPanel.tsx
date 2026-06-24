@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuthStore } from '../stores/authStore'
 import { useMatchStore, type Match, type Tip } from '../stores/matchStore'
@@ -6,6 +6,7 @@ import { getTeamLogo } from '../lib/teamLogos'
 import { MatchChat } from './MatchChat'
 import { Users, MessageCircle, User as UserIcon, X } from 'lucide-react'
 import { berechnePunkte } from '../lib/utils'
+import { useTranslation } from '../utils/translations'
 
 interface MatchDetailPanelProps {
   matchId: string
@@ -22,18 +23,14 @@ function punkteFarbe(punkte: number): string {
 export function MatchDetailPanel({ matchId, onClose }: MatchDetailPanelProps) {
   const { user } = useAuthStore()
   const { matches } = useMatchStore()
+  const { t } = useTranslation()
   const [tipps, setTipps] = useState<Tip[]>([])
   const [isLaden, setIsLaden] = useState(true)
   const [activeTab, setActiveTab] = useState<'tips' | 'chat'>('tips')
 
   const match = matches.find(m => m.id === matchId) as Match | undefined
 
-  useEffect(() => {
-    if (!matchId || !user) return
-    ladeTipps()
-  }, [matchId, user])
-
-  async function ladeTipps() {
+  const ladeTipps = useCallback(async () => {
     setIsLaden(true)
     try {
       // 1. Meine Ligen → Mitglieder-IDs
@@ -70,12 +67,17 @@ export function MatchDetailPanel({ matchId, onClose }: MatchDetailPanelProps) {
     } finally {
       setIsLaden(false)
     }
-  }
+  }, [matchId, user])
+
+  useEffect(() => {
+    if (!matchId || !user) return
+    ladeTipps()
+  }, [matchId, user, ladeTipps])
 
   if (!match) {
     return (
       <div className="flex flex-col items-center justify-center h-full min-h-[300px] text-center p-6 bg-surface-container-low border border-surface-container-high rounded-xl">
-        <p className="text-on-surface-variant/40 text-sm font-mono">Spiel nicht gefunden.</p>
+        <p className="text-on-surface-variant/40 text-sm font-mono">{t('matchNotFound')}</p>
       </div>
     )
   }
@@ -96,7 +98,7 @@ export function MatchDetailPanel({ matchId, onClose }: MatchDetailPanelProps) {
         )}
 
         <div className="text-center font-mono text-[9px] text-on-surface-variant/50 uppercase tracking-widest mb-2">
-          {match.status === 'live' ? 'LIVE SPIEL' : match.status === 'finished' ? 'SPIEL BEENDET' : 'BEVORSTEHEND'}
+          {match.status === 'live' ? t('liveMatchUpper') : match.status === 'finished' ? t('finishedMatchUpper') : t('upcomingMatchUpper')}
         </div>
 
         {/* Core Match Info: Teams + Score */}
@@ -139,7 +141,7 @@ export function MatchDetailPanel({ matchId, onClose }: MatchDetailPanelProps) {
                 : 'border-transparent text-on-surface-variant hover:text-on-surface'
             }`}
           >
-            <Users size={12} /> Tipps ({tipps.length})
+            <Users size={12} /> {t('predictionsSubmitted').split(' ')[0]} ({tipps.length})
           </button>
           <button
             onClick={() => setActiveTab('chat')}
@@ -149,7 +151,7 @@ export function MatchDetailPanel({ matchId, onClose }: MatchDetailPanelProps) {
                 : 'border-transparent text-on-surface-variant hover:text-on-surface'
             }`}
           >
-            <MessageCircle size={12} /> Trash-Talk
+            <MessageCircle size={12} /> {t('trashTalk')}
           </button>
         </div>
       </div>
@@ -167,14 +169,14 @@ export function MatchDetailPanel({ matchId, onClose }: MatchDetailPanelProps) {
                 <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-2.5">
                   <span className="text-sm">🔒</span>
                 </div>
-                <p className="text-on-surface text-[12px] font-mono font-bold uppercase tracking-wider text-on-surface-variant mb-1">Tipps verdeckt</p>
+                <p className="text-on-surface text-[12px] font-mono font-bold uppercase tracking-wider text-on-surface-variant mb-1">{t('tipsHidden')}</p>
                 <p className="text-on-surface-variant text-[11px] font-mono leading-normal">
-                  Die Tipps deiner Cousengs werden erst ab Anpfiff freigeschaltet. Keine Spionage vor Spielbeginn!
+                  {t('tipsHiddenDesc')}
                 </p>
               </div>
             ) : tipps.length === 0 ? (
               <div className="text-center py-12 font-mono text-on-surface-variant/40 text-xs">
-                Für dieses Spiel wurden keine Tipps abgegeben.
+                {t('noTipsForMatch')}
               </div>
             ) : (
               tipps.map(tip => {
@@ -196,8 +198,8 @@ export function MatchDetailPanel({ matchId, onClose }: MatchDetailPanelProps) {
                       )}
                     </div>
                     <span className={`flex-1 text-xs truncate ${isOwn ? 'text-primary font-bold font-mono' : 'text-on-surface font-medium'}`}>
-                      {tip.profile?.username || 'Unbekannt'}
-                      {isOwn && <span className="text-[9px] text-on-surface-variant/50 ml-1">(Du)</span>}
+                      {tip.profile?.username || t('unknownUser')}
+                      {isOwn && <span className="text-[9px] text-on-surface-variant/50 ml-1">{t('youLabel')}</span>}
                     </span>
                     <span className="font-mono text-xs font-bold text-on-surface px-2 py-0.5 bg-surface-container rounded">
                       {tip.tipp_heim}:{tip.tipp_gast}

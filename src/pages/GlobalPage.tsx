@@ -1,12 +1,17 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { useMatchStore } from '../stores/matchStore'
 import { getTeamLogo } from '../lib/teamLogos'
 import { Trophy, Users, BarChart2, Gift, Award, Crown, Medal, Target } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { getLevelBadgeStyle, calculateLevel } from '../lib/utils'
-import { evaluateAchievements } from '../utils/achievementEvaluator'
+import { evaluateAchievements, type TipDetails } from '../utils/achievementEvaluator'
 import { RivalInspector } from '../components/RivalInspector'
+import { AvatarLightbox } from '../components/AvatarLightbox'
+import { useTranslation } from '../utils/translations'
+import { getCached, setCache, CACHE_KEYS } from '../lib/cache'
+import { useToastStore } from '../stores/toastStore'
 
 interface RanglisteEintrag {
   id: string
@@ -36,12 +41,13 @@ function LeaderboardSection({
 }: {
   rangliste: RanglisteEintrag[]
   top3: RanglisteEintrag[]
-  rest: RanglisteEintrag[]
+  rest: Array<RanglisteEintrag & { displayRank: string }>
   navigate: ReturnType<typeof useNavigate>
   onSelectUser?: (id: string) => void
   selectedUserId?: string | null
   isDesktop?: boolean
 }) {
+  const { t } = useTranslation()
   const handleUserClick = (userId: string) => {
     if (isDesktop && onSelectUser) {
       onSelectUser(userId)
@@ -49,6 +55,11 @@ function LeaderboardSection({
       navigate(`/analyse/${userId}`)
     }
   }
+
+  // Tie-Erkennung für Podium
+  const tie1_2 = top3[0] && top3[1] && top3[0].gesamt_punkte === top3[1].gesamt_punkte
+  const tie2_3 = top3[1] && top3[2] && top3[1].gesamt_punkte === top3[2].gesamt_punkte
+  const tieAll = tie1_2 && tie2_3
 
   return (
     <div className="space-y-4">
@@ -66,21 +77,21 @@ function LeaderboardSection({
                   : 'border-transparent hover:bg-white/5'
               }`}
             >
-              <div className="w-8 h-8 flex items-center justify-center bg-gradient-to-br from-slate-200 to-slate-400 rounded-full shadow-[0_0_10px_rgba(148,163,184,0.5)] mb-1">
+              <div className="w-8 h-8 flex items-center justify-center bg-gradient-to-br from-slate-200 to-slate-400 rounded-full shadow-[0_0_10px_rgba(148,163,184,0.5)] mb-1 relative">
                 <Medal size={16} className="text-slate-700" />
+                {(tie1_2 || tieAll) && <span className="absolute -top-1 -right-1 text-[7px] bg-amber-500 text-amber-900 font-bold px-1 rounded-full border border-amber-400">2×</span>}
               </div>
-              <div className="relative w-8 h-8">
-                <div className="w-full h-full rounded-full bg-surface-container-high border border-surface-container-highest overflow-hidden flex items-center justify-center">
-                  {top3[1]?.avatar_url ? (
-                    <img src={top3[1].avatar_url} alt="" className="w-full h-full object-cover" />
-                  ) : (
-                    <span className="text-xs font-bold text-on-surface-variant">{top3[1]?.username?.charAt(0)?.toUpperCase() || '?'}</span>
-                  )}
-                </div>
-                <div className={`absolute -bottom-1 -right-1 z-10 text-[7px] h-3.5 w-3.5 rounded-full flex items-center justify-center shadow select-none ${getLevelBadgeStyle(calculateLevel(top3[1]?.gesamt_punkte || 0, top3[1]?.achievements_count || 0))}`}>
-                  {calculateLevel(top3[1]?.gesamt_punkte || 0, top3[1]?.achievements_count || 0)}
-                </div>
-              </div>
+              <AvatarLightbox
+                src={top3[1]?.avatar_url}
+                username={top3[1]?.username || ''}
+                size="sm"
+                showLevel
+                levelBadge={
+                  <div className={`absolute -bottom-1 -right-1 z-10 text-[7px] h-3.5 w-3.5 rounded-full flex items-center justify-center shadow select-none ${getLevelBadgeStyle(calculateLevel(top3[1]?.gesamt_punkte || 0, top3[1]?.achievements_count || 0))}`}>
+                    {calculateLevel(top3[1]?.gesamt_punkte || 0, top3[1]?.achievements_count || 0)}
+                  </div>
+                }
+              />
               <span className="text-[9px] text-on-surface-variant font-mono truncate w-full text-center flex items-center justify-center gap-1">
                 {top3[1]?.username}
                 {top3[1]?.is_admin && (
@@ -90,7 +101,7 @@ function LeaderboardSection({
               <div className="w-full h-16 bg-gradient-to-t from-slate-400/20 to-transparent rounded-t-lg border-x border-t border-slate-400/30 flex flex-col items-center justify-start pt-2 relative overflow-hidden">
                 <div className="absolute inset-0 bg-surface-container-low/50 backdrop-blur-[2px] -z-10" />
                 <span className="text-xs font-bold font-mono text-on-surface">{top3[1]?.gesamt_punkte}</span>
-                <span className="text-[8px] font-mono text-on-surface-variant">Pkt</span>
+                <span className="text-[8px] font-mono text-on-surface-variant">{t('tableHeaderPoints')}</span>
               </div>
             </motion.div>
           )}
@@ -106,19 +117,19 @@ function LeaderboardSection({
           >
             <div className="w-12 h-12 flex items-center justify-center bg-gradient-to-br from-yellow-300 via-amber-400 to-yellow-600 rounded-full shadow-[0_0_15px_rgba(251,191,36,0.6)] mb-1 relative">
               <Crown size={24} className="text-yellow-900" />
+              {tie1_2 && <span className="absolute -top-1 -right-2 text-[7px] bg-amber-500 text-amber-900 font-bold px-1 rounded-full border border-amber-400">geteilt</span>}
             </div>
-            <div className="relative w-10 h-10">
-              <div className="w-full h-full rounded-full bg-primary-container/20 border-2 border-primary-container/40 overflow-hidden flex items-center justify-center">
-                {top3[0]?.avatar_url ? (
-                  <img src={top3[0].avatar_url} alt="" className="w-full h-full object-cover" />
-                ) : (
-                  <span className="text-sm font-bold text-primary-fixed-dim">{top3[0]?.username?.charAt(0)?.toUpperCase() || '?'}</span>
-                )}
-              </div>
-              <div className={`absolute -bottom-1 -right-1 z-10 text-[8px] h-4 w-4 rounded-full flex items-center justify-center shadow select-none ${getLevelBadgeStyle(calculateLevel(top3[0]?.gesamt_punkte || 0, top3[0]?.achievements_count || 0))}`}>
-                {calculateLevel(top3[0]?.gesamt_punkte || 0, top3[0]?.achievements_count || 0)}
-              </div>
-            </div>
+            <AvatarLightbox
+              src={top3[0]?.avatar_url}
+              username={top3[0]?.username || ''}
+              size="md"
+              showLevel
+              levelBadge={
+                <div className={`absolute -bottom-1 -right-1 z-10 text-[8px] h-4 w-4 rounded-full flex items-center justify-center shadow select-none ${getLevelBadgeStyle(calculateLevel(top3[0]?.gesamt_punkte || 0, top3[0]?.achievements_count || 0))}`}>
+                  {calculateLevel(top3[0]?.gesamt_punkte || 0, top3[0]?.achievements_count || 0)}
+                </div>
+              }
+            />
             <span className="text-[9px] text-primary-fixed-dim font-mono font-bold truncate w-full text-center flex items-center justify-center gap-1">
               {top3[0]?.username}
               {top3[0]?.is_admin && (
@@ -128,7 +139,7 @@ function LeaderboardSection({
             <div className="w-full h-24 bg-gradient-to-t from-primary/30 to-transparent rounded-t-lg border-x border-t border-primary/40 flex flex-col items-center justify-start pt-2 relative overflow-hidden">
               <div className="absolute inset-0 bg-surface-container-low/30 backdrop-blur-[2px] -z-10" />
               <span className="text-sm font-bold font-mono text-primary-fixed-dim">{top3[0]?.gesamt_punkte}</span>
-              <span className="text-[8px] font-mono text-primary-fixed-dim/60">Pkt</span>
+              <span className="text-[8px] font-mono text-primary-fixed-dim/60">{t('tableHeaderPoints')}</span>
             </div>
           </motion.div>
           {/* Bronze (3.) */}
@@ -142,21 +153,21 @@ function LeaderboardSection({
                   : 'border-transparent hover:bg-white/5'
               }`}
             >
-              <div className="w-8 h-8 flex items-center justify-center bg-gradient-to-br from-amber-600 to-amber-800 rounded-full shadow-[0_0_10px_rgba(217,119,6,0.5)] mb-1">
+              <div className="w-8 h-8 flex items-center justify-center bg-gradient-to-br from-amber-600 to-amber-800 rounded-full shadow-[0_0_10px_rgba(217,119,6,0.5)] mb-1 relative">
                 <Medal size={16} className="text-amber-100" />
+                {(tie2_3 || tieAll) && <span className="absolute -top-1 -right-1 text-[7px] bg-amber-500 text-amber-900 font-bold px-1 rounded-full border border-amber-400">2×</span>}
               </div>
-              <div className="relative w-8 h-8">
-                <div className="w-full h-full rounded-full bg-surface-container-high border border-surface-container-highest overflow-hidden flex items-center justify-center">
-                  {top3[2]?.avatar_url ? (
-                    <img src={top3[2].avatar_url} alt="" className="w-full h-full object-cover" />
-                  ) : (
-                    <span className="text-xs font-bold text-on-surface-variant">{top3[2]?.username?.charAt(0)?.toUpperCase() || '?'}</span>
-                  )}
-                </div>
-                <div className={`absolute -bottom-1 -right-1 z-10 text-[7px] h-3.5 w-3.5 rounded-full flex items-center justify-center shadow select-none ${getLevelBadgeStyle(calculateLevel(top3[2]?.gesamt_punkte || 0, top3[2]?.achievements_count || 0))}`}>
-                  {calculateLevel(top3[2]?.gesamt_punkte || 0, top3[2]?.achievements_count || 0)}
-                </div>
-              </div>
+              <AvatarLightbox
+                src={top3[2]?.avatar_url}
+                username={top3[2]?.username || ''}
+                size="sm"
+                showLevel
+                levelBadge={
+                  <div className={`absolute -bottom-1 -right-1 z-10 text-[7px] h-3.5 w-3.5 rounded-full flex items-center justify-center shadow select-none ${getLevelBadgeStyle(calculateLevel(top3[2]?.gesamt_punkte || 0, top3[2]?.achievements_count || 0))}`}>
+                    {calculateLevel(top3[2]?.gesamt_punkte || 0, top3[2]?.achievements_count || 0)}
+                  </div>
+                }
+              />
               <span className="text-[9px] text-on-surface-variant font-mono truncate w-full text-center flex items-center justify-center gap-1">
                 {top3[2]?.username}
                 {top3[2]?.is_admin && (
@@ -166,7 +177,7 @@ function LeaderboardSection({
               <div className="w-full h-12 bg-gradient-to-t from-amber-700/20 to-transparent rounded-t-lg border-x border-t border-amber-700/30 flex flex-col items-center justify-start pt-2 relative overflow-hidden">
                 <div className="absolute inset-0 bg-surface-container-low/50 backdrop-blur-[2px] -z-10" />
                 <span className="text-xs font-bold font-mono text-on-surface">{top3[2]?.gesamt_punkte}</span>
-                <span className="text-[8px] font-mono text-on-surface-variant">Pkt</span>
+                <span className="text-[8px] font-mono text-on-surface-variant">{t('tableHeaderPoints')}</span>
               </div>
             </motion.div>
           )}
@@ -186,26 +197,25 @@ function LeaderboardSection({
                   isSelected ? 'bg-primary-container/10 border-r-2 border-primary font-bold' : i % 2 === 0 ? '' : 'bg-surface-container-lowest'
                 }`}
               >
-                <span className="w-6 text-center font-mono text-[11px] text-on-surface-variant">#{i + 4}</span>
-                <div className="relative w-8 h-8 flex-shrink-0">
-                  {e.avatar_url ? (
-                    <img src={e.avatar_url} alt="" className="w-full h-full rounded-full object-cover border border-surface-container-highest" />
-                  ) : (
-                    <div className="w-full h-full rounded-full bg-surface-container-high flex items-center justify-center">
-                      <span className="text-on-surface-variant text-xs font-bold">{e.username?.charAt(0)?.toUpperCase() || '?'}</span>
+                <span className="w-6 text-center font-mono text-[11px] text-on-surface-variant">{e.displayRank}</span>
+                <AvatarLightbox
+                  src={e.avatar_url}
+                  username={e.username || ''}
+                  size="sm"
+                  showLevel
+                  levelBadge={
+                    <div className={`absolute -bottom-1 -right-1 z-10 text-[7px] h-3.5 w-3.5 rounded-full flex items-center justify-center shadow select-none ${getLevelBadgeStyle(calculateLevel(e.gesamt_punkte, e.achievements_count || 0))}`}>
+                      {calculateLevel(e.gesamt_punkte, e.achievements_count || 0)}
                     </div>
-                  )}
-                  <div className={`absolute -bottom-1 -right-1 z-10 text-[7px] h-3.5 w-3.5 rounded-full flex items-center justify-center shadow select-none ${getLevelBadgeStyle(calculateLevel(e.gesamt_punkte, e.achievements_count || 0))}`}>
-                    {calculateLevel(e.gesamt_punkte, e.achievements_count || 0)}
-                  </div>
-                </div>
+                  }
+                />
                 <span className="flex-1 text-sm text-on-surface truncate font-semibold flex items-center gap-1.5">
                   {e.username}
                   {e.is_admin && (
-                    <span className="inline-flex px-1.5 py-0.5 rounded text-[8px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30 font-mono uppercase tracking-wider">Admin</span>
+                    <span className="inline-flex px-1.5 py-0.5 rounded text-[8px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30 font-mono uppercase tracking-wider">{t('admin')}</span>
                   )}
                 </span>
-                <span className="font-mono text-sm text-on-surface font-bold shrink-0">{e.gesamt_punkte} P</span>
+                <span className="font-mono text-sm text-on-surface font-bold shrink-0">{e.gesamt_punkte} {t('pointsShort')}</span>
                 {e.exakte_treffer > 0 && (
                   <div className="flex items-center gap-1 shrink-0 bg-primary-container/20 px-2 py-0.5 rounded-full border border-primary/20">
                     <Target size={10} className="text-primary-fixed-dim" />
@@ -219,7 +229,7 @@ function LeaderboardSection({
       )}
 
       {rangliste.length === 0 && (
-        <p className="text-on-surface-variant/40 text-center py-12 text-sm font-mono bg-surface-container-low border border-surface-container-high rounded-xl">Noch keine Spieler.</p>
+        <p className="text-on-surface-variant/40 text-center py-12 text-sm font-mono bg-surface-container-low border border-surface-container-high rounded-xl">{t('noPlayers')}</p>
       )}
     </div>
   )
@@ -239,15 +249,16 @@ function StatsSection({
   remainingPoints: number
   bonusStats: Record<number, BonusStat[]>
 }) {
+  const { t } = useTranslation()
   return (
     <div className="space-y-4">
       {/* Erklärungstext für neue User */}
       <div className="bg-primary-container/10 border border-primary-container/20 rounded-xl p-4 mb-2">
         <h2 className="text-primary font-bold text-sm mb-1.5 flex items-center gap-2">
-          <BarChart2 size={16} /> Was sind die Community-Stats?
+          <BarChart2 size={16} /> {t('whatAreStats')}
         </h2>
         <p className="text-on-surface-variant text-xs leading-relaxed">
-          Hier siehst du die globalen Kennzahlen aller Tipper aus allen Ligen. Vergleiche den Punktedurchschnitt, sieh dir an, wie viele Punkte rechnerisch noch möglich sind, und entdecke die Favoriten der Community.
+          {t('statsExplain')}
         </p>
       </div>
 
@@ -256,17 +267,17 @@ function StatsSection({
         <div className="bg-surface-container-low border border-surface-container-high rounded-xl p-3 text-center shadow-sm">
           <Users className="text-blue-400 mx-auto mb-1.5" size={20} />
           <div className="font-mono text-base font-black text-on-surface">{totalUsers}</div>
-          <div className="font-mono text-[8px] text-on-surface-variant uppercase tracking-wider">Tipper</div>
+          <div className="font-mono text-[8px] text-on-surface-variant uppercase tracking-wider">{t('totalPlayers')}</div>
         </div>
         <div className="bg-surface-container-low border border-surface-container-high rounded-xl p-3 text-center shadow-sm">
           <Gift className="text-emerald-400 mx-auto mb-1.5" size={20} />
           <div className="font-mono text-base font-black text-on-surface">{totalTips}</div>
-          <div className="font-mono text-[8px] text-on-surface-variant uppercase tracking-wider">Tipps Gesamt</div>
+          <div className="font-mono text-[8px] text-on-surface-variant uppercase tracking-wider">{t('totalTips')}</div>
         </div>
         <div className="bg-surface-container-low border border-surface-container-high rounded-xl p-3 text-center shadow-sm">
           <Trophy className="text-amber-400 mx-auto mb-1.5" size={20} />
           <div className="font-mono text-base font-black text-on-surface">{avgPoints}</div>
-          <div className="font-mono text-[8px] text-on-surface-variant uppercase tracking-wider">Ø-Punkte</div>
+          <div className="font-mono text-[8px] text-on-surface-variant uppercase tracking-wider">{t('avgPoints')}</div>
         </div>
         <div className="bg-surface-container-low border border-surface-container-high rounded-xl p-3 text-center shadow-sm relative overflow-hidden">
           <div className="absolute top-0 right-0 p-1">
@@ -277,21 +288,21 @@ function StatsSection({
           </div>
           <BarChart2 className="text-primary-fixed-dim mx-auto mb-1.5" size={20} />
           <div className="font-mono text-base font-black text-primary">{remainingPoints}</div>
-          <div className="font-mono text-[8px] text-primary-fixed-dim uppercase tracking-wider">Max. verbleibend</div>
+          <div className="font-mono text-[8px] text-primary-fixed-dim uppercase tracking-wider">{t('maxRemaining')}</div>
         </div>
       </div>
 
       {/* Community Vote Stats on Bonus wetten */}
       <div className="pt-4">
-        <h2 className="text-sm font-bold text-on-surface mb-1">Saison-Prognosen der Tipper</h2>
+        <h2 className="text-sm font-bold text-on-surface mb-1">{t('prognosisTitle')}</h2>
         <p className="text-[11px] text-on-surface-variant mb-4 leading-relaxed">
-          Vor dem ersten Spieltag konnte jeder Spieler Bonus-Tipps abgeben. Hier siehst du das Stimmungsbild der gesamten Community.
+          {t('prognosisDesc')}
         </p>
         <div className="space-y-4">
       {[
-        { id: 1, title: 'Meisterschafts-Tipps', color: 'bg-gradient-to-r from-amber-500 to-yellow-400' },
-        { id: 2, title: 'Meiste Tore (Tipp)', color: 'bg-emerald-500/80' },
-        { id: 3, title: 'Wenigste Gegentore (Tipp)', color: 'bg-purple-500/80' },
+        { id: 1, title: t('bonusTitle1'), color: 'bg-gradient-to-r from-amber-500 to-yellow-400' },
+        { id: 2, title: t('bonusTitle2'), color: 'bg-emerald-500/80' },
+        { id: 3, title: t('bonusTitle3'), color: 'bg-purple-500/80' },
       ].map(q => (
         <div key={q.id} className="bg-surface-container-low border border-surface-container-high rounded-xl p-4 shadow-sm">
           <div className="flex items-center gap-2 mb-4">
@@ -329,7 +340,7 @@ function StatsSection({
                 )
               })
             ) : (
-              <p className="text-xs text-on-surface-variant/40 font-mono text-center py-4">Noch keine Abgaben vorhanden.</p>
+              <p className="text-xs text-on-surface-variant/40 font-mono text-center py-4">{t('noPrognosis')}</p>
             )}
           </div>
         </div>
@@ -342,6 +353,7 @@ function StatsSection({
 
 // ─── Hauptkomponente ──────────────────────────────────
 export function GlobalPage() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState<'rangliste' | 'stats'>('rangliste')
   const [desktopRightTab, setDesktopRightTab] = useState<'analyse' | 'stats'>('analyse')
@@ -370,94 +382,113 @@ export function GlobalPage() {
     return () => window.removeEventListener('resize', handleResize)
   }, [])
 
-  useEffect(() => {
-    ladeGlobalDaten()
-  }, [])
+  interface TipWithMatch {
+    id: string
+    tipp_heim: number
+    tipp_gast: number
+    punkte: number
+    created_at: string
+    updated_at: string
+    matches: {
+      id: string
+      spieltag: number
+      status: string
+      heim_team: string
+      gast_team: string
+      anpfiff: string
+      tore_heim: number | null
+      tore_gast: number | null
+      tournament?: string
+    } | null
+  }
 
-  useEffect(() => {
-    if (isDesktop && rangliste.length > 0) {
-      const hasUser = rangliste.some(r => r.id === selectedUserId)
-      if (!hasUser) {
-        setSelectedUserId(rangliste[0].id)
-      }
-    } else if (!isDesktop) {
-      setSelectedUserId(null)
-    }
-  }, [isDesktop, rangliste, selectedUserId])
-
-  async function ladeGlobalDaten() {
+  const ladeGlobalDaten = useCallback(async () => {
     setIsLaden(true)
     try {
-      // 1. Leaderboard
-      const { data: rangData } = await supabase
-        .from('profiles')
-        .select('id,username,avatar_url,gesamt_punkte,exakte_treffer,is_admin')
-        .order('gesamt_punkte', { ascending: false })
-        .limit(50)
+      const seasonKey = useMatchStore.getState().aktuelleSaison || 2026
 
-      if (rangData && rangData.length > 0) {
-        const userIds = rangData.map(r => r.id)
-        
-        // Fetch all tips for these top users to evaluate achievements
-        const { data: allUsersTips } = await supabase
-          .from('tips')
-          .select('*, matches(id, spieltag, status, tournament, heim_team, gast_team, tore_heim, tore_gast, anpfiff)')
-          .in('user_id', userIds)
+      // Cache-Check: Leaderboard (teuerste Query — 2 DB-Calls)
+      const cachedRangliste = getCached<RanglisteEintrag[]>(CACHE_KEYS.leaderboard(seasonKey))
+      let rangData: RanglisteEintrag[] | null = null
 
-        const tipsByUser: Record<string, any[]> = {}
-        if (allUsersTips) {
-          allUsersTips.forEach(t => {
-            if (!tipsByUser[t.user_id]) {
-              tipsByUser[t.user_id] = []
-            }
-            tipsByUser[t.user_id].push(t)
-          })
-        }
-
-        const enrichedRangliste = rangData.map((userEntry, index) => {
-          const userTips = tipsByUser[userEntry.id] || []
-          const formattedTips = userTips.map(t => ({
-            id: t.id,
-            tipp_heim: t.tipp_heim,
-            tipp_gast: t.tipp_gast,
-            punkte: t.punkte,
-            created_at: t.created_at,
-            updated_at: t.updated_at,
-            match: {
-              id: t.matches?.id,
-              spieltag: t.matches?.spieltag,
-              status: t.matches?.status,
-              heim_team: t.matches?.heim_team,
-              gast_team: t.matches?.gast_team,
-              anpfiff: t.matches?.anpfiff,
-              tore_heim: t.matches?.tore_heim,
-              tore_gast: t.matches?.tore_gast,
-              tournament: t.matches?.tournament
-            }
-          }))
-
-          const unlockedSet = evaluateAchievements(
-            formattedTips as any,
-            {
-              gesamt_punkte: userEntry.gesamt_punkte || 0,
-              exakte_treffer: userEntry.exakte_treffer || 0,
-              is_admin: userEntry.is_admin || false,
-              rang: index + 1,
-              league_count: 0
-            },
-            userEntry.avatar_url,
-            userEntry.username || ''
-          )
-
-          return {
-            ...userEntry,
-            achievements_count: unlockedSet.size
-          }
-        })
-
-        setRangliste(enrichedRangliste as RanglisteEintrag[])
+      if (cachedRangliste) {
+        setRangliste(cachedRangliste)
+        rangData = cachedRangliste
+        // Stats & Bonus trotzdem live laden (sind billiger)
       } else {
-        setRangliste([])
+        // 1. Leaderboard (frisch von DB)
+        const { data: rawRangData } = await supabase
+          .from('profiles')
+          .select('id,username,avatar_url,gesamt_punkte,exakte_treffer,is_admin')
+          .order('gesamt_punkte', { ascending: false })
+          .order('exakte_treffer', { ascending: false })
+          .limit(50)
+
+        if (rawRangData && rawRangData.length > 0) {
+          const userIds = rawRangData.map(r => r.id)
+          
+          // Fetch all tips for these top users to evaluate achievements
+          const { data: allUsersTips } = await supabase
+            .from('tips')
+            .select('*, matches(id, spieltag, status, tournament, heim_team, gast_team, tore_heim, tore_gast, anpfiff)')
+            .in('user_id', userIds)
+
+          const tipsByUser: Record<string, TipWithMatch[]> = {}
+          if (allUsersTips) {
+            allUsersTips.forEach(t => {
+              if (!tipsByUser[t.user_id]) {
+                tipsByUser[t.user_id] = []
+              }
+              tipsByUser[t.user_id].push(t as unknown as TipWithMatch)
+            })
+          }
+
+          rangData = rawRangData.map((userEntry, index) => {
+            const userTips = tipsByUser[userEntry.id] || []
+            const formattedTips = userTips.map(t => ({
+              id: t.id,
+              tipp_heim: t.tipp_heim,
+              tipp_gast: t.tipp_gast,
+              punkte: t.punkte,
+              created_at: t.created_at,
+              updated_at: t.updated_at,
+              match: {
+                id: t.matches?.id || '',
+                spieltag: t.matches?.spieltag || 1,
+                status: t.matches?.status || 'scheduled',
+                heim_team: t.matches?.heim_team || '',
+                gast_team: t.matches?.gast_team || '',
+                anpfiff: t.matches?.anpfiff || '',
+                tore_heim: t.matches?.tore_heim ?? null,
+                tore_gast: t.matches?.tore_gast ?? null,
+                tournament: t.matches?.tournament || ''
+              }
+            }))
+
+            const unlockedSet = evaluateAchievements(
+              formattedTips as unknown as TipDetails[],
+              {
+                gesamt_punkte: userEntry.gesamt_punkte || 0,
+                exakte_treffer: userEntry.exakte_treffer || 0,
+                is_admin: userEntry.is_admin || false,
+                rang: index + 1,
+                league_count: 0
+              },
+              userEntry.avatar_url,
+              userEntry.username || ''
+            )
+
+            return {
+              ...userEntry,
+              achievements_count: unlockedSet.size
+            } as RanglisteEintrag
+          })
+
+          setRangliste(rangData)
+          setCache(CACHE_KEYS.leaderboard(seasonKey), rangData)
+        } else {
+          setRangliste([])
+        }
       }
 
       // 2. Global Tipping Statistics
@@ -521,15 +552,48 @@ export function GlobalPage() {
         setBonusStats(computedStats)
       }
 
-    } catch (err) {
-      console.error('Fehler beim Laden der globalen Daten:', err)
+    } catch (e) {
+      console.error('Fehler beim Laden der globalen Daten:', e)
+      useToastStore.getState().toast('Fehler beim Laden der Rangliste', 'error')
     } finally {
       setIsLaden(false)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    ladeGlobalDaten()
+  }, [ladeGlobalDaten])
+
+  useEffect(() => {
+    if (isDesktop && rangliste.length > 0) {
+      const hasUser = rangliste.some(r => r.id === selectedUserId)
+      if (!hasUser) {
+        setSelectedUserId(rangliste[0].id)
+      }
+    } else if (!isDesktop) {
+      setSelectedUserId(null)
+    }
+  }, [isDesktop, rangliste, selectedUserId])
 
   const top3 = rangliste.slice(0, 3)
-  const rest = rangliste.slice(3)
+
+  // rest mit Tie-bereinigtem Rang (Punktgleichstand → gleicher Rang)
+  const rest = (() => {
+    const raw = rangliste.slice(3)
+    if (raw.length === 0) return []
+    const withRanks: Array<RanglisteEintrag & { displayRank: string }> = []
+    let currentRank = 4
+    let lastPoints: number | null = top3[2]?.gesamt_punkte ?? null
+    for (let i = 0; i < raw.length; i++) {
+      if (lastPoints !== null && raw[i].gesamt_punkte !== lastPoints) {
+        currentRank = i + 4
+        lastPoints = raw[i].gesamt_punkte
+      }
+      const isTie = i > 0 && raw[i].gesamt_punkte === raw[i-1].gesamt_punkte
+      withRanks.push({ ...raw[i], displayRank: isTie ? '–' : `#${currentRank}` })
+    }
+    return withRanks
+  })()
 
   if (isLaden) {
     return (
@@ -552,7 +616,7 @@ export function GlobalPage() {
           }`}
         >
           <Trophy size={13} />
-          Globale Rangliste
+          {t('globalRanklist')}
         </button>
         <button
           onClick={() => setActiveTab('stats')}
@@ -563,7 +627,7 @@ export function GlobalPage() {
           }`}
         >
           <BarChart2 size={13} />
-          Community-Stats
+          {t('communityStats')}
         </button>
       </div>
 
@@ -573,7 +637,7 @@ export function GlobalPage() {
         <div className={`col-span-1 lg:col-span-7 space-y-4 ${activeTab !== 'rangliste' && !isDesktop ? 'hidden' : ''}`}>
           <div className="hidden lg:flex items-center gap-2 mb-2 px-1">
             <Trophy size={16} className="text-primary-fixed-dim" />
-            <h2 className="text-sm font-mono font-bold text-on-surface uppercase tracking-wider">Globale Bestenliste</h2>
+            <h2 className="text-sm font-mono font-bold text-on-surface uppercase tracking-wider">{t('globalRanklist')}</h2>
           </div>
           <LeaderboardSection
             rangliste={rangliste}
@@ -602,7 +666,7 @@ export function GlobalPage() {
                   : 'border-transparent text-on-surface-variant hover:text-on-surface'
               }`}
             >
-              <Award size={12} /> Gegner-Analyse
+              <Award size={12} /> {t('rivalAnalysis')}
             </button>
             <button
               onClick={() => setDesktopRightTab('stats')}
@@ -612,7 +676,7 @@ export function GlobalPage() {
                   : 'border-transparent text-on-surface-variant hover:text-on-surface'
               }`}
             >
-              <BarChart2 size={12} /> Community-Stats
+              <BarChart2 size={12} /> {t('communityStats')}
             </button>
           </div>
 

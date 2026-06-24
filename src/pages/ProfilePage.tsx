@@ -1,4 +1,5 @@
-import { useEffect, useState, useRef, useMemo } from 'react'
+ 
+import { useEffect, useState, useRef, useMemo, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuthStore } from '../stores/authStore'
@@ -7,6 +8,8 @@ import { BookOpen, Sparkles, Download } from 'lucide-react'
 import { usePwaStore } from '../stores/pwaStore'
 import { useToastStore } from '../stores/toastStore'
 import { calculateLevelDetails } from '../lib/utils'
+import { useLanguageStore } from '../stores/languageStore'
+import { useTranslation } from '../utils/translations'
 
 // Import profile subcomponents
 import { UserInfoSettings } from '../components/profile/UserInfoSettings'
@@ -15,10 +18,12 @@ import { AdminSection } from '../components/profile/AdminSection'
 import { NotificationSettings } from '../components/profile/NotificationSettings'
 import { StatsGrid } from '../components/profile/StatsGrid'
 import { AchievementsSection } from '../components/profile/AchievementsSection'
-import { evaluateAchievements } from '../utils/achievementEvaluator'
+import { evaluateAchievements, type TipDetails } from '../utils/achievementEvaluator'
 import { BonusTippsCard } from '../components/profile/BonusTippsCard'
 
 interface BonusTipp { frage_id: number; antwort: string }
+
+
 
 function komprimiereBild(file: File, maxKB: number = 80): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -52,6 +57,8 @@ function komprimiereBild(file: File, maxKB: number = 80): Promise<string> {
 }
 
 export function ProfilePage() {
+  const { t, language } = useTranslation()
+  const { setLanguage } = useLanguageStore()
   const { user, logout } = useAuthStore()
   const [username, setUsername] = useState('')
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
@@ -65,7 +72,7 @@ export function ProfilePage() {
   const [antworten, setAntworten] = useState<Record<number, string>>({})
   const [gespeichert, setGespeichert] = useState(false)
   const [bonusGesperrt, setBonusGesperrt] = useState(false)
-  const [userTips, setUserTips] = useState<any[]>([])
+  const [userTips, setUserTips] = useState<TipDetails[]>([])
 
   // Level animation states
   const [animatedPoints, setAnimatedPoints] = useState(0)
@@ -109,7 +116,7 @@ export function ProfilePage() {
   const [isIosNotStandalone, setIsIosNotStandalone] = useState(false)
 
   useEffect(() => {
-    const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream
+    const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as unknown as { MSStream?: unknown }).MSStream
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches
     if (isIos && !isStandalone) {
       setIsIosNotStandalone(true)
@@ -117,11 +124,12 @@ export function ProfilePage() {
   }, [])
 
   // Achievements Evaluation
+  const userId = user?.id
   const unlockedSet = useMemo(() => {
     const evaluated = evaluateAchievements(userTips, profil, avatarUrl, username)
-    if (!user?.id) return evaluated
+    if (!userId) return evaluated
 
-    const storageKey = `superbet_unlocked_achievements_${user.id}`
+    const storageKey = `superbet_unlocked_achievements_${userId}`
     const savedArr = JSON.parse(localStorage.getItem(storageKey) || '[]')
     
     // Union of evaluated and saved
@@ -137,7 +145,7 @@ export function ProfilePage() {
     }
     
     return union
-  }, [userTips, profil, avatarUrl, username, user?.id])
+  }, [userTips, profil, avatarUrl, username, userId])
 
   const [newlyUnlockedCount, setNewlyUnlockedCount] = useState(0)
   const [newlyUnlockedSet, setNewlyUnlockedSet] = useState<Set<string>>(new Set())
@@ -177,82 +185,24 @@ export function ProfilePage() {
     }
   }, [activeTab, newlyUnlockedCount, unlockedSet, user, username])
 
-
-
-  useEffect(() => { if (!user) return; lade() }, [user])
-
-  useEffect(() => {
-    if (localStorage.getItem('superbet_open_bonus') === 'true') {
-      setActiveTab('bonus')
-      localStorage.removeItem('superbet_open_bonus')
-    }
-  }, [])
-
-  // Count-up animation for points & levels
-  useEffect(() => {
-    if (!isAnimating || !profil) return
-
-    const start = animatedPoints
-    const end = profil.gesamt_punkte
-    if (start >= end) {
-      setIsAnimating(false)
-      localStorage.setItem('superbet_last_seen_points', String(end))
-      return
-    }
-
-    const diff = end - start
-    const duration = Math.min(2200, Math.max(900, diff * 60))
-    const startTime = performance.now()
-
-    let animationFrameId: number
-
-    const tick = (now: number) => {
-      const elapsed = now - startTime
-      const progress = Math.min(elapsed / duration, 1)
-      const ease = progress * (2 - progress)
-      const currentPoints = Math.floor(start + diff * ease)
-      
-      setAnimatedPoints(currentPoints)
-
-      if (progress < 1) {
-        animationFrameId = requestAnimationFrame(tick)
-      } else {
-        setAnimatedPoints(end)
-        setIsAnimating(false)
-        localStorage.setItem('superbet_last_seen_points', String(end))
-        
-        const finalLvl = calculateLevelDetails(end).level
-        if (finalLvl > initialLevelRef) {
-          setShowLevelUpModal(true)
-        }
-      }
-    }
-
-    animationFrameId = requestAnimationFrame(tick)
-    return () => cancelAnimationFrame(animationFrameId)
-  }, [isAnimating, profil?.gesamt_punkte, initialLevelRef])
-
-  async function lade() {
+  const lade = useCallback(async () => {
     const { data } = await supabase.from('profiles')
       .select('username,avatar_url,gesamt_punkte,exakte_treffer,is_admin')
       .eq('id', user!.id).single()
     
     let dbPoints = 0
-    let dbExacts = 0
-    let dbIsAdmin = false
-    let calculatedRank: number | null = null
 
     if (data) {
       setUsername(data.username)
       setAvatarUrl(data.avatar_url || null)
       dbPoints = data.gesamt_punkte || 0
-      dbExacts = data.exakte_treffer || 0
-      dbIsAdmin = !!data.is_admin
+      const dbExacts = data.exakte_treffer || 0
+      const dbIsAdmin = !!data.is_admin
 
       const { count } = await supabase.from('profiles')
         .select('*', { count: 'exact', head: true })
         .gt('gesamt_punkte', dbPoints)
-      calculatedRank = dbPoints > 0 ? (count || 0) + 1 : null
+      const calculatedRank = dbPoints > 0 ? (count || 0) + 1 : null
       
       const { count: leagueCount } = await supabase.from('league_members')
         .select('*', { count: 'exact', head: true })
@@ -299,7 +249,8 @@ export function ProfilePage() {
         )
       `)
       .eq('user_id', user!.id)
-    const userTips = userTipsData || []
+    const userTips = ((userTipsData || [])
+      .filter((t) => t.match !== null) as unknown as TipDetails[]) || []
     setUserTips(userTips)
 
     let total = 0
@@ -310,7 +261,7 @@ export function ProfilePage() {
 
     if (userTips && userTips.length > 0) {
       total = userTips.length
-      userTips.forEach((t: any) => {
+      userTips.forEach((t) => {
         if (t.punkte === 4) exact++
         else if (t.punkte === 3) diff++
         else if (t.punkte === 2) tend++
@@ -385,7 +336,6 @@ export function ProfilePage() {
     const { data: st2Matches } = await supabase.from('matches')
       .select('anpfiff')
       .eq('spieltag', 2)
-      .order('anpfiff', { ascending: true })
       .limit(1)
 
     if (st2Matches && st2Matches.length > 0) {
@@ -396,7 +346,61 @@ export function ProfilePage() {
     }
 
     setIsLaden(false)
-  }
+  }, [user])
+
+  useEffect(() => { if (!user) return; lade() }, [user, lade])
+
+  useEffect(() => {
+    if (localStorage.getItem('superbet_open_bonus') === 'true') {
+      setActiveTab('bonus')
+      localStorage.removeItem('superbet_open_bonus')
+    }
+  }, [])
+
+  // Count-up animation for points & levels
+  useEffect(() => {
+    if (!isAnimating || !profil) return
+
+    const start = animatedPoints
+    const end = profil.gesamt_punkte
+    if (start >= end) {
+      setIsAnimating(false)
+      localStorage.setItem('superbet_last_seen_points', String(end))
+      return
+    }
+
+    const diff = end - start
+    const duration = Math.min(2200, Math.max(900, diff * 60))
+    const startTime = performance.now()
+
+    let animationFrameId: number
+
+    const tick = (now: number) => {
+      const elapsed = now - startTime
+      const progress = Math.min(elapsed / duration, 1)
+      const ease = progress * (2 - progress)
+      const currentPoints = Math.floor(start + diff * ease)
+      
+      setAnimatedPoints(currentPoints)
+
+      if (progress < 1) {
+        animationFrameId = requestAnimationFrame(tick)
+      } else {
+        setAnimatedPoints(end)
+        setIsAnimating(false)
+        localStorage.setItem('superbet_last_seen_points', String(end))
+        
+        const finalLvl = calculateLevelDetails(end).level
+        if (finalLvl > initialLevelRef) {
+          setShowLevelUpModal(true)
+        }
+      }
+    }
+
+    animationFrameId = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(animationFrameId)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAnimating, initialLevelRef])
 
   async function handleToggleAnpfiff() {
     const nextVal = !notifyAnpfiff
@@ -404,7 +408,7 @@ export function ProfilePage() {
     await supabase.auth.updateUser({
       data: { ...user?.user_metadata, notify_anpfiff: nextVal }
     })
-    useToastStore.getState().toast('Benachrichtigungseinstellungen aktualisiert')
+    useToastStore.getState().toast(language === 'tr' ? 'Bildirim ayarları güncellendi' : language === 'en' ? 'Notification settings updated' : 'Benachrichtigungseinstellungen aktualisiert')
   }
 
   async function handleToggleChat() {
@@ -413,7 +417,7 @@ export function ProfilePage() {
     await supabase.auth.updateUser({
       data: { ...user?.user_metadata, notify_chat: nextVal }
     })
-    useToastStore.getState().toast('Benachrichtigungseinstellungen aktualisiert')
+    useToastStore.getState().toast(language === 'tr' ? 'Bildirim ayarları güncellendi' : language === 'en' ? 'Notification settings updated' : 'Benachrichtigungseinstellungen aktualisiert')
   }
 
   async function handleUsernameUpdate() {
@@ -422,16 +426,16 @@ export function ProfilePage() {
       const cleanUser = username.trim().toLowerCase()
       const { data } = await supabase.from('profiles').select('id').eq('username', cleanUser).limit(1)
       if (data && data.length > 0) {
-        useToastStore.getState().toast('Fehler: Username bereits vergeben!', 'error')
+        useToastStore.getState().toast(t('usernameTaken'), 'error')
         setUsername(user?.user_metadata?.username || '')
         return
       }
 
       await supabase.from('profiles').update({ username: cleanUser }).eq('id', user!.id)
       await supabase.auth.updateUser({ data: { ...user?.user_metadata, username: cleanUser } })
-      useToastStore.getState().toast('Benutzername aktualisiert')
-    } catch (err) {
-      useToastStore.getState().toast('Fehler beim Aktualisieren des Benutzernamens', 'error')
+      useToastStore.getState().toast(t('usernameUpdated'))
+    } catch {
+      useToastStore.getState().toast(language === 'tr' ? 'Kullanıcı adı güncellenirken hata oluştu' : language === 'en' ? 'Error updating username' : 'Fehler beim Aktualisieren des Benutzernamens', 'error')
     }
   }
 
@@ -440,12 +444,12 @@ export function ProfilePage() {
     if (!file || !user) return
 
     if (!file.type.startsWith('image/')) {
-      useToastStore.getState().toast('Fehler: Nur Bilddateien (PNG, JPG, WEBP etc.) sind erlaubt!', 'error')
+      useToastStore.getState().toast(language === 'tr' ? 'Hata: Yalnızca resim dosyalarına (PNG, JPG, WEBP vb.) izin verilir!' : language === 'en' ? 'Error: Only image files (PNG, JPG, WEBP etc.) are allowed!' : 'Fehler: Nur Bilddateien (PNG, JPG, WEBP etc.) sind erlaubt!', 'error')
       return
     }
 
     if (file.size > 2 * 1024 * 1024) {
-      useToastStore.getState().toast('Fehler: Das Bild darf maximal 2 MB groß sein!', 'error')
+      useToastStore.getState().toast(language === 'tr' ? 'Hata: Resim boyutu en fazla 2 MB olabilir!' : language === 'en' ? 'Error: The image must be maximum 2 MB in size!' : 'Fehler: Das Bild darf maximal 2 MB groß sein!', 'error')
       return
     }
 
@@ -454,10 +458,10 @@ export function ProfilePage() {
       const dataUrl = await komprimiereBild(file, 80)
       await supabase.from('profiles').update({ avatar_url: dataUrl }).eq('id', user.id)
       setAvatarUrl(dataUrl)
-      useToastStore.getState().toast('Profilbild aktualisiert')
+      useToastStore.getState().toast(t('avatarUpdated'))
     } catch (err) {
-      console.error('Upload fehlgeschlagen:', err)
-      useToastStore.getState().toast('Fehler beim Hochladen des Bildes', 'error')
+      console.error('Upload failed:', err)
+      useToastStore.getState().toast(language === 'tr' ? 'Resim yüklenirken hata oluştu' : language === 'en' ? 'Error uploading image' : 'Fehler beim Hochladen des Bildes', 'error')
     } finally { setUploading(false) }
   }
 
@@ -499,8 +503,9 @@ export function ProfilePage() {
       setCreatedUsersList([{ username: newUsername.trim(), password: newPassword }])
       setNewUsername('')
       setNewPassword('')
-    } catch (err: any) {
-      setAdminMsg({ type: 'error', text: err?.message || 'Fehler beim Erstellen' })
+    } catch (err) {
+      const errorObj = err as Error
+      setAdminMsg({ type: 'error', text: errorObj?.message || 'Fehler beim Erstellen' })
     } finally {
       setCreatingUser(false)
     }
@@ -525,8 +530,9 @@ export function ProfilePage() {
       setAdminMsg({ type: 'success', text: `Benutzer "${creds.username}" erstellt!` })
       useToastStore.getState().toast(`Benutzer "${creds.username}" erstellt`)
       setCreatedUsersList([creds])
-    } catch (err: any) {
-      setAdminMsg({ type: 'error', text: err?.message || 'Fehler beim Erstellen' })
+    } catch (err) {
+      const errorObj = err as Error
+      setAdminMsg({ type: 'error', text: errorObj?.message || 'Fehler beim Erstellen' })
     } finally {
       setCreatingUser(false)
     }
@@ -543,7 +549,7 @@ export function ProfilePage() {
     
     const results: { username: string; password: string }[] = []
     let successCount = 0
-    let lastError: any = null
+    let lastError: Error | null = null
 
     for (let i = 0; i < batchCount; i++) {
       const creds = generateRandomCreds()
@@ -552,7 +558,7 @@ export function ProfilePage() {
         results.push(creds)
         successCount++
       } catch (err) {
-        lastError = err
+        lastError = err as Error
       }
     }
 
@@ -578,9 +584,10 @@ export function ProfilePage() {
       if (error) throw error
       useToastStore.getState().toast(data?.message || 'Passwort zurückgesetzt')
       setAdminMsg({ type: 'success', text: data?.message || 'Passwort zurückgesetzt' })
-    } catch (err: any) {
-      useToastStore.getState().toast(err?.message || 'Fehler beim Passwort-Reset', 'error')
-      setAdminMsg({ type: 'error', text: err?.message || 'Fehler beim Reset' })
+    } catch (err) {
+      const errorObj = err as Error
+      useToastStore.getState().toast(errorObj?.message || 'Fehler beim Passwort-Reset', 'error')
+      setAdminMsg({ type: 'error', text: errorObj?.message || 'Fehler beim Reset' })
     } finally {
       setCreatingUser(false)
     }
@@ -597,9 +604,10 @@ export function ProfilePage() {
       if (error) throw error
       useToastStore.getState().toast(data?.message || 'Benutzer gelöscht')
       setAdminMsg({ type: 'success', text: data?.message || 'Benutzer gelöscht' })
-    } catch (err: any) {
-      useToastStore.getState().toast(err?.message || 'Fehler beim Löschen', 'error')
-      setAdminMsg({ type: 'error', text: err?.message || 'Fehler beim Löschen' })
+    } catch (err) {
+      const errorObj = err as Error
+      useToastStore.getState().toast(errorObj?.message || 'Fehler beim Löschen', 'error')
+      setAdminMsg({ type: 'error', text: errorObj?.message || 'Fehler beim Löschen' })
     } finally {
       setCreatingUser(false)
     }
@@ -618,9 +626,10 @@ export function ProfilePage() {
       setAdminMsg({ type: 'success', text: data?.message || 'Liga gelöscht' })
       setAllLeagues(prev => prev.filter(l => l.id !== leagueId))
       if (selectedLeagueId === leagueId) setSelectedLeagueId('')
-    } catch (err: any) {
-      useToastStore.getState().toast(err?.message || 'Fehler beim Löschen', 'error')
-      setAdminMsg({ type: 'error', text: err?.message || 'Fehler beim Löschen' })
+    } catch (err) {
+      const errorObj = err as Error
+      useToastStore.getState().toast(errorObj?.message || 'Fehler beim Löschen', 'error')
+      setAdminMsg({ type: 'error', text: errorObj?.message || 'Fehler beim Löschen' })
     } finally {
       setCreatingUser(false)
     }
@@ -643,6 +652,17 @@ export function ProfilePage() {
 
   async function handleSpeichernBonus() {
     if (!user) return
+    // Re-Check Deadline vor jedem Speicher-Versuch
+    const { data: st3Check } = await supabase.from('matches')
+      .select('anpfiff')
+      .eq('spieltag', 3)
+      .lte('anpfiff', new Date().toISOString())
+      .limit(1)
+    if (st3Check && st3Check.length > 0) {
+      useToastStore.getState().toast('Bonus-Tipps sind nach dem 2. Spieltag gesperrt.', 'error')
+      setBonusGesperrt(true)
+      return
+    }
     try {
       for (const [frageId, antwort] of Object.entries(antworten)) {
         const existing = bonusTipps.find(t => t.frage_id === Number(frageId))
@@ -667,7 +687,7 @@ export function ProfilePage() {
         .select('*')
         .eq('user_id', user.id)
       if (bonusData) setBonusTipps(bonusData as BonusTipp[])
-    } catch (err) {
+    } catch {
       useToastStore.getState().toast('Fehler beim Speichern der Bonus-Tipps', 'error')
     }
   }
@@ -708,7 +728,7 @@ export function ProfilePage() {
               : 'border-white/10 text-on-surface hover:bg-white/5'
           }`}
         >
-          📊 Übersicht
+          📊 {t('profileOverview')}
         </button>
         <button
           onClick={() => setActiveTab('achievements')}
@@ -718,7 +738,7 @@ export function ProfilePage() {
               : 'border-white/10 text-on-surface hover:bg-white/5'
           }`}
         >
-          🏆 Erfolge
+          🏆 {t('myAchievements')}
           {newlyUnlockedCount > 0 && (
             <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-[#1E1E1E] animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.8)]" />
           )}
@@ -731,7 +751,7 @@ export function ProfilePage() {
               : 'border-white/10 text-on-surface hover:bg-white/5'
           }`}
         >
-          ⭐ Bonus-Tipps
+          ⭐ {t('bonusTipsTab')}
         </button>
         <button
           onClick={() => setActiveTab('settings')}
@@ -741,7 +761,7 @@ export function ProfilePage() {
               : 'border-white/10 text-on-surface hover:bg-white/5'
           }`}
         >
-          ⚙️ Einstellungen
+          ⚙️ {t('profileSettings')}
         </button>
         {profil?.is_admin && (
           <button
@@ -752,7 +772,7 @@ export function ProfilePage() {
                 : 'border-white/10 text-red-400/70 hover:bg-white/5'
             }`}
           >
-            🛡️ Admin
+            🛡️ {t('admin')}
           </button>
         )}
       </div>
@@ -776,15 +796,6 @@ export function ProfilePage() {
         {activeTab === 'achievements' && (
           <div className="animate-fade-in space-y-6">
             <AchievementsSection 
-              stats={stats}
-              exaktCount={profil?.exakte_treffer || 0}
-              punkte={profil?.gesamt_punkte || 0}
-              userRank={profil?.rang || null}
-              leagueCount={profil?.league_count || 0}
-              isAdmin={!!profil?.is_admin}
-              userTips={userTips}
-              avatarUrl={avatarUrl}
-              username={username}
               unlockedSet={unlockedSet}
               newlyUnlocked={newlyUnlockedSet}
             />
@@ -815,19 +826,45 @@ export function ProfilePage() {
               handleToggleChat={handleToggleChat}
             />
 
+            {/* Language Selector Dropdown */}
+            <div className="bg-surface-container-low border border-surface-container-high rounded-xl p-4 shadow-sm text-left">
+              <h3 className="text-xs font-mono font-bold uppercase tracking-wider text-primary mb-3">
+                {t('languageSelect')}
+              </h3>
+              <div className="relative">
+                <select
+                  value={language}
+                  onChange={(e) => setLanguage(e.target.value as 'de' | 'en' | 'tr')}
+                  className="w-full bg-black/30 border border-outline-variant rounded-md px-3 py-2.5 text-on-surface
+                             font-mono text-xs focus:border-primary-container focus:outline-none focus:shadow-[0_0_10px_rgba(251,191,36,0.2)]
+                             transition-all duration-200 cursor-pointer"
+                >
+                  <option value="de" className="bg-surface-container text-on-surface">Deutsch (Standard)</option>
+                  <option value="en" className="bg-surface-container text-on-surface">English</option>
+                  <option value="tr" className="bg-surface-container text-on-surface">Türkçe</option>
+                </select>
+              </div>
+            </div>
+
             <div className="bg-surface-container-low border border-surface-container-high rounded-xl overflow-hidden shadow-sm text-left">
               <button onClick={() => navigate('/rules')} className="w-full flex items-center gap-3 px-4 py-4 text-on-surface text-sm hover:bg-surface-container transition-colors font-medium border-b border-surface-container-high/60">
                 <BookOpen size={18} className="text-primary" />
                 <div className="flex-1 text-left">
-                  <div className="font-bold">Regelwerk & Punkteschlüssel</div>
-                  <div className="text-[10px] text-on-surface-variant font-mono mt-0.5">Lies nach, wie die Punkte berechnet werden</div>
+                  <div className="font-bold">{t('rulesTitle')}</div>
+                  <div className="text-[10px] text-on-surface-variant font-mono mt-0.5">
+                    {language === 'tr' ? 'Puanların nasıl hesaplandığını inceleyin' : language === 'en' ? 'Read how points are calculated' : 'Lies nach, wie die Punkte berechnet werden'}
+                  </div>
                 </div>
               </button>
               <button onClick={handleStartOnboarding} className="w-full flex items-center gap-3 px-4 py-4 text-on-surface text-sm hover:bg-surface-container transition-colors font-medium">
                 <Sparkles size={18} className="text-primary" />
                 <div className="flex-1 text-left">
-                  <div className="font-bold">Onboarding & Hilfe starten</div>
-                  <div className="text-[10px] text-on-surface-variant font-mono mt-0.5">Zeigt die Einleitungs-Tour erneut an</div>
+                  <div className="font-bold">
+                    {language === 'tr' ? 'Tanıtımı ve yardımı başlat' : language === 'en' ? 'Start onboarding & help' : 'Onboarding & Hilfe starten'}
+                  </div>
+                  <div className="text-[10px] text-on-surface-variant font-mono mt-0.5">
+                    {language === 'tr' ? 'Giriş turunu tekrar gösterir' : language === 'en' ? 'Shows the introductory tour again' : 'Zeigt die Einleitungs-Tour erneut an'}
+                  </div>
                 </div>
               </button>
 
@@ -837,7 +874,7 @@ export function ProfilePage() {
                     const success = await triggerInstall()
                     if (success) {
                       window.dispatchEvent(new CustomEvent('show-toast', { 
-                        detail: { message: '🎉 App wurde erfolgreich installiert!', type: 'success' } 
+                        detail: { message: language === 'tr' ? '🎉 Uygulama başarıyla yüklendi!' : language === 'en' ? '🎉 App installed successfully!' : '🎉 App wurde erfolgreich installiert!', type: 'success' } 
                       }))
                     }
                   }}
@@ -845,8 +882,8 @@ export function ProfilePage() {
                 >
                   <Download size={18} className="text-primary-fixed-dim group-hover:scale-110 transition-transform shrink-0" />
                   <div className="flex-1 text-left">
-                    <div className="font-bold text-primary-fixed-dim">SüperBET App installieren</div>
-                    <div className="text-[10px] text-primary-fixed-dim/75 font-mono mt-0.5">Als App auf dem Startbildschirm speichern für offline Tippabgabe & schnelleren Start</div>
+                    <div className="font-bold text-primary-fixed-dim">{t('pwaInstall')}</div>
+                    <div className="text-[10px] text-primary-fixed-dim/75 font-mono mt-0.5">{t('pwaInstallDesc')}</div>
                   </div>
                 </button>
               )}
@@ -855,8 +892,8 @@ export function ProfilePage() {
                 <div className="w-full flex items-center gap-3 px-4 py-4 text-on-surface text-sm border-t border-white/5 bg-primary/5">
                   <Download size={18} className="text-primary-fixed-dim shrink-0" />
                   <div className="flex-1 text-left">
-                    <div className="font-bold text-primary-fixed-dim">Als App installieren (iOS)</div>
-                    <div className="text-[10px] text-on-surface-variant/80 font-mono mt-0.5">Tippe unten auf <span className="font-bold text-on-surface">Teilen</span> und wähle <span className="font-bold text-on-surface">„Zum Home-Bildschirm“</span>.</div>
+                    <div className="font-bold text-primary-fixed-dim">{t('iosInstallGuide')}</div>
+                    <div className="text-[10px] text-on-surface-variant/80 font-mono mt-0.5" dangerouslySetInnerHTML={{ __html: t('iosInstallDesc') }} />
                   </div>
                 </div>
               )}
@@ -867,7 +904,7 @@ export function ProfilePage() {
                 onClick={logout}
                 className="w-full bg-red-500/10 hover:bg-red-500/15 border border-red-500/20 text-red-400 py-3.5 rounded-lg font-mono text-xs font-bold uppercase tracking-wider transition-all active:scale-[0.98] cursor-pointer text-center"
               >
-                Abmelden (Logout)
+                {t('logout')}
               </button>
             </div>
           </div>

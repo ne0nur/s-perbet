@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuthStore } from '../stores/authStore'
 import { Send, MessageCircle } from 'lucide-react'
@@ -61,28 +61,12 @@ export function MatchChat({ matchId }: MatchChatProps) {
   const [text, setText] = useState('')
   const [isLaden, setIsLaden] = useState(true)
   const [sendeState, setSendeState] = useState<'idle' | 'sending'>('idle')
-  const [profileCache, setProfileCache] = useState<Record<string, { username: string; avatar_url: string | null }>>({})
+  const profileCacheRef = useRef<Record<string, { username: string; avatar_url: string | null }>>({})
   const scrollRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null)
 
-  useEffect(() => {
-    ladeNachrichten()
-    subscribeRealtime()
-    return () => {
-      if (channelRef.current) {
-        supabase.removeChannel(channelRef.current)
-      }
-    }
-  }, [matchId])
-
-  useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight
-    }
-  }, [nachrichten])
-
-  async function ladeNachrichten() {
+  const ladeNachrichten = useCallback(async () => {
     setIsLaden(true)
     const { data } = await supabase
       .from('chat_nachrichten')
@@ -101,7 +85,7 @@ export function MatchChat({ matchId }: MatchChatProps) {
 
     const profileMap: Record<string, { username: string; avatar_url: string | null }> = {}
     profiles?.forEach(p => { profileMap[p.id] = { username: p.username, avatar_url: p.avatar_url } })
-    setProfileCache(prev => ({ ...prev, ...profileMap }))
+    profileCacheRef.current = { ...profileCacheRef.current, ...profileMap }
 
     const enriched: ChatMessage[] = data.map(m => ({
       ...m,
@@ -111,9 +95,9 @@ export function MatchChat({ matchId }: MatchChatProps) {
 
     setNachrichten(enriched)
     setIsLaden(false)
-  }
+  }, [matchId])
 
-  function subscribeRealtime() {
+  const subscribeRealtime = useCallback(() => {
     const channel = supabase
       .channel(`match-chat-${matchId}`)
       .on(
@@ -126,7 +110,7 @@ export function MatchChat({ matchId }: MatchChatProps) {
         },
         async (payload) => {
           const msg = payload.new as ChatMessage
-          let prof = profileCache[msg.user_id]
+          let prof = profileCacheRef.current[msg.user_id]
           if (!prof) {
             const { data: profile } = await supabase
               .from('profiles')
@@ -134,7 +118,7 @@ export function MatchChat({ matchId }: MatchChatProps) {
               .eq('id', msg.user_id)
               .single()
             prof = { username: profile?.username || 'Unbekannt', avatar_url: profile?.avatar_url || null }
-            setProfileCache(prev => ({ ...prev, [msg.user_id]: prof! }))
+            profileCacheRef.current[msg.user_id] = prof
           }
 
           setNachrichten(prev => [...prev, {
@@ -147,7 +131,23 @@ export function MatchChat({ matchId }: MatchChatProps) {
       .subscribe()
 
     channelRef.current = channel
-  }
+  }, [matchId])
+
+  useEffect(() => {
+    ladeNachrichten()
+    subscribeRealtime()
+    return () => {
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current)
+      }
+    }
+  }, [ladeNachrichten, subscribeRealtime])
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+    }
+  }, [nachrichten])
 
   async function handleSenden() {
     if (!text.trim() || !user) return

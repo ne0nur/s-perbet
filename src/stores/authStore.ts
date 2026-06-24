@@ -68,11 +68,12 @@ export const useAuthStore = create<AuthState>((set) => ({
         })(),
         timeoutPromise
       ])
-    } catch (err: any) {
+    } catch (err) {
       console.error('Fehler bei login:', err)
-      const msg = err.message?.includes('Timeout')
+      const errorObj = err as Error
+      const msg = errorObj.message?.includes('Timeout')
         ? 'Verbindung zum Server fehlgeschlagen (Timeout). Bitte prüfe deinen Adblocker oder dein VPN.'
-        : (err.message || 'Login fehlgeschlagen. Bitte versuche es erneut.')
+        : (errorObj.message || 'Login fehlgeschlagen. Bitte versuche es erneut.')
       set({ fehler: msg, isLaden: false })
       throw err
     }

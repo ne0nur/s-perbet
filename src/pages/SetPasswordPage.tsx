@@ -2,13 +2,15 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../stores/authStore'
 import { Lock, Eye, EyeOff, Check } from 'lucide-react'
+import { useTranslation } from '../utils/translations'
 
 export function SetPasswordPage() {
   const [passwort, setPasswort] = useState('')
   const [bestaetigung, setBestaetigung] = useState('')
   const [zeigePasswort, setZeigePasswort] = useState(false)
   const [erfolg, setErfolg] = useState(false)
-  const { passwortAendern, fehler, user } = useAuthStore()
+  const { passwortAendern, fehler } = useAuthStore()
+  const { t } = useTranslation()
   const navigate = useNavigate()
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -18,7 +20,9 @@ export function SetPasswordPage() {
       await passwortAendern(passwort)
       setErfolg(true)
       setTimeout(() => navigate('/dashboard'), 1500)
-    } catch {}
+    } catch (err) {
+      console.error('Fehler beim Passwortändern:', err)
+    }
   }
 
   if (erfolg) {
@@ -28,8 +32,8 @@ export function SetPasswordPage() {
           <div className="w-16 h-16 rounded-full bg-primary-container/10 flex items-center justify-center mx-auto mb-4">
             <Check size={32} className="text-emerald-400" />
           </div>
-          <h2 className="text-xl font-bold text-on-surface mb-2">Passwort geändert!</h2>
-          <p className="text-on-surface-variant text-sm">Weiterleitung...</p>
+          <h2 className="text-xl font-bold text-on-surface mb-2">{t('passwordChanged')}</h2>
+          <p className="text-on-surface-variant text-sm">{t('redirecting')}</p>
         </div>
       </div>
     )
@@ -39,14 +43,14 @@ export function SetPasswordPage() {
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
       <div className="mb-6 text-center">
         <Lock size={28} className="text-primary-fixed-dim mx-auto mb-3" />
-        <h1 className="text-xl font-bold text-on-surface">Neues Passwort</h1>
-        <p className="text-on-surface-variant text-sm mt-1">Mindestens 6 Zeichen</p>
+        <h1 className="text-xl font-bold text-on-surface">{t('newPassword')}</h1>
+        <p className="text-on-surface-variant text-sm mt-1">{t('minCharacters')}</p>
       </div>
 
       <form onSubmit={handleSubmit} className="glass-panel rounded-xl p-6 max-w-sm w-full space-y-4">
         <div>
           <label className="block text-[11px] font-mono text-on-surface-variant mb-1.5 uppercase tracking-wider">
-            Neues Passwort
+            {t('newPassword')}
           </label>
           <div className="relative">
             <input
@@ -64,14 +68,14 @@ export function SetPasswordPage() {
         </div>
         <div>
           <label className="block text-[11px] font-mono text-on-surface-variant mb-1.5 uppercase tracking-wider">
-            Bestätigen
+            {t('confirmPasswordLabel')}
           </label>
           <input type="password" value={bestaetigung} onChange={(e) => setBestaetigung(e.target.value)}
             className={`w-full bg-black/30 border rounded-md px-4 py-2.5 text-on-surface font-mono text-sm
               focus:outline-none ${bestaetigung && passwort !== bestaetigung ? 'border-error' : 'border-outline-variant'}`}
             placeholder="••••••" required />
           {bestaetigung && passwort !== bestaetigung && (
-            <p className="text-error text-[11px] mt-1">Passwörter stimmen nicht überein</p>
+            <p className="text-error text-[11px] mt-1">{t('passwordsMismatch')}</p>
           )}
         </div>
         {fehler && <p className="text-error text-[11px] font-mono bg-error-container/20 rounded-md px-3 py-2">{fehler}</p>}
@@ -79,7 +83,7 @@ export function SetPasswordPage() {
           className="w-full bg-primary-container text-on-primary font-bold text-sm py-3 rounded-md
                      shadow-[0_0_15px_rgba(251,191,36,0.15)] active:scale-95 transition-transform
                      disabled:opacity-50 disabled:cursor-not-allowed">
-          Passwort speichern
+          {t('savePassword')}
         </button>
       </form>
     </div>

@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react'
+import React from 'react'
 import type { Match } from '../stores/matchStore'
 import { Trophy } from 'lucide-react'
 
@@ -24,7 +24,7 @@ export function TournamentBracket({ matches }: TournamentBracketProps) {
   // We want to group two-legged ties into a single "Tie" object
   const buildTies = (spieltag: number) => {
     const roundMatches = knockoutMatches.filter((m) => m.spieltag === spieltag)
-    const ties: { team1: string, team2: string, leg1: Match, leg2?: Match, extra: any }[] = []
+    const ties: { team1: string, team2: string, leg1: Match, leg2?: Match, extra?: { aet?: boolean; pens?: string; agg?: string } }[] = []
     const processed = new Set<string>()
 
     roundMatches.forEach((m) => {
@@ -34,7 +34,7 @@ export function TournamentBracket({ matches }: TournamentBracketProps) {
         (r) => r.id !== m.id && r.heim_team === m.gast_team && r.gast_team === m.heim_team
       )
       
-      let tieInfo = getExtraInfo(m)
+      const tieInfo = getExtraInfo(m)
       
       ties.push({
         team1: m.heim_team,
@@ -55,7 +55,7 @@ export function TournamentBracket({ matches }: TournamentBracketProps) {
   const semis = buildTies(12)
   const final = knockoutMatches.filter((m) => m.spieltag === 13)
 
-  const renderTie = (tie: { team1: string, team2: string, leg1: Match, leg2?: Match, extra: any }, title?: string) => {
+  const renderTie = (tie: { team1: string, team2: string, leg1: Match, leg2?: Match, extra?: { aet?: boolean; pens?: string; agg?: string } }, title?: string) => {
     const { team1, team2, leg1, leg2, extra } = tie
     // For single match (Final)
     if (!leg2 && !leg1) return null

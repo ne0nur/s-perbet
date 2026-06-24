@@ -1,8 +1,7 @@
-import { useState, memo, useMemo, useEffect } from 'react'
-import { Award, ChevronDown, ChevronUp, Lock, Check, Target } from 'lucide-react'
-import { evaluateAchievements } from '../../utils/achievementEvaluator'
-import type { TipDetails } from '../../utils/achievementEvaluator'
+import { memo, useMemo, useEffect } from 'react'
+import { Award, Lock, Check, Target } from 'lucide-react'
 import { useAuthStore } from '../../stores/authStore'
+import { useTranslation } from '../../utils/translations'
 
 interface AchievementBadgeProps {
   id: string
@@ -25,9 +24,9 @@ const AchievementBadge = memo(function AchievementBadge({ id, unlocked, rarity }
 
   if (!unlocked) {
     return (
-      <div className="relative w-14 h-14 p-1 flex items-center justify-center bg-black/85 border border-white/5 rounded-xl flex-shrink-0 shadow-inner opacity-30 grayscale hover:grayscale-0 hover:opacity-100 transition-all duration-300">
+      <div className="relative w-14 h-14 p-1 flex items-center justify-center bg-black/85 border border-white/5 rounded-xl flex-shrink-0 shadow-inner opacity-30 grayscale grayscale hover:grayscale-0 hover:opacity-100 transition-all duration-300">
         <img 
-          src={`${import.meta.env.BASE_URL}achievements/${id}.png`} 
+          src={`${import.meta.env.BASE_URL}achievements/${id}.webp`} 
           alt="" 
           className="w-full h-full object-contain rounded-lg" 
           loading="lazy"
@@ -42,7 +41,7 @@ const AchievementBadge = memo(function AchievementBadge({ id, unlocked, rarity }
       <div className="absolute -inset-0.5 rounded-xl border border-white/5 opacity-20" />
       {/* Image Loader */}
       <img 
-        src={`${import.meta.env.BASE_URL}achievements/${id}.png`} 
+        src={`${import.meta.env.BASE_URL}achievements/${id}.webp`} 
         alt="" 
         className="relative z-10 w-full h-full object-contain rounded-lg drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)]" 
       />
@@ -51,278 +50,132 @@ const AchievementBadge = memo(function AchievementBadge({ id, unlocked, rarity }
 })
 
 interface AchievementsSectionProps {
-  stats: { total: number; exact: number; diff: number; tend: number; miss: number; rate: number }
-  exaktCount: number
-  punkte: number
-  userRank: number | null
-  leagueCount: number
-  isAdmin: boolean
-  userTips: TipDetails[]
-  avatarUrl: string | null
-  username: string
   unlockedSet: Set<string>
   newlyUnlocked: Set<string>
 }
 
+function getAchievementsList(language: string) {
+  if (language === 'tr') {
+    return [
+      { id: 'domstadt_don', name: 'Domstadt-Don', desc: 'En az 27 maç tahmin ettikten sonra genel sıralamada 1. sırada yer alırsınız.', req: 'En az 27 tahminden sonra 1. sıra', rarity: 'local' as const },
+      { id: 'brezelfest_kral', name: 'Brezelfest-Kral', desc: 'Üst üste 5 maçta tam skoru (4 puan) doğru tahmin edersiniz.', req: 'Üst üste 5 tam skor tahmini', rarity: 'local' as const },
+      { id: 'maxi_flaneur', name: 'Maxi-Flaneur', desc: 'Tahmin grubunda 100 toplam puana ulaşan ilk kişi olun.', req: '100 toplam puana ulaşın', rarity: 'local' as const },
+      { id: 'schorle_cay', name: 'Schorle & Çay', desc: 'Cuma akşamı oynanan tüm maçların kazananını doğru tahmin edin.', req: 'Tüm Cuma maçlarının eğilimi doğru (en az 2)', rarity: 'local' as const },
+      { id: 'technik_museum', name: 'Technik-Museum', desc: 'Tahmininizi başlama vuruşundan önceki son 5 dakika içinde teslim edin.', req: 'Maçtan önceki son 0-5 dk içinde tahmin', rarity: 'local' as const },
+      { id: 'altpoertel_sniper', name: 'Altpörtel-Sniper', desc: 'Bir hafta içinde üç deplasman galibiyetini tam skor (4 puan) doğru tahmin edersiniz.', req: 'Bir haftada 3 deplasman tam skoru', rarity: 'local' as const },
+      { id: 'speyer_boss', name: 'Speyer-Boss', desc: 'Tüm sezonu genel sıralamanın zirvesinde (1. sırada) tamamlayın.', req: 'Sezon sonunda genel şampiyon', rarity: 'local' as const },
+      { id: 'vallah_krise', name: 'Vallah Krise', desc: 'Tahmin yaptığınız (en az 3 tahmin) tüm bir haftada tam 0 puan alırsınız.', req: 'Bir haftada 0 puan (en az 3 tahmin)', rarity: 'toxic' as const },
+      { id: 'kupon_yirtan', name: 'Kupon Yırtan', desc: 'En az 2 gol farkla ev sahibi galibiyeti tahmin edersiniz ama takım maçı kaybeder.', req: 'Banko ev sahibi tahmini yatar (fark >= 2)', rarity: 'toxic' as const },
+      { id: 'amk_modus', name: 'Amk-Modus', desc: 'Üst üste üç kez tam skoru tam bir golle kaçırıp sadece doğru kazananı (eğilim) bulursunuz.', req: 'Üst üste 3 kez eğilim, tam skor kıl payı kaçtı', rarity: 'toxic' as const },
+      { id: 'ters_koese', name: 'Ters Köşe', desc: 'Dört büyüklerden (GAL, FEN, BJK, TS) birinin iç saha galibiyetine oynarsınız ama evlerinde kaybederler.', req: 'Dört büyükler evinde yatar', rarity: 'toxic' as const },
+      { id: 'hayalet', name: 'Hayalet', desc: 'Üst üste üç hafta tahmin yapmayı unutursunuz.', req: 'Üst üste 3 hafta tahmin yapılmadı', rarity: 'toxic' as const },
+      { id: 'ugursuz', name: 'Uğursuz', desc: 'Arka arkaya 3 maçta tam skoru tam 1 gol farkla kaçırırsınız.', req: 'Üst üste 3 kez tam 1 gol farkla kaçtı', rarity: 'toxic' as const },
+      { id: 'kral_ciplak', name: 'Kral Çıplak', desc: 'En az 15 puan aldığınız bir haftanın hemen ardından gelen haftada 2 veya daha az puan alırsınız.', req: '>= 15 puanlık haftadan sonra <= 2 puan', rarity: 'toxic' as const },
+      { id: 'finito', name: 'Finito', desc: 'Tüm sezonu tablonun en son sırasında tamamlayın.', req: 'Sezon sonunda sonuncu sıra', rarity: 'toxic' as const },
+      { id: 'derby_baba', name: 'Derby-Baba', desc: 'Kıtalararası derbinin (Galatasaray - Fenerbahçe) skorunu tam olarak doğru tahmin edin.', req: 'GS - FB derbisinde tam skor', rarity: 'rare' as const },
+      { id: 'cim_bom_bom', name: 'Cim Bom Bom', desc: 'Galatasaray galibiyetlerinde 3 kez tam skor tahmini yapın.', req: '3 kez GS galibiyeti tam skoru', rarity: 'common' as const },
+      { id: 'fener_aglama', name: 'Fener Ağlama', desc: 'Fenerbahçe galibiyetlerinde 3 kez tam skor tahmini yapın.', req: '3 kez FB galibiyeti tam skoru', rarity: 'common' as const },
+      { id: 'kara_kartal', name: 'Kara Kartal', desc: 'Beşiktaş galibiyetlerinde 3 kez tam skor tahmini yapın.', req: '3 kez BJK galibiyeti tam skoru', rarity: 'common' as const },
+      { id: 'bize_her_yer_trabzon', name: 'Bize Her Yer Trabzon', desc: 'Trabzonspor galibiyetlerinde 3 kez tam skor tahmini yapın.', req: '3 kez TS galibiyeti tam skoru', rarity: 'common' as const },
+      { id: 'der_alman', name: 'Der Alman', desc: 'Dört büyüklerin ilk 3 derbi maçının her birine beraberlik tahmininde bulunun.', req: 'İlk 3 büyükler derbisine beraberlik', rarity: 'rare' as const },
+      { id: 'gurbetci', name: 'Gurbetçi', desc: 'İlk yarının tüm maçlarını tahmin edin (1-19. haftalar).', req: 'İlk yarıdaki tüm maçlar tahmin edildi', rarity: 'epic' as const },
+      { id: 'hadi_lan', name: 'Hadi Lan!', desc: 'Başlama vuruşundan önceki son dakika içinde tahminde bulunup puan alın.', req: 'Maçtan < 1 dk önce tahminle puan alma', rarity: 'rare' as const },
+      { id: 'ilk_kan', name: 'İlk Kan', desc: 'Sezondaki ilk tahmininizi teslim edin.', req: 'İlk yapılan tahmin', rarity: 'common' as const },
+      { id: 'hosgeldin_abi', name: 'Hoşgeldin Abi', desc: 'Profil resminizi (avatar) yükleyerek profilinizi tamamlayın.', req: 'Profil resmi yüklendi', rarity: 'common' as const },
+      { id: 'macher', name: 'Macher', desc: 'Üst üste 5 hafta boyunca her maç için tahminde bulunun.', req: 'Üst üste 5 hafta tüm maçlar tahmin edildi', rarity: 'epic' as const },
+      { id: 'kahin', name: 'Kahin', desc: 'Tek bir hafta içinde en az 3 tam skor tahmini (4 puan) tutturun.', req: 'Bir haftada 3 tam skor tahmini', rarity: 'legendary' as const },
+      { id: 'son_dakika', name: 'Son Dakika', desc: 'Başlama vuruşundan önceki son 5 dakika içinde tahminde bulunun ve puan alın.', req: 'Son dakikalarda puan kazandıran tahmin', rarity: 'rare' as const },
+      { id: 'bereket', name: 'Bereket', desc: 'Dört büyüklerin üst üste 5 maçını en az 2 puan alacak şekilde doğru tahmin edin.', req: 'Üst üste 5 büyükler maçı doğru (min. 2 puan)', rarity: 'epic' as const },
+      { id: 'psikopat', name: 'Psikopat', desc: 'En az 6 gollü vahşi bir skoru (örn. 4:2, 3:3, 5:1) tam olarak doğru tahmin edin.', req: '>= 6 gollü veya >= 4 farkı tam tahmin', rarity: 'legendary' as const },
+      { id: 'kebap_spiess', name: 'Kebap-Spieß', desc: 'Tek bir hafta içinde 4 tam skor tahmini (4 puan) tutturun.', req: 'Bir haftada 4 tam skor tahmini', rarity: 'legendary' as const },
+      { id: 'sifir_sikinti', name: 'Sıfır Sıkıntı', desc: 'Üst üste 10 maçın her birinden en az bir puan alın.', req: 'Arka arkaya 10 maçta puan kazanıldı', rarity: 'epic' as const },
+      { id: 'gegen_den_strom', name: 'Gegen den Strom', desc: 'Dört büyüklerden birine karşı sürpriz takıma oynayıp başarıyla puan kazanın.', req: 'Dört büyüklere karşı başarılı sürpriz', rarity: 'epic' as const },
+      { id: 'kardesim_benim', name: 'Kardeşim Benim', desc: 'Bir hafta içinde üç kez aynı skoru (örn. 3 kez 2:1) tahmin edin.', req: 'Bir haftada 3 kez aynı skor tahmini', rarity: 'common' as const }
+    ]
+  } else if (language === 'en') {
+    return [
+      { id: 'domstadt_don', name: 'Domstadt-Don', desc: 'You stand at rank 1 on the overall leaderboard after at least 27 predicted matches.', req: 'Rank 1 after at least 27 predictions', rarity: 'local' as const },
+      { id: 'brezelfest_kral', name: 'Brezelfest-Kral', desc: 'You predict the exact outcome (4 points) in 5 consecutive matches.', req: '5 exact tips in a row', rarity: 'local' as const },
+      { id: 'maxi_flaneur', name: 'Maxi-Flaneur', desc: 'Be the first to reach 100 total points in the prediction round.', req: 'Reach 100 total points', rarity: 'local' as const },
+      { id: 'schorle_cay', name: 'Schorle & Çay', desc: 'Predict the correct outcome tendency for all Friday night matches.', req: 'All Friday matches correct tendency (min. 2)', rarity: 'local' as const },
+      { id: 'technik_museum', name: 'Technik-Museum', desc: 'Submit your prediction within the final 5 minutes before kickoff.', req: 'Prediction 0-5 mins before kickoff', rarity: 'local' as const },
+      { id: 'altpoertel_sniper', name: 'Altpörtel-Sniper', desc: 'You predict three away wins exactly right (4 points) on a single matchday.', req: '3 exact away wins on a matchday', rarity: 'local' as const },
+      { id: 'speyer_boss', name: 'Speyer-Boss', desc: 'Finish the entire season at rank 1 of the overall leaderboard.', req: 'Overall winner at end of season', rarity: 'local' as const },
+      { id: 'vallah_krise', name: 'Vallah Krise', desc: 'You get exactly 0 points on a complete matchday (with at least 3 predictions submitted).', req: '0 points on a matchday (min. 3 tips)', rarity: 'toxic' as const },
+      { id: 'kupon_yirtan', name: 'Kupon Yırtan', desc: 'You tip a home win with at least 2 goals difference, but the team loses the match.', req: 'Safe home win tip loses (diff >= 2)', rarity: 'toxic' as const },
+      { id: 'amk_modus', name: 'Amk-Modus', desc: 'You miss the exact score by exactly one goal three times in a row, getting only the tendency.', req: '3x tendency in a row, barely missing exact score', rarity: 'toxic' as const },
+      { id: 'ters_koese', name: 'Ters Köşe', desc: 'You predict a home win for one of the Big 4 (GAL, FEN, BES, TRA), but they lose their home match.', req: 'Big 4 home loss predicted and lost', rarity: 'toxic' as const },
+      { id: 'hayalet', name: 'Hayalet', desc: 'You forget to submit predictions for three consecutive matchdays.', req: '3 matchdays in a row without predictions', rarity: 'toxic' as const },
+      { id: 'ugursuz', name: 'Uğursuz', desc: 'You miss the exact score by exactly one goal in 3 consecutive matches.', req: '3x in a row missed by exactly 1 goal', rarity: 'toxic' as const },
+      { id: 'kral_ciplak', name: 'Kral Çıplak', desc: 'You get 2 or fewer points on a matchday after scoring at least 15 points on the previous matchday.', req: '<= 2 points after matchday with >= 15 points', rarity: 'toxic' as const },
+      { id: 'finito', name: 'Finito', desc: 'Finish the entire season at the absolute bottom of the leaderboard.', req: 'Last place at end of season', rarity: 'toxic' as const },
+      { id: 'derby_baba', name: 'Derby-Baba', desc: 'Predict the exact outcome of an intercontinental derby (Galatasaray vs Fenerbahçe) correctly.', req: 'Exact tip on GS - FB derby', rarity: 'rare' as const },
+      { id: 'cim_bom_bom', name: 'Cim Bom Bom', desc: 'Achieve 3 exact tips on Galatasaray wins.', req: '3 exact GS wins correctly predicted', rarity: 'common' as const },
+      { id: 'fener_aglama', name: 'Fener Ağlama', desc: 'Achieve 3 exact tips on Fenerbahçe wins.', req: '3 exact FB wins correctly predicted', rarity: 'common' as const },
+      { id: 'kara_kartal', name: 'Kara Kartal', desc: 'Achieve 3 exact tips on Beşiktaş wins.', req: '3 exact BJK wins correctly predicted', rarity: 'common' as const },
+      { id: 'bize_her_yer_trabzon', name: 'Bize Her Yer Trabzon', desc: 'Achieve 3 exact tips on Trabzonspor wins.', req: '3 exact TS wins correctly predicted', rarity: 'common' as const },
+      { id: 'der_alman', name: 'Der Alman', desc: 'Predict a draw for each of the first 3 Big 4 derbies.', req: 'First 3 Big-4 derbies predicted draw', rarity: 'rare' as const },
+      { id: 'gurbetci', name: 'Gurbetçi', desc: 'Predict every single match of the entire first half of the season (Matchdays 1-19).', req: 'All first-half matches predicted', rarity: 'epic' as const },
+      { id: 'hadi_lan', name: 'Hadi Lan!', desc: 'Submit a prediction in the very final minute before kickoff and score points.', req: 'Tip < 1 min before kickoff with points', rarity: 'rare' as const },
+      { id: 'ilk_kan', name: 'İlk Kan', desc: 'Submit your very first prediction of the season.', req: 'First prediction submitted', rarity: 'common' as const },
+      { id: 'hosgeldin_abi', name: 'Hoşgeldin Abi', desc: 'Complete your profile by uploading a profile picture (avatar).', req: 'Profile picture uploaded', rarity: 'common' as const },
+      { id: 'macher', name: 'Macher', desc: 'Predict every single match for 5 consecutive matchdays.', req: 'All matches predicted on 5 consecutive matchdays', rarity: 'epic' as const },
+      { id: 'kahin', name: 'Kahin', desc: 'Achieve at least 3 exact prediction outcomes (4 points) on a single matchday.', req: '3 exact tips on a single matchday', rarity: 'legendary' as const },
+      { id: 'son_dakika', name: 'Son Dakika', desc: 'Submit your tip in the final 5 minutes before kickoff and score points.', req: 'Last-minute tip with points', rarity: 'rare' as const },
+      { id: 'bereket', name: 'Bereket', desc: 'Predict 5 consecutive Big 4 matches correctly with at least 2 points.', req: '5x Big 4 correctly tipped in a row (min. 2 points)', rarity: 'epic' as const },
+      { id: 'psikopat', name: 'Psikopat', desc: 'Predict a wild scoreline with at least 6 goals (e.g. 4:2, 3:3, 5:1) exactly right.', req: 'Exact tip on match with >= 6 goals or diff >= 4', rarity: 'legendary' as const },
+      { id: 'kebap_spiess', name: 'Kebap-Spieß', desc: 'Achieve 4 exact prediction outcomes (4 points) on a single matchday.', req: '4 exact tips on a single matchday', rarity: 'legendary' as const },
+      { id: 'sifir_sikinti', name: 'Sıfır Sıkıntı', desc: 'Score at least one point in 10 consecutive matches.', req: '10 matches in a row scored points', rarity: 'epic' as const },
+      { id: 'gegen_den_strom', name: 'Gegen den Strom', desc: 'Predict successfully on the underdog against one of the Big 4 and score points.', req: 'Successful underdog tip vs Big 4', rarity: 'epic' as const },
+      { id: 'kardesim_benim', name: 'Kardeşim Benim', desc: 'Predict the exact same scoreline three times on a single matchday (e.g. 3x 2:1).', req: '3x same scoreline predicted on a matchday', rarity: 'common' as const }
+    ]
+  }
+  return [
+    { id: 'domstadt_don', name: 'Domstadt-Don', desc: 'Du stehst nach mindestens 27 absolvierten Spielen auf Platz 1 der Gesamttabelle.', req: 'Platz 1 nach min. 27 getippten Spielen', rarity: 'local' as const },
+    { id: 'brezelfest_kral', name: 'Brezelfest-Kral', desc: 'Du triffst 5 Spiele hintereinander exakt das richtige Ergebnis (4 Punkte).', req: '5 exakte Tipps in Folge', rarity: 'local' as const },
+    { id: 'maxi_flaneur', name: 'Maxi-Flaneur', desc: 'Erreiche als Erster die Marke von 100 Gesamtpunkten in der Tipprunde.', req: 'Erreiche 100 Gesamtpunkte', rarity: 'local' as const },
+    { id: 'schorle_cay', name: 'Schorle & Çay', desc: 'Gib am Freitagabend für alle anstehenden Spiele den richtigen Tendenztipp ab.', req: 'Alle Freitagsspiele Tendenz richtig (min. 2)', rarity: 'local' as const },
+    { id: 'technik_museum', name: 'Technik-Museum', desc: 'Gib deinen Tipp in den letzten 5 Minuten vor dem Anpfiff ab.', req: 'Tippabgabe 0-5 Min vor Anpfiff', rarity: 'local' as const },
+    { id: 'altpoertel_sniper', name: 'Altpörtel-Sniper', desc: 'Du tippst an einem Spieltag drei Auswärtssiege exakt richtig (4 Punkte).', req: '3 exakte Auswärtssiege an einem Spieltag', rarity: 'local' as const },
+    { id: 'speyer_boss', name: 'Speyer-Boss', desc: 'Beende die gesamte Saison auf Platz 1 der Gesamttabelle.', req: 'Gesamtsieger am Saisonende', rarity: 'local' as const },
+    { id: 'vallah_krise', name: 'Vallah Krise', desc: 'Du holst an einem kompletten Spieltag exakt 0 Punkte (mindestens 3 Tipps abgegeben).', req: '0 Punkte an einem Spieltag (min. 3 Tipps)', rarity: 'toxic' as const },
+    { id: 'kupon_yirtan', name: 'Kupon Yırtan', desc: 'Du tippst auf einen Heimsieg mit mindestens 2 Toren Differenz, aber das Team verliert das Spiel.', req: 'Sicherer Heimsieg-Tipp verliert (Differenz >= 2)', rarity: 'toxic' as const },
+    { id: 'amk_modus', name: 'Amk-Modus', desc: 'Du liegst dreimal hintereinander um genau ein Tor daneben und bekommst nur die Tendenz.', req: '3x Tendenz in Folge, aber knapp am exakten Tipp vorbei', rarity: 'toxic' as const },
+    { id: 'ters_koese', name: 'Ters Köşe', desc: 'Du tippst auf einen Heimsieg eines der Big 4 (GAL, FEN, BES, TRA), aber sie verlieren das Heimspiel.', req: 'Heimniederlage für Big 4 getippt & verloren', rarity: 'toxic' as const },
+    { id: 'hayalet', name: 'Hayalet', desc: 'Du vergisst an drei aufeinanderfolgenden Spieltagen, deine Tipps abzugeben.', req: '3 Spieltage in Folge keine Tipps abgegeben', rarity: 'toxic' as const },
+    { id: 'ugursuz', name: 'Uğursuz', desc: 'Du liegst in 3 aufeinanderfolgenden Spielen um genau ein Tor daneben.', req: '3x in Folge um genau 1 Tor daneben', rarity: 'toxic' as const },
+    { id: 'kral_ciplak', name: 'Kral Çıplak', desc: 'Du holst an einem Spieltag weniger als 2 Punkte, nachdem du am vorherigen Spieltag mindestens 15 Punkte geholt hast.', req: '<= 2 Punkte nach Spieltag mit >= 15 Punkten', rarity: 'toxic' as const },
+    { id: 'finito', name: 'Finito', desc: 'Beende die gesamte Saison auf dem allerletzten Platz der Tabelle.', req: 'Letzter Platz am Saisonende', rarity: 'toxic' as const },
+    { id: 'derby_baba', name: 'Derby-Baba', desc: 'Tippe das Ergebnis eines interkontinentalen Derbys (Galatasaray gegen Fenerbahçe) exakt richtig.', req: 'Exakter Tipp bei GS - FB Derby', rarity: 'rare' as const },
+    { id: 'cim_bom_bom', name: 'Cim Bom Bom', desc: 'Erziele 3 exakte Tipps auf Siege von Galatasaray.', req: '3 exakte GS-Siege richtig getippt', rarity: 'common' as const },
+    { id: 'fener_aglama', name: 'Fener Ağlama', desc: 'Erziele 3 exakte Tipps auf Siege von Fenerbahçe.', req: '3 exakte FB-Siege richtig getippt', rarity: 'common' as const },
+    { id: 'kara_kartal', name: 'Kara Kartal', desc: 'Erziele 3 exakte Tipps auf Siege von Beşiktaş.', req: '3 exakte BJK-Siege richtig getippt', rarity: 'common' as const },
+    { id: 'bize_her_yer_trabzon', name: 'Bize Her Yer Trabzon', desc: 'Erziele 3 exakte Tipps auf Siege von Trabzonspor.', req: '3 exakte TS-Siege richtig getippt', rarity: 'common' as const },
+    { id: 'der_alman', name: 'Der Alman', desc: 'Tippe in den ersten 3 Derbys der Big 4 jeweils auf ein Unentschieden.', req: 'Erste 3 Big-4 Derbies Unentschieden getippt', rarity: 'rare' as const },
+    { id: 'gurbetci', name: 'Gurbetçi', desc: 'Tippe jedes einzelne Spiel der gesamten Hinrunde (Spieltage 1-19).', req: 'Alle Hinrundenspiele getippt', rarity: 'epic' as const },
+    { id: 'hadi_lan', name: 'Hadi Lan!', desc: 'Gib einen Tipp in der allerletzten Minute vor Anpfiff ab und erhalte Punkte.', req: 'Tippabgabe < 1 Min vor Anpfiff mit Punkten', rarity: 'rare' as const },
+    { id: 'ilk_kan', name: 'İlk Kan', desc: 'Gib deinen allerersten Tipp in dieser Saison ab.', req: 'Erster abgegebener Tipp', rarity: 'common' as const },
+    { id: 'hosgeldin_abi', name: 'Hoşgeldin Abi', desc: 'Vervollständige dein Profil, indem du ein Benutzerbild (Avatar) hochlädst.', req: 'Profilbild hochgeladen', rarity: 'common' as const },
+    { id: 'macher', name: 'Macher', desc: 'Gib an 5 aufeinanderfolgenden Spieltagen Tipps für jedes einzelne Spiel ab.', req: 'Alle Spiele an 5 Spieltagen in Folge getippt', rarity: 'epic' as const },
+    { id: 'kahin', name: 'Kahin', desc: 'Erziele an einem einzigen Spieltag mindestens 3 exakte Tippergebnisse (4 Punkte).', req: '3 exakte Tipps an einem Spieltag', rarity: 'legendary' as const },
+    { id: 'son_dakika', name: 'Son Dakika', desc: 'Gib deinen Tipp in den letzten 5 Minuten vor dem Anpfiff ab und hole Punkte.', req: 'Last-Minute Tipp mit Punkten', rarity: 'rare' as const },
+    { id: 'bereket', name: 'Bereket', desc: 'Tippe 5 Spiele der Big 4 in Folge richtig mit mindestens 2 Punkten.', req: '5x Big 4 in Folge richtig getippt (min. 2 Punkte)', rarity: 'epic' as const },
+    { id: 'psikopat', name: 'Psikopat', desc: 'Tippe ein wildes Ergebnis mit mindestens 6 Toren (z.B. 4:2, 3:3, 5:1) exakt richtig.', req: 'Exakter Tipp bei Spiel mit >= 6 Toren oder Differenz >= 4', rarity: 'legendary' as const },
+    { id: 'kebap_spiess', name: 'Kebap-Spieß', desc: 'Erziele an einem einzigen Spieltag 4 exakte Tippergebnisse (4 Punkte).', req: '4 exakte Tipps an einem Spieltag', rarity: 'legendary' as const },
+    { id: 'sifir_sikinti', name: 'Sıfır Sıkıntı', desc: 'Hole in 10 aufeinanderfolgenden Spielen jeweils mindestens einen Punkt.', req: '10 Spiele in Folge Punkte erzielt', rarity: 'epic' as const },
+    { id: 'gegen_den_strom', name: 'Gegen den Strom', desc: 'Tippe erfolgreich auf den Außenseiter gegen eines der Big 4 und hole Punkte.', req: 'Erfolgreicher Außenseiter-Tipp gegen Big 4', rarity: 'epic' as const },
+    { id: 'kardesim_benim', name: 'Kardeşim Benim', desc: 'Tippe an einem Spieltag dreimal das exakt gleiche Ergebnis (z.B. 3x 2:1).', req: '3x gleiches Ergebnis an einem Spieltag getippt', rarity: 'common' as const }
+  ]
+}
+
 export function AchievementsSection({
-  stats,
-  exaktCount,
-  punkte,
-  userRank,
-  leagueCount,
-  isAdmin,
-  userTips,
-  avatarUrl,
-  username,
   unlockedSet,
   newlyUnlocked
 }: AchievementsSectionProps) {
   const { user } = useAuthStore()
+  const { t, language } = useTranslation()
 
-  const achievementsList = [
-    // --- 1. Speyer Locals ---
-    {
-      id: 'domstadt_don',
-      name: 'Domstadt-Don',
-      desc: 'Du stehst nach mindestens 27 absolvierten Spielen auf Platz 1 der Gesamttabelle.',
-      req: 'Platz 1 nach min. 27 getippten Spielen',
-      rarity: 'local' as const
-    },
-    {
-      id: 'brezelfest_kral',
-      name: 'Brezelfest-Kral',
-      desc: 'Du triffst 5 Spiele hintereinander exakt das richtige Ergebnis (4 Punkte).',
-      req: '5 exakte Tipps in Folge',
-      rarity: 'local' as const
-    },
-    {
-      id: 'maxi_flaneur',
-      name: 'Maxi-Flaneur',
-      desc: 'Erreiche als Erster die Marke von 100 Gesamtpunkten in der Tipprunde.',
-      req: 'Erreiche 100 Gesamtpunkte',
-      rarity: 'local' as const
-    },
-    {
-      id: 'schorle_cay',
-      name: 'Schorle & Çay',
-      desc: 'Gib am Freitagabend für alle anstehenden Spiele den richtigen Tendenztipp ab.',
-      req: 'Alle Freitagsspiele Tendenz richtig (min. 2)',
-      rarity: 'local' as const
-    },
-    {
-      id: 'technik_museum',
-      name: 'Technik-Museum',
-      desc: 'Gib deinen Tipp in den letzten 5 Minuten vor dem Anpfiff ab.',
-      req: 'Tippabgabe 0-5 Min vor Anpfiff',
-      rarity: 'local' as const
-    },
-    {
-      id: 'altpoertel_sniper',
-      name: 'Altpörtel-Sniper',
-      desc: 'Du tippst an einem Spieltag drei Auswärtssiege exakt richtig (4 Punkte).',
-      req: '3 exakte Auswärtssiege an einem Spieltag',
-      rarity: 'local' as const
-    },
-    {
-      id: 'speyer_boss',
-      name: 'Speyer-Boss',
-      desc: 'Beende die gesamte Saison auf Platz 1 der Gesamttabelle.',
-      req: 'Gesamtsieger am Saisonende',
-      rarity: 'local' as const
-    },
-    // --- 2. Trash-Talk & Fails ---
-    {
-      id: 'vallah_krise',
-      name: 'Vallah Krise',
-      desc: 'Du holst an einem kompletten Spieltag exakt 0 Punkte (mindestens 3 Tipps abgegeben).',
-      req: '0 Punkte an einem Spieltag (min. 3 Tipps)',
-      rarity: 'toxic' as const
-    },
-    {
-      id: 'kupon_yirtan',
-      name: 'Kupon Yırtan',
-      desc: 'Du tippst auf einen Heimsieg mit mindestens 2 Toren Differenz, aber das Team verliert das Spiel.',
-      req: 'Sicherer Heimsieg-Tipp verliert (Differenz >= 2)',
-      rarity: 'toxic' as const
-    },
-    {
-      id: 'amk_modus',
-      name: 'Amk-Modus',
-      desc: 'Du liegst dreimal hintereinander um genau ein Tor daneben und bekommst nur die Tendenz.',
-      req: '3x Tendenz in Folge, aber knapp am exakten Tipp vorbei',
-      rarity: 'toxic' as const
-    },
-    {
-      id: 'ters_koese',
-      name: 'Ters Köşe',
-      desc: 'Du tippst auf einen Heimsieg eines der Big 4 (GAL, FEN, BES, TRA), aber sie verlieren das Heimspiel.',
-      req: 'Heimniederlage für Big 4 getippt & verloren',
-      rarity: 'toxic' as const
-    },
-    {
-      id: 'hayalet',
-      name: 'Hayalet',
-      desc: 'Du vergisst an drei aufeinanderfolgenden Spieltagen, deine Tipps abzugeben.',
-      req: '3 Spieltage in Folge keine Tipps abgegeben',
-      rarity: 'toxic' as const
-    },
-    {
-      id: 'ugursuz',
-      name: 'Uğursuz',
-      desc: 'Du liegst in 3 aufeinanderfolgenden Spielen um genau ein Tor daneben.',
-      req: '3x in Folge um genau 1 Tor daneben',
-      rarity: 'toxic' as const
-    },
-    {
-      id: 'kral_ciplak',
-      name: 'Kral Çıplak',
-      desc: 'Du holst an einem Spieltag weniger als 2 Punkte, nachdem du am vorherigen Spieltag mindestens 15 Punkte geholt hast.',
-      req: '<= 2 Punkte nach Spieltag mit >= 15 Punkten',
-      rarity: 'toxic' as const
-    },
-    {
-      id: 'finito',
-      name: 'Finito',
-      desc: 'Beende die gesamte Saison auf dem allerletzten Platz der Tabelle.',
-      req: 'Letzter Platz am Saisonende',
-      rarity: 'toxic' as const
-    },
-    // --- 3. Süper Lig Culture ---
-    {
-      id: 'derby_baba',
-      name: 'Derby-Baba',
-      desc: 'Tippe das Ergebnis eines interkontinentalen Derbys (Galatasaray gegen Fenerbahçe) exakt richtig.',
-      req: 'Exakter Tipp bei GS - FB Derby',
-      rarity: 'rare' as const
-    },
-    {
-      id: 'cim_bom_bom',
-      name: 'Cim Bom Bom',
-      desc: 'Erziele 3 exakte Tipps auf Siege von Galatasaray.',
-      req: '3 exakte GS-Siege richtig getippt',
-      rarity: 'common' as const
-    },
-    {
-      id: 'fener_aglama',
-      name: 'Fener Ağlama',
-      desc: 'Erziele 3 exakte Tipps auf Siege von Fenerbahçe.',
-      req: '3 exakte FB-Siege richtig getippt',
-      rarity: 'common' as const
-    },
-    {
-      id: 'kara_kartal',
-      name: 'Kara Kartal',
-      desc: 'Erziele 3 exakte Tipps auf Siege von Beşiktaş.',
-      req: '3 exakte BJK-Siege richtig getippt',
-      rarity: 'common' as const
-    },
-    {
-      id: 'bize_her_yer_trabzon',
-      name: 'Bize Her Yer Trabzon',
-      desc: 'Erziele 3 exakte Tipps auf Siege von Trabzonspor.',
-      req: '3 exakte TS-Siege richtig getippt',
-      rarity: 'common' as const
-    },
-    {
-      id: 'der_alman',
-      name: 'Der Alman',
-      desc: 'Tippe in den ersten 3 Derbys der Big 4 jeweils auf ein Unentschieden.',
-      req: 'Erste 3 Big-4 Derbies Unentschieden getippt',
-      rarity: 'rare' as const
-    },
-    {
-      id: 'gurbetci',
-      name: 'Gurbetçi',
-      desc: 'Tippe jedes einzelne Spiel der gesamten Hinrunde (Spieltage 1-19).',
-      req: 'Alle Hinrundenspiele getippt',
-      rarity: 'epic' as const
-    },
-    {
-      id: 'hadi_lan',
-      name: 'Hadi Lan!',
-      desc: 'Gib einen Tipp in der allerletzten Minute vor Anpfiff ab und erhalte Punkte.',
-      req: 'Tippabgabe < 1 Min vor Anpfiff mit Punkten',
-      rarity: 'rare' as const
-    },
-    // --- 4. Purer Flex ---
-    {
-      id: 'ilk_kan',
-      name: 'İlk Kan',
-      desc: 'Gib deinen allerersten Tipp in dieser Saison ab.',
-      req: 'Erster abgegebener Tipp',
-      rarity: 'common' as const
-    },
-    {
-      id: 'hosgeldin_abi',
-      name: 'Hoşgeldin Abi',
-      desc: 'Vervollständige dein Profil, indem du ein Benutzerbild (Avatar) hochlädst.',
-      req: 'Profilbild hochgeladen',
-      rarity: 'common' as const
-    },
-    {
-      id: 'macher',
-      name: 'Macher',
-      desc: 'Gib an 5 aufeinanderfolgenden Spieltagen Tipps für jedes einzelne Spiel ab.',
-      req: 'Alle Spiele an 5 Spieltagen in Folge getippt',
-      rarity: 'epic' as const
-    },
-    {
-      id: 'kahin',
-      name: 'Kahin',
-      desc: 'Erziele an einem einzigen Spieltag mindestens 3 exakte Tippergebnisse (4 Punkte).',
-      req: '3 exakte Tipps an einem Spieltag',
-      rarity: 'legendary' as const
-    },
-    {
-      id: 'son_dakika',
-      name: 'Son Dakika',
-      desc: 'Gib deinen Tipp in den letzten 5 Minuten vor dem Anpfiff ab und hole Punkte.',
-      req: 'Last-Minute Tipp mit Punkten',
-      rarity: 'rare' as const
-    },
-    {
-      id: 'bereket',
-      name: 'Bereket',
-      desc: 'Tippe 5 Spiele der Big 4 in Folge richtig mit mindestens 2 Punkten.',
-      req: '5x Big 4 in Folge richtig getippt (min. 2 Punkte)',
-      rarity: 'epic' as const
-    },
-    {
-      id: 'psikopat',
-      name: 'Psikopat',
-      desc: 'Tippe ein wildes Ergebnis mit mindestens 6 Toren (z.B. 4:2, 3:3, 5:1) exakt richtig.',
-      req: 'Exakter Tipp bei Spiel mit >= 6 Toren oder Differenz >= 4',
-      rarity: 'legendary' as const
-    },
-    {
-      id: 'kebap_spiess',
-      name: 'Kebap-Spieß',
-      desc: 'Erziele an einem einzigen Spieltag 4 exakte Tippergebnisse (4 Punkte).',
-      req: '4 exakte Tipps an einem Spieltag',
-      rarity: 'legendary' as const
-    },
-    {
-      id: 'sifir_sikinti',
-      name: 'Sıfır Sıkıntı',
-      desc: 'Hole in 10 aufeinanderfolgenden Spielen jeweils mindestens einen Punkt.',
-      req: '10 Spiele in Folge Punkte erzielt',
-      rarity: 'epic' as const
-    },
-    {
-      id: 'gegen_den_strom',
-      name: 'Gegen den Strom',
-      desc: 'Tippe erfolgreich auf den Außenseiter gegen eines der Big 4 und hole Punkte.',
-      req: 'Erfolgreicher Außenseiter-Tipp gegen Big 4',
-      rarity: 'epic' as const
-    },
-    {
-      id: 'kardesim_benim',
-      name: 'Kardeşim Benim',
-      desc: 'Tippe an einem Spieltag dreimal das exakt gleiche Ergebnis (z.B. 3x 2:1).',
-      req: '3x gleiches Ergebnis an einem Spieltag getippt',
-      rarity: 'common' as const
-    }
-  ]
+  const achievementsList = useMemo(() => getAchievementsList(language), [language])
 
   const unlockedCount = unlockedSet.size
 
@@ -334,7 +187,7 @@ export function AchievementsSection({
       if (!aUnlocked && bUnlocked) return 1
       return 0
     })
-  }, [unlockedSet])
+  }, [unlockedSet, achievementsList])
 
   // Speichere den Count im localStorage, damit andere Komponenten (wie AppShell) darauf zugreifen können
   useEffect(() => {
@@ -352,7 +205,7 @@ export function AchievementsSection({
       <div className="flex items-center gap-2 mb-4 pb-3 border-b border-surface-container-high/60">
         <Award size={16} className="text-primary-fixed-dim" />
         <h3 className="text-xs font-mono text-on-surface uppercase tracking-wider font-bold">
-          Meine Erfolge ({unlockedCount}/{achievementsList.length})
+          {t('myAchievements')} ({unlockedCount}/{achievementsList.length})
         </h3>
       </div>
       
@@ -383,11 +236,11 @@ export function AchievementsSection({
                       </h4>
                       {unlocked ? (
                         <span className="flex items-center gap-1 text-[7px] font-mono uppercase tracking-wider text-green-400 bg-green-500/10 px-1.5 py-0.5 rounded border border-green-500/20 font-bold shrink-0">
-                          <Check size={8} strokeWidth={3} /> Freigeschaltet
+                          <Check size={8} strokeWidth={3} /> {t('unlockedLabel')}
                         </span>
                       ) : (
                         <span className="flex items-center gap-1 text-[7px] font-mono uppercase tracking-wider text-slate-400 bg-slate-500/10 px-1.5 py-0.5 rounded border border-slate-500/20 shrink-0 font-bold">
-                          <Lock size={8} strokeWidth={3} /> Gesperrt
+                          <Lock size={8} strokeWidth={3} /> {t('lockedLabel')}
                         </span>
                       )}
                     </div>
@@ -398,7 +251,9 @@ export function AchievementsSection({
                   <div className={`flex items-start gap-1.5 mt-2.5 p-1.5 rounded-lg border ${unlocked ? 'bg-primary-container/20 border-primary/20 text-primary-fixed-dim' : 'bg-surface-container border-surface-container-high text-on-surface-variant/70'}`}>
                     <Target size={12} className="shrink-0 mt-0.5" />
                     <span className="text-[8.5px] font-mono leading-snug font-semibold">
-                      <span className="uppercase tracking-wider opacity-70 block text-[7px] mb-0.5">Mission</span>
+                      <span className="uppercase tracking-wider opacity-70 block text-[7px] mb-0.5">
+                        {t('missionLabel')}
+                      </span>
                       {ach.req}
                     </span>
                   </div>

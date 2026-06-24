@@ -48,10 +48,8 @@ export function evaluateAchievements(
   }
 
   const punkte = profil?.gesamt_punkte || 0
-  const exaktCount = profil?.exakte_treffer || 0
   const userRank = profil?.rang || null
   const leagueCount = profil?.league_count || 0
-  const isAdmin = !!profil?.is_admin
 
   // Filter finished and upcoming tips
   const finishedTips = userTips

@@ -3,11 +3,15 @@ import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../stores/authStore'
 import { supabase } from '../lib/supabase'
 import { useToastStore } from '../stores/toastStore'
-import { Trophy, User, Lock, ArrowRight, Eye, EyeOff, ChevronLeft, Sparkles, Check, X, ShieldAlert } from 'lucide-react'
+import { Trophy, User, Lock, ArrowRight, Eye, EyeOff, ChevronLeft, Sparkles, ShieldAlert } from 'lucide-react'
+import { useLanguageStore } from '../stores/languageStore'
+import { useTranslation } from '../utils/translations'
 
 type AuthView = 'login' | 'invite' | 'ask-account' | 'onboarding'
 
 export function LoginPage() {
+  const { t, language } = useTranslation()
+  const { setLanguage } = useLanguageStore()
   const [view, setView] = useState<AuthView>('login')
   
   // Login states
@@ -68,11 +72,11 @@ export function LoginPage() {
               league_id: pendingLeagueId,
               user_id: user.id
             })
-            useToastStore.getState().toast('Liga erfolgreich beigetreten!')
+            useToastStore.getState().toast(t('leagueJoinedSuccess'))
           }
         }
       }
-    } catch {}
+    } catch { /* Silently ignore invite check errors */ }
   }
 
   // Einladungscode prüfen
@@ -104,15 +108,15 @@ export function LoginPage() {
         .single()
 
       if (error || !league) {
-        setLocalFehler('Dieser Einladungscode existiert nicht oder ist ungültig.')
+        setLocalFehler(t('invalidCode'))
         return
       }
 
       setInviteLeague(league)
       localStorage.setItem('superbet_pending_league_id', league.id)
       setView('ask-account')
-    } catch (err) {
-      setLocalFehler('Dieser Einladungscode existiert nicht oder ist ungültig.')
+    } catch {
+      setLocalFehler(t('invalidCode'))
     } finally {
       setValidatingCode(false)
     }
@@ -125,19 +129,19 @@ export function LoginPage() {
     
     const cleanUser = regUsername.trim().toLowerCase()
     if (!cleanUser) {
-      setLocalFehler('Benutzername darf nicht leer sein.')
+      setLocalFehler(t('usernameEmpty'))
       return
     }
     if (cleanUser.length < 3) {
-      setLocalFehler('Benutzername muss mindestens 3 Zeichen lang sein.')
+      setLocalFehler(t('usernameMin'))
       return
     }
     if (regPassword.length < 6) {
-      setLocalFehler('Das Passwort muss mindestens 6 Zeichen lang sein.')
+      setLocalFehler(t('passwordMin'))
       return
     }
     if (regPassword !== regPasswordConfirm) {
-      setLocalFehler('Die Passwörter stimmen nicht überein.')
+      setLocalFehler(t('passwordsMismatch'))
       return
     }
 
@@ -150,7 +154,7 @@ export function LoginPage() {
         .limit(1)
 
       if (existing && existing.length > 0) {
-        setLocalFehler('Dieser Benutzername ist leider bereits vergeben.')
+        setLocalFehler(t('usernameTaken'))
         return
       }
 
@@ -165,7 +169,7 @@ export function LoginPage() {
       })
 
       if (signupError || !authResult.user) {
-        throw new Error(signupError?.message || 'Registrierung fehlgeschlagen.')
+        throw new Error(signupError?.message || (language === 'tr' ? 'Kayıt başarısız.' : language === 'en' ? 'Registration failed.' : 'Registrierung fehlgeschlagen.'))
       }
 
       // 3. Dem User das Profil aktualisieren (Trigger hat bereits gearbeitet, wir setzen Profil up)
@@ -180,22 +184,40 @@ export function LoginPage() {
           league_id: inviteLeague.id,
           user_id: authResult.user.id
         })
-        useToastStore.getState().toast(`Erfolgreich erstellt und der Liga "${inviteLeague.name}" beigetreten!`)
+        useToastStore.getState().toast(t('registerAndJoinSuccess', { name: inviteLeague.name }))
       } else {
-        useToastStore.getState().toast('Konto erfolgreich erstellt!')
+        useToastStore.getState().toast(t('registerSuccess'))
       }
 
       // Da supabase.auth.signUp bei korrekter Konfiguration sofort einloggt,
       // lauscht authStore per onAuthStateChange darauf und leitet weiter.
       // Falls nicht, forcen wir den Login
       await login(cleanUser, regPassword)
-    } catch (err: any) {
-      setLocalFehler(err.message || 'Fehler bei der Registrierung.')
+    } catch (err: unknown) {
+      setLocalFehler(err instanceof Error ? err.message : 'Fehler bei der Registrierung.')
     }
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4 animate-page-enter">
+    <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4 animate-page-enter relative">
+      {/* Floating Language Switcher */}
+      <div className="absolute top-4 right-4 flex items-center gap-1 bg-surface-container-high/45 border border-white/5 rounded-full p-1 backdrop-blur-md z-50">
+        {(['de', 'en', 'tr'] as const).map((lang) => (
+          <button
+            key={lang}
+            type="button"
+            onClick={() => setLanguage(lang)}
+            className={`px-2.5 py-1 rounded-full text-[10px] font-mono font-bold uppercase transition-all ${
+              language === lang
+                ? 'bg-primary-container text-on-primary-container shadow-[0_0_8px_rgba(251,191,36,0.25)]'
+                : 'text-on-surface-variant hover:text-on-surface'
+            }`}
+          >
+            {lang}
+          </button>
+        ))}
+      </div>
+
       {/* Logo-Sektion */}
       <div className="mb-8 text-center select-none">
         <div className="w-16 h-16 rounded-full bg-primary-container/10 flex items-center justify-center mx-auto mb-4 shadow-[0_0_30px_rgba(251,191,36,0.08)]">
@@ -205,7 +227,9 @@ export function LoginPage() {
           <span className="superbet-text-super text-2xl">SÜPER</span>
           <span className="superbet-badge-bet text-xl ml-1">BET</span>
         </div>
-        <p className="text-on-surface-variant/50 text-[9px] mt-1 font-mono tracking-[0.25em] uppercase">Süper Lig Tipprunde</p>
+        <p className="text-on-surface-variant/50 text-[9px] mt-1 font-mono tracking-[0.25em] uppercase">
+          {t('saisonPredictionLeagueSubtitle')}
+        </p>
       </div>
 
       <div className="w-full max-w-sm">
@@ -216,17 +240,17 @@ export function LoginPage() {
             className={`glass-panel rounded-2xl p-6 space-y-4 text-left ${shake ? 'animate-shake' : ''}`}
           >
             <div className="flex items-center justify-between border-b border-white/5 pb-2.5">
-              <h2 className="text-sm font-bold text-on-surface uppercase font-mono tracking-wider">Anmelden</h2>
+              <h2 className="text-sm font-bold text-on-surface uppercase font-mono tracking-wider">{t('loginTitle')}</h2>
               {pendingLeagueId && (
                 <div className="text-[9px] font-mono bg-primary-container/15 text-primary border border-primary-container/30 px-2 py-0.5 rounded">
-                  Liga-Beitritt ausstehend
+                  {t('pendingLeagueJoin')}
                 </div>
               )}
             </div>
 
             <div>
               <label className="block text-[10px] font-mono text-on-surface-variant mb-1.5 uppercase tracking-wider">
-                Benutzername
+                {t('username')}
               </label>
               <div className="relative">
                 <User size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/70" />
@@ -245,7 +269,7 @@ export function LoginPage() {
 
             <div>
               <label className="block text-[10px] font-mono text-on-surface-variant mb-1.5 uppercase tracking-wider">
-                Passwort
+                {t('password')}
               </label>
               <div className="relative">
                 <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/70" />
@@ -280,7 +304,7 @@ export function LoginPage() {
               {isLaden ? (
                 <div className="w-4 h-4 border-2 border-on-primary border-t-transparent rounded-full animate-spin" />
               ) : (
-                <>Einloggen <ArrowRight size={14} /></>
+                <>{t('loginTitle')} <ArrowRight size={14} /></>
               )}
             </button>
 
@@ -290,7 +314,7 @@ export function LoginPage() {
                 onClick={() => { setView('invite'); setLocalFehler(null); }}
                 className="text-[10px] text-primary-fixed-dim hover:underline font-mono uppercase tracking-wider"
               >
-                ⚡ Mit Einladungscode beitreten
+                {t('inviteFlowBtn')}
               </button>
             </div>
           </form>
@@ -310,16 +334,16 @@ export function LoginPage() {
               >
                 <ChevronLeft size={16} />
               </button>
-              <h2 className="text-sm font-bold text-on-surface uppercase font-mono tracking-wider">Einladungscode</h2>
+              <h2 className="text-sm font-bold text-on-surface uppercase font-mono tracking-wider">{t('inviteCode')}</h2>
             </div>
 
             <p className="text-[11px] text-on-surface-variant font-mono leading-relaxed">
-              Trage den Code ein, den du von deinem Couseng oder Admin erhalten hast.
+              {t('inviteCodeDesc')}
             </p>
 
             <div>
               <label className="block text-[10px] font-mono text-on-surface-variant mb-1.5 uppercase tracking-wider">
-                Code eingeben
+                {t('enterCodeLabel')}
               </label>
               <input
                 type="text"
@@ -347,7 +371,7 @@ export function LoginPage() {
               {validatingCode ? (
                 <div className="w-4 h-4 border-2 border-on-primary border-t-transparent rounded-full animate-spin" />
               ) : (
-                <>Code prüfen <ArrowRight size={14} /></>
+                <>{t('validateCode')} <ArrowRight size={14} /></>
               )}
             </button>
           </form>
@@ -364,41 +388,43 @@ export function LoginPage() {
               >
                 <ChevronLeft size={16} />
               </button>
-              <h2 className="text-sm font-bold text-on-surface uppercase font-mono tracking-wider">Liga beitreten</h2>
+              <h2 className="text-sm font-bold text-on-surface uppercase font-mono tracking-wider">{t('joinLeagueTitle')}</h2>
             </div>
 
             <div className="p-3 bg-primary-container/10 border border-primary-container/20 rounded-xl flex items-center gap-3">
               <div className="w-8 h-8 rounded-full bg-primary-container/15 flex items-center justify-center text-lg shrink-0">⚽</div>
               <div className="min-w-0">
-                <p className="text-[10px] font-mono uppercase tracking-wider text-primary">Liga gefunden</p>
+                <p className="text-[10px] font-mono uppercase tracking-wider text-primary">{t('leagueFound')}</p>
                 <p className="text-xs font-bold text-on-surface truncate">{inviteLeague.name}</p>
               </div>
             </div>
 
             <p className="text-[11px] text-on-surface-variant font-mono leading-relaxed">
-              Besitzt du bereits einen aktiven **SüperBET-Account**?
+              {t('haveAccount')}
             </p>
 
             <div className="space-y-2 pt-2">
               <button
+                type="button"
                 onClick={() => {
                   setPendingLeagueId(inviteLeague.id)
                   if (inviteLeague) {
                     localStorage.setItem('superbet_pending_league_id', inviteLeague.id)
                   }
                   setView('login')
-                  useToastStore.getState().toast(`Logge dich ein, um "${inviteLeague.name}" beizutreten!`)
+                  useToastStore.getState().toast(t('loginToJoin', { name: inviteLeague.name }))
                 }}
                 className="w-full bg-surface-container-high border border-white/10 hover:border-white/20 text-on-surface font-bold text-xs py-3 rounded-md uppercase tracking-wider active:scale-95 transition-all text-center"
               >
-                Ja, einloggen & beitreten
+                {t('loginAndJoin')}
               </button>
               
               <button
+                type="button"
                 onClick={() => setView('onboarding')}
                 className="w-full bg-primary-container text-on-primary font-bold text-xs py-3 rounded-md uppercase tracking-wider shadow-[0_0_15px_rgba(251,191,36,0.1)] active:scale-95 transition-all flex items-center justify-center gap-2"
               >
-                Nein, neuen Account erstellen <Sparkles size={14} />
+                {t('noAccount')} <Sparkles size={14} />
               </button>
             </div>
           </div>
@@ -418,16 +444,16 @@ export function LoginPage() {
               >
                 <ChevronLeft size={16} />
               </button>
-              <h2 className="text-sm font-bold text-on-surface uppercase font-mono tracking-wider">Account erstellen</h2>
+              <h2 className="text-sm font-bold text-on-surface uppercase font-mono tracking-wider">{t('registerTitle')}</h2>
             </div>
 
             <p className="text-[10px] font-mono text-on-surface-variant/80">
-              Du wirst Mitglied in: <span className="text-primary font-bold">{inviteLeague.name}</span>
+              {t('joinAsMemberOf')} <span className="text-primary font-bold">{inviteLeague.name}</span>
             </p>
 
             <div>
               <label className="block text-[10px] font-mono text-on-surface-variant mb-1.5 uppercase tracking-wider">
-                Benutzername wählen
+                {t('chooseUsername')}
               </label>
               <div className="relative">
                 <User size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/70" />
@@ -446,7 +472,7 @@ export function LoginPage() {
 
             <div>
               <label className="block text-[10px] font-mono text-on-surface-variant mb-1.5 uppercase tracking-wider">
-                Passwort festlegen
+                {t('setPassword')}
               </label>
               <div className="relative">
                 <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/70" />
@@ -469,7 +495,7 @@ export function LoginPage() {
 
             <div>
               <label className="block text-[10px] font-mono text-on-surface-variant mb-1.5 uppercase tracking-wider">
-                Passwort wiederholen
+                {t('confirmPassword')}
               </label>
               <div className="relative">
                 <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/70" />
@@ -500,7 +526,7 @@ export function LoginPage() {
               {isLaden ? (
                 <div className="w-4 h-4 border-2 border-on-primary border-t-transparent rounded-full animate-spin" />
               ) : (
-                <>Registrieren & Beitreten <ArrowRight size={14} /></>
+                <>{t('registerAndJoin')} <ArrowRight size={14} /></>
               )}
             </button>
           </form>

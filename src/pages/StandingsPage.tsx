@@ -1,8 +1,11 @@
-import { useEffect, useState } from 'react'
+ 
+import { useEffect, useState, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
+import type { Match } from '../stores/matchStore'
 import { getTeamLogo } from '../lib/teamLogos'
 import { TeamInspector } from '../components/TeamInspector'
 import { TournamentBracket } from '../components/TournamentBracket'
+import { useTranslation } from '../utils/translations'
 
 interface LeagueRow {
   team: string
@@ -18,8 +21,9 @@ interface LeagueRow {
 }
 
 export function StandingsPage() {
+  const { t, language } = useTranslation()
   const [standings, setStandings] = useState<LeagueRow[]>([])
-  const [matchesForPhase, setMatchesForPhase] = useState<any[]>([]) // Für K.o.-Phasen
+  const [matchesForPhase, setMatchesForPhase] = useState<Match[]>([]) // Für K.o.-Phasen
   const [isLaden, setIsLaden] = useState(true)
   const [saison, setSaison] = useState(2026)
   const [selectedTeam, setSelectedTeam] = useState<string | null>(null)
@@ -28,47 +32,7 @@ export function StandingsPage() {
   const [viewPhase, setViewPhase] = useState<'table' | 'baum'>('table')
   const [availablePhases, setAvailablePhases] = useState<number[]>([])
 
-  useEffect(() => {
-    const handleResize = () => {
-      setIsDesktop(window.innerWidth >= 1024)
-    }
-    window.addEventListener('resize', handleResize)
-    return () => window.removeEventListener('resize', handleResize)
-  }, [])
-
-  useEffect(() => {
-    setViewPhase('table')
-    setSaison(2026)
-  }, [viewTournament])
-
-  useEffect(() => {
-    setViewPhase('table')
-  }, [saison])
-
-  useEffect(() => {
-    if (viewTournament === 'Champions League') {
-      ladeMatchesTabelle(saison)
-    } else {
-      if (saison === 2026) {
-        ladeMatchesTabelle(2026)
-      } else {
-        ladeTabelleHistorisch(saison)
-      }
-    }
-  }, [saison, viewTournament])
-
-  useEffect(() => {
-    if (isDesktop && standings.length > 0 && viewPhase === 'table') {
-      const hasTeam = standings.some(s => s.team === selectedTeam)
-      if (!hasTeam) {
-        setSelectedTeam(standings[0].team)
-      }
-    } else if (!isDesktop || viewPhase !== 'table') {
-      setSelectedTeam(null)
-    }
-  }, [isDesktop, standings, selectedTeam, viewPhase])
-
-  async function ladeMatchesTabelle(targetSeason: number) {
+  const ladeMatchesTabelle = useCallback(async (targetSeason: number) => {
     setIsLaden(true)
     try {
       const { data: matchesData, error } = await supabase
@@ -126,10 +90,14 @@ export function StandingsPage() {
         return a.team.localeCompare(b.team)
       })
       setStandings(list)
+      setSelectedTeam(prev => {
+        const hasTeam = list.some(s => s.team === prev)
+        return hasTeam ? prev : (list[0]?.team || null)
+      })
     } catch (e) { console.error(e) } finally { setIsLaden(false) }
-  }
+  }, [viewTournament])
 
-  async function ladeTabelleHistorisch(seasonYear: number) {
+  const ladeTabelleHistorisch = useCallback(async (seasonYear: number) => {
     setIsLaden(true)
     try {
       if (viewTournament === 'Champions League') {
@@ -160,19 +128,34 @@ export function StandingsPage() {
       }))
 
       setStandings(list)
+      setSelectedTeam(prev => {
+        const hasTeam = list.some(s => s.team === prev)
+        return hasTeam ? prev : (list[0]?.team || null)
+      })
     } catch (e) {
       console.error(e)
     } finally { setIsLaden(false) }
-  }
+  }, [viewTournament])
 
-  const getPhaseName = (st: number) => {
-    if (st === 9) return 'Play-offs'
-    if (st === 10) return 'Achtelfinale'
-    if (st === 11) return 'Viertelfinale'
-    if (st === 12) return 'Halbfinale'
-    if (st === 13) return 'Finale'
-    return `${st}. Phase`
-  }
+  useEffect(() => {
+    const handleResize = () => {
+      setIsDesktop(window.innerWidth >= 1024)
+    }
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
+  useEffect(() => {
+    if (viewTournament === 'Champions League') {
+      ladeMatchesTabelle(saison)
+    } else {
+      if (saison === 2026) {
+        ladeMatchesTabelle(2026)
+      } else {
+        ladeTabelleHistorisch(saison)
+      }
+    }
+  }, [saison, viewTournament, ladeMatchesTabelle, ladeTabelleHistorisch])
 
   if (isLaden) return (
     <div className="min-h-screen bg-background flex items-center justify-center">
@@ -186,14 +169,22 @@ export function StandingsPage() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 md:mb-6 max-w-[1600px] w-full gap-3">
         <div className="flex bg-surface-container border border-surface-container-high p-1 rounded-lg">
           <button
-            onClick={() => setViewTournament('Süper Lig')}
+            onClick={() => {
+              setViewTournament('Süper Lig')
+              setViewPhase('table')
+              setSaison(2026)
+            }}
             className={`px-3 py-1.5 text-xs font-medium rounded-md whitespace-nowrap transition-all flex items-center gap-2 ${viewTournament === 'Süper Lig' ? 'bg-primary text-on-primary font-bold shadow-md' : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container/50'}`}
           >
             <img src={`${import.meta.env.BASE_URL}logos/Süper_Lig.png`} alt="SL" className="w-6 h-6 object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.6)] brightness-110" />
             Süper Lig
           </button>
           <button
-            onClick={() => setViewTournament('Champions League')}
+            onClick={() => {
+              setViewTournament('Champions League')
+              setViewPhase('table')
+              setSaison(2026)
+            }}
             className={`px-3 py-1.5 text-xs font-medium rounded-md whitespace-nowrap transition-all flex items-center gap-2 ${viewTournament === 'Champions League' ? 'bg-primary text-on-primary font-bold shadow-md' : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container/50'}`}
           >
             <img src={`${import.meta.env.BASE_URL}logos/UEFA_Champions_League_logo.png`} alt="CL" className="w-6 h-6 object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.6)] brightness-110" />
@@ -203,17 +194,20 @@ export function StandingsPage() {
 
         <select
           value={saison}
-          onChange={(e) => setSaison(parseInt(e.target.value))}
+          onChange={(e) => {
+            setSaison(parseInt(e.target.value))
+            setViewPhase('table')
+          }}
           className="bg-surface-container border border-surface-container-high rounded-lg px-3 py-1.5 text-xs text-on-surface focus:outline-none focus:border-primary-container font-mono"
         >
-          <option value={2026}>Saison 2026/27</option>
-          <option value={2025}>Saison 2025/26</option>
+          <option value={2026}>{t('seasonLabel', { year: '2026/27' })}</option>
+          <option value={2025}>{t('seasonLabel', { year: '2025/26' })}</option>
           {viewTournament === 'Süper Lig' && (
             <>
-              <option value={2024}>Saison 2024/25</option>
-              <option value={2023}>Saison 2023/24</option>
-              <option value={2022}>Saison 2022/23</option>
-              <option value={2021}>Saison 2021/22</option>
+              <option value={2024}>{t('seasonLabel', { year: '2024/25' })}</option>
+              <option value={2023}>{t('seasonLabel', { year: '2023/24' })}</option>
+              <option value={2022}>{t('seasonLabel', { year: '2022/23' })}</option>
+              <option value={2021}>{t('seasonLabel', { year: '2021/22' })}</option>
             </>
           )}
         </select>
@@ -226,14 +220,14 @@ export function StandingsPage() {
             onClick={() => setViewPhase('table')}
             className={`px-4 py-2 text-xs font-medium rounded-md whitespace-nowrap transition-all ${viewPhase === 'table' ? 'bg-surface-container-high text-on-surface font-bold shadow-sm' : 'text-on-surface-variant hover:text-on-surface'}`}
           >
-            Ligaphase (Tabelle)
+            {t('clLeaguePhaseTable')}
           </button>
           {availablePhases.length > 0 && (
             <button
               onClick={() => setViewPhase('baum')}
               className={`px-4 py-2 text-xs font-medium rounded-md whitespace-nowrap transition-all ${viewPhase === 'baum' ? 'bg-surface-container-high text-on-surface font-bold shadow-sm' : 'text-on-surface-variant hover:text-on-surface'}`}
             >
-              K.O.-Phase (Turnierbaum)
+              {t('clKnockoutPhase')}
             </button>
           )}
         </div>
@@ -243,7 +237,7 @@ export function StandingsPage() {
         // ─── Matches Ansicht für K.o.-Phasen (Turnierbaum) ───
         <div className="w-full">
           {matchesForPhase.length === 0 ? (
-            <div className="col-span-full py-12 text-center text-on-surface-variant font-mono text-sm">Keine Spiele gefunden.</div>
+            <div className="col-span-full py-12 text-center text-on-surface-variant font-mono text-sm">{t('noMatchesFound')}</div>
           ) : (
             <TournamentBracket matches={matchesForPhase} />
           )}
@@ -260,14 +254,14 @@ export function StandingsPage() {
                   <tr className="bg-surface-container border-b border-surface-container-high">
                     <th className="py-2.5 px-2 text-center font-mono text-[9px] text-on-surface-variant uppercase font-normal w-[28px]">#</th>
                     <th className="py-2.5 px-2 font-mono text-[9px] text-on-surface-variant uppercase font-normal">Team</th>
-                    <th className="py-2.5 px-1 text-center font-mono text-[9px] text-on-surface-variant uppercase font-normal w-[22px]" title="Spiele">Sp</th>
-                    <th className="py-2.5 px-1 text-center font-mono text-[9px] text-on-surface-variant uppercase font-normal w-[22px] hidden sm:table-cell" title="Siege">S</th>
-                    <th className="py-2.5 px-1 text-center font-mono text-[9px] text-on-surface-variant uppercase font-normal w-[22px] hidden sm:table-cell" title="Unentschieden">U</th>
-                    <th className="py-2.5 px-1 text-center font-mono text-[9px] text-on-surface-variant uppercase font-normal w-[22px] hidden sm:table-cell" title="Niederlagen">N</th>
-                    <th className="py-2.5 px-1 text-center font-mono text-[9px] text-on-surface-variant uppercase font-normal w-[45px] hidden sm:table-cell" title="Torverhältnis (Tore : Gegentore)">Tore</th>
-                    <th className="py-2.5 px-1 text-center font-mono text-[9px] text-on-surface-variant uppercase font-normal w-[30px]" title="Tordifferenz">+/-</th>
-                    <th className="py-2.5 px-2 text-center font-mono text-[9px] text-primary-fixed-dim uppercase font-bold w-[30px]" title="Punkte">Pkt</th>
-                    <th className="py-2.5 px-1 text-center font-mono text-[9px] text-on-surface-variant uppercase font-normal w-[80px]">Form</th>
+                    <th className="py-2.5 px-1 text-center font-mono text-[9px] text-on-surface-variant uppercase font-normal w-[22px]" title={t('tableHeaderPlayedTitle')}>{t('tableHeaderPlayed')}</th>
+                    <th className="py-2.5 px-1 text-center font-mono text-[9px] text-on-surface-variant uppercase font-normal w-[22px] hidden sm:table-cell" title={t('tableHeaderWonTitle')}>{t('tableHeaderWon')}</th>
+                    <th className="py-2.5 px-1 text-center font-mono text-[9px] text-on-surface-variant uppercase font-normal w-[22px] hidden sm:table-cell" title={t('tableHeaderDrawnTitle')}>{t('tableHeaderDrawn')}</th>
+                    <th className="py-2.5 px-1 text-center font-mono text-[9px] text-on-surface-variant uppercase font-normal w-[22px] hidden sm:table-cell" title={t('tableHeaderLostTitle')}>{t('tableHeaderLost')}</th>
+                    <th className="py-2.5 px-1 text-center font-mono text-[9px] text-on-surface-variant uppercase font-normal w-[45px] hidden sm:table-cell" title={t('tableHeaderGoalsTitle')}>{t('tableHeaderGoals')}</th>
+                    <th className="py-2.5 px-1 text-center font-mono text-[9px] text-on-surface-variant uppercase font-normal w-[30px]" title={t('tableHeaderDiffTitle')}>{t('tableHeaderDiff')}</th>
+                    <th className="py-2.5 px-2 text-center font-mono text-[9px] text-primary-fixed-dim uppercase font-bold w-[30px]" title={t('tableHeaderPointsTitle')}>{t('tableHeaderPoints')}</th>
+                    <th className="py-2.5 px-1 text-center font-mono text-[9px] text-on-surface-variant uppercase font-normal w-[80px]">{t('tableHeaderForm')}</th>
                   </tr>
                 </thead>
                 <tbody className="text-xs">
@@ -328,10 +322,12 @@ export function StandingsPage() {
                           <div className="flex items-center justify-center gap-0.5">
                             {row.form.map((f, i) => {
                               const color = f === 'W' ? 'bg-green-500' : f === 'L' ? 'bg-red-500' : 'bg-slate-600'
-                              const letter = f === 'W' ? 'S' : f === 'L' ? 'N' : 'U'
+                              const letter = f === 'W' ? (language === 'de' ? 'S' : language === 'tr' ? 'G' : 'W') :
+                                             f === 'L' ? (language === 'de' ? 'N' : language === 'tr' ? 'M' : 'L') :
+                                             (language === 'de' ? 'U' : language === 'tr' ? 'B' : 'D')
                               return (
                                 <span key={i} className={`w-4 h-4 rounded-full ${color} text-white flex items-center justify-center text-[7px] font-black`}
-                                  title={f === 'W' ? 'Sieg' : f === 'L' ? 'Niederlage' : 'Unentschieden'}>{letter}</span>
+                                  title={f === 'W' ? t('win') : f === 'L' ? t('loss') : t('draw')}>{letter}</span>
                               )
                             })}
                             {row.form.length === 0 && <span className="text-[9px] text-on-surface-variant/30">–</span>}
@@ -347,23 +343,23 @@ export function StandingsPage() {
             {/* Legende */}
             {viewTournament === 'Süper Lig' ? (
               <div className="flex flex-wrap gap-x-3 gap-y-1.5 text-[9px] font-mono text-on-surface-variant mt-4 px-1 uppercase tracking-wider">
-                <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-green-500" /> CL Gruppenphase</span>
-                <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-400" /> CL Quali</span>
-                <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-blue-500" /> Europa League</span>
-                <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-sky-400" /> Conference Quali</span>
-                <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-orange-400" /> Relegationsspiele</span>
-                <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-red-500" /> Abstieg</span>
+                <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-green-500" /> {t('legendClGroups')}</span>
+                <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-400" /> {t('legendClQuali')}</span>
+                <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-blue-500" /> {t('legendEl')}</span>
+                <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-sky-400" /> {t('legendConfQuali')}</span>
+                <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-orange-400" /> {t('legendRelegationPlayoffs')}</span>
+                <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-red-500" /> {t('legendRelegation')}</span>
               </div>
             ) : (
               <div className="flex flex-wrap gap-x-3 gap-y-1.5 text-[9px] font-mono text-on-surface-variant mt-4 px-1 uppercase tracking-wider">
-                <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-green-500" /> Achtelfinale (Direkt)</span>
-                <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-400" /> Play-offs</span>
-                <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-red-500" /> Ausgeschieden</span>
+                <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-green-500" /> {t('legendClDirect')}</span>
+                <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-400" /> {t('legendClPlayoffs')}</span>
+                <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-red-500" /> {t('legendClOut')}</span>
               </div>
             )}
 
             {standings.length > 0 && standings.every(s => s.played === 0) && (
-              <p className="text-center text-xs text-on-surface-variant/50 mt-4 font-mono">Tabelle wird nach den ersten Spielen berechnet.</p>
+              <p className="text-center text-xs text-on-surface-variant/50 mt-4 font-mono">{t('tableCalculationNotice')}</p>
             )}
           </div>
 

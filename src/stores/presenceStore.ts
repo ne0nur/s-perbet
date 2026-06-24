@@ -55,7 +55,12 @@ export const usePresenceStore = create<PresenceState>((set, get) => ({
             
             for (const id in presenceState) {
               // Take the first presence instance for each user
-              const presence = presenceState[id][0] as any
+              const presence = presenceState[id][0] as unknown as {
+                user_id: string
+                username: string
+                avatar_url: string | null
+                onlineAt: string
+              }
               users[presence.user_id] = {
                 id: presence.user_id,
                 username: presence.username,

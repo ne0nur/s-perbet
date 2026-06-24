@@ -1,4 +1,5 @@
 import { Bell, MessageCircle } from 'lucide-react'
+import { useTranslation } from '../../utils/translations'
 
 interface NotificationSettingsProps {
   notifyAnpfiff: boolean
@@ -13,10 +14,14 @@ export function NotificationSettings({
   notifyChat,
   handleToggleChat
 }: NotificationSettingsProps) {
+  const { t } = useTranslation()
+
   return (
     <div className="bg-surface-container-low border border-surface-container-high rounded-xl overflow-hidden shadow-sm stagger-in text-left">
       <div className="px-4 py-2.5 bg-surface-container border-b border-surface-container-high">
-        <span className="font-mono text-[9px] text-on-surface-variant uppercase tracking-wider">Benachrichtigungen</span>
+        <span className="font-mono text-[9px] text-on-surface-variant uppercase tracking-wider">
+          {t('notifications')}
+        </span>
       </div>
       
       {/* Push vor Anpfiff */}
@@ -24,8 +29,12 @@ export function NotificationSettings({
         <div className="flex items-center gap-3">
           <Bell size={16} className="text-on-surface-variant animate-pulse" />
           <div className="min-w-0">
-            <p className="text-sm text-on-surface leading-tight">Push vor Anpfiff</p>
-            <p className="font-mono text-[9px] text-on-surface-variant/60 uppercase tracking-wider mt-0.5">30 Min vor Spielbeginn</p>
+            <p className="text-sm text-on-surface leading-tight">
+              {t('pushBeforeKickoff')}
+            </p>
+            <p className="font-mono text-[9px] text-on-surface-variant/60 uppercase tracking-wider mt-0.5">
+              {t('thirtyMinsBeforeMatch')}
+            </p>
           </div>
         </div>
         <button
@@ -49,8 +58,12 @@ export function NotificationSettings({
         <div className="flex items-center gap-3">
           <MessageCircle size={16} className="text-on-surface-variant" />
           <div className="min-w-0">
-            <p className="text-sm text-on-surface leading-tight">Neue Chat-Nachrichten</p>
-            <p className="font-mono text-[9px] text-on-surface-variant/60 uppercase tracking-wider mt-0.5">In deinen Ligen</p>
+            <p className="text-sm text-on-surface leading-tight">
+              {t('newChatMessages')}
+            </p>
+            <p className="font-mono text-[9px] text-on-surface-variant/60 uppercase tracking-wider mt-0.5">
+              {t('inYourLeagues')}
+            </p>
           </div>
         </div>
         <button

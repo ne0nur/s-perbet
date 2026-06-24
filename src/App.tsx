@@ -1,8 +1,10 @@
 import { useEffect, Suspense, lazy } from 'react'
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useAuthStore } from './stores/authStore'
+import { useSettingsStore } from './stores/settingsStore'
 import { AppShell } from './components/AppShell'
 import { ProtectedRoute } from './components/ProtectedRoute'
+import { ErrorBoundary } from './components/ErrorBoundary'
 import { SplashPage } from './pages/SplashPage'
 import { LoginPage } from './pages/LoginPage'
 import { SetPasswordPage } from './pages/SetPasswordPage'
@@ -24,21 +26,23 @@ function PageLoader() {
   )
 }
 
-import { usePwaStore } from './stores/pwaStore'
+import { usePwaStore, type BeforeInstallPromptEvent } from './stores/pwaStore'
 
 export default function App() {
   const { ladeUser } = useAuthStore()
+  const ladeSettings = useSettingsStore(s => s.ladeSettings)
 
   useEffect(() => {
     ladeUser()
-  }, [ladeUser])
+    ladeSettings()
+  }, [ladeUser, ladeSettings])
 
   useEffect(() => {
     const handleBeforeInstallPrompt = (e: Event) => {
       // Prevent browser's default prompt banner
       e.preventDefault()
       // Save prompt event in store
-      usePwaStore.getState().setDeferredPrompt(e)
+      usePwaStore.getState().setDeferredPrompt(e as BeforeInstallPromptEvent)
     }
 
     const handleAppInstalled = () => {
@@ -61,6 +65,7 @@ export default function App() {
   }, [])
 
   return (
+    <ErrorBoundary>
     <HashRouter>
       <Routes>
         <Route path="/" element={<SplashPage />} />
@@ -87,5 +92,6 @@ export default function App() {
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </HashRouter>
+    </ErrorBoundary>
   )
 }

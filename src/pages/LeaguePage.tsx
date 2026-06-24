@@ -1,13 +1,27 @@
-import { useState, useEffect, useRef, useMemo } from 'react'
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuthStore } from '../stores/authStore'
-import { getTeamLogo } from '../lib/teamLogos'
 import { Users, Copy, Check, Plus, LogIn, X, Trophy, LogOut, Trash2, MoreHorizontal, MessageCircle, Target } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { LeagueChat } from '../components/LeagueChat'
 import { useToastStore } from '../stores/toastStore'
 import { calculateLevel, getLevelBadgeStyle } from '../lib/utils'
+import { useTranslation } from '../utils/translations'
+
+interface Profile {
+  id: string
+  username: string
+  avatar_url: string | null
+  gesamt_punkte: number
+}
+
+interface TipSummary {
+  user_id: string
+  match_id: string
+  tipp_heim: number
+  tipp_gast: number
+  punkte: number | null
+}
 
 // ─── Team-Abkürzungen ────────────────────────────────
 function teamKuerzel(name: string): string {
@@ -48,8 +62,8 @@ function subscriptPunkte(p: number): string {
 
 // ─── Komponente ──────────────────────────────────────
 export function LeaguePage() {
+  const { t } = useTranslation()
   const { user } = useAuthStore()
-  const navigate = useNavigate()
   const [meineLigen, setMeineLigen] = useState<Liga[]>([])
   const [ligaMeta, setLigaMeta] = useState<Record<string, { mitglieder: number; rang: number }>>({})
   const [aktiveLiga, setAktiveLiga] = useState<Liga | null>(null)
@@ -57,12 +71,10 @@ export function LeaguePage() {
   const [isLaden, setIsLaden] = useState(true)
   const [viewSpieltag, setViewSpieltag] = useState<'gesamt' | number>('gesamt')
   const [maxSpieltag, setMaxSpieltag] = useState(38)
-  const [aktuellerSpieltag, setAktuellerSpieltag] = useState<number | null>(null)
   const [codeKopiert, setCodeKopiert] = useState(false)
   const [zeigeErstellen, setZeigeErstellen] = useState(false)
   const [neueLigaName, setNeueLigaName] = useState('')
   const [beitrittsCode, setBeitrittsCode] = useState('')
-  const [zeigeBeitreten, setZeigeBeitreten] = useState(false)
   const [zeigeMenu, setZeigeMenu] = useState(false)
   const [zeigeTurnierModal, setZeigeTurnierModal] = useState(false)
   const [editTurniere, setEditTurniere] = useState<string[]>([])
@@ -72,90 +84,48 @@ export function LeaguePage() {
   const [viewTournament, setViewTournament] = useState<string>('Alle')
   const [neueLigaTurniere, setNeueLigaTurniere] = useState<string[]>(['Süper Lig'])
 
-  const tabRef = useRef<HTMLDivElement>(null)
+  const [allMatches, setAllMatches] = useState<MatchInfo[]>([])
   const tableScrollRef = useRef<HTMLDivElement>(null)
   const initialized = useRef(false)
   const datenGeladen = useRef(false)
-  // Cache: alle Matches + alle Tipps (für client-seitiges Filtern)
-  const allMatchesRef = useRef<MatchInfo[]>([])
-  const allTipsRef = useRef<any[]>([])
-  const allProfilesRef = useRef<any[]>([])
+  const allTipsRef = useRef<TipSummary[]>([])
+  const allProfilesRef = useRef<Profile[]>([])
 
-  // ─── Ligen und Saisons laden (nur bei Mount) ──────────────────
-  useEffect(() => { 
-    fetchSeasons()
-    ladeLigen() 
-  }, [])
-
-  async function fetchSeasons() {
+  const tabRef = useRef<HTMLDivElement>(null)
+  const fetchSeasons = useCallback(async () => {
     const { data } = await supabase.from('seasons').select('*').order('id', { ascending: false })
     if (data && data.length > 0) {
       setSeasonsList(data)
       const current = data.find(s => s.is_current) || data[0]
       setSaison(current.id)
     } else {
-      // Fallback if seasons table doesn't exist or is empty
       setSaison(2026)
       setSeasonsList([{ id: 2026, name: 'Saison 2026/27' }])
     }
-  }
+  }, [])
 
-  // ─── Liga-Daten laden (nur bei Liga-Wechsel oder Saison-Wechsel) ──────
-  useEffect(() => {
-    if (aktiveLiga && saison) {
-      datenGeladen.current = false
-      setIsLaden(true)
-      ladeDaten()
-    }
-  }, [aktiveLiga?.id, saison])
-
-  // ─── Bei Spieltag-Wechsel oder Turnier-Wechsel: nur client-seitig filtern ──
-  useEffect(() => {
-    if (aktiveLiga && datenGeladen.current) {
-      computeRows()
-    }
-  }, [viewSpieltag, viewTournament])
-
-  // ─── filteredMatches: client-seitiger Filter ────────
-  const filteredMatches = useMemo(() => {
-    let matches = allMatchesRef.current
-    if (viewTournament !== 'Alle') {
-      matches = matches.filter(m => (m.tournament || 'Süper Lig') === viewTournament)
-    }
-    if (viewSpieltag === 'gesamt') return matches
-    return matches.filter(m => m.spieltag === viewSpieltag)
-  }, [viewSpieltag, viewTournament, allMatchesRef.current.length])
-
-  // Auto-scroll tabs to current spieltag
-  useEffect(() => {
-    if (viewSpieltag === 'gesamt' || !tabRef.current) return
-    const tabBtn = tabRef.current.querySelector(`[data-st="${viewSpieltag}"]`) as HTMLElement | null
-    if (tabBtn) tabBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' })
-  }, [viewSpieltag])
-
-  async function ladeLigen() {
+  const ladeLigen = useCallback(async () => {
     if (!user) { setIsLaden(false); return }
 
     const { data: profile } = await supabase.from('profiles').select('is_admin').eq('id', user.id).single()
     const isAdmin = profile?.is_admin || false
 
-    let ligenData: any[] = []
+    let ligenData: Liga[] = []
 
     if (isAdmin) {
       const { data } = await supabase.from('leagues').select('*').order('created_at', { ascending: false })
-      if (data) ligenData = data
+      if (data) ligenData = data as Liga[]
     } else {
       const { data: mof } = await supabase.from('league_members').select('league_id').eq('user_id', user.id)
       if (mof?.length) {
         const ids = mof.map(m => m.league_id)
         const { data } = await supabase.from('leagues').select('*').in('id', ids).order('created_at', { ascending: false })
-        if (data) ligenData = data
+        if (data) ligenData = data as Liga[]
       }
     }
 
     if (ligenData.length) {
-      setMeineLigen(ligenData as Liga[])
-      // Lade Meta-Daten (Mitgliederzahl + Rang) für jede Liga
+      setMeineLigen(ligenData)
       const meta: Record<string, { mitglieder: number; rang: number }> = {}
       for (const liga of ligenData) {
         const { count } = await supabase.from('league_members').select('*', { count: 'exact', head: true }).eq('league_id', liga.id)
@@ -163,16 +133,14 @@ export function LeaguePage() {
       }
       setLigaMeta(meta)
       
-      // Auto-Select if exactly 1 league exists
       if (ligenData.length === 1) {
-        setAktiveLiga(ligenData[0] as Liga)
+        setAktiveLiga(ligenData[0])
       }
     }
     setIsLaden(false)
-  }
+  }, [user])
 
-  // ─── Lädt ALLE Daten für die aktive Liga (einmalig) ──
-  async function ladeDaten() {
+  const ladeDaten = useCallback(async () => {
     if (!aktiveLiga) return
 
     // 1. Mitglieder
@@ -183,11 +151,11 @@ export function LeaguePage() {
     // 2. Profile
     const { data: profiles } = await supabase.from('profiles').select('id,username,avatar_url,gesamt_punkte').in('id', userIds)
     if (!profiles) { setIsLaden(false); return }
-    allProfilesRef.current = profiles
+    allProfilesRef.current = profiles as Profile[]
 
     // 3. Max Spieltag + aktuellen Spieltag ermitteln
-    const maxSt = allMatchesRef.current.length > 0
-      ? Math.max(...allMatchesRef.current.map(m => m.spieltag))
+    const maxSt = allMatches.length > 0
+      ? Math.max(...allMatches.map(m => m.spieltag))
       : 0
     if (maxSt > 0) setMaxSpieltag(maxSt)
 
@@ -195,7 +163,6 @@ export function LeaguePage() {
       initialized.current = true
       const { data: stData } = await supabase.from('matches').select('spieltag').eq('status', 'upcoming').order('anpfiff', { ascending: true }).limit(1)
       const currentST = stData?.[0]?.spieltag || 1
-      setAktuellerSpieltag(currentST)
       setViewSpieltag(currentST)
     }
 
@@ -207,40 +174,36 @@ export function LeaguePage() {
       query = query.eq('season', saison)
     }
     const { data: matchesData } = await query
-    const allMatches = (matchesData || []) as MatchInfo[]
-    allMatchesRef.current = allMatches
+    const fetchedMatches = (matchesData || []) as MatchInfo[]
+    setAllMatches(fetchedMatches)
 
     // MaxSpieltag updaten
-    if (allMatches.length > 0) {
-      const m = Math.max(...allMatches.map(x => x.spieltag))
+    if (fetchedMatches.length > 0) {
+      const m = Math.max(...fetchedMatches.map(x => x.spieltag))
       setMaxSpieltag(m)
     }
 
-    const matchIds = allMatches.map(m => m.id)
+    const matchIds = fetchedMatches.map(m => m.id)
 
     // 5. ALLE Tipps laden (für alle Matches)
     const { data: tips } = await supabase.from('tips')
       .select('user_id,match_id,tipp_heim,tipp_gast,punkte')
       .in('user_id', userIds).in('match_id', matchIds)
-    allTipsRef.current = tips || []
+    allTipsRef.current = (tips || []) as TipSummary[]
 
-    // 6. Rows berechnen
-    computeRows()
     datenGeladen.current = true
     setIsLaden(false)
-  }
+  }, [aktiveLiga, saison, allMatches])
 
-  // ─── Client-seitige Row-Berechnung (bei Spieltag-Wechsel) ──
-  function computeRows() {
+  const computeRows = useCallback(() => {
     const profiles = allProfilesRef.current
     const tips = allTipsRef.current
-    const allMatches = allMatchesRef.current
     if (!profiles.length) return
 
     // Nur Matches für aktuellen viewSpieltag und viewTournament
     let activeMatches = allMatches
     if (viewTournament !== 'Alle') {
-      activeMatches = activeMatches.filter(m => (m.tournament || 'Süper Lig') === viewTournament)
+      activeMatches = activeMatches.filter(m => (m.tournament || 'Süper Lik') === viewTournament)
     }
     if (viewSpieltag !== 'gesamt') {
       activeMatches = activeMatches.filter(m => m.spieltag === viewSpieltag)
@@ -256,7 +219,7 @@ export function LeaguePage() {
     })
     const validMatchesForPointsIds = new Set(validMatchesForPoints.map(m => m.id))
 
-    const userIds = profiles.map((p: any) => p.id)
+    const userIds = profiles.map((p) => p.id)
 
     // Tipp-Map + Spieltag-Punkte + Saison-Gesamtpunkte
     const tippMap: Record<string, Record<string, { heim: number; gast: number; punkte: number }>> = {}
@@ -269,13 +232,13 @@ export function LeaguePage() {
     })
 
     if (tips) {
-      tips.forEach((t: any) => {
+      tips.forEach((t) => {
         // Saison-Punkte berechnen (abhängig vom aktiven Turnier-Filter)
         if (validMatchesForPointsIds.has(t.match_id)) {
           seasonPoints[t.user_id] = (seasonPoints[t.user_id] || 0) + (t.punkte || 0)
         }
 
-        if (!activeMatchIds.has(t.match_id)) return // nur aktive Matches für Spieltag-Ansicht
+        if (!activeMatchIds.has(t.match_id)) return
         if (!tippMap[t.user_id]) tippMap[t.user_id] = {}
         tippMap[t.user_id][t.match_id] = { heim: t.tipp_heim, gast: t.tipp_gast, punkte: t.punkte || 0 }
         spPunkte[t.user_id] = (spPunkte[t.user_id] || 0) + (t.punkte || 0)
@@ -284,9 +247,9 @@ export function LeaguePage() {
 
     const spieltagGesamt = activeMatches.length || 9
 
-    const rows: MitgliedRow[] = profiles.map((p: any) => ({
+    const rows: MitgliedRow[] = profiles.map((p) => ({
       id: p.id, username: p.username, avatar_url: p.avatar_url || null, 
-      gesamt_punkte: seasonPoints[p.id] || 0, // Dynamisch aus den Tipps der Saison berechnet
+      gesamt_punkte: seasonPoints[p.id] || 0,
       tipps: tippMap[p.id] || {},
       spieltag_punkte: spPunkte[p.id] || 0,
       spieltag_tipps: Object.keys(tippMap[p.id] || {}).length,
@@ -300,7 +263,41 @@ export function LeaguePage() {
     }
 
     setMitglieder(rows)
-  }
+  }, [allMatches, viewSpieltag, viewTournament, aktiveLiga])
+
+  useEffect(() => { 
+    fetchSeasons()
+    ladeLigen() 
+  }, [fetchSeasons, ladeLigen])
+
+  useEffect(() => {
+    if (aktiveLiga && saison) {
+      datenGeladen.current = false
+      setIsLaden(true)
+      ladeDaten()
+    }
+  }, [aktiveLiga, saison, ladeDaten])
+
+  useEffect(() => {
+    if (aktiveLiga && datenGeladen.current) {
+      computeRows()
+    }
+  }, [viewSpieltag, viewTournament, allMatches, computeRows, aktiveLiga])
+
+  const filteredMatches = useMemo(() => {
+    let matches = allMatches
+    if (viewTournament !== 'Alle') {
+      matches = matches.filter(m => (m.tournament || 'Süper Lig') === viewTournament)
+    }
+    if (viewSpieltag === 'gesamt') return matches
+    return matches.filter(m => m.spieltag === viewSpieltag)
+  }, [viewSpieltag, viewTournament, allMatches])
+
+  useEffect(() => {
+    if (viewSpieltag === 'gesamt' || !tabRef.current) return
+    const tabBtn = tabRef.current.querySelector(`[data-st="${viewSpieltag}"]`) as HTMLElement | null
+    if (tabBtn) tabBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' })
+  }, [viewSpieltag])
 
   // ─── Liga Aktionen ─────────────────────────────────
   async function handleLigaErstellen() {
@@ -318,7 +315,7 @@ export function LeaguePage() {
     const { data: leagueId, error } = await supabase.rpc('join_league_by_code', { p_invite_code: beitrittsCode.trim().toUpperCase() })
     
     if (error || !leagueId) {
-      useToastStore.getState().toast('Code ungültig oder Liga nicht gefunden', 'error')
+      useToastStore.getState().toast(t('codeInvalidOrNotFound'), 'error')
       return
     }
 
@@ -326,17 +323,17 @@ export function LeaguePage() {
     const { data: liga } = await supabase.from('leagues').select('*').eq('id', leagueId).single()
     
     setBeitrittsCode('')
-    setZeigeBeitreten(false)
-    useToastStore.getState().toast(`Liga „${liga?.name || 'Beigetreten'}“ beigetreten`)
+    useToastStore.getState().toast(t('joinedLeagueToast', { name: liga?.name || '' }))
     if (liga) setAktiveLiga(liga as Liga)
     await ladeLigen()
   }
-  function handleCodeKopieren(code: string) { navigator.clipboard.writeText(code); setCodeKopiert(true); setTimeout(() => setCodeKopiert(false), 2000); useToastStore.getState().toast('Einladungs-Code kopiert', 'info') }
+  function handleCodeKopieren(code: string) { navigator.clipboard.writeText(code); setCodeKopiert(true); setTimeout(() => setCodeKopiert(false), 2000); useToastStore.getState().toast(t('copied'), 'info') }
 
   async function handleLigaVerlassen() {
     if (!user || !aktiveLiga) return
+    if (!window.confirm(t('leaveLeagueConfirm'))) return
     await supabase.from('league_members').delete().eq('league_id', aktiveLiga.id).eq('user_id', user.id)
-    useToastStore.getState().toast(`Liga „${aktiveLiga.name}“ verlassen`)
+    useToastStore.getState().toast(t('leftLeagueToast', { name: aktiveLiga.name }))
     setZeigeMenu(false)
     setAktiveLiga(null)
     await ladeLigen()
@@ -346,8 +343,9 @@ export function LeaguePage() {
     if (!user || !aktiveLiga) return
     const istErsteller = aktiveLiga.creator_id === user.id
     if (!istErsteller) return
+    if (!window.confirm(t('deleteLeagueConfirm'))) return
     await supabase.from('leagues').delete().eq('id', aktiveLiga.id)
-    useToastStore.getState().toast(`Liga „${aktiveLiga.name}“ gelöscht`)
+    useToastStore.getState().toast(t('deletedLeagueToast', { name: aktiveLiga.name }))
     setZeigeMenu(false)
     setAktiveLiga(null)
     await ladeLigen()
@@ -361,39 +359,39 @@ export function LeaguePage() {
     if (!error) {
       setAktiveLiga({ ...aktiveLiga, active_tournaments: editTurniere })
       setZeigeTurnierModal(false)
-      useToastStore.getState().toast('Turniere erfolgreich aktualisiert', 'success')
+      useToastStore.getState().toast(t('tournamentsUpdatedToast'), 'success')
       setViewTournament('Alle')
       await ladeLigen() // Refresh die Meta-Daten in meineLigen
     } else {
-      useToastStore.getState().toast('Fehler beim Aktualisieren der Turniere', 'error')
+      useToastStore.getState().toast(t('errorUpdatingTournamentsToast'), 'error')
     }
   }
 
   // ─── Dynamische Tabs ───────────────────────────────
   const getPhaseLabel = (st: number, tournament: string) => {
     if (tournament === 'Champions League') {
-      if (st <= 8) return `${st}. Liga`;
-      if (st === 9) return `Play-offs`;
-      if (st === 10) return `Achtelfinale`;
-      if (st === 11) return `Viertelfinale`;
-      if (st === 12) return `Halbfinale`;
-      if (st === 13) return `Finale`;
-      return `${st}.`;
+      if (st <= 8) return t('clRoundLeague', { st })
+      if (st === 9) return t('clRoundPlayoffs')
+      if (st === 10) return t('clRoundLast16')
+      if (st === 11) return t('clRoundQuarter')
+      if (st === 12) return t('clRoundSemi')
+      if (st === 13) return t('clRoundFinal')
+      return `${st}.`
     }
-    return `${st}.`;
+    return `${st}.`
   }
 
   const availableSpieltage = useMemo(() => {
-    let matches = allMatchesRef.current;
+    let matches = allMatches;
     if (viewTournament !== 'Alle') {
        matches = matches.filter(m => (m.tournament || 'Süper Lig') === viewTournament);
     }
     const st = new Set(matches.map(m => m.spieltag));
     return Array.from(st).sort((a,b) => a - b);
-  }, [allMatchesRef.current, viewTournament]);
+  }, [allMatches, viewTournament]);
 
   const tabs: { key: 'gesamt' | number; label: string }[] = [
-    { key: 'gesamt', label: 'Gesamt' },
+    { key: 'gesamt', label: t('gesamt') },
     ...availableSpieltage.map(st => ({ key: st, label: getPhaseLabel(st, viewTournament) }))
   ]
 
@@ -425,7 +423,7 @@ export function LeaguePage() {
               <div className="flex-1 min-w-[200px]">
                 <div className="flex items-center gap-1.5 text-primary-fixed-dim mb-1">
                   <Trophy size={14} />
-                  <span className="text-[10px] font-mono font-bold uppercase tracking-wider">Aktuelle Liga</span>
+                  <span className="text-[10px] font-mono font-bold uppercase tracking-wider">{t('currentLeague')}</span>
                 </div>
                 <h1 className="text-3xl md:text-4xl font-black text-on-surface tracking-tight leading-none">{aktiveLiga.name}</h1>
               </div>
@@ -455,17 +453,17 @@ export function LeaguePage() {
                     <div className="absolute right-0 top-8 z-50 bg-surface-container-high border border-surface-container-highest rounded-lg py-1 min-w-[160px] shadow-lg">
                       <button onClick={handleLigaVerlassen}
                         className="w-full flex items-center gap-2 px-3 py-2 text-[11px] font-medium text-on-surface hover:bg-surface-container-highest transition-colors">
-                        <LogOut size={13} className="text-on-surface-variant" /> Liga verlassen
+                        <LogOut size={13} className="text-on-surface-variant" /> {t('leaveLeague')}
                       </button>
                       {aktiveLiga.creator_id === user?.id && (
                         <>
                           <button onClick={() => { setEditTurniere(aktiveLiga.active_tournaments || ['Süper Lig']); setZeigeTurnierModal(true); setZeigeMenu(false); }}
                             className="w-full flex items-center gap-2 px-3 py-2 text-[11px] font-medium text-on-surface hover:bg-surface-container-highest transition-colors border-t border-surface-container-high">
-                            <Target size={13} className="text-on-surface-variant" /> Turniere verwalten
+                            <Target size={13} className="text-on-surface-variant" /> {t('manageTournaments')}
                           </button>
                           <button onClick={handleLigaLoeschen}
                             className="w-full flex items-center gap-2 px-3 py-2 text-[11px] font-medium text-red-400 hover:bg-surface-container-highest transition-colors border-t border-surface-container-high">
-                            <Trash2 size={13} /> Liga löschen
+                            <Trash2 size={13} /> {t('deleteLeague')}
                           </button>
                         </>
                       )}
@@ -482,7 +480,7 @@ export function LeaguePage() {
                   onClick={() => setViewTournament('Alle')}
                   className={`px-3 py-1.5 text-xs font-medium rounded-md whitespace-nowrap transition-all ${viewTournament === 'Alle' ? 'bg-primary text-on-primary font-bold shadow-md' : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container/50'}`}
                 >
-                  Alle
+                  {t('filterAll')}
                 </button>
                 {aktiveLiga.active_tournaments.map(t => (
                   <button
@@ -519,8 +517,8 @@ export function LeaguePage() {
                       <span className="text-blue-400 text-sm">👀</span>
                     </div>
                     <div>
-                      <p className="text-[11px] font-bold text-blue-400 uppercase tracking-wider mb-0.5">Admin-Zuschauermodus</p>
-                      <p className="text-[10px] text-blue-400/70 font-mono">Du bist kein Mitglied dieser Liga und siehst sie nur als Admin. Du spielst hier nicht mit.</p>
+                      <p className="text-[11px] font-bold text-blue-400 uppercase tracking-wider mb-0.5">{t('adminSpectator')}</p>
+                      <p className="text-[10px] text-blue-400/70 font-mono">{t('spectatorWarning')}</p>
                     </div>
                   </div>
                 )}
@@ -537,7 +535,7 @@ export function LeaguePage() {
                     }`}
                     style={{ marginRight: '1px' }}
                   >
-                    Gesamt
+                    {t('gesamt')}
                   </button>
 
                   {/* Scrollable Spieltag-Nummern */}
@@ -564,9 +562,9 @@ export function LeaguePage() {
                       <div className="w-12 h-12 rounded-full bg-surface-container-high flex items-center justify-center mx-auto mb-3">
                         <Trophy size={20} className="text-on-surface-variant/30" />
                       </div>
-                      <p className="text-on-surface text-sm font-bold mb-1">Noch keine Tipps</p>
+                      <p className="text-on-surface text-sm font-bold mb-1">{t('noTipsYet')}</p>
                       <p className="text-on-surface-variant text-[11px] max-w-[200px] mx-auto">
-                        Die Tabelle wird nach den ersten Spielen berechnet.
+                        {t('tableCalculationNotice')}
                       </p>
                     </div>
                   ) : (
@@ -583,8 +581,8 @@ export function LeaguePage() {
                           <table className="w-full text-left border-collapse min-w-[600px]">
                         <thead>
                           <tr className="border-b border-surface-container-high bg-surface-container-low">
-                            <th className="py-2.5 pl-3 pr-2 text-[10px] font-mono font-medium text-on-surface-variant/60 uppercase tracking-wider w-8" title="Platzierung">#</th>
-                            <th className="py-2.5 pr-2 text-[10px] font-mono font-medium text-on-surface-variant/60 uppercase tracking-wider" title="Spieler">Spieler</th>
+                            <th className="py-2.5 pl-3 pr-2 text-[10px] font-mono font-medium text-on-surface-variant/60 uppercase tracking-wider w-8" title={t('rank')}>#</th>
+                            <th className="py-2.5 pr-2 text-[10px] font-mono font-medium text-on-surface-variant/60 uppercase tracking-wider" title={t('player')}>{t('player')}</th>
                             {filteredMatches.map(m => (
                               <th key={m.id} className="py-2.5 px-1 text-[10px] font-mono font-medium text-on-surface-variant/60 uppercase tracking-wider text-center w-10 relative" title={`${m.heim_team} vs ${m.gast_team}`}>
                                 {(m.tournament === 'Champions League') && (
@@ -595,8 +593,8 @@ export function LeaguePage() {
                                 <span className="block">{teamKuerzel(m.gast_team)}</span>
                               </th>
                             ))}
-                            <th className="py-2.5 pr-2 text-[10px] font-mono font-medium text-on-surface-variant/60 uppercase tracking-wider w-14 text-right" title="Spieltag-Punkte">Sp</th>
-                            <th className="py-2.5 pr-3 text-[10px] font-mono font-medium text-on-surface-variant/60 uppercase tracking-wider w-14 text-right" title="Gesamtpunkte">Pkt</th>
+                            <th className="py-2.5 pr-2 text-[10px] font-mono font-medium text-on-surface-variant/60 uppercase tracking-wider w-14 text-right" title={t('spieltag')}>Sp</th>
+                            <th className="py-2.5 pr-3 text-[10px] font-mono font-medium text-on-surface-variant/60 uppercase tracking-wider w-14 text-right" title={t('pointsLong')}>{t('pointsShort')}</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -625,7 +623,7 @@ export function LeaguePage() {
                                     </div>
                                     <span className={`text-[11px] font-medium truncate max-w-[80px] flex items-center gap-1 ${isMe ? 'text-primary-fixed-dim' : 'text-on-surface'}`}>
                                       {m.username}
-                                      {m.id === aktiveLiga.creator_id && <span title="Liga-Ersteller">👑</span>}
+                                      {m.id === aktiveLiga.creator_id && <span title={t('leagueCreator')}>👑</span>}
                                     </span>
                                   </div>
                                 </td>
@@ -673,12 +671,12 @@ export function LeaguePage() {
 
                 {/* Einladungs-Code */}
                 <div className="bg-surface-container-low border border-surface-container-high rounded-xl px-4 py-3 flex items-center gap-2 shrink-0">
-                  <span className="text-[10px] text-on-surface-variant/60 shrink-0">Teile diesen Code:</span>
+                  <span className="text-[10px] text-on-surface-variant/60 shrink-0">{t('shareThisCode')}</span>
                   <span className="text-[11px] font-mono font-bold text-primary-fixed-dim tracking-wider truncate">{aktiveLiga.invite_code}</span>
                   <button onClick={() => handleCodeKopieren(aktiveLiga.invite_code)}
                     className="btn-press bg-primary-container text-on-primary-container px-3 py-1.5 rounded-lg font-mono text-[10px] font-bold uppercase tracking-wider hover:opacity-90 flex items-center gap-1.5 shrink-0 ml-auto border border-primary-container/20">
                     {codeKopiert ? <Check size={12} /> : <Copy size={12} />}
-                    {codeKopiert ? 'Kopiert' : 'Kopieren'}
+                    {codeKopiert ? t('copied') : t('copy')}
                   </button>
                 </div>
 
@@ -690,18 +688,18 @@ export function LeaguePage() {
                   <div className="flex items-center gap-2.5">
                     <MessageCircle className="text-primary-fixed-dim" size={18} />
                     <div className="text-left">
-                      <p className="text-xs font-bold text-primary-fixed-dim">Liga-Chat öffnen</p>
-                      <p className="text-[9px] font-mono text-on-surface-variant/70 uppercase tracking-wider">Ergebnisse diskutieren & Gegner ärgern</p>
+                      <p className="text-xs font-bold text-primary-fixed-dim">{t('openLeagueChat')}</p>
+                      <p className="text-[9px] font-mono text-on-surface-variant/70 uppercase tracking-wider">{t('openLeagueChatDesc')}</p>
                     </div>
                   </div>
-                  <span className="text-xs text-primary-fixed-dim font-mono flex items-center gap-0.5">Anzeigen →</span>
+                  <span className="text-xs text-primary-fixed-dim font-mono flex items-center gap-0.5">{t('showArrow')}</span>
                 </button>
               </div>
 
               {/* Right Column: Chat (Desktop only) */}
               <div className="hidden md:flex md:col-span-4 flex-col bg-surface-container-low border border-surface-container-high rounded-xl p-4 h-[580px] sticky top-4 text-left">
                 <div className="pb-3 border-b border-surface-container-high">
-                  <h2 className="text-sm font-bold text-on-surface">Liga-Chat</h2>
+                  <h2 className="text-sm font-bold text-on-surface">{t('leagueChatTitle')}</h2>
                   <p className="text-[9px] font-mono text-on-surface-variant uppercase tracking-wider">{aktiveLiga.name}</p>
                 </div>
                 <div className="flex-1 min-h-0 mt-3">
@@ -726,7 +724,7 @@ export function LeaguePage() {
                     {/* Drawer Header */}
                     <div className="px-4 pb-3 border-b border-surface-container-high flex items-center justify-between">
                       <div>
-                        <h2 className="text-sm font-bold text-on-surface">Liga-Chat</h2>
+                        <h2 className="text-sm font-bold text-on-surface">{t('leagueChatTitle')}</h2>
                         <p className="text-[9px] font-mono text-on-surface-variant uppercase tracking-wider">{aktiveLiga.name}</p>
                       </div>
                       <button 
@@ -760,8 +758,8 @@ export function LeaguePage() {
               exit={{opacity:0, scale: 0.9, y: 20}}
               className="bg-surface-container-low border border-surface-container-high rounded-2xl p-6 w-full max-w-sm relative z-10 shadow-2xl"
             >
-              <h3 className="text-lg font-bold text-on-surface mb-1">Turniere verwalten</h3>
-              <p className="text-xs text-on-surface-variant mb-6">Wähle welche Turniere in dieser Liga getippt werden können.</p>
+              <h3 className="text-lg font-bold text-on-surface mb-1">{t('manageTournaments')}</h3>
+              <p className="text-xs text-on-surface-variant mb-6">{t('activeTournamentsInfo')}</p>
               
               <div className="grid grid-cols-2 gap-3 mb-6">
                 <motion.div
@@ -794,8 +792,8 @@ export function LeaguePage() {
               </div>
               
               <div className="flex gap-2">
-                <button onClick={() => setZeigeTurnierModal(false)} className="flex-1 py-3 rounded-xl font-mono text-xs font-bold uppercase tracking-wider text-on-surface bg-surface-container hover:bg-surface-container-high transition-colors">Abbrechen</button>
-                <button onClick={handleTurniereSpeichern} disabled={editTurniere.length === 0} className="flex-1 py-3 rounded-xl font-mono text-xs font-bold uppercase tracking-wider text-on-primary-container bg-primary-container hover:opacity-90 transition-colors disabled:opacity-50">Speichern</button>
+                <button onClick={() => setZeigeTurnierModal(false)} className="flex-1 py-3 rounded-xl font-mono text-xs font-bold uppercase tracking-wider text-on-surface bg-surface-container hover:bg-surface-container-high transition-colors">{t('cancel')}</button>
+                <button onClick={handleTurniereSpeichern} disabled={editTurniere.length === 0} className="flex-1 py-3 rounded-xl font-mono text-xs font-bold uppercase tracking-wider text-on-primary-container bg-primary-container hover:opacity-90 transition-colors disabled:opacity-50">{t('save')}</button>
               </div>
             </motion.div>
           </div>
@@ -819,9 +817,9 @@ export function LeaguePage() {
                   <div className="flex items-center gap-3">
                     <div className="flex items-center gap-1.5">
                       <Users size={12} className="text-on-surface-variant/40" />
-                      <span className="text-[10px] font-mono text-on-surface-variant/60">{meta?.mitglieder || 0} Mitglieder</span>
+                      <span className="text-[10px] font-mono text-on-surface-variant/60">{meta?.mitglieder || 0} {t('members')}</span>
                     </div>
-                    <span className="text-[10px] font-mono text-primary-fixed-dim opacity-0 group-hover:opacity-100 transition-opacity">Anzeigen →</span>
+                    <span className="text-[10px] font-mono text-primary-fixed-dim opacity-0 group-hover:opacity-100 transition-opacity">{t('showArrow')}</span>
                   </div>
                 </button>
               )
@@ -831,9 +829,9 @@ export function LeaguePage() {
           {/* Aktionen */}
           <div className="space-y-2">
             <div className="bg-surface-container-low border border-surface-container-high rounded-lg p-4 space-y-3">
-              <span className="text-sm text-on-surface font-medium">Liga beitreten</span>
+              <span className="text-sm text-on-surface font-medium">{t('joinLeagueTitle')}</span>
               <div className="flex gap-2">
-                <input value={beitrittsCode} onChange={e => setBeitrittsCode(e.target.value)} placeholder="Code"
+                <input value={beitrittsCode} onChange={e => setBeitrittsCode(e.target.value)} placeholder={t('inviteCodeLabel')}
                   className="flex-1 bg-surface-container-lowest border border-surface-container-high rounded-lg px-3 py-2 font-mono text-sm text-on-surface uppercase focus:border-primary focus:outline-none" />
                 <button onClick={handleBeitreten} disabled={!beitrittsCode.trim()}
                   className="bg-primary-container text-on-primary-container px-3 py-2 rounded-lg font-mono text-xs font-bold uppercase tracking-wider hover:opacity-90 disabled:opacity-30"><LogIn size={16} /></button>
@@ -843,13 +841,13 @@ export function LeaguePage() {
             <AnimatePresence mode="wait">
               {!zeigeErstellen ? (
                 <motion.button 
-                  key="btn"
+                   key="btn"
                   initial={{opacity:0, y:-10}} animate={{opacity:1, y:0}} exit={{opacity:0, y:-10}}
                   onClick={() => setZeigeErstellen(true)}
                   className="w-full bg-surface-container-low border border-surface-container-high rounded-xl p-4 flex items-center justify-center gap-3 hover:bg-surface-container transition-colors text-on-surface text-sm font-medium shadow-sm"
                 >
                   <div className="bg-primary/20 p-1.5 rounded-full"><Plus size={16} className="text-primary" /></div>
-                  Neue Liga erstellen
+                  {t('createLeagueTitle')}
                 </motion.button>
               ) : (
                 <motion.div 
@@ -859,20 +857,20 @@ export function LeaguePage() {
                 >
                   <div className="flex items-center justify-between">
                     <div>
-                      <span className="text-base text-on-surface font-bold block">Neue Liga</span>
-                      <span className="text-xs text-on-surface-variant">Konfiguriere deine eigene Tipprunde</span>
+                      <span className="text-base text-on-surface font-bold block">{t('createLeagueTitle')}</span>
+                      <span className="text-xs text-on-surface-variant">{t('newLeagueDesc')}</span>
                     </div>
                     <button onClick={() => setZeigeErstellen(false)} className="text-on-surface-variant hover:text-on-surface bg-surface-container p-1.5 rounded-full"><X size={16} /></button>
                   </div>
                   
                   <div>
-                    <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2 block">Name der Liga</label>
-                    <input value={neueLigaName} onChange={e => setNeueLigaName(e.target.value)} placeholder="z.B. Büro-Tipprunde"
+                    <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2 block">{t('leagueName')}</label>
+                    <input value={neueLigaName} onChange={e => setNeueLigaName(e.target.value)} placeholder={t('leagueNamePlaceholder')}
                       className="w-full bg-surface-container-lowest border-2 border-surface-container-high rounded-xl px-4 py-3 text-sm text-on-surface focus:border-primary focus:outline-none transition-colors" autoFocus />
                   </div>
                   
                   <div>
-                    <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2 block">Enthaltene Turniere</label>
+                    <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2 block">{t('includedTournaments')}</label>
                     <div className="grid grid-cols-2 gap-3">
                       <motion.div
                         whileHover={{ scale: 1.02 }}
@@ -905,7 +903,7 @@ export function LeaguePage() {
                   </div>
                   
                   <button onClick={handleLigaErstellen} disabled={!neueLigaName.trim() || neueLigaTurniere.length === 0}
-                    className="bg-primary-container text-on-primary-container w-full py-3.5 rounded-xl font-mono text-sm font-bold uppercase tracking-wider shadow hover:opacity-90 transition-opacity disabled:opacity-30 disabled:shadow-none mt-2">Liga erstellen</button>
+                    className="bg-primary-container text-on-primary-container w-full py-3.5 rounded-xl font-mono text-sm font-bold uppercase tracking-wider shadow hover:opacity-90 transition-opacity disabled:opacity-30 disabled:shadow-none mt-2">{t('createLeagueBtn')}</button>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -920,9 +918,9 @@ export function LeaguePage() {
             <div className="w-16 h-16 rounded-full bg-surface-container-high flex items-center justify-center mx-auto mb-4">
               <Users size={28} className="text-on-surface-variant/40" />
             </div>
-            <p className="text-on-surface text-base font-bold mb-1">Keine Liga</p>
+            <p className="text-on-surface text-base font-bold mb-1">{t('noLeaguesTitle')}</p>
             <p className="text-on-surface-variant text-xs mb-2 max-w-[240px] mx-auto">
-              Erstelle eine eigene Liga oder tritt mit einem Einladungs-Code bei.
+              {t('noLeaguesDesc')}
             </p>
           </div>
 
@@ -930,12 +928,12 @@ export function LeaguePage() {
           <div className="space-y-4">
             {/* Join card */}
             <div className="bg-surface-container-low border border-surface-container-high rounded-lg p-4 space-y-3">
-              <span className="text-sm text-on-surface font-medium">Liga beitreten</span>
+              <span className="text-sm text-on-surface font-medium">{t('joinLeagueTitle')}</span>
               <div className="flex gap-2">
                 <input
                   value={beitrittsCode}
                   onChange={e => setBeitrittsCode(e.target.value)}
-                  placeholder="Code (z.B. LIGA-XXXXXX)"
+                  placeholder={t('inviteCodeLabel')}
                   className="flex-1 bg-surface-container-lowest border border-surface-container-high rounded-lg px-3 py-2 font-mono text-sm text-on-surface uppercase focus:border-primary focus:outline-none"
                 />
                 <button
@@ -954,12 +952,12 @@ export function LeaguePage() {
                 onClick={() => setZeigeErstellen(true)}
                 className="w-full bg-surface-container-low border border-surface-container-high rounded-lg p-4 flex items-center gap-3 hover:bg-surface-container transition-colors text-on-surface text-sm font-medium"
               >
-                <Plus size={18} className="text-primary-fixed-dim" /> Neue Liga erstellen
+                <Plus size={18} className="text-primary-fixed-dim" /> {t('createLeagueTitle')}
               </button>
             ) : (
               <div className="bg-surface-container-low border border-surface-container-high rounded-lg p-4 space-y-3 animate-page-enter">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-on-surface font-medium">Neue Liga</span>
+                  <span className="text-sm text-on-surface font-medium">{t('createLeagueTitle')}</span>
                   <button onClick={() => setZeigeErstellen(false)} className="text-on-surface-variant">
                     <X size={16} />
                   </button>
@@ -967,12 +965,12 @@ export function LeaguePage() {
                 <input
                   value={neueLigaName}
                   onChange={e => setNeueLigaName(e.target.value)}
-                  placeholder="Liga-Name"
+                  placeholder={t('leagueName')}
                   className="w-full bg-surface-container-lowest border border-surface-container-high rounded-lg px-3 py-2 text-sm text-on-surface focus:border-primary focus:outline-none"
                   autoFocus
                 />
                 <div className="space-y-2 py-2">
-                  <span className="text-xs text-on-surface-variant font-medium">Turniere wählen:</span>
+                  <span className="text-xs text-on-surface-variant font-medium">{t('chooseTournaments')}</span>
                   <label className="flex items-center gap-2 text-sm text-on-surface cursor-pointer bg-surface-container-lowest border border-surface-container-high p-2 rounded-lg">
                     <input type="checkbox" checked={neueLigaTurniere.includes('Süper Lig')} onChange={(e) => {
                       if (e.target.checked) setNeueLigaTurniere([...neueLigaTurniere, 'Süper Lig'])
@@ -991,7 +989,7 @@ export function LeaguePage() {
                   disabled={!neueLigaName.trim() || neueLigaTurniere.length === 0}
                   className="bg-primary-container text-on-primary-container w-full py-2.5 rounded-lg font-mono text-xs font-bold uppercase tracking-wider hover:opacity-90 disabled:opacity-30"
                 >
-                  Erstellen
+                  {t('createLeagueBtn')}
                 </button>
               </div>
             )}

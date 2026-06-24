@@ -2,10 +2,12 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../stores/authStore'
 import { Trophy } from 'lucide-react'
+import { useTranslation } from '../utils/translations'
 
 export function SplashPage() {
   const navigate = useNavigate()
   const { isEingeloggt, isLaden } = useAuthStore()
+  const { t } = useTranslation()
   const [logoKicked, setLogoKicked] = useState(false)
 
   // Kick-Kollision triggert nach ~780ms (wenn der Ball die Mitte trifft)
@@ -43,7 +45,7 @@ export function SplashPage() {
           <span className="superbet-text-super text-4xl">SÜPER</span>
           <span className="superbet-badge-bet text-3xl ml-1">BET</span>
         </div>
-        <p className="text-on-surface-variant/50 mt-3 text-xs font-mono uppercase tracking-[0.3em]">Süper Lig Tipprunde</p>
+        <p className="text-on-surface-variant/50 mt-3 text-xs font-mono uppercase tracking-[0.3em]">{t('saisonPredictionLeagueSubtitle')}</p>
 
         {/* Lade-Indikator */}
         <div className="mt-10 flex items-center justify-center gap-1.5">

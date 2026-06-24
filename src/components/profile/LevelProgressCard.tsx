@@ -1,19 +1,49 @@
 import { useState, useEffect } from 'react'
 import { Trophy, ChevronDown, ChevronUp, Award } from 'lucide-react'
 import { calculateLevelDetails, getLevelBadgeStyle } from '../../lib/utils'
+import { useTranslation } from '../../utils/translations'
 
-const rangTitelSystem = [
-  { lvl: 1, title: 'Zuschauer-Alman', desc: 'Du schaust nur zu und isst Sonnenblumenkerne.', range: 'Lvl 1' },
-  { lvl: 2, title: 'Habibi auf Probe', desc: 'Kiosk-Besitzer grüßt dich jetzt schon mit Handshake.', range: 'Lvl 2' },
-  { lvl: 3, title: 'Kreisliga-Couseng', desc: 'Dein Platz ist auf der Asche, aber die Tipps sitzen schon.', range: 'Lvl 3' },
-  { lvl: 4, title: 'Amateur-Kicker', desc: 'Du hast Ahnung, aber die Beine wollen nicht mehr.', range: 'Lvl 4' },
-  { lvl: 5, title: 'Halı Saha Legende', desc: 'Der Kunstrasen zittert vor deinen Tipps, Bruder.', range: 'Lvl 5-6' },
-  { lvl: 7, title: 'Taktik-Abi', desc: 'Du analysierst wie Mourinho auf Koks, aber mit Cay.', range: 'Lvl 7-8' },
-  { lvl: 9, title: 'Tippschein-Millionär', desc: 'Der Wettschein fliegt fast von alleine. Krankes Gespür!', range: 'Lvl 9' },
-  { lvl: 10, title: 'Baba aller Tipper', desc: 'Cousengs rufen dich nachts an für Tipp-Empfehlungen.', range: 'Lvl 10' },
-  { lvl: 11, title: 'El Patron des Kiosks', desc: 'Du besitzt den Kiosk gefühlt schon selbst.', range: 'Lvl 11-12' },
-  { lvl: 13, title: 'Der absolute Boss-Macher', desc: 'Endgegner! Wallah, du hast das System durchgespielt!', range: 'Lvl 13+' },
-]
+function getRangTitelSystem(language: string) {
+  if (language === 'tr') {
+    return [
+      { lvl: 1, title: 'Seyirci-Alman', desc: 'Sadece izliyor ve çekirdek çitliyorsun.', range: 'Lvl 1' },
+      { lvl: 2, title: 'Stajyer Habibi', desc: 'Büfeci artık seni el sıkışarak selamlıyor.', range: 'Lvl 2' },
+      { lvl: 3, title: 'Amatör Lig Kuzeni', desc: 'Yerin toprak sahada ama tahminlerin şimdiden oturmuş.', range: 'Lvl 3' },
+      { lvl: 4, title: 'Amatör Futbolcu', desc: 'Futboldan anlıyorsun ama bacaklar artık gitmiyor.', range: 'Lvl 4' },
+      { lvl: 5, title: 'Halı Saha Efsanesi', desc: 'Yapay çim tahminlerinden titriyor kardeşim.', range: 'Lvl 5-6' },
+      { lvl: 7, title: 'Taktik Abisi', desc: 'Çay eşliğinde Mourinho gibi taktik analiz kasıyorsun.', range: 'Lvl 7-8' },
+      { lvl: 9, title: 'Kupon Milyoneri', desc: 'Tahmin kuponu kendi kendine uçuyor. Sıradışı hisler!', range: 'Lvl 9' },
+      { lvl: 10, title: 'Tahmincilerin Babası', desc: 'Kuzenler gece yarısı tüyo almak için seni arıyor.', range: 'Lvl 10' },
+      { lvl: 11, title: 'Büfenin Patronu', desc: 'Büfe sanki tamamen seninmiş gibi hissediyorsun.', range: 'Lvl 11-12' },
+      { lvl: 13, title: 'Mutlak Patron', desc: 'Son Canavar! Valla, sen bu sistemi çözmüşsün!', range: 'Lvl 13+' },
+    ]
+  } else if (language === 'en') {
+    return [
+      { lvl: 1, title: 'Spectator-Alman', desc: 'You are just watching and eating sunflower seeds.', range: 'Lvl 1' },
+      { lvl: 2, title: 'Probationary Habibi', desc: 'The kiosk owner already greets you with a handshake.', range: 'Lvl 2' },
+      { lvl: 3, title: 'Sunday League Couseng', desc: 'Your place is on the dirt pitch, but predictions are solid.', range: 'Lvl 3' },
+      { lvl: 4, title: 'Amateur Player', desc: 'You have the knowledge, but the legs won\'t cooperate.', range: 'Lvl 4' },
+      { lvl: 5, title: 'Astro Turf Legend', desc: 'The artificial grass trembles at your tips, brother.', range: 'Lvl 5-6' },
+      { lvl: 7, title: 'Tactics Abi', desc: 'You analyze like Mourinho on steroids, but with tea.', range: 'Lvl 7-8' },
+      { lvl: 9, title: 'Bet Slip Millionaire', desc: 'The bet slip flies by itself. Insane instinct!', range: 'Lvl 9' },
+      { lvl: 10, title: 'Baba of all Tippers', desc: 'Cousins call you at night for prediction tips.', range: 'Lvl 10' },
+      { lvl: 11, title: 'El Patron of the Kiosk', desc: 'You practically own the kiosk yourself.', range: 'Lvl 11-12' },
+      { lvl: 13, title: 'The Ultimate Boss Maker', desc: 'Endboss! Wallah, you beat the entire system!', range: 'Lvl 13+' },
+    ]
+  }
+  return [
+    { lvl: 1, title: 'Zuschauer-Alman', desc: 'Du schaust nur zu und isst Sonnenblumenkerne.', range: 'Lvl 1' },
+    { lvl: 2, title: 'Habibi auf Probe', desc: 'Kiosk-Besitzer grüßt dich jetzt schon mit Handshake.', range: 'Lvl 2' },
+    { lvl: 3, title: 'Kreisliga-Couseng', desc: 'Dein Platz ist auf der Asche, aber die Tipps sitzen schon.', range: 'Lvl 3' },
+    { lvl: 4, title: 'Amateur-Kicker', desc: 'Du hast Ahnung, aber die Beine wollen nicht mehr.', range: 'Lvl 4' },
+    { lvl: 5, title: 'Halı Saha Legende', desc: 'Der Kunstrasen zittert vor deinen Tipps, Bruder.', range: 'Lvl 5-6' },
+    { lvl: 7, title: 'Taktik-Abi', desc: 'Du analysierst wie Mourinho auf Koks, aber mit Cay.', range: 'Lvl 7-8' },
+    { lvl: 9, title: 'Tippschein-Millionär', desc: 'Der Wettschein fliegt fast von alleine. Krankes Gespür!', range: 'Lvl 9' },
+    { lvl: 10, title: 'Baba aller Tipper', desc: 'Cousengs rufen dich nachts an für Tipp-Empfehlungen.', range: 'Lvl 10' },
+    { lvl: 11, title: 'El Patron des Kiosks', desc: 'Du besitzt den Kiosk gefühlt schon selbst.', range: 'Lvl 11-12' },
+    { lvl: 13, title: 'Der absolute Boss-Macher', desc: 'Endgegner! Wallah, du hast das System durchgespielt!', range: 'Lvl 13+' },
+  ]
+}
 
 // Level icon based on rank
 function LevelIcon({ size }: { size: number }) {
@@ -31,6 +61,7 @@ export function LevelProgressCard({
   showLevelUpModal,
   setShowLevelUpModal
 }: LevelProgressCardProps) {
+  const { t, language } = useTranslation()
   const [ranksExpanded, setRanksExpanded] = useState(false)
   const [achievementsCount, setAchievementsCount] = useState(() => {
     return parseInt(localStorage.getItem('superbet_achievements_count') || '0', 10)
@@ -52,18 +83,27 @@ export function LevelProgressCard({
   const xpPct = lvlDetails.xpPct
   const totalExp = lvlDetails.totalExp
 
+  const rangTitelSystem = getRangTitelSystem(language)
+
   // Title based on level
-  let levelTitle = 'Alman'
+  let levelTitle = rangTitelSystem[0].title
   let titleColor = 'text-slate-400'
-  if (level >= 13) { levelTitle = 'Der absolute Boss-Macher'; titleColor = 'text-red-400 animate-pulse font-black' }
-  else if (level >= 11) { levelTitle = 'El Patron des Kiosks'; titleColor = 'text-purple-400 font-black' }
-  else if (level >= 10) { levelTitle = 'Baba aller Tipper'; titleColor = 'text-amber-400 font-bold' }
-  else if (level >= 9) { levelTitle = 'Tippschein-Millionär'; titleColor = 'text-yellow-450 font-bold' }
-  else if (level >= 7) { levelTitle = 'Taktik-Abi'; titleColor = 'text-emerald-450 font-bold' }
-  else if (level >= 5) { levelTitle = 'Halı Saha Legende'; titleColor = 'text-blue-400 font-bold' }
-  else if (level >= 4) { levelTitle = 'Amateur-Kicker'; titleColor = 'text-cyan-400 font-semibold' }
-  else if (level >= 3) { levelTitle = 'Kreisliga-Couseng'; titleColor = 'text-slate-300 font-medium' }
-  else if (level >= 2) { levelTitle = 'Habibi auf Probe'; titleColor = 'text-slate-400 font-medium' }
+  for (let i = rangTitelSystem.length - 1; i >= 0; i--) {
+    if (level >= rangTitelSystem[i].lvl) {
+      levelTitle = rangTitelSystem[i].title
+      break
+    }
+  }
+
+  if (level >= 13) { titleColor = 'text-red-400 animate-pulse font-black' }
+  else if (level >= 11) { titleColor = 'text-purple-400 font-black' }
+  else if (level >= 10) { titleColor = 'text-amber-400 font-bold' }
+  else if (level >= 9) { titleColor = 'text-yellow-450 font-bold' }
+  else if (level >= 7) { titleColor = 'text-emerald-450 font-bold' }
+  else if (level >= 5) { titleColor = 'text-blue-400 font-bold' }
+  else if (level >= 4) { titleColor = 'text-cyan-400 font-semibold' }
+  else if (level >= 3) { titleColor = 'text-slate-300 font-medium' }
+  else if (level >= 2) { titleColor = 'text-slate-400 font-medium' }
 
   return (
     <>
@@ -75,7 +115,9 @@ export function LevelProgressCard({
               <LevelIcon size={20} />
             </div>
             <div className="text-left">
-              <span className="text-[9px] font-mono text-on-surface-variant uppercase tracking-wider">Liga-Fortschritt</span>
+              <span className="text-[9px] font-mono text-on-surface-variant uppercase tracking-wider">
+                {t('leagueProgress')}
+              </span>
               <h3 className={`text-sm font-bold mt-0.5 ${titleColor}`}>{levelTitle}</h3>
             </div>
           </div>
@@ -86,8 +128,12 @@ export function LevelProgressCard({
         </div>
         <div className="space-y-1.5">
           <div className="flex justify-between text-[10px] font-mono">
-            <span className="text-on-surface-variant">EXP: {totalExp} gesamt</span>
-            <span className="text-primary font-bold">{xpCurrent} / {xpRequired} EXP bis Level {level + 1}</span>
+            <span className="text-on-surface-variant">
+              {t('expTotal', { totalExp })}
+            </span>
+            <span className="text-primary font-bold">
+              {t('expToLevel', { current: xpCurrent, required: xpRequired, level: level + 1 })}
+            </span>
           </div>
           <div className="h-2.5 w-full bg-black/40 rounded-full overflow-hidden p-[1.5px] border border-white/10">
             <div 
@@ -106,7 +152,9 @@ export function LevelProgressCard({
         >
           <div className="flex items-center gap-1.5">
             <Trophy size={13} className="text-on-surface-variant" />
-            <p className="text-[9px] font-mono text-on-surface-variant uppercase tracking-wider">Ehren-Ränge & Level-Übersicht</p>
+            <p className="text-[9px] font-mono text-on-surface-variant uppercase tracking-wider">
+              {t('ranksLevelOverview')}
+            </p>
           </div>
           {ranksExpanded ? (
             <ChevronUp size={16} className="text-on-surface-variant" />
@@ -117,7 +165,7 @@ export function LevelProgressCard({
         {ranksExpanded && (
           <div className="mt-4 space-y-2 animate-fade-in text-left">
             <p className="text-[9.5px] font-mono text-on-surface-variant leading-relaxed mb-3">
-              Verdiene XP durch richtige Tipps! Je höher dein Level, desto heftiger glüht dein Badge im Header und in den Ligen.
+              {t('ranksLevelOverviewDesc')}
             </p>
             <div className="space-y-2 max-h-[350px] overflow-y-auto pr-1">
               {rangTitelSystem.map(item => (
@@ -155,19 +203,19 @@ export function LevelProgressCard({
               ✨ LEVEL UP! ✨
             </span>
             <h2 className="text-2xl font-black text-on-surface mt-2 mb-1">
-              STUFE {level}
+              {t('levelTitle', { level })}
             </h2>
             <p className={`text-sm font-bold uppercase tracking-wider mb-4 ${titleColor}`}>
               {levelTitle}
             </p>
             <p className="text-xs text-on-surface-variant/80 leading-relaxed mb-6 font-mono">
-              Mashallah, deine Tipps haben komplett rasiert! Die anderen heulen schon leise in den Ligen.
+              {t('levelUpModalDesc')}
             </p>
             <button
               onClick={() => setShowLevelUpModal(false)}
               className="w-full bg-primary-container text-on-primary font-mono font-bold text-xs py-3 rounded-lg uppercase tracking-wider hover:opacity-90 active:scale-95 transition-all shadow-[0_0_15px_rgba(251,191,36,0.15)] cursor-pointer text-center"
             >
-              Bruder, Danke! 🔥
+              {t('levelUpModalBtn')}
             </button>
           </div>
         </div>

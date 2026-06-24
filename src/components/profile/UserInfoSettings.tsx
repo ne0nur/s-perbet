@@ -1,4 +1,5 @@
 import { Camera, ShieldAlert } from 'lucide-react'
+import { useTranslation } from '../../utils/translations'
 
 interface UserInfoSettingsProps {
   username: string
@@ -23,6 +24,8 @@ export function UserInfoSettings({
   isAdmin,
   userRank
 }: UserInfoSettingsProps) {
+  const { t } = useTranslation()
+
   return (
     <div className="bg-surface-container-low border border-surface-container-high rounded-xl p-5 shadow-sm">
       <div className="flex items-center gap-4">
@@ -57,22 +60,24 @@ export function UserInfoSettings({
           <div className="flex flex-wrap items-center gap-2 mt-1">
             {isAdmin && (
               <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-mono text-[9px] uppercase tracking-wider text-red-400 bg-red-500/10 border border-red-500/20 animate-pulse">
-                <ShieldAlert size={10} /> Admin
+                <ShieldAlert size={10} /> {t('admin')}
               </span>
             )}
             {userRank ? (
               <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 font-mono text-[9px] uppercase tracking-wider text-primary bg-primary-container/10 border border-primary-container/20 font-bold">
-                🏆 Platz {userRank}
+                🏆 {t('rank')} {userRank}
               </span>
             ) : (
               <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-mono text-[9px] uppercase tracking-wider text-on-surface-variant/40 bg-surface-container-high border border-surface-container-highest">
-                Kein Rang
+                {t('noRank')}
               </span>
             )}
           </div>
         </div>
       </div>
-      <p className="text-[9px] text-on-surface-variant/40 font-mono mt-3 text-center border-t border-surface-container-high/60 pt-2">Tippe auf deinen Namen oder dein Bild, um sie anzupassen</p>
+      <p className="text-[9px] text-on-surface-variant/40 font-mono mt-3 text-center border-t border-surface-container-high/60 pt-2">
+        {t('tapToEditProfile')}
+      </p>
     </div>
   )
 }

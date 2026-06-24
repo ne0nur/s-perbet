@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useMemo } from 'react'
+import { useEffect, useState, useRef, useMemo, useCallback } from 'react'
 import { useMatchStore, type Match } from '../stores/matchStore'
 import { useTipStore } from '../stores/tipStore'
 import { useNavigate } from 'react-router-dom'
@@ -7,14 +7,18 @@ import { MatchCard } from '../components/MatchCard'
 import { MatchDetailPanel } from '../components/MatchDetailPanel'
 import { Lock, Check } from 'lucide-react'
 import { useAuthStore } from '../stores/authStore'
-import { TIPPS_FREIGESCHALTET } from '../config'
+import { useSettingsStore } from '../stores/settingsStore'
+import { useToastStore } from '../stores/toastStore'
+import { useTranslation } from '../utils/translations'
 
 export function DashboardPage() {
+  const { t } = useTranslation()
   const { matches, aktuellerSpieltag, aktuelleSaison, isLaden, setSpieltag, ladeMatches, initialisiereSpieltag, letztesUpdate, abonnierenRealtimeMatches } = useMatchStore()
   const ladeMeineTipps = useTipStore(s => s.ladeMeineTipps)
   const meineTipps = useTipStore(s => s.meineTipps)
   const getTippFuerMatch = useTipStore(s => s.getTippFuerMatch)
   const { user } = useAuthStore()
+  const tippsFreigeschaltet = useSettingsStore(s => s.tippsFreigeschaltet)
   const navigate = useNavigate()
   const [maxSpieltag, setMaxSpieltag] = useState(38)
   const [filter, setFilter] = useState<'alle' | 'live'>('alle')
@@ -40,12 +44,12 @@ export function DashboardPage() {
     initialized.current = true
     initialisiereSpieltag()
     abonnierenRealtimeMatches()
-  }, [])
+  }, [initialisiereSpieltag, abonnierenRealtimeMatches])
 
   useEffect(() => {
     ladeMatches(aktuellerSpieltag)
     ladeMeineTipps(aktuellerSpieltag)
-  }, [aktuellerSpieltag])
+  }, [aktuellerSpieltag, ladeMatches, ladeMeineTipps])
 
   useEffect(() => {
     let query = supabase.from('matches').select('spieltag').order('spieltag', { ascending: false }).limit(1)
@@ -60,11 +64,59 @@ export function DashboardPage() {
     if (btn) setTimeout(() => btn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' }), 100)
   }, [aktuellerSpieltag, maxSpieltag])
 
+  const ladeSpieltagInfos = useCallback(async () => {
+    try {
+      const [{ data: matchesData }, { data: tipsData }] = await Promise.all([
+        supabase.from('matches').select('spieltag, status'),
+        supabase.from('tips').select('matches!inner(spieltag)').eq('user_id', user!.id)
+      ])
+
+      const matchCounts: Record<number, number> = {}
+      const tipCounts: Record<number, number> = {}
+      const liveSpieltage = new Set<number>()
+
+      if (matchesData) {
+        matchesData.forEach(m => {
+          if (m.spieltag) {
+            matchCounts[m.spieltag] = (matchCounts[m.spieltag] || 0) + 1
+            if (m.status === 'live') {
+              liveSpieltage.add(m.spieltag)
+            }
+          }
+        })
+      }
+
+      if (tipsData) {
+        tipsData.forEach(t => {
+          const st = (t.matches as unknown as { spieltag: number })?.spieltag
+          if (st) {
+            tipCounts[st] = (tipCounts[st] || 0) + 1
+          }
+        })
+      }
+
+      const infoMap: Record<number, { fullyTipped: boolean; isLive: boolean }> = {}
+      const maxSt = matchesData && matchesData.length > 0 ? Math.max(...matchesData.map(m => m.spieltag), 1) : 38
+      for (let st = 1; st <= maxSt; st++) {
+        const totalMatches = matchCounts[st] || 0
+        const totalTips = tipCounts[st] || 0
+        infoMap[st] = {
+          fullyTipped: totalMatches > 0 && totalTips === totalMatches,
+          isLive: liveSpieltage.has(st)
+        }
+      }
+      setSpieltagInfo(infoMap)
+    } catch (e) {
+      console.error('Fehler beim Laden der Spieltag-Infos:', e)
+      useToastStore.getState().toast('Fehler beim Laden der Spieltag-Infos', 'error')
+    }
+  }, [user])
+
   // Spieltag-Infos (live, fullyTipped) laden. Nur beim Start oder wenn sich der User ändert.
   useEffect(() => {
     if (!user) return
     ladeSpieltagInfos()
-  }, [user])
+  }, [user, ladeSpieltagInfos])
 
   // Auto-select first match on desktop when matches list changes
   const anzeigeMatches = filter === 'live'
@@ -93,52 +145,7 @@ export function DashboardPage() {
     }
   }, [isDesktop, anzeigeMatches, selectedMatchId])
 
-  async function ladeSpieltagInfos() {
-    try {
-      const [{ data: matchesData }, { data: tipsData }] = await Promise.all([
-        supabase.from('matches').select('spieltag, status'),
-        supabase.from('tips').select('matches!inner(spieltag)').eq('user_id', user!.id)
-      ])
 
-      const matchCounts: Record<number, number> = {}
-      const tipCounts: Record<number, number> = {}
-      const liveSpieltage = new Set<number>()
-
-      if (matchesData) {
-        matchesData.forEach(m => {
-          if (m.spieltag) {
-            matchCounts[m.spieltag] = (matchCounts[m.spieltag] || 0) + 1
-            if (m.status === 'live') {
-              liveSpieltage.add(m.spieltag)
-            }
-          }
-        })
-      }
-
-      if (tipsData) {
-        tipsData.forEach(t => {
-          const st = (t.matches as any)?.spieltag
-          if (st) {
-            tipCounts[st] = (tipCounts[st] || 0) + 1
-          }
-        })
-      }
-
-      const infoMap: Record<number, { fullyTipped: boolean; isLive: boolean }> = {}
-      const maxSt = matchesData && matchesData.length > 0 ? Math.max(...matchesData.map(m => m.spieltag), 1) : 38
-      for (let st = 1; st <= maxSt; st++) {
-        const totalMatches = matchCounts[st] || 0
-        const totalTips = tipCounts[st] || 0
-        infoMap[st] = {
-          fullyTipped: totalMatches > 0 && totalTips === totalMatches,
-          isLive: liveSpieltage.has(st)
-        }
-      }
-      setSpieltagInfo(infoMap)
-    } catch (e) {
-      console.error('Fehler beim Laden der Spieltag-Infos:', e)
-    }
-  }
 
   // Lokales Update der Spieltag-Info, wenn sich meineTipps (für den aktuellen Spieltag) ändern
   useEffect(() => {
@@ -156,21 +163,19 @@ export function DashboardPage() {
         }
       }))
     }
-  }, [meineTipps, matches, aktuellerSpieltag])
-
-  const spieltage = Array.from({ length: maxSpieltag }, (_, i) => i + 1)
+  }, [meineTipps, matches, aktuellerSpieltag, spieltagInfo])
   const offeneTipps = matches.filter(m => m.status === 'upcoming' && !getTippFuerMatch(m.id)).length
 
   const getPhaseLabel = (st: number, tournament: string) => {
     if (tournament === 'Champions League') {
-      if (st <= 8) return `${st}. Liga`
-      if (st === 9) return `Play-offs`
-      if (st === 10) return `Achtelfinale`
-      if (st === 11) return `Viertelfinale`
-      if (st === 12) return `Halbfinale`
-      if (st === 13) return `Finale`
+      if (st <= 8) return t('clRoundLeague', { st })
+      if (st === 9) return t('clRoundPlayoffs')
+      if (st === 10) return t('clRoundLast16')
+      if (st === 11) return t('clRoundQuarter')
+      if (st === 12) return t('clRoundSemi')
+      if (st === 13) return t('clRoundFinal')
     }
-    return `${st}. Spieltag`
+    return t('slRoundLabel', { st })
   }
 
   // Bestimme wie viele Tabs gezeigt werden
@@ -207,14 +212,27 @@ export function DashboardPage() {
               onChange={(e) => useMatchStore.getState().setSaison(parseInt(e.target.value))}
               className="bg-surface-container border border-surface-container-high rounded-lg px-3 py-1.5 text-xs text-on-surface focus:outline-none focus:border-primary-container font-mono"
             >
-              <option value={2026}>Saison 2026/27</option>
-              <option value={2025}>Saison 2025/26</option>
-              <option value={2024}>Saison 2024/25</option>
+              <option value={2026}>{t('seasonLabel', { year: '2026/27' })}</option>
+              <option value={2025}>{t('seasonLabel', { year: '2025/26' })}</option>
+              <option value={2024}>{t('seasonLabel', { year: '2024/25' })}</option>
             </select>
           </div>
 
           {/* Spieltag-Slider */}
-          <div className="pt-2 pb-3 border-t border-white/5 relative">
+          <div className="pt-2 pb-3 border-t border-white/5 relative flex items-center gap-1.5">
+            {/* Sticky "ALLE" Button — immer sichtbar */}
+            <button
+              onClick={() => { setSpieltag(0); ladeMatches(0); }}
+              className={`flex-shrink-0 px-3 py-2 rounded-full border text-[11px] font-mono font-medium transition-all z-20 ${
+                aktuellerSpieltag === 0
+                  ? 'bg-primary-container text-on-primary border-primary-container shadow-[0_0_15px_rgba(251,191,36,0.4)] font-bold'
+                  : 'bg-surface-container/80 border-white/10 text-on-surface-variant hover:bg-white/5'
+              }`}
+            >
+              {t('filterAll')}
+            </button>
+            {/* Slider (scrollbar) */}
+            <div className="relative flex-1 min-w-0">
             <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-background to-transparent z-10 pointer-events-none" />
             <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-background to-transparent z-10 pointer-events-none" />
             <div ref={sliderRef} className="flex overflow-x-auto no-scrollbar gap-2 px-2 relative z-0">
@@ -253,6 +271,7 @@ export function DashboardPage() {
                 )
               })}
             </div>
+            </div>
           </div>
 
           {/* Filter-Toggle + Letztes Update Badge */}
@@ -268,7 +287,7 @@ export function DashboardPage() {
                       : 'border-white/10 text-on-surface-variant hover:border-white/20'
                   }`}
                 >
-                  {f === 'alle' ? 'Alle' : 'Nur Live'}
+                  {f === 'alle' ? t('filterAll') : t('filterLive')}
                 </button>
               ))}
             </div>
@@ -276,7 +295,7 @@ export function DashboardPage() {
             {letztesUpdate && (
               <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-white/5 border border-white/5 text-[9px] font-mono text-on-surface-variant/60 animate-pulse-slow">
                 <span className="w-1.5 h-1.5 rounded-full bg-green-500 shrink-0" />
-                <span>Live ({letztesUpdate})</span>
+                <span>{t('matchLive')} ({letztesUpdate})</span>
               </div>
             )}
           </div>
@@ -284,31 +303,31 @@ export function DashboardPage() {
       </header>
 
       {/* Banners */}
-      {( !TIPPS_FREIGESCHALTET || (TIPPS_FREIGESCHALTET && offeneTipps > 0) ) && (
+      {( !tippsFreigeschaltet || (tippsFreigeschaltet && offeneTipps > 0) ) && (
         <div className="px-4 md:px-6 lg:px-8 max-w-[1600px] mx-auto w-full mt-4 flex flex-col gap-3">
-          {!TIPPS_FREIGESCHALTET && (
+          {!tippsFreigeschaltet && (
             <div className="px-4 py-3 bg-amber-500/5 border border-amber-500/20 rounded-xl flex items-center gap-3">
               <div className="flex-shrink-0 w-8 h-8 rounded-full bg-amber-500/10 flex items-center justify-center">
                 <Lock size={14} className="text-amber-400" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-[11px] font-mono font-bold uppercase tracking-wider text-amber-400/80 mb-0.5 whitespace-normal break-words">Tippabgabe gesperrt</p>
+                <p className="text-[11px] font-mono font-bold uppercase tracking-wider text-amber-400/80 mb-0.5 whitespace-normal break-words">{t('tippingLocked')}</p>
                 <p className="text-[11px] text-amber-400/50 font-mono whitespace-normal break-words leading-snug">
-                  Freischaltung nach Veröffentlichung des offiziellen Spielplans 2026/27
+                  {t('tippingLockedDesc')}
                 </p>
               </div>
             </div>
           )}
 
-          {TIPPS_FREIGESCHALTET && offeneTipps > 0 && (
+          {tippsFreigeschaltet && offeneTipps > 0 && (
             <div className="px-4 py-3 bg-amber-500/10 border border-amber-500/35 rounded-xl flex items-center gap-3 animate-glow-pulse">
               <div className="flex-shrink-0 w-8 h-8 rounded-full bg-amber-500/15 flex items-center justify-center">
                 <span className="text-sm">⏳</span>
               </div>
               <div className="flex-1 min-w-0 text-left">
-                <p className="text-[11px] font-mono font-black uppercase tracking-wider text-amber-400 mb-0.5">Tipp-Erinnerung</p>
+                <p className="text-[11px] font-mono font-black uppercase tracking-wider text-amber-400 mb-0.5">{t('tipReminder')}</p>
                 <p className="text-[11px] text-on-surface-variant font-mono">
-                  Du hast noch <span className="text-amber-400 font-bold">{offeneTipps} ungetippte</span> {offeneTipps === 1 ? 'Spiel' : 'Spiele'} an diesem Spieltag. Rasiere den Wettschein, bevor es zu spät ist!
+                  {t('tipReminderDesc', { count: offeneTipps })}
                 </p>
               </div>
             </div>
@@ -329,10 +348,10 @@ export function DashboardPage() {
               </div>
             ) : anzeigeMatches.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 gap-3">
-                <p className="text-on-surface-variant/50 text-sm font-mono">Keine Spiele</p>
+                <p className="text-on-surface-variant/50 text-sm font-mono">{t('noMatchesShort')}</p>
                 {filter === 'live' && (
                   <button onClick={() => setFilter('alle')} className="btn-secondary text-xs">
-                    Alle Spiele anzeigen
+                    {t('showAllMatches')}
                   </button>
                 )}
               </div>
