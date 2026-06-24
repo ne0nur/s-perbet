@@ -3,9 +3,11 @@ import { Canvas, useFrame } from '@react-three/fiber'
 import { useGLTF } from '@react-three/drei'
 import * as THREE from 'three'
 
+const BALL_URL = import.meta.env.BASE_URL + 'ball.glb'
+
 function BallModel() {
   const ref = useRef<THREE.Group>(null!)
-  const { scene } = useGLTF('/ball.glb')
+  const { scene } = useGLTF(BALL_URL)
 
   // Färbe die Materialien — das Modell hat 2 graue Default-Materialien
   useEffect(() => {
@@ -85,4 +87,4 @@ export function Football3D({ className }: { className?: string }) {
 }
 
 // Preload the model
-useGLTF.preload('/ball.glb')
+useGLTF.preload(BALL_URL)
