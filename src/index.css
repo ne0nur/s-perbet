@@ -272,6 +272,17 @@ body {
   animation: logo-enter 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
+/* Float-Up Partikel */
+@keyframes float-up {
+  0% { opacity: 0; transform: translateY(20px); }
+  20% { opacity: 0.6; }
+  80% { opacity: 0.3; }
+  100% { opacity: 0; transform: translateY(-60px); }
+}
+.animate-float-up {
+  animation: float-up 3s ease-out infinite;
+}
+
 /* live-dot: pulsierender roter Kreis (für Live-Spiele) */
 .live-dot {
   display: inline-block;
