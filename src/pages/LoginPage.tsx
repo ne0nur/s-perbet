@@ -6,6 +6,7 @@ import { useToastStore } from '../stores/toastStore'
 import { Trophy, User, Lock, ArrowRight, Eye, EyeOff, ChevronLeft, Sparkles, ShieldAlert } from 'lucide-react'
 import { useLanguageStore } from '../stores/languageStore'
 import { useTranslation } from '../utils/translations'
+import { HeaderLogo } from '../components/HeaderLogo'
 
 type AuthView = 'login' | 'invite' | 'ask-account' | 'onboarding'
 
@@ -223,9 +224,8 @@ export function LoginPage() {
         <div className="w-16 h-16 rounded-full bg-primary-container/10 flex items-center justify-center mx-auto mb-4 shadow-[0_0_30px_rgba(251,191,36,0.08)]">
           <Trophy size={28} className="text-primary-fixed-dim" />
         </div>
-        <div className="superbet-logo-container mb-1">
-          <span className="superbet-text-super text-2xl">SÜPER</span>
-          <span className="superbet-badge-bet text-xl ml-1">BET</span>
+        <div className="superbet-header-logo mb-1 scale-125 origin-center">
+          <HeaderLogo />
         </div>
         <p className="text-on-surface-variant/50 text-[9px] mt-1 font-mono tracking-[0.25em] uppercase">
           {t('saisonPredictionLeagueSubtitle')}

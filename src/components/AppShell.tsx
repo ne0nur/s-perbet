@@ -11,6 +11,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronLeft, ChevronRight, Trophy, Target, Sparkles, Award, Table2, BarChart2, Users, User, Gift, Rocket, Download } from 'lucide-react'
 import { usePwaStore } from '../stores/pwaStore'
 import { useTranslation } from '../utils/translations'
+import { HeaderLogo } from './HeaderLogo'
 
 /** Nur der Page-Content animiert — AppShell & BottomNav bleiben stabil */
 function AnimatedOutlet() {
@@ -259,10 +260,7 @@ export function AppShell() {
       <aside className="hidden md:flex md:flex-col w-64 border-r border-white/5 bg-surface/30 backdrop-blur-xl shrink-0 p-5 justify-between sticky top-0 h-screen">
         {/* Top: Logo + Nav Links */}
         <div className="space-y-8">
-          <span className="superbet-logo-container select-none px-2 block">
-            <span className="superbet-text-super text-2xl">SÜPER</span>
-            <span className="superbet-badge-bet text-sm ml-1">BET</span>
-          </span>
+          <HeaderLogo />
           
           <nav className="space-y-1">
             {sidebarTabs.map(({ to, icon: Icon, label }) => {
@@ -354,10 +352,7 @@ export function AppShell() {
             <div className="flex items-center justify-between px-4 h-16 max-w-lg mx-auto w-full">
               {/* Logo + Tab Name */}
               <div className="flex items-center gap-2.5">
-                <span className="superbet-logo-container select-none">
-                  <span className="superbet-text-super text-xl">SÜPER</span>
-                  <span className="superbet-badge-bet text-[11px] ml-0.5">BET</span>
-                </span>
+              <HeaderLogo size="sm" />
                 <span className="h-4 w-px bg-white/10" />
                 <span className="text-[10px] font-mono font-bold text-on-surface-variant uppercase tracking-widest">{tabName}</span>
               </div>
