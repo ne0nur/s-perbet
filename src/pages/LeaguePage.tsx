@@ -45,6 +45,7 @@ interface MitgliedRow {
   id: string; username: string; avatar_url: string | null; gesamt_punkte: number
   tipps: Record<string, { heim: number; gast: number; punkte: number }>
   spieltag_punkte: number; spieltag_tipps: number; spieltag_gesamt: number
+  trend?: number
 }
 interface Liga { id: string; name: string; invite_code: string; creator_id: string; active_tournaments: string[] }
 
@@ -225,10 +226,15 @@ export function LeaguePage() {
     const tippMap: Record<string, Record<string, { heim: number; gast: number; punkte: number }>> = {}
     const spPunkte: Record<string, number> = {}
     const seasonPoints: Record<string, number> = {}
+    const previousPoints: Record<string, number> = {}
+
+    const finishedMatches = validMatchesForPoints.filter(m => m.status === 'finished' || m.status === 'live')
+    const maxFinishedSpieltag = finishedMatches.length > 0 ? Math.max(...finishedMatches.map(m => m.spieltag)) : 0
     
     userIds.forEach(uid => { 
       spPunkte[uid] = 0 
       seasonPoints[uid] = 0
+      previousPoints[uid] = 0
     })
 
     if (tips) {
@@ -236,6 +242,10 @@ export function LeaguePage() {
         // Saison-Punkte berechnen (abhängig vom aktiven Turnier-Filter)
         if (validMatchesForPointsIds.has(t.match_id)) {
           seasonPoints[t.user_id] = (seasonPoints[t.user_id] || 0) + (t.punkte || 0)
+          const matchInfo = validMatchesForPoints.find(m => m.id === t.match_id)
+          if (matchInfo && matchInfo.spieltag < maxFinishedSpieltag) {
+            previousPoints[t.user_id] = (previousPoints[t.user_id] || 0) + (t.punkte || 0)
+          }
         }
 
         if (!activeMatchIds.has(t.match_id)) return
@@ -246,6 +256,12 @@ export function LeaguePage() {
     }
 
     const spieltagGesamt = activeMatches.length || 9
+
+    const prevRankOrder = [...userIds].sort((a, b) => previousPoints[b] - previousPoints[a])
+    const prevRankMap: Record<string, number> = {}
+    prevRankOrder.forEach((uid, index) => {
+      prevRankMap[uid] = index + 1
+    })
 
     const rows: MitgliedRow[] = profiles.map((p) => ({
       id: p.id, username: p.username, avatar_url: p.avatar_url || null, 
@@ -261,6 +277,16 @@ export function LeaguePage() {
     } else {
       rows.sort((a, b) => b.spieltag_punkte - a.spieltag_punkte || b.gesamt_punkte - a.gesamt_punkte)
     }
+
+    rows.forEach((row, index) => {
+      const currentRank = index + 1
+      const prevRank = prevRankMap[row.id] || currentRank
+      if (maxFinishedSpieltag > 1 && viewSpieltag === 'gesamt') {
+        row.trend = prevRank - currentRank
+      } else {
+        row.trend = 0
+      }
+    })
 
     setMitglieder(rows)
   }, [allMatches, viewSpieltag, viewTournament, aktiveLiga])
@@ -603,7 +629,17 @@ export function LeaguePage() {
                             return (
                               <tr key={m.id} className={`border-b border-surface-container-high/50 last:border-0 ${isMe ? 'bg-primary-container/5' : ''}`}>
                                 <td className="py-2.5 pr-2 pl-3">
-                                  <span className="text-[11px] font-mono font-bold text-on-surface">{idx + 1}</span>
+                                  <div className="flex flex-col items-center justify-center">
+                                    <span className="text-[11px] font-mono font-bold text-on-surface">{idx + 1}</span>
+                                    {m.trend !== undefined && m.trend !== 0 && (
+                                      <span className={`text-[8px] font-bold ${m.trend > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                                        {m.trend > 0 ? '▲' : '▼'} {Math.abs(m.trend)}
+                                      </span>
+                                    )}
+                                    {m.trend === 0 && viewSpieltag === 'gesamt' && (
+                                      <span className="text-[8px] font-bold text-on-surface-variant/30">-</span>
+                                    )}
+                                  </div>
                                 </td>
                                 <td className="py-2.5 pr-2">
                                   <div className="flex items-center gap-1.5 min-w-[90px]">
@@ -969,20 +1005,37 @@ export function LeaguePage() {
                   className="w-full bg-surface-container-lowest border border-surface-container-high rounded-lg px-3 py-2 text-sm text-on-surface focus:border-primary focus:outline-none"
                   autoFocus
                 />
-                <div className="space-y-2 py-2">
-                  <span className="text-xs text-on-surface-variant font-medium">{t('chooseTournaments')}</span>
-                  <label className="flex items-center gap-2 text-sm text-on-surface cursor-pointer bg-surface-container-lowest border border-surface-container-high p-2 rounded-lg">
-                    <input type="checkbox" checked={neueLigaTurniere.includes('Süper Lig')} onChange={(e) => {
-                      if (e.target.checked) setNeueLigaTurniere([...neueLigaTurniere, 'Süper Lig'])
-                      else setNeueLigaTurniere(neueLigaTurniere.filter(t => t !== 'Süper Lig'))
-                    }} className="accent-primary" /> Süper Lig
-                  </label>
-                  <label className="flex items-center gap-2 text-sm text-on-surface cursor-pointer bg-surface-container-lowest border border-surface-container-high p-2 rounded-lg">
-                    <input type="checkbox" checked={neueLigaTurniere.includes('Champions League')} onChange={(e) => {
-                      if (e.target.checked) setNeueLigaTurniere([...neueLigaTurniere, 'Champions League'])
-                      else setNeueLigaTurniere(neueLigaTurniere.filter(t => t !== 'Champions League'))
-                    }} className="accent-primary" /> Champions League
-                  </label>
+                <div className="space-y-3 py-2">
+                  <span className="text-xs text-on-surface-variant font-bold uppercase tracking-wider">{t('chooseTournaments')}</span>
+                  <div className="grid grid-cols-2 gap-3">
+                    <motion.div
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => {
+                        if (neueLigaTurniere.includes('Süper Lig')) setNeueLigaTurniere(neueLigaTurniere.filter(t => t !== 'Süper Lig'))
+                        else setNeueLigaTurniere([...neueLigaTurniere, 'Süper Lig'])
+                      }}
+                      className={`flex flex-col items-center justify-center p-3 rounded-xl border-2 cursor-pointer transition-colors relative overflow-hidden ${neueLigaTurniere.includes('Süper Lig') ? 'border-primary bg-primary/10' : 'border-surface-container-high bg-surface-container-lowest hover:border-surface-variant'}`}
+                    >
+                      {neueLigaTurniere.includes('Süper Lig') && <div className="absolute top-2 right-2 w-4 h-4 bg-primary rounded-full flex items-center justify-center text-on-primary"><Check size={10} strokeWidth={4} /></div>}
+                      <img src={`${import.meta.env.BASE_URL}logos/Süper_Lig.png`} alt="SL" className="w-8 h-8 object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.6)] brightness-110 mb-2" />
+                      <span className={`text-xs font-bold ${neueLigaTurniere.includes('Süper Lig') ? 'text-primary' : 'text-on-surface'}`}>Süper Lig</span>
+                    </motion.div>
+                    
+                    <motion.div
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => {
+                        if (neueLigaTurniere.includes('Champions League')) setNeueLigaTurniere(neueLigaTurniere.filter(t => t !== 'Champions League'))
+                        else setNeueLigaTurniere([...neueLigaTurniere, 'Champions League'])
+                      }}
+                      className={`flex flex-col items-center justify-center p-3 rounded-xl border-2 cursor-pointer transition-colors relative overflow-hidden ${neueLigaTurniere.includes('Champions League') ? 'border-primary bg-primary/10' : 'border-surface-container-high bg-surface-container-lowest hover:border-surface-variant'}`}
+                    >
+                      {neueLigaTurniere.includes('Champions League') && <div className="absolute top-2 right-2 w-4 h-4 bg-primary rounded-full flex items-center justify-center text-on-primary"><Check size={10} strokeWidth={4} /></div>}
+                      <img src={`${import.meta.env.BASE_URL}logos/UEFA_Champions_League_logo.png`} alt="CL" className="w-8 h-8 object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.6)] brightness-110 mb-2" />
+                      <span className={`text-xs font-bold text-center ${neueLigaTurniere.includes('Champions League') ? 'text-primary' : 'text-on-surface'}`}>Champions League</span>
+                    </motion.div>
+                  </div>
                 </div>
                 <button
                   onClick={handleLigaErstellen}

@@ -20,6 +20,7 @@ import { StatsGrid } from '../components/profile/StatsGrid'
 import { AchievementsSection } from '../components/profile/AchievementsSection'
 import { evaluateAchievements, type TipDetails } from '../utils/achievementEvaluator'
 import { BonusTippsCard } from '../components/profile/BonusTippsCard'
+import { PointsChart } from '../components/profile/PointsChart'
 
 interface BonusTipp { frage_id: number; antwort: string }
 
@@ -789,6 +790,7 @@ export function ProfilePage() {
               setShowLevelUpModal={setShowLevelUpModal}
             />
             <StatsGrid stats={stats} remainingPoints={remainingPoints} gesamtPunkte={profil?.gesamt_punkte || 0} />
+            <PointsChart tips={userTips} />
           </div>
         )}
 

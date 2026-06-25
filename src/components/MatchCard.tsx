@@ -2,8 +2,9 @@ import { useState, useEffect, useRef, memo } from 'react'
 import { useTipStore } from '../stores/tipStore'
 import { getTeamLogo } from '../lib/teamLogos'
 import { berechnePunkte } from '../lib/utils'
-import { ChevronRight, Check, Minus, Plus, Lock } from 'lucide-react'
+import { ChevronRight, Check, Minus, Plus, Lock, WifiOff } from 'lucide-react'
 import { useSettingsStore } from '../stores/settingsStore'
+import { useNetworkStore } from '../stores/networkStore'
 import type { Match } from '../stores/matchStore'
 
 function punkteFarbe(punkte: number): string {
@@ -91,6 +92,7 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
   const eigenerTipp = useTipStore(s => s.meineTipps.find(t => t.match_id === match.id))
   const tippSpeichern = useTipStore(s => s.tippSpeichern)
   const tippsFreigeschaltet = useSettingsStore(s => s.tippsFreigeschaltet)
+  const isOnline = useNetworkStore(s => s.isOnline)
 
   const istVorbei  = match.status === 'finished'
   const istLive    = match.status === 'live'
@@ -124,7 +126,7 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
 
   async function handleSpeichern(e: React.MouseEvent) {
     e.stopPropagation()
-    if (isSaving) return
+    if (isSaving || !isOnline) return
     setIsSaving(true)
     try {
       await tippSpeichern(match.id, tippHeim, tippGast, match.spieltag)
@@ -237,19 +239,23 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
         {kannTippen && (
           <div className="flex items-center justify-between gap-2 px-1">
             {/* Heim-Stepper */}
-            <Stepper value={tippHeim} onChange={setTippHeim} disabled={isSaving} />
+            <Stepper value={tippHeim} onChange={setTippHeim} disabled={isSaving || !isOnline} />
 
             {/* Speichern-Button */}
             <button
               onClick={handleSpeichern}
-              disabled={isSaving}
+              disabled={isSaving || !isOnline}
               className={`flex-shrink-0 flex items-center justify-center gap-1.5 px-4 py-2 rounded-full text-[11px] font-mono font-bold uppercase tracking-wider transition-all duration-200 ${
-                saved
-                  ? 'bg-green-500/20 border border-green-500/40 text-green-400'
-                  : 'bg-primary-container/15 border border-primary-container/30 text-primary-fixed-dim hover:bg-primary-container/25 active:scale-95'
+                !isOnline
+                  ? 'bg-red-500/10 border border-red-500/20 text-red-400'
+                  : saved
+                    ? 'bg-green-500/20 border border-green-500/40 text-green-400'
+                    : 'bg-primary-container/15 border border-primary-container/30 text-primary-fixed-dim hover:bg-primary-container/25 active:scale-95'
               } disabled:opacity-50`}
             >
-              {isSaving ? (
+              {!isOnline ? (
+                <><WifiOff size={12} /> Offline</>
+              ) : isSaving ? (
                 <div className="w-3.5 h-3.5 border-2 border-primary-fixed-dim border-t-transparent rounded-full animate-spin" />
               ) : saved ? (
                 <><Check size={12} /> Gespeichert</>
@@ -259,7 +265,7 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
             </button>
 
             {/* Gast-Stepper */}
-            <Stepper value={tippGast} onChange={setTippGast} disabled={isSaving} />
+            <Stepper value={tippGast} onChange={setTippGast} disabled={isSaving || !isOnline} />
           </div>
         )}
 

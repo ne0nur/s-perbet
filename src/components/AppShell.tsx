@@ -12,6 +12,7 @@ import { ChevronLeft, ChevronRight, Trophy, Target, Sparkles, Award, Table2, Bar
 import { usePwaStore } from '../stores/pwaStore'
 import { useTranslation } from '../utils/translations'
 import { HeaderLogo } from './HeaderLogo'
+import { NetworkIndicator } from './NetworkIndicator'
 
 /** Nur der Page-Content animiert — AppShell & BottomNav bleiben stabil */
 function AnimatedOutlet() {
@@ -256,6 +257,7 @@ export function AppShell() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col md:flex-row">
+      <NetworkIndicator />
       {/* Desktop Sidebar Navigation */}
       <aside className="hidden md:flex md:flex-col w-64 border-r border-white/5 bg-surface/30 backdrop-blur-xl shrink-0 p-5 justify-between sticky top-0 h-screen">
         {/* Top: Logo + Nav Links */}
