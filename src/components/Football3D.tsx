@@ -24,16 +24,10 @@ function BallModel({ isHovered, isKicked, onKick }: { isHovered: boolean; isKick
         // 360-Grad Flip um X- und Z-Achse (sanfter Bogen)
         ref.current.rotation.x = Math.sin(t * Math.PI) * Math.PI * 1.5
         ref.current.rotation.z = Math.sin(t * Math.PI) * Math.PI * 0.75
-        
-        // Physikalischer Hopser nach rechts (Richtung Text - sanfter und weicher)
-        ref.current.position.y = Math.sin(t * Math.PI) * 0.25
-        ref.current.position.x = Math.sin(t * Math.PI) * 0.18
       } else {
         kickProgress.current = 0
         ref.current.rotation.x = THREE.MathUtils.lerp(ref.current.rotation.x, 0, 8 * delta)
         ref.current.rotation.z = THREE.MathUtils.lerp(ref.current.rotation.z, 0, 8 * delta)
-        ref.current.position.y = THREE.MathUtils.lerp(ref.current.position.y, 0, 8 * delta)
-        ref.current.position.x = THREE.MathUtils.lerp(ref.current.position.x, 0, 8 * delta)
       }
     }
   })
@@ -69,7 +63,7 @@ export function Football3D({ className, isHovered = false, isKicked = false, onK
         <directionalLight position={[5, 5, 5]} intensity={1.2} />
         <directionalLight position={[-3, -1, -2]} intensity={0.3} />
 
-        <Bounds fit clip observe margin={0.8}>
+        <Bounds fit clip observe margin={1.15}>
           <Center>
             <BallModel isHovered={isHovered} isKicked={isKicked} onKick={onKick} />
           </Center>

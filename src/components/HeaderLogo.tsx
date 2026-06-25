@@ -12,7 +12,7 @@ interface HeaderLogoProps {
 
 export function HeaderLogo({ size = 'md' }: HeaderLogoProps) {
   const isSm = size === 'sm'
-  const ballSize = isSm ? 'w-8 h-8' : 'w-9 h-9'
+  const ballSize = isSm ? 'w-9 h-9' : 'w-11 h-11'
 
   const [isHovered, setIsHovered] = useState(false)
   const [isKicked, setIsKicked] = useState(false)
@@ -53,9 +53,9 @@ export function HeaderLogo({ size = 'md' }: HeaderLogoProps) {
       onMouseLeave={() => setIsHovered(false)}
       onClick={handleKick}
     >
-      {/* Echtes 3D-Fußball-Modell mit Wave-Effekt */}
+      {/* Echtes 3D-Fußball-Modell mit Wave-Effekt und CSS-Hopser */}
       <span 
-        className="animate-logo-float inline-flex" 
+        className={`animate-logo-float inline-flex ${isKicked ? 'animate-ball-hop' : ''}`} 
         style={{ '--float-delay': '0s' } as React.CSSProperties}
       >
         <Football3D 

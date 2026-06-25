@@ -611,6 +611,26 @@ body {
   will-change: transform;
 }
 
+@keyframes ballKickHop {
+  0% {
+    transform: translate(0, 0);
+  }
+  35% {
+    /* Up and to the right towards text */
+    transform: translate(6px, -8px);
+  }
+  70% {
+    transform: translate(-1px, 0.4px);
+  }
+  100% {
+    transform: translate(0, 0);
+  }
+}
+
+.animate-ball-hop {
+  animation: ballKickHop 0.95s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
 @keyframes superHitSmooth {
   0% {
     transform: translate(0, 0) scale(1);
