@@ -8,7 +8,7 @@ import { supabase } from '../lib/supabase'
 import { calculateLevelDetails, getLevelBadgeStyle } from '../lib/utils'
 import { evaluateAchievements, type TipDetails } from '../utils/achievementEvaluator'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ChevronLeft, ChevronRight, Trophy, Target, Sparkles, Award, Table2, BarChart2, Users, User, Gift, Rocket, Download } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Trophy, Target, Sparkles, Award, Table2, BarChart2, Users, User, Gift, Rocket, Download, Share2 } from 'lucide-react'
 import { usePwaStore } from '../stores/pwaStore'
 import { useTranslation } from '../utils/translations'
 import { HeaderLogo } from './HeaderLogo'
@@ -133,6 +133,19 @@ export function AppShell() {
     if (redirectToBonus) {
       localStorage.setItem('superbet_open_bonus', 'true')
       navigate('/profile')
+    }
+  }
+
+  const handleShare = async () => {
+    const shareData = {
+      title: 'SüperBET — Die private Fußball-Tipprunde',
+      text: '🔥 Tippe mit uns die Süper Lig! Komm in die Tipprunde.',
+      url: 'https://ne0nur.github.io/s-perbet/',
+    }
+    if (navigator.share) {
+      try { await navigator.share(shareData) } catch {}
+    } else {
+      try { await navigator.clipboard.writeText(shareData.url) } catch {}
     }
   }
 
@@ -308,6 +321,17 @@ export function AppShell() {
           </div>
         )}
 
+        {/* Share Button (Desktop) */}
+        <div className="px-2 mt-2">
+          <button
+            onClick={handleShare}
+            className="w-full flex items-center gap-2.5 px-3.5 py-3 rounded-xl text-xs font-mono font-bold uppercase tracking-wider text-on-surface-variant hover:text-on-surface hover:bg-surface-container/40 transition-all border border-transparent hover:border-white/10"
+          >
+            <Share2 size={14} />
+            {language === 'tr' ? 'Paylaş' : language === 'en' ? 'Share' : 'Teilen'}
+          </button>
+        </div>
+
         {/* Bottom User Section */}
         <div className="border-t border-white/5 pt-4">
           <button
@@ -440,39 +464,60 @@ export function AppShell() {
                 </div>
               )}
 
-              {onboardingSlide === 1 && (
-                <div className="animate-fade-in space-y-3">
-                  <div className="w-12 h-12 rounded-full bg-blue-500/10 border border-blue-500/30 flex items-center justify-center mx-auto mb-1">
-                    <Target size={24} className="text-blue-400" />
-                  </div>
-                  <h2 className="text-lg font-black text-on-surface">
-                    {t('onboardingPointsTitle')}
-                  </h2>
-                  <p className="text-[10px] text-on-surface-variant/80 font-mono mb-2">
-                    {t('onboardingPointsDesc')}
-                  </p>
-                  <div className="space-y-1.5 text-left max-w-[260px] mx-auto text-xs font-mono">
-                    <div className="flex items-center gap-2 p-1.5 bg-green-500/5 border border-green-500/20 rounded-md">
-                      <span className="w-2.5 h-2.5 rounded-full bg-green-500 shrink-0" />
-                      <span className="text-[11px] text-on-surface leading-none" dangerouslySetInnerHTML={{ __html: t('onboardingPointsExact').replace('4 Punkte', '<b>4 Punkte</b>').replace('4 Points', '<b>4 Points</b>').replace('4 Puan', '<b>4 Puan</b>') }} />
-                    </div>
-                    <div className="flex items-center gap-2 p-1.5 bg-amber-500/5 border border-amber-500/20 rounded-md">
-                      <span className="w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0" />
-                      <span className="text-[11px] text-on-surface leading-none" dangerouslySetInnerHTML={{ __html: t('onboardingPointsDiff').replace('3 Punkte', '<b>3 Punkte</b>').replace('3 Points', '<b>3 Points</b>').replace('3 Puan', '<b>3 Puan</b>') }} />
-                    </div>
-                    <div className="flex items-center gap-2 p-1.5 bg-blue-500/5 border border-blue-500/20 rounded-md">
-                      <span className="w-2.5 h-2.5 rounded-full bg-blue-500 shrink-0" />
-                      <span className="text-[11px] text-on-surface leading-none" dangerouslySetInnerHTML={{ __html: t('onboardingPointsTend').replace('2 Punkte', '<b>2 Punkte</b>').replace('2 Points', '<b>2 Points</b>').replace('2 Puan', '<b>2 Puan</b>') }} />
-                    </div>
-                    <div className="flex items-center gap-2 p-1.5 bg-slate-650/5 border border-slate-600/20 rounded-md">
-                      <span className="w-2.5 h-2.5 rounded-full bg-slate-500 shrink-0" />
-                      <span className="text-[11px] text-on-surface-variant leading-none" dangerouslySetInnerHTML={{ __html: t('onboardingPointsMiss').replace('0 Punkte', '<b>0 Punkte</b>').replace('0 Points', '<b>0 Points</b>').replace('0 Puan', '<b>0 Puan</b>') }} />
-                    </div>
-                  </div>
-                </div>
-              )}
+              {/* === SLIDES 1-7: Punktestufen (je eine eigene Seite) === */}
+              {onboardingSlide >= 1 && onboardingSlide <= 7 && (() => {
+                const tiers = [
+                  { pts: '+4', color: 'emerald', icon: '🎯', tip: '2:1', res: '2:1',
+                    de: 'Exakter Treffer', en: 'Exact Hit', tr: 'Tam İsabet' },
+                  { pts: '+3', color: 'amber',   icon: '🔥', tip: '4:1', res: '3:1',
+                    de: 'Sehr nah dran', en: 'Very Close', tr: 'Çok Yakın' },
+                  { pts: '+2', color: 'blue',    icon: '👍', tip: '2:0', res: '3:1',
+                    de: 'Gute Tendenz', en: 'Good Tendency', tr: 'İyi Eğilim' },
+                  { pts: '+1', color: 'purple',  icon: '🤏', tip: '1:0', res: '4:1',
+                    de: 'Weit vorbei', en: 'Far Off', tr: 'Uzak Sapma' },
+                  { pts: '0',  color: 'slate',   icon: '😬', tip: '1:1', res: '2:1',
+                    de: 'Knapp daneben', en: 'Close Miss', tr: 'Kıl Payı' },
+                  { pts: '−1', color: 'red',     icon: '😅', tip: '1:2', res: '2:1',
+                    de: 'Falscher Sieger', en: 'Wrong Winner', tr: 'Yanlış Kazanan' },
+                  { pts: '−2', color: 'red',     icon: '💀', tip: '0:3', res: '2:1',
+                    de: 'Komplett daneben', en: 'Complete Miss', tr: 'Tamamen Karavana' },
+                ]
+                const t = tiers[onboardingSlide - 1]
+                const cMap: Record<string, string> = { emerald: 'border-emerald-500/25 bg-emerald-500/5 text-emerald-400', amber: 'border-amber-500/25 bg-amber-500/5 text-amber-400', blue: 'border-blue-500/25 bg-blue-500/5 text-blue-400', purple: 'border-purple-500/25 bg-purple-500/5 text-purple-400', slate: 'border-slate-500/20 bg-slate-500/5 text-slate-400', red: 'border-red-500/20 bg-red-500/5 text-red-400/80' }
+                const c = cMap[t.color] || cMap.slate
+                const [cBorder, cBg, cText] = c.split(' ')
+                const title = language === 'tr' ? t.tr : language === 'en' ? t.en : t.de
 
-              {onboardingSlide === 2 && (
+                return (
+                  <div className="animate-fade-in space-y-4">
+                    <div className="text-4xl mb-1">{t.icon}</div>
+                    <div className={`inline-flex items-center gap-1 mx-auto px-4 py-1.5 rounded-full border ${cBorder} ${cBg}`}>
+                      <span className={`text-3xl font-black font-mono ${cText}`}>{t.pts}</span>
+                      <span className={`text-xs font-mono font-bold ${cText}`}>{language === 'tr' ? 'Puan' : language === 'en' ? 'PTS' : 'P'}</span>
+                    </div>
+                    <h2 className={`text-lg font-black ${cText}`}>{title}</h2>
+
+                    {/* Match Card */}
+                    <div className={`glass-panel rounded-xl p-3 border ${cBorder} ${cBg} max-w-[220px] mx-auto`}>
+                      <div className="flex items-center justify-center gap-4">
+                        <div className="text-center">
+                          <span className="text-[8px] text-on-surface-variant/50 font-mono uppercase block mb-0.5">{language === 'tr' ? 'Tahmin' : language === 'en' ? 'Tip' : 'Tipp'}</span>
+                          <span className="font-mono text-xl font-black text-on-surface">{t.tip}</span>
+                        </div>
+                        <span className="text-on-surface-variant/20 text-sm font-mono">VS</span>
+                        <div className="text-center">
+                          <span className="text-[8px] text-on-surface-variant/50 font-mono uppercase block mb-0.5">{language === 'tr' ? 'Sonuç' : language === 'en' ? 'Result' : 'Ergebnis'}</span>
+                          <span className="font-mono text-xl font-black text-on-surface">{t.res}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <p className="text-[9px] text-on-surface-variant/40 font-mono">{onboardingSlide} / 7</p>
+                  </div>
+                )
+              })()}
+
+              {onboardingSlide === 8 && (
                 <div className="animate-fade-in space-y-4">
                   <div className="w-12 h-12 rounded-full bg-purple-500/10 border border-purple-500/30 flex items-center justify-center mx-auto mb-1">
                     <Trophy size={24} className="text-purple-400" />
@@ -522,7 +567,7 @@ export function AppShell() {
                 </div>
               )}
 
-              {onboardingSlide === 3 && (
+              {onboardingSlide === 9 && (
                 <div className="animate-fade-in space-y-4">
                   <div className="w-12 h-12 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center mx-auto mb-1">
                     <Award size={24} className="text-emerald-400" />
@@ -545,7 +590,7 @@ export function AppShell() {
                 </div>
               )}
 
-              {onboardingSlide === 4 && (
+              {onboardingSlide === 10 && (
                 <div className="animate-fade-in space-y-4">
                   <div className="w-12 h-12 rounded-full bg-orange-500/10 border border-orange-500/30 flex items-center justify-center mx-auto mb-1">
                     <Gift size={24} className="text-orange-400" />
@@ -568,7 +613,7 @@ export function AppShell() {
                 </div>
               )}
 
-              {onboardingSlide === 5 && (
+              {onboardingSlide === 11 && (
                 <div className="animate-fade-in space-y-4">
                   <div className="w-16 h-16 rounded-full bg-primary-container/15 border border-primary-container/30 flex items-center justify-center mx-auto mb-2">
                     <Rocket size={32} className="text-primary-fixed-dim" />
@@ -590,7 +635,7 @@ export function AppShell() {
             <div className="mt-6 space-y-4">
               {/* Dot Indicators */}
               <div className="flex justify-center gap-1.5">
-                {[0, 1, 2, 3, 4, 5].map((idx) => (
+                {Array.from({ length: 12 }, (_, idx) => (
                   <button
                     key={idx}
                     onClick={() => setOnboardingSlide(idx)}
@@ -614,7 +659,7 @@ export function AppShell() {
                   <div className="w-[42px] shrink-0" />
                 )}
 
-                {onboardingSlide < 5 ? (
+                {onboardingSlide < 11 ? (
                   <button
                     onClick={() => setOnboardingSlide(onboardingSlide + 1)}
                     className="flex-1 bg-primary-container text-on-primary-container py-3 rounded-lg font-mono text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 hover:opacity-90 active:scale-95 transition-all shadow-[0_0_15px_rgba(251,191,36,0.1)]"
