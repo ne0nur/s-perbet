@@ -6,42 +6,42 @@ import { useTranslation } from '../../utils/translations'
 function getRangTitelSystem(language: string) {
   if (language === 'tr') {
     return [
-      { lvl: 1, title: 'Çekirdek Çıtlatan Seyirci', desc: 'Tribünde oturup çekirdek çıtlıyor, maçı yarı uykulu izliyorsun.', range: 'Lvl 1' },
-      { lvl: 2, title: 'Büfe Stajyeri Habibi', desc: 'Büfeci sana kredi açtı. Artık çay + simit kombo yapıyorsun.', range: 'Lvl 2' },
-      { lvl: 3, title: 'Halı Saha Piyadesi', desc: 'Halı sahada 5 dakika koşup 40 dakika nefes topluyorsun.', range: 'Lvl 3' },
-      { lvl: 4, title: 'Kupon Avcısı Kuzen', desc: 'İddaa kuponu yaparken annenin duası şart. Ama tutmaya başladı.', range: 'Lvl 4' },
-      { lvl: 5, title: 'Taktik Kurmay Çavuş', desc: 'Maçları çizgi film gibi analiz ediyorsun. Mourinho gıpta ediyor.', range: 'Lvl 5-6' },
-      { lvl: 7, title: 'Futbol Kahini Abi', desc: 'Maç sonucunu rüyanda görüyorsun. Ciddiyim, test edildi.', range: 'Lvl 7-8' },
-      { lvl: 9, title: 'Transfer Çarlığı Baronu', desc: 'Transfermarkt\'ı ezbere biliyorsun. Menajerler seni arıyor.', range: 'Lvl 9' },
-      { lvl: 10, title: 'Süper Lig Nostradamus\'u', desc: 'Maç skorlarını 3 hafta önceden bilen efsane. Korkutucu.', range: 'Lvl 10' },
-      { lvl: 11, title: 'Kupon Kâşifi Sultan', desc: 'Bankoların bankosu. Tek maçtan yatarım diye korkmuyorsun.', range: 'Lvl 11-12' },
-      { lvl: 13, title: 'Futbol İmparatoru 🏆', desc: 'Artık top koşturmuyorsun, top SANA koşuyor. Sistem çöktü!', range: 'Lvl 13+' },
+      { lvl: 1, title: 'Çekirdek Spucker', range: 'Lvl 1' },
+      { lvl: 2, title: 'Tipico Sponsor', range: 'Lvl 2' },
+      { lvl: 3, title: 'Halısaha Efsanesi', range: 'Lvl 3' },
+      { lvl: 4, title: 'Kuponcu Kuzen', range: 'Lvl 4' },
+      { lvl: 5, title: 'Kiralık AMG', range: 'Lvl 5-6' },
+      { lvl: 7, title: 'Nargile Scout', range: 'Lvl 7-8' },
+      { lvl: 9, title: 'Speyer Taktisyeni', range: 'Lvl 9' },
+      { lvl: 10, title: 'SüperLig Babası', range: 'Lvl 10' },
+      { lvl: 11, title: 'İddaa Sultanı', range: 'Lvl 11-12' },
+      { lvl: 13, title: 'Speyer Efsanesi 🏆', range: 'Lvl 13+' },
     ]
   } else if (language === 'en') {
     return [
-      { lvl: 1, title: 'Seed-Spitting Spectator', desc: 'Sitting in the stands, half asleep, spitting sunflower seeds.', range: 'Lvl 1' },
-      { lvl: 2, title: 'Kiosk Intern Habibi', desc: 'The kiosk guy gives you credit now. Tea + simit combo unlocked.', range: 'Lvl 2' },
-      { lvl: 3, title: 'Astro Turf Foot Soldier', desc: 'Runs for 5 minutes, gasps for air for 40. But the spirit is there.', range: 'Lvl 3' },
-      { lvl: 4, title: 'Bet Slip Hunter Couseng', desc: 'Needs mama\'s prayers for the bet slip to hit. But it\'s starting to work.', range: 'Lvl 4' },
-      { lvl: 5, title: 'Tactical Staff Sergeant', desc: 'Analyzing matches like a cartoon. Mourinho is jealous.', range: 'Lvl 5-6' },
-      { lvl: 7, title: 'Football Oracle Abi', desc: 'Dreaming match results. Seriously, it\'s been tested.', range: 'Lvl 7-8' },
-      { lvl: 9, title: 'Transfer Market Baron', desc: 'Knows Transfermarkt by heart. Agents are calling YOU.', range: 'Lvl 9' },
-      { lvl: 10, title: 'Süper Lig Nostradamus', desc: 'Predicting scores 3 weeks ahead. It\'s getting scary.', range: 'Lvl 10' },
-      { lvl: 11, title: 'Bet Slip Sultan Explorer', desc: 'The banker of all bankers. Single-match upset? Not afraid.', range: 'Lvl 11-12' },
-      { lvl: 13, title: 'Football Emperor 🏆', desc: 'You don\'t chase the ball anymore — the ball chases YOU. System broken!', range: 'Lvl 13+' },
+      { lvl: 1, title: 'Seed Spitter', range: 'Lvl 1' },
+      { lvl: 2, title: 'Tipico Funder', range: 'Lvl 2' },
+      { lvl: 3, title: 'Sunday Legend', range: 'Lvl 3' },
+      { lvl: 4, title: 'Coupon Cousin', range: 'Lvl 4' },
+      { lvl: 5, title: 'AMG Renter', range: 'Lvl 5-6' },
+      { lvl: 7, title: 'Hookah Scout', range: 'Lvl 7-8' },
+      { lvl: 9, title: 'Speyer Tactician', range: 'Lvl 9' },
+      { lvl: 10, title: 'SüperLig Boss', range: 'Lvl 10' },
+      { lvl: 11, title: 'Betting Sultan', range: 'Lvl 11-12' },
+      { lvl: 13, title: 'Speyer Legend 🏆', range: 'Lvl 13+' },
     ]
   }
   return [
-    { lvl: 1, title: 'Sonnenblumenkern-Spucker', desc: 'Sitzt auf der Tribüne, halb am Pennen, spuckst Kerne.', range: 'Lvl 1' },
-    { lvl: 2, title: 'Kiosk-Praktikant Habibi', desc: 'Der Kiosk-Typ gibt dir jetzt Kredit. Çay + Simit Combo freigeschaltet.', range: 'Lvl 2' },
-    { lvl: 3, title: 'Ascheplatz-Fußsoldat', desc: '5 Minuten bolzen, 40 Minuten nach Luft schnappen. Aber die Moral stimmt.', range: 'Lvl 3' },
-    { lvl: 4, title: 'Wettschein-Jäger Couseng', desc: 'Brauchst Mamas Gebete, damit der Schein durchgeht. Aber es läuft langsam.', range: 'Lvl 4' },
-    { lvl: 5, title: 'Taktik-Feldwebel', desc: 'Analysierst Spiele wie\'n Zeichentrick. Mourinho ist neidisch.', range: 'Lvl 5-6' },
-    { lvl: 7, title: 'Fußball-Orakel Abi', desc: 'Träumst Ergebnisse voraus. Kein Witz, ist getestet.', range: 'Lvl 7-8' },
-    { lvl: 9, title: 'Transfermarkt-Baron', desc: 'Kannst Transfermarkt auswendig. Spielerberater rufen DICH an.', range: 'Lvl 9' },
-    { lvl: 10, title: 'Süper-Lig-Nostradamus', desc: 'Sagst Spielstände 3 Wochen voraus. Wird langsam unheimlich.', range: 'Lvl 10' },
-    { lvl: 11, title: 'Wettschein-Sultan', desc: 'Die Bank aller Banken. Einzelspiel-Ausrutscher? Keine Angst.', range: 'Lvl 11-12' },
-    { lvl: 13, title: 'Fußball-Imperator 🏆', desc: 'Du rennst dem Ball nicht mehr hinterher — der Ball rennt DIR hinterher. System gedribbelt!', range: 'Lvl 13+' },
+    { lvl: 1, title: 'Çekirdek Spucker', range: 'Lvl 1' },
+    { lvl: 2, title: 'Tipico Sponsor', range: 'Lvl 2' },
+    { lvl: 3, title: 'Kreisliga Legende', range: 'Lvl 3' },
+    { lvl: 4, title: 'Kupon Couseng', range: 'Lvl 4' },
+    { lvl: 5, title: 'AMG Mieter', range: 'Lvl 5-6' },
+    { lvl: 7, title: 'Shishabar Scout', range: 'Lvl 7-8' },
+    { lvl: 9, title: 'Speyer Taktiker', range: 'Lvl 9' },
+    { lvl: 10, title: 'SüperLig Baba', range: 'Lvl 10' },
+    { lvl: 11, title: 'Tipico Sultan', range: 'Lvl 11-12' },
+    { lvl: 13, title: 'Speyer Legende 🏆', range: 'Lvl 13+' },
   ]
 }
 
@@ -178,10 +178,9 @@ export function LevelProgressCard({
                     <span className="text-[6px] font-mono opacity-75 leading-none z-10">LVL</span>
                     <span className="text-xs leading-none mt-0.5 level-digit z-10">{item.lvl}</span>
                   </div>
-                  <div className={level >= item.lvl ? 'opacity-100' : 'opacity-60'}>
-                    <h5 className="font-bold text-on-surface leading-tight">{item.title}</h5>
-                    <p className="text-[10px] text-on-surface-variant/80 mt-0.5 leading-snug">{item.desc}</p>
-                    <span className="text-[7px] font-mono uppercase tracking-wider text-primary-fixed-dim/60 mt-1 block">{item.range}</span>
+                  <div className={level >= item.lvl ? 'opacity-100 flex flex-col justify-center' : 'opacity-60 flex flex-col justify-center'}>
+                    <h5 className="font-bold text-on-surface leading-tight text-[13px]">{item.title}</h5>
+                    <span className="text-[9px] font-mono uppercase tracking-wider text-primary-fixed-dim/70 mt-0.5 block">{item.range}</span>
                   </div>
                 </div>
               ))}
