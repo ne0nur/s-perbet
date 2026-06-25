@@ -18,22 +18,22 @@ function BallModel({ isHovered, isKicked, onKick }: { isHovered: boolean; isKick
 
       // Kick-Animation (Flip & Hop)
       if (isKicked) {
-        kickProgress.current = Math.min(1, kickProgress.current + delta * 2.2)
+        kickProgress.current = Math.min(1, kickProgress.current + delta * 1.1)
         const t = kickProgress.current
         
-        // 360-Grad Flip um X- und Z-Achse
-        ref.current.rotation.x = Math.sin(t * Math.PI) * Math.PI * 2
-        ref.current.rotation.z = Math.sin(t * Math.PI) * Math.PI * 1
+        // 360-Grad Flip um X- und Z-Achse (sanfter Bogen)
+        ref.current.rotation.x = Math.sin(t * Math.PI) * Math.PI * 1.5
+        ref.current.rotation.z = Math.sin(t * Math.PI) * Math.PI * 0.75
         
-        // Physikalischer Hopser nach rechts (Richtung Text)
-        ref.current.position.y = Math.sin(t * Math.PI) * 0.4
-        ref.current.position.x = Math.sin(t * Math.PI) * 0.25
+        // Physikalischer Hopser nach rechts (Richtung Text - sanfter und weicher)
+        ref.current.position.y = Math.sin(t * Math.PI) * 0.25
+        ref.current.position.x = Math.sin(t * Math.PI) * 0.18
       } else {
         kickProgress.current = 0
-        ref.current.rotation.x = THREE.MathUtils.lerp(ref.current.rotation.x, 0, 10 * delta)
-        ref.current.rotation.z = THREE.MathUtils.lerp(ref.current.rotation.z, 0, 10 * delta)
-        ref.current.position.y = THREE.MathUtils.lerp(ref.current.position.y, 0, 10 * delta)
-        ref.current.position.x = THREE.MathUtils.lerp(ref.current.position.x, 0, 10 * delta)
+        ref.current.rotation.x = THREE.MathUtils.lerp(ref.current.rotation.x, 0, 8 * delta)
+        ref.current.rotation.z = THREE.MathUtils.lerp(ref.current.rotation.z, 0, 8 * delta)
+        ref.current.position.y = THREE.MathUtils.lerp(ref.current.position.y, 0, 8 * delta)
+        ref.current.position.x = THREE.MathUtils.lerp(ref.current.position.x, 0, 8 * delta)
       }
     }
   })

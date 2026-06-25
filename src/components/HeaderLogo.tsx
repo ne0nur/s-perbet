@@ -24,26 +24,26 @@ export function HeaderLogo({ size = 'md' }: HeaderLogoProps) {
     setIsKicked(true)
 
     // Ball starts moving.
-    // At t = 180ms, the ball hits "SÜPER"
+    // At t = 300ms, the ball hits "SÜPER"
     setTimeout(() => {
       setSuperShake(true)
-    }, 180)
+    }, 300)
 
-    // At t = 280ms, the impact energy reaches "BET"
+    // At t = 450ms, the impact energy reaches "BET"
     setTimeout(() => {
       setBetFlicker(true)
-    }, 280)
+    }, 450)
 
     // Reset ball kick and super shake state
     setTimeout(() => {
       setIsKicked(false)
       setSuperShake(false)
-    }, 500)
+    }, 950)
 
     // Reset bet flicker state
     setTimeout(() => {
       setBetFlicker(false)
-    }, 750)
+    }, 1350)
   }
 
   return (
