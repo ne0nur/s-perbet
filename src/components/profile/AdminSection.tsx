@@ -83,6 +83,11 @@ function AdminMatchRow({ m, handleUpdateMatch }: { m: Match, handleUpdateMatch: 
   )
 }
 
+function generateTemporaryPassword(): string {
+  const randomDigits = Math.floor(1000 + Math.random() * 9000)
+  return `SuperTip-${randomDigits}`
+}
+
 export function AdminSection({
   allLeagues,
   selectedLeagueId,
@@ -117,6 +122,87 @@ export function AdminSection({
   const [adminMatches, setAdminMatches] = useState<Match[]>([])
   const [loadingMatches, setLoadingMatches] = useState(false)
   const { t } = useTranslation()
+
+  // Reset Requests States
+  const [pendingRequests, setPendingRequests] = useState<{ id: string; username: string; email_hint: string | null; created_at: string }[]>([])
+  const [loadingRequests, setLoadingRequests] = useState(false)
+  
+  // Funktion um offene Reset-Anfragen zu laden
+  const fetchPendingRequests = async () => {
+    setLoadingRequests(true)
+    try {
+      const { data, error } = await supabase
+        .from('password_reset_requests')
+        .select('id, username, email_hint, created_at')
+        .eq('status', 'pending')
+        .order('created_at', { ascending: true })
+      if (!error && data) {
+        setPendingRequests(data)
+      }
+    } catch (err) {
+      console.error('Fehler beim Laden der Reset-Anfragen:', err)
+    } finally {
+      setLoadingRequests(false)
+    }
+  }
+
+  // Freigabe einer Passwort-Anfrage
+  const handleApproveRequest = async (requestId: string, username: string) => {
+    const tempPassword = generateTemporaryPassword()
+    
+    setAdminMsg(null)
+    try {
+      // 1. RPC zum Passwort zurücksetzen aufrufen (aktualisiert auth.users und profiles.muss_passwort_aendern)
+      const { error: rpcError } = await supabase.rpc('admin_reset_password', {
+        target_username: username,
+        new_password: tempPassword
+      })
+      
+      if (rpcError) throw rpcError
+      
+      // 2. Den Status der Anfrage auf 'resolved' aktualisieren
+      const { error: updateError } = await supabase
+        .from('password_reset_requests')
+        .update({
+          status: 'resolved',
+          temporary_password: tempPassword,
+          resolved_at: new Date().toISOString()
+        })
+        .eq('id', requestId)
+        
+      if (updateError) throw updateError
+      
+      setAdminMsg({ type: 'success', text: `Passwort für ${username} wurde auf "${tempPassword}" gesetzt und freigegeben!` })
+      fetchPendingRequests()
+    } catch (err: unknown) {
+      console.error(err)
+      const msg = err instanceof Error ? err.message : 'Fehler beim Zurücksetzen des Passworts.'
+      setAdminMsg({ type: 'error', text: msg })
+    }
+  }
+
+  // Ablehnen einer Passwort-Anfrage
+  const handleRejectRequest = async (requestId: string, username: string) => {
+    setAdminMsg(null)
+    try {
+      const { error } = await supabase
+        .from('password_reset_requests')
+        .update({
+          status: 'rejected',
+          resolved_at: new Date().toISOString()
+        })
+        .eq('id', requestId)
+        
+      if (error) throw error
+      
+      setAdminMsg({ type: 'success', text: `Anfrage von ${username} wurde abgelehnt.` })
+      fetchPendingRequests()
+    } catch (err: unknown) {
+      console.error(err)
+      const msg = err instanceof Error ? err.message : 'Fehler beim Ablehnen der Anfrage.'
+      setAdminMsg({ type: 'error', text: msg })
+    }
+  }
   
   // Funktion um Spiele für den Admin zu laden
   const fetchAdminMatches = async () => {
@@ -170,7 +256,7 @@ export function AdminSection({
             {t('adminCreateUser')}
           </button>
           <button
-            onClick={() => { setAdminTab('manage_users'); setAdminMsg(null); }}
+            onClick={() => { setAdminTab('manage_users'); setAdminMsg(null); fetchPendingRequests(); }}
             className={`px-2 py-1 text-[9px] font-mono uppercase tracking-wider rounded-md transition-all whitespace-nowrap ${
               adminTab === 'manage_users' ? 'bg-primary-container/20 text-primary border border-primary-container/30 font-bold' : 'text-on-surface-variant/60 hover:text-on-surface'
             }`}
@@ -313,14 +399,59 @@ export function AdminSection({
 
         {adminTab === 'manage_users' && (
           <div className="space-y-4">
-            <div className="space-y-2">
+            {/* Offene Reset-Anfragen */}
+            <div className="bg-surface-container border border-surface-container-high rounded-xl p-3.5 space-y-2">
+              <p className="text-[10px] font-mono text-primary uppercase tracking-wider font-bold mb-1">
+                {t('adminPendingRequests')}
+              </p>
+              {loadingRequests ? (
+                <div className="flex justify-center py-2"><div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" /></div>
+              ) : pendingRequests.length === 0 ? (
+                <p className="text-xs text-on-surface-variant/80 py-2 text-center">{t('adminNoPendingRequests')}</p>
+              ) : (
+                <div className="space-y-2 max-h-48 overflow-y-auto pr-1 custom-scrollbar">
+                  {pendingRequests.map(req => (
+                    <div key={req.id} className="flex flex-col gap-2 p-2.5 rounded bg-surface-container-lowest border border-surface-container-high text-xs text-left">
+                      <div className="flex justify-between items-start font-mono">
+                        <div>
+                          <span className="text-on-surface font-bold">{req.username}</span>
+                          {req.email_hint && (
+                            <div className="text-[10px] text-on-surface-variant mt-0.5">
+                              Hint: <span className="text-primary-fixed-dim">{req.email_hint}</span>
+                            </div>
+                          )}
+                        </div>
+                        <span className="text-[9px] text-on-surface-variant/60">{new Date(req.created_at).toLocaleDateString()}</span>
+                      </div>
+                      <div className="flex gap-2 mt-1">
+                        <button
+                          onClick={() => handleApproveRequest(req.id, req.username)}
+                          className="flex-1 bg-green-500/10 hover:bg-green-500/15 border border-green-500/20 text-green-400 py-1.5 rounded font-mono text-[9px] uppercase font-bold tracking-wider transition-all cursor-pointer"
+                        >
+                          {t('adminApproveReset')}
+                        </button>
+                        <button
+                          onClick={() => handleRejectRequest(req.id, req.username)}
+                          className="bg-red-500/10 hover:bg-red-500/15 border border-red-500/20 text-red-400 px-3 py-1.5 rounded font-mono text-[9px] uppercase font-bold tracking-wider transition-all cursor-pointer"
+                        >
+                          {t('adminRejectReset')}
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Manuelles Passwort Zurücksetzen */}
+            <div className="space-y-2 pt-2 border-t border-surface-container-high">
               <p className="text-[10px] font-mono text-on-surface-variant uppercase tracking-wider mb-1">{t('adminResetPasswordTitle')}</p>
               <input type="text" value={targetUsername} onChange={e => setTargetUsername(e.target.value)} placeholder={t('adminPlaceholderUserToReset')} className="w-full bg-surface-container-lowest border border-surface-container-high rounded-lg px-3 py-2 text-sm text-on-surface focus:border-primary outline-none" />
               <input type="text" value={resetPassword} onChange={e => setResetPassword(e.target.value)} placeholder={t('adminPlaceholderNewPassword')} className="w-full bg-surface-container-lowest border border-surface-container-high rounded-lg px-3 py-2 text-sm text-on-surface focus:border-primary outline-none font-mono" />
               <button 
                 onClick={() => handleAdminResetPassword(targetUsername, resetPassword)} 
                 disabled={creatingUser || !targetUsername.trim() || !resetPassword.trim()} 
-                className="w-full bg-primary-container text-on-primary py-2.5 rounded-lg font-mono text-xs font-bold uppercase hover:opacity-90 disabled:opacity-30"
+                className="w-full bg-primary-container text-on-primary py-2.5 rounded-lg font-mono text-xs font-bold uppercase hover:opacity-90 disabled:opacity-30 cursor-pointer"
               >
                 {t('adminBtnOverwritePassword')}
               </button>
@@ -332,7 +463,7 @@ export function AdminSection({
               <button 
                 onClick={() => handleAdminDeleteUser(targetUsername)} 
                 disabled={creatingUser || !targetUsername.trim()} 
-                className="w-full bg-red-500/10 text-red-400 border border-red-500/20 py-2.5 rounded-lg font-mono text-xs font-bold uppercase hover:bg-red-500/20 disabled:opacity-30"
+                className="w-full bg-red-500/10 text-red-400 border border-red-500/20 py-2.5 rounded-lg font-mono text-xs font-bold uppercase hover:bg-red-500/20 disabled:opacity-30 cursor-pointer"
               >
                 {t('adminBtnDeleteUser')}
               </button>

@@ -8,7 +8,7 @@ import { useLanguageStore } from '../stores/languageStore'
 import { useTranslation } from '../utils/translations'
 import { HeaderLogo } from '../components/HeaderLogo'
 
-type AuthView = 'login' | 'invite' | 'ask-account' | 'onboarding'
+type AuthView = 'login' | 'invite' | 'ask-account' | 'onboarding' | 'forgot-password'
 
 export function LoginPage() {
   const { t, language } = useTranslation()
@@ -33,6 +33,15 @@ export function LoginPage() {
   const [regPasswordConfirm, setRegPasswordConfirm] = useState('')
   const [zeigeRegPassword, setZeigeRegPassword] = useState(false)
   const [localFehler, setLocalFehler] = useState<string | null>(null)
+
+  // Forgot password states
+  const [forgotUsername, setForgotUsername] = useState('')
+  const [forgotEmailHint, setForgotEmailHint] = useState('')
+  const [statusCheckUsername, setStatusCheckUsername] = useState('')
+  const [statusResult, setStatusResult] = useState<{ status: 'pending' | 'resolved' | 'rejected'; tempPw?: string } | 'not_found' | null>(null)
+  const [loadingStatus, setLoadingStatus] = useState(false)
+  const [submittingRequest, setSubmittingRequest] = useState(false)
+  const [forgotSubView, setForgotSubView] = useState<'request' | 'check'>('request')
   
   const { login, fehler, isLaden, isEingeloggt } = useAuthStore()
   const navigate = useNavigate()
@@ -78,6 +87,70 @@ export function LoginPage() {
         }
       }
     } catch { /* Silently ignore invite check errors */ }
+  }
+
+  // Forgot Password Actions
+  const handleForgotSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!forgotUsername.trim()) return
+    setSubmittingRequest(true)
+    try {
+      const cleanUser = forgotUsername.trim().toLowerCase()
+      const { error } = await supabase.from('password_reset_requests').insert({
+        username: cleanUser,
+        email_hint: forgotEmailHint.trim() || null,
+        status: 'pending'
+      })
+
+      if (error) throw error
+
+      useToastStore.getState().toast(t('toastRequestSubmitted'))
+      setForgotUsername('')
+      setForgotEmailHint('')
+      setForgotSubView('check')
+      setStatusCheckUsername(cleanUser)
+      setTimeout(() => {
+        handleCheckStatusFor(cleanUser)
+      }, 200)
+    } catch (err: unknown) {
+      console.error(err)
+      useToastStore.getState().toast(t('toastErrorSubmitting'), 'error')
+    } finally {
+      setSubmittingRequest(false)
+    }
+  }
+
+  const handleCheckStatus = async () => {
+    if (!statusCheckUsername.trim()) return
+    handleCheckStatusFor(statusCheckUsername.trim().toLowerCase())
+  }
+
+  const handleCheckStatusFor = async (userToCheck: string) => {
+    setLoadingStatus(true)
+    try {
+      const { data, error } = await supabase
+        .from('password_reset_requests')
+        .select('status, temporary_password')
+        .eq('username', userToCheck)
+        .order('created_at', { ascending: false })
+        .limit(1)
+
+      if (error) throw error
+
+      if (data && data.length > 0) {
+        setStatusResult({
+          status: data[0].status as 'pending' | 'resolved' | 'rejected',
+          tempPw: data[0].temporary_password || undefined
+        })
+      } else {
+        setStatusResult('not_found')
+      }
+    } catch (err) {
+      console.error(err)
+      setStatusResult('not_found')
+    } finally {
+      setLoadingStatus(false)
+    }
   }
 
   // Einladungscode prüfen
@@ -308,7 +381,7 @@ export function LoginPage() {
               )}
             </button>
 
-            <div className="text-center pt-2">
+            <div className="text-center pt-2 flex flex-col gap-2">
               <button
                 type="button"
                 onClick={() => { setView('invite'); setLocalFehler(null); }}
@@ -316,8 +389,178 @@ export function LoginPage() {
               >
                 {t('inviteFlowBtn')}
               </button>
+              <button
+                type="button"
+                onClick={() => { setView('forgot-password'); setLocalFehler(null); setStatusResult(null); }}
+                className="text-[10px] text-on-surface-variant/80 hover:text-on-surface hover:underline font-mono uppercase tracking-wider"
+              >
+                {t('forgotPasswordLink')}
+              </button>
             </div>
           </form>
+        )}
+
+        {/* PASSWORT VERGESSEN */}
+        {view === 'forgot-password' && (
+          <div className="glass-panel rounded-2xl p-6 space-y-4 text-left animate-page-enter">
+            <div className="flex items-center gap-2 border-b border-white/5 pb-2.5">
+              <button
+                type="button"
+                onClick={() => setView('login')}
+                className="p-1 hover:bg-white/5 rounded text-on-surface-variant hover:text-on-surface transition-colors"
+              >
+                <ChevronLeft size={16} />
+              </button>
+              <h2 className="text-sm font-bold text-on-surface uppercase font-mono tracking-wider">
+                {t('forgotPasswordTitle')}
+              </h2>
+            </div>
+
+            <p className="text-[11px] text-on-surface-variant font-mono leading-relaxed">
+              {t('forgotPasswordDesc')}
+            </p>
+
+            <div className="flex bg-surface-container p-[2px] rounded-lg border border-surface-container-high">
+              <button
+                type="button"
+                onClick={() => { setForgotSubView('request'); setStatusResult(null); }}
+                className={`flex-1 py-1.5 text-[9px] font-mono uppercase tracking-wider rounded-md transition-all ${
+                  forgotSubView === 'request'
+                    ? 'bg-primary-container/20 text-primary border border-primary-container/30 font-bold'
+                    : 'text-on-surface-variant/60 hover:text-on-surface'
+                }`}
+              >
+                {t('btnSubmitRequest')}
+              </button>
+              <button
+                type="button"
+                onClick={() => { setForgotSubView('check'); setStatusResult(null); }}
+                className={`flex-1 py-1.5 text-[9px] font-mono uppercase tracking-wider rounded-md transition-all ${
+                  forgotSubView === 'check'
+                    ? 'bg-primary-container/20 text-primary border border-primary-container/30 font-bold'
+                    : 'text-on-surface-variant/60 hover:text-on-surface'
+                }`}
+              >
+                {t('btnCheckStatus')}
+              </button>
+            </div>
+
+            {forgotSubView === 'request' ? (
+              <form onSubmit={handleForgotSubmit} className="space-y-4 pt-2">
+                <div>
+                  <label className="block text-[10px] font-mono text-on-surface-variant mb-1.5 uppercase tracking-wider">
+                    {t('username')}
+                  </label>
+                  <div className="relative">
+                    <User size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/70" />
+                    <input
+                      type="text"
+                      value={forgotUsername}
+                      onChange={(e) => setForgotUsername(e.target.value)}
+                      placeholder="dein_username"
+                      className="w-full bg-black/30 border border-outline-variant rounded-md px-10 py-2.5 text-on-surface
+                                 font-mono text-sm focus:border-primary-container focus:outline-none focus:shadow-[0_0_10px_rgba(251,191,36,0.2)]
+                                 transition-all duration-200"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-mono text-on-surface-variant mb-1.5 uppercase tracking-wider">
+                    {t('emailHintLabel')}
+                  </label>
+                  <input
+                    type="text"
+                    value={forgotEmailHint}
+                    onChange={(e) => setForgotEmailHint(e.target.value)}
+                    placeholder="z.B. WhatsApp +49..."
+                    className="w-full bg-black/30 border border-outline-variant rounded-md px-4 py-2.5 text-on-surface
+                               font-mono text-xs focus:border-primary-container focus:outline-none focus:shadow-[0_0_10px_rgba(251,191,36,0.2)]
+                               transition-all duration-200"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={submittingRequest || !forgotUsername.trim()}
+                  className="w-full bg-primary-container text-on-primary font-bold text-xs py-3 rounded-md uppercase tracking-wider
+                             shadow-[0_0_15px_rgba(251,191,36,0.15)] active:scale-95 transition-all duration-150
+                             disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                >
+                  {submittingRequest ? (
+                    <div className="w-4 h-4 border-2 border-on-primary border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    t('btnSubmitRequest')
+                  )}
+                </button>
+              </form>
+            ) : (
+              <div className="space-y-4 pt-2">
+                <div>
+                  <label className="block text-[10px] font-mono text-on-surface-variant mb-1.5 uppercase tracking-wider">
+                    {t('username')}
+                  </label>
+                  <div className="relative">
+                    <User size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/70" />
+                    <input
+                      type="text"
+                      value={statusCheckUsername}
+                      onChange={(e) => setStatusCheckUsername(e.target.value)}
+                      placeholder="dein_username"
+                      className="w-full bg-black/30 border border-outline-variant rounded-md px-10 py-2.5 text-on-surface
+                                 font-mono text-sm focus:border-primary-container focus:outline-none focus:shadow-[0_0_10px_rgba(251,191,36,0.2)]
+                                 transition-all duration-200"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleCheckStatus}
+                  disabled={loadingStatus || !statusCheckUsername.trim()}
+                  className="w-full bg-primary-container text-on-primary font-bold text-xs py-3 rounded-md uppercase tracking-wider
+                             shadow-[0_0_15px_rgba(251,191,36,0.15)] active:scale-95 transition-all duration-150
+                             disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                >
+                  {loadingStatus ? (
+                    <div className="w-4 h-4 border-2 border-on-primary border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    t('btnCheckStatus')
+                  )}
+                </button>
+
+                {statusResult && (
+                  <div className="bg-surface-container/60 border border-surface-container-high rounded-xl p-3.5 mt-3 space-y-1.5 font-mono text-[11px] leading-normal">
+                    <div className="text-on-surface-variant uppercase tracking-wider font-bold">
+                      {t('statusTitle')}: <span className="text-on-surface font-mono font-medium">{statusCheckUsername}</span>
+                    </div>
+                    {statusResult === 'not_found' ? (
+                      <div className="text-error">{t('statusNotFound')}</div>
+                    ) : (
+                      <div className="space-y-2">
+                        {statusResult.status === 'pending' && (
+                          <div className="text-amber-400 font-bold">{t('statusPending')}</div>
+                        )}
+                        {statusResult.status === 'rejected' && (
+                          <div className="text-red-400 font-bold">{t('statusRejected')}</div>
+                        )}
+                        {statusResult.status === 'resolved' && (
+                          <div className="space-y-1">
+                            <div className="text-green-400 font-bold">{t('statusResolved')}</div>
+                            <div className="bg-black/50 border border-green-500/20 text-green-300 font-bold font-mono text-sm px-3.5 py-2.5 rounded-lg tracking-widest text-center select-all cursor-pointer">
+                              {statusResult.tempPw}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         )}
 
         {/* EINLADUNGSCODE-VALIDIERUNG */}
