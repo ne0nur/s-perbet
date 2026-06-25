@@ -11,10 +11,10 @@ interface HeaderLogoProps {
 
 export function HeaderLogo({ size = 'md' }: HeaderLogoProps) {
   const isSm = size === 'sm'
-  const ballSize = isSm ? 'w-6 h-6' : 'w-9 h-9'
+  const ballSize = isSm ? 'w-8 h-8' : 'w-9 h-9'
 
   return (
-    <span className={`superbet-header-logo select-none inline-flex items-center gap-1.5${isSm ? ' scale-75 origin-left' : ''}`}>
+    <span className={`superbet-header-logo select-none inline-flex items-center gap-1.5${isSm ? ' scale-90 origin-left' : ''}`}>
       {/* Echtes 3D-Fußball-Modell */}
       <Football3D className={ballSize} />
 
