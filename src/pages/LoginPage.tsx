@@ -364,7 +364,7 @@ export function LoginPage() {
             {fehler && (
               <p className="text-error text-[10px] font-mono bg-error-container/10 rounded-md px-3 py-2 border border-error/20 flex items-start gap-1.5">
                 <ShieldAlert size={14} className="mt-0.5 shrink-0" />
-                <span>{fehler}</span>
+                <span>{fehler === 'INVALID_CREDENTIALS' ? t('invalidCredentials') : fehler}</span>
               </p>
             )}
 

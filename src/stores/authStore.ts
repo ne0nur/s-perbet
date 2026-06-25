@@ -38,13 +38,24 @@ export const useAuthStore = create<AuthState>((set) => ({
     try {
       await Promise.race([
         (async () => {
-          const { error } = await supabase.auth.signInWithPassword({ email, password: passwort })
-          if (error) {
-            const msg = error.message === 'Invalid login credentials'
-              ? 'Falscher Benutzername oder Passwort'
-              : error.message
+          let email = `${username}@tipp.local`
+          let authResult = await supabase.auth.signInWithPassword({ email, password: passwort })
+          
+          // Fallback für alte Accounts (@gmail.com), falls @tipp.local nicht existiert oder fehlschlägt
+          if (authResult.error && authResult.error.message === 'Invalid login credentials') {
+            email = `${username}@gmail.com`
+            const fallbackResult = await supabase.auth.signInWithPassword({ email, password: passwort })
+            if (!fallbackResult.error) {
+              authResult = fallbackResult
+            }
+          }
+
+          if (authResult.error) {
+            const msg = authResult.error.message === 'Invalid login credentials'
+              ? 'INVALID_CREDENTIALS'
+              : authResult.error.message
             set({ fehler: msg, isLaden: false })
-            throw error
+            throw authResult.error
           }
 
           // Profil-Status prüfen

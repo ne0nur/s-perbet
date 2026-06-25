@@ -25,6 +25,7 @@ export const translations = {
     achievementsUnlockedToast: '🏆 Du hast {count} neue(n) Erfolg(e) freigeschaltet! Schau in dein Profil.',
     
     // Login / Register
+    invalidCredentials: 'Der Benutzername oder das Passwort ist falsch.',
     loginTitle: 'Anmelden',
     registerTitle: 'Registrieren',
     username: 'Benutzername',
@@ -449,6 +450,7 @@ export const translations = {
     achievementsUnlockedToast: '🏆 You have unlocked {count} new achievement(s)! Check your profile.',
     
     // Login / Register
+    invalidCredentials: 'Invalid username or password.',
     loginTitle: 'Log In',
     registerTitle: 'Register',
     username: 'Username',
@@ -873,6 +875,7 @@ export const translations = {
     achievementsUnlockedToast: '🏆 {count} yeni başarının kilidini açtınız! Profilinizi kontrol edin.',
     
     // Login / Register
+    invalidCredentials: 'Geçersiz kullanıcı adı veya şifre.',
     loginTitle: 'Giriş Yap',
     registerTitle: 'Kaydol',
     username: 'Kullanıcı Adı',
