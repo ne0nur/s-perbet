@@ -15,19 +15,38 @@ export function LevelBadge({ level, className = '', children, ...props }: LevelB
   const particles = useMemo(() => {
     if (!isPremium) return [];
     
-    // More particles for higher levels
-    const count = isGojo ? 25 : level >= 27 ? 15 : 10;
+    // Dichter (mehr Partikel), aber weniger weit verstreut
+    const count = isGojo ? 35 : level >= 27 ? 25 : level >= 24 ? 20 : 15;
     const p = [];
     
+    // Farben passend zum Konzept
+    // 20-23: Ruby (Red/Amber), 24-26: Sapphire (Blue/Cyan), 27-29: Mythic (Purple/Pink), 30: Gojo (White/Cyan/Purple)
+    const getParticleColor = () => {
+      if (isGojo) {
+        const r = Math.random();
+        if (r > 0.7) return { bg: 'bg-white', shadow: 'rgba(255,255,255,0.8)' };
+        if (r > 0.3) return { bg: 'bg-cyan-300', shadow: 'rgba(6,182,212,0.8)' };
+        return { bg: 'bg-purple-400', shadow: 'rgba(168,85,247,0.8)' };
+      }
+      if (level >= 27) {
+        return Math.random() > 0.5 ? { bg: 'bg-fuchsia-300', shadow: 'rgba(217,70,239,0.8)' } : { bg: 'bg-purple-300', shadow: 'rgba(168,85,247,0.8)' };
+      }
+      if (level >= 24) {
+        return Math.random() > 0.5 ? { bg: 'bg-cyan-200', shadow: 'rgba(34,211,238,0.8)' } : { bg: 'bg-blue-300', shadow: 'rgba(96,165,250,0.8)' };
+      }
+      // Level 20-23
+      return Math.random() > 0.5 ? { bg: 'bg-red-400', shadow: 'rgba(248,113,113,0.8)' } : { bg: 'bg-amber-300', shadow: 'rgba(251,191,36,0.8)' };
+    };
+
     for (let i = 0; i < count; i++) {
-      const size = Math.random() * (isGojo ? 4 : 3) + 1; // 1px to 5px
-      const left = Math.random() * 140 - 20; // -20% to +120% (spills out)
-      const top = Math.random() * 140 - 20;
+      const size = Math.random() * (isGojo ? 3 : 2) + 1; // 1px to 4px
+      // Dichter am Zentrum: -10% bis +110% statt -20% bis +120%
+      const left = Math.random() * 120 - 10; 
+      const top = Math.random() * 120 - 10;
       
-      // Random animation duration between 1s and 4s
-      const duration = Math.random() * 3 + 1;
-      // Random delay
+      const duration = Math.random() * 2.5 + 1.5; // 1.5s - 4s
       const delay = Math.random() * 2;
+      const color = getParticleColor();
       
       p.push({
         id: i,
@@ -36,7 +55,8 @@ export function LevelBadge({ level, className = '', children, ...props }: LevelB
         top: `${top}%`,
         duration: `${duration}s`,
         delay: `${delay}s`,
-        opacity: Math.random() * 0.7 + 0.3
+        opacity: Math.random() * 0.6 + 0.4,
+        ...color
       });
     }
     return p;
@@ -44,13 +64,13 @@ export function LevelBadge({ level, className = '', children, ...props }: LevelB
 
   return (
     <div className={`relative flex items-center justify-center ${className}`} {...props}>
-      {/* Container for particles - absolute positioned, NO overflow hidden, spills out everywhere */}
+      {/* Container for particles - NO overflow hidden, but tighter inset so it doesn't break tables */}
       {isPremium && (
-        <div className="absolute inset-[-40px] pointer-events-none z-0">
+        <div className="absolute inset-[-15px] pointer-events-none z-0">
           {particles.map(p => (
             <div 
               key={p.id}
-              className={`absolute rounded-full animate-premium-particle ${isGojo ? 'bg-purple-300' : 'bg-amber-100'}`}
+              className={`absolute rounded-full animate-premium-particle ${p.bg}`}
               style={{
                 width: `${p.size}px`,
                 height: `${p.size}px`,
@@ -59,7 +79,7 @@ export function LevelBadge({ level, className = '', children, ...props }: LevelB
                 opacity: p.opacity,
                 animationDuration: p.duration,
                 animationDelay: p.delay,
-                boxShadow: isGojo ? `0 0 ${p.size * 2}px rgba(168, 85, 247, 0.8)` : `0 0 ${p.size * 2}px rgba(251, 191, 36, 0.6)`
+                boxShadow: `0 0 ${p.size * 2}px ${p.shadow}`
               }}
             />
           ))}

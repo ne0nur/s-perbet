@@ -921,71 +921,71 @@ body {
   animation-iteration-count: infinite;
 }
 
-/* Lvl 10: NOSTRADAMUS */
-.badge-nostradamus {
-  box-shadow: 0 0 15px rgba(245,158,11,0.5);
-}
-.badge-nostradamus::before {
-  background: conic-gradient(from 0deg, transparent 60%, #f59e0b 80%, #fcd34d 100%);
-  animation: spinConic 2.5s cubic-bezier(0.4, 0, 0.2, 1) infinite, sweepBreathe 2s infinite;
-}
-.badge-nostradamus::after {
-  background-image: linear-gradient(135deg, #78350f, #9a3412, #78350f);
+@keyframes spinConicReverse {
+  0% { transform: translate(-50%, -50%) rotate(360deg); }
+  100% { transform: translate(-50%, -50%) rotate(0deg); }
 }
 
-/* Lvl 11: SULTAN */
-.badge-sultan {
-  box-shadow: 0 0 20px rgba(167,139,250,0.6);
-}
-.badge-sultan::before {
-  background: conic-gradient(from 0deg, transparent 50%, #c084fc 80%, #e879f9 100%);
-  animation: spinConic 2s cubic-bezier(0.4, 0, 0.2, 1) infinite, sweepBreathe 1.8s infinite;
-}
-.badge-sultan::after {
-  background-image: linear-gradient(135deg, #4c1d95, #701a75, #4c1d95);
+@keyframes spinConicSlow {
+  0% { transform: translate(-50%, -50%) rotate(0deg); }
+  100% { transform: translate(-50%, -50%) rotate(360deg); }
 }
 
-/* Lvl 12: SULTAN+ */
-.badge-sultan-plus {
-  box-shadow: 0 0 25px rgba(216,180,254,0.8);
+/* Tier 5: RUBY (Lvl 20-23) */
+.badge-ruby {
+  box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
 }
-.badge-sultan-plus::before {
-  background: conic-gradient(from 0deg, transparent 40%, #e879f9 70%, #f0abfc 100%);
-  animation: spinConic 1.5s linear infinite, sweepBreathe 1.5s infinite;
+.badge-ruby::before {
+  /* Fast aggressive red/amber dual sweep */
+  background: conic-gradient(from 0deg, transparent 40%, #ef4444 50%, transparent 90%, #f59e0b 100%);
+  animation: spinConic 2s linear infinite, sweepBreathe 1.5s infinite;
 }
-.badge-sultan-plus::after {
-  background-image: linear-gradient(135deg, #581c87, #86198f, #581c87);
-}
-
-/* Lvl 13: EMPEROR (Majestic) */
-.badge-emperor {
-  box-shadow: 0 0 40px rgba(251,191,36,0.8), inset 0 0 20px rgba(239,68,68,0.5);
-}
-.badge-emperor::before {
-  /* Dual Sweep */
-  background: conic-gradient(from 0deg, transparent 30%, #fbbf24 50%, transparent 80%, #ef4444 100%);
-  animation: spinConic 1.2s linear infinite, sweepBreathe 1s infinite;
-}
-.badge-emperor::after {
-  background-image: linear-gradient(135deg, #7f1d1d, #991b1b, #b45309, #7f1d1d);
+.badge-ruby::after {
+  background-image: linear-gradient(135deg, #450a0a, #7f1d1d, #450a0a);
 }
 
-/* Lvl 30: GOJO SATORU (Hollow Purple) */
+/* Tier 6: SAPPHIRE (Lvl 24-26) */
+.badge-sapphire {
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+}
+.badge-sapphire::before {
+  /* Reverse rotation, cool cyan/blue triple sweep */
+  background: conic-gradient(from 0deg, transparent 20%, #3b82f6 33%, transparent 53%, #06b6d4 66%, transparent 86%, #93c5fd 100%);
+  animation: spinConicReverse 3.5s linear infinite, sweepBreathe 2s infinite;
+}
+.badge-sapphire::after {
+  background-image: linear-gradient(135deg, #020617, #1e3a8a, #020617);
+}
+
+/* Tier 7: AMETHYST (Lvl 27-29) */
+.badge-amethyst {
+  box-shadow: 0 0 30px rgba(168, 85, 247, 0.6);
+}
+.badge-amethyst::before {
+  /* Thick pulsing purple and fuchsia sweep with whip effect */
+  background: conic-gradient(from 0deg, transparent 30%, #a855f7 50%, transparent 80%, #d946ef 100%);
+  animation: spinConic 1.8s cubic-bezier(0.4, 0, 0.2, 1) infinite, sweepBreathe 1.2s infinite;
+}
+.badge-amethyst::after {
+  background-image: linear-gradient(135deg, #2e1065, #4a044e, #2e1065);
+}
+
+/* Tier 8: GOJO SATORU (Lvl 30 - Majestic Epic) */
 .badge-gojo {
-  box-shadow: 0 0 60px rgba(168, 85, 247, 0.9), inset 0 0 30px rgba(236, 72, 153, 0.6);
-  animation: gojoHover 3.5s ease-in-out infinite;
+  box-shadow: 0 0 45px rgba(6, 182, 212, 0.6), inset 0 0 20px rgba(168, 85, 247, 0.3);
+  animation: gojoHover 4s ease-in-out infinite;
 }
 @keyframes gojoHover {
-  0%, 100% { filter: drop-shadow(0 0 20px rgba(59, 130, 246, 0.8)); transform: scale(1); }
-  50% { filter: drop-shadow(0 0 80px rgba(168, 85, 247, 1)); transform: scale(1.05); }
+  0%, 100% { filter: drop-shadow(0 0 15px rgba(6, 182, 212, 0.5)); transform: scale(1); }
+  50% { filter: drop-shadow(0 0 40px rgba(168, 85, 247, 0.8)); transform: scale(1.05); }
 }
 .badge-gojo::before {
-  /* Fast clash of Red and Blue with a flash of white */
-  background: conic-gradient(from 0deg, #ef4444 0%, transparent 20%, #3b82f6 50%, transparent 70%, #ffffff 90%, #a855f7 100%);
-  animation: spinConic 0.6s linear infinite, sweepBreathe 0.8s infinite;
+  /* Majestic, slow dual sweep of bright cyan and pure white with a hint of hollow purple */
+  background: conic-gradient(from 0deg, transparent 30%, #06b6d4 45%, #ffffff 50%, transparent 80%, #a855f7 95%, #ffffff 100%);
+  animation: spinConicSlow 5s linear infinite, sweepBreathe 3s infinite;
 }
 .badge-gojo::after {
-  background-image: linear-gradient(135deg, #1e1b4b, #4c1d95, #831843, #1e1b4b);
+  background-image: linear-gradient(135deg, #020617, #0f172a, #020617);
 }
 
 /* ─── Level-Ziffer: fette 3D-Typo mit Multi-Layer Text-Shadow ─── */

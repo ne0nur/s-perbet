@@ -54,46 +54,34 @@ export function getLevelBadgeStyle(level: number): string {
   //  Font: Geist Black Italic (fett, breit)
   // ═══════════════════════════════════════════════
 
-  // ── LVL 30 🌌 SECHSTER SINN (GOJO SATORU) ──
+  // ── LVL 30 🌌 SECHSTER SINN (GOJO SATORU - Majestic Infinity) ──
   if (level >= 30) {
-    return 'badge-sweep badge-gojo text-purple-100 font-geist font-black italic tracking-[0.06em]'
+    return 'badge-sweep badge-gojo text-cyan-50 font-geist font-black italic tracking-[0.06em]'
   }
-  // ── LVL 29 👑 ENDGEGNER (EMPEROR) ──
-  if (level >= 29) {
-    return 'badge-sweep badge-emperor text-amber-300 font-geist font-black italic tracking-[0.06em]'
-  }
-  // ── LVL 27-28 💎 LEGENDE/KRAL (SULTAN+) ──
+  // ── LVL 27-29 👑 MYTHIC (Amethyst: Purple/Pink) ──
   if (level >= 27) {
-    return 'badge-sweep badge-sultan-plus text-fuchsia-100 font-geist font-black italic tracking-[0.06em]'
+    return 'badge-sweep badge-amethyst text-purple-100 font-geist font-black italic tracking-[0.06em]'
   }
-  // ── LVL 24-26 ⚔️ BABA/PATRON/MASCHINE (SULTAN) ──
+  // ── LVL 24-26 💎 DIAMOND (Sapphire: Deep Blue/Cyan) ──
   if (level >= 24) {
-    return 'badge-sweep badge-sultan text-purple-100 font-geist font-black italic tracking-[0.06em]'
+    return 'badge-sweep badge-sapphire text-cyan-100 font-geist font-black italic tracking-[0.06em]'
   }
-  // ── LVL 20-23 ⚡ VIP/MEISTER/LÖWE (NOSTRADAMUS) ──
+  // ── LVL 20-23 🔥 PLATINUM (Ruby: Crimson/Amber) ──
   if (level >= 20) {
-    return 'badge-sweep badge-nostradamus text-amber-100 font-geist font-black italic tracking-[0.06em]'
+    return 'badge-sweep badge-ruby text-amber-100 font-geist font-black italic tracking-[0.06em]'
   }
-  // ── LVL 15-19 🏛️ MACHER bis WETT-PATE ──
+  // ── LVL 15-19 🏆 GOLD (Amber/Yellow) ──
   if (level >= 15) {
-    return 'bg-gradient-to-br from-amber-950 via-yellow-950 to-amber-900 border border-yellow-400/55 text-amber-100 ring-2 ring-amber-400/35 animate-level-glow-wobble font-geist font-black italic tracking-[0.05em]'
+    return 'bg-gradient-to-br from-yellow-950 via-amber-900 to-yellow-950 border border-yellow-500/50 text-amber-200 ring-2 ring-yellow-500/30 shadow-[0_0_15px_rgba(234,179,8,0.4)] animate-level-glow-wobble font-geist font-black italic tracking-[0.05em]'
   }
-  // ── LVL 10-14 🔮 KREISKLASSE bis STAMMGAST ──
+  // ── LVL 10-14 🌿 EMERALD (Green/Teal) ──
   if (level >= 10) {
-    return 'bg-gradient-to-br from-emerald-950 to-emerald-900 border border-emerald-400/50 text-emerald-100 ring-1 ring-emerald-400/25 animate-level-glow-fast font-geist font-black italic tracking-[0.04em]'
+    return 'bg-gradient-to-br from-emerald-950 to-teal-900 border border-emerald-500/40 text-emerald-200 ring-1 ring-emerald-500/20 shadow-[0_0_10px_rgba(16,185,129,0.3)] animate-level-glow-fast font-geist font-black italic tracking-[0.04em]'
   }
-  // ── LVL 7-9 🎖️ SCHÖNWETTER bis KREISLIGA-MESSI ──
-  if (level >= 7) {
-    return 'bg-gradient-to-br from-blue-950 to-blue-900 border border-blue-400/45 text-blue-100 ring-1 ring-blue-400/20 animate-level-glow font-geist font-black italic tracking-[0.04em]'
+  // ── LVL 5-9 💧 SAPPHIRE BASIC (Blue/Cyan) ──
+  if (level >= 5) {
+    return 'bg-gradient-to-br from-blue-950 to-cyan-950 border border-blue-500/30 text-blue-200 shadow-[0_0_8px_rgba(59,130,246,0.2)] animate-level-glow font-geist font-bold italic tracking-[0.04em]'
   }
-  // ── LVL 4-6 🎫 ALMAN-TIPPER bis BALLJUNGE ──
-  if (level >= 4) {
-    return 'bg-gradient-to-br from-cyan-950 to-slate-900 border border-cyan-400/40 text-cyan-200 animate-level-glow font-geist font-bold italic tracking-[0.03em]'
-  }
-  // ── LVL 2-3 🥤 ÇAY-BRINGER bis LELLEK ──
-  if (level >= 2) {
-    return 'bg-slate-800 border border-slate-500/50 text-slate-200 font-geist font-semibold'
-  }
-  // ── LVL 1 🌻 WASSERHOLER ──
-  return 'bg-slate-900 border border-slate-700/40 text-slate-400 font-geist font-medium'
+  // ── LVL 1-4 🪨 SLATE (Gray/Steel) ──
+  return 'bg-slate-900 border border-slate-700/50 text-slate-300 font-geist font-medium'
 }
