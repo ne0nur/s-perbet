@@ -264,8 +264,8 @@ export function ProfilePage() {
       userTips.forEach((t) => {
         if (t.punkte === 4) exact++
         else if (t.punkte === 3) diff++
-        else if (t.punkte === 2) tend++
-        else if (t.punkte === 0) miss++
+        else if (t.punkte === 2 || t.punkte === 1) tend++
+        else if (t.punkte <= 0) miss++
       })
     }
 

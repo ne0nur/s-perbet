@@ -9,14 +9,24 @@ export function berechnePunkte(
   tippHeim: number, tippGast: number,
   toreHeim: number, toreGast: number
 ): number {
-  if (tippHeim === toreHeim && tippGast === toreGast) return 4
-  if ((tippHeim - tippGast) === (toreHeim - toreGast)) return 3
-  if (Math.sign(tippHeim - tippGast) === Math.sign(toreHeim - toreGast)) return 2
-  return 0
+  const d = Math.abs(tippHeim - toreHeim) + Math.abs(tippGast - toreGast)
+  const tendenzStimmt = Math.sign(tippHeim - tippGast) === Math.sign(toreHeim - toreGast)
+
+  if (tendenzStimmt) {
+    if (d === 0) return 4
+    if (d === 1) return 3
+    if (d === 2) return 2
+    return 1
+  } else {
+    if (d <= 1) return 0
+    if (d <= 3) return -1
+    return -2
+  }
 }
 
 export function calculateLevelDetails(punkte: number, achievementsCount: number = 0, bonusTippsCount: number = 0) {
-  const totalExp = (punkte * 10) + (achievementsCount * 50) + (bonusTippsCount * 50)
+  const calculatedExp = (punkte * 10) + (achievementsCount * 50) + (bonusTippsCount * 50)
+  const totalExp = Math.max(0, calculatedExp)
   
   let remainingExp = totalExp
   let level = 1

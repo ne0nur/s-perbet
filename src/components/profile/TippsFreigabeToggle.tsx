@@ -1,11 +1,9 @@
 import { useSettingsStore } from '../../stores/settingsStore'
-import { useTranslation } from '../../utils/translations'
 
 export function TippsFreigabeToggle() {
   const tippsFreigeschaltet = useSettingsStore(s => s.tippsFreigeschaltet)
   const setTippsFreigeschaltet = useSettingsStore(s => s.setTippsFreigeschaltet)
   const isLaden = useSettingsStore(s => s.isLaden)
-  const { t } = useTranslation()
 
   if (isLaden) return (
     <div className="bg-surface-container border border-surface-container-high rounded-lg p-3 animate-pulse">

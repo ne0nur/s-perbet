@@ -103,7 +103,7 @@ export function evaluateAchievements(
     }
   })
   for (const tips of Object.values(fridayTipsByDate)) {
-    if (tips.length >= 2 && tips.every(t => t.punkte >= 2)) {
+    if (tips.length >= 2 && tips.every(t => t.punkte >= 1)) {
       unlocked.add('schorle_cay')
       break
     }
@@ -140,7 +140,7 @@ export function evaluateAchievements(
   // Vallah Krise: Exactly 0 points on a full matchday (minimum 3 tips submitted on that matchday)
   for (const matchdayTips of Object.values(tipsByMatchday)) {
     const finishedMD = matchdayTips.filter(t => t.match.status === 'finished')
-    if (finishedMD.length === matchdayTips.length && finishedMD.length >= 3 && finishedMD.every(t => t.punkte === 0)) {
+    if (finishedMD.length === matchdayTips.length && finishedMD.length >= 3 && finishedMD.every(t => t.punkte <= 0)) {
       unlocked.add('vallah_krise')
       break
     }
@@ -150,12 +150,12 @@ export function evaluateAchievements(
   for (const t of finishedTips) {
     if (t.match.tore_heim !== null && t.match.tore_gast !== null) {
       const predDiff = t.tipp_heim - t.tipp_gast
-      if (predDiff >= 2 && t.match.tore_heim < t.match.tore_gast && t.punkte === 0) {
+      if (predDiff >= 2 && t.match.tore_heim < t.match.tore_gast && t.punkte <= 0) {
         unlocked.add('kupon_yirtan')
         break
       }
       const predDiffAway = t.tipp_gast - t.tipp_heim
-      if (predDiffAway >= 2 && t.match.tore_gast < t.match.tore_heim && t.punkte === 0) {
+      if (predDiffAway >= 2 && t.match.tore_gast < t.match.tore_heim && t.punkte <= 0) {
         unlocked.add('kupon_yirtan')
         break
       }
@@ -165,7 +165,7 @@ export function evaluateAchievements(
   // Amk-Modus: 3x in a row missed exact score by exactly 1 goal (only got tendency = 2 pts)
   let amkStreak = 0
   for (const t of finishedTips) {
-    if (t.match.tore_heim !== null && t.match.tore_gast !== null && t.punkte === 2) {
+    if (t.match.tore_heim !== null && t.match.tore_gast !== null && t.punkte === 3) {
       const predDiff = t.tipp_heim - t.tipp_gast
       const actDiff = t.match.tore_heim - t.match.tore_gast
       if (Math.abs(predDiff - actDiff) === 1) {

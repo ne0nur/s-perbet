@@ -14,9 +14,12 @@ interface MatchDetailPanelProps {
 }
 
 function punkteFarbe(punkte: number): string {
-  if (punkte === 4) return 'text-green-400'
+  if (punkte === 4) return 'text-emerald-400 font-bold'
   if (punkte === 3) return 'text-amber-400'
   if (punkte === 2) return 'text-blue-400'
+  if (punkte === 1) return 'text-purple-400'
+  if (punkte === -1) return 'text-red-400/80'
+  if (punkte === -2) return 'text-red-500 font-bold'
   return 'text-slate-500'
 }
 

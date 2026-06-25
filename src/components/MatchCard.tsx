@@ -7,23 +7,32 @@ import { useSettingsStore } from '../stores/settingsStore'
 import type { Match } from '../stores/matchStore'
 
 function punkteFarbe(punkte: number): string {
-  if (punkte === 4) return 'text-green-400 bg-green-500/10 border-green-500/30'
+  if (punkte === 4) return 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30'
   if (punkte === 3) return 'text-amber-400 bg-amber-500/10 border-amber-500/30'
   if (punkte === 2) return 'text-blue-400 bg-blue-500/10 border-blue-500/30'
+  if (punkte === 1) return 'text-purple-400 bg-purple-500/10 border-purple-500/30'
+  if (punkte === -1) return 'text-red-400/90 bg-red-500/5 border-red-500/20'
+  if (punkte === -2) return 'text-red-500 bg-red-600/10 border-red-600/30 font-bold'
   return 'text-slate-500 bg-slate-500/10 border-slate-500/30'
 }
 
 function randFarbe(punkte: number): string {
-  if (punkte === 4) return 'border-green-500/50'
+  if (punkte === 4) return 'border-emerald-500/50 shadow-[0_0_10px_rgba(16,185,129,0.1)]'
   if (punkte === 3) return 'border-amber-500/50'
   if (punkte === 2) return 'border-blue-500/50'
+  if (punkte === 1) return 'border-purple-500/40'
+  if (punkte === -1) return 'border-red-500/20 opacity-80'
+  if (punkte === -2) return 'border-red-600/40 opacity-75 shadow-[0_0_10px_rgba(220,38,38,0.05)]'
   return ''
 }
 
 function liveGlowKlasse(punkte: number): string {
-  if (punkte === 4) return 'animate-pulse border-green-500/50 shadow-[0_0_15px_rgba(34,197,94,0.3)] bg-green-950/[0.04]'
+  if (punkte === 4) return 'animate-pulse border-emerald-500/50 shadow-[0_0_15px_rgba(16,185,129,0.3)] bg-emerald-950/[0.04]'
   if (punkte === 3) return 'animate-pulse border-amber-500/50 shadow-[0_0_15px_rgba(245,158,11,0.3)] bg-amber-950/[0.04]'
   if (punkte === 2) return 'animate-pulse border-blue-500/50 shadow-[0_0_15px_rgba(59,130,246,0.3)] bg-blue-950/[0.04]'
+  if (punkte === 1) return 'animate-pulse border-purple-500/50 shadow-[0_0_15px_rgba(168,85,247,0.3)] bg-purple-950/[0.04]'
+  if (punkte === -1) return 'animate-pulse border-red-500/30 shadow-[0_0_10px_rgba(239,68,68,0.15)] bg-red-950/[0.02]'
+  if (punkte === -2) return 'animate-pulse border-red-600/40 shadow-[0_0_12px_rgba(220,38,38,0.2)] bg-red-950/[0.03]'
   return 'animate-pulse border-slate-500/30 shadow-[0_0_8px_rgba(100,116,139,0.15)] bg-slate-950/[0.02]'
 }
 

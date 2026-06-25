@@ -8,7 +8,7 @@ interface SettingsState {
   setTippsFreigeschaltet: (wert: boolean) => Promise<void>
 }
 
-export const useSettingsStore = create<SettingsState>((set, get) => ({
+export const useSettingsStore = create<SettingsState>((set) => ({
   tippsFreigeschaltet: false,
   isLaden: true,
 

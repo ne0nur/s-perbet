@@ -8,10 +8,12 @@ export function RulesPage() {
 
   const beispiele = [
     { punkte: 4, farbe: 'border-emerald-500/30', bg: 'bg-emerald-500/5', text: 'text-emerald-400', titel: t('ruleExExactTitle'), tipp: '2 : 1', erg: '2 : 1', erkl: t('ruleExExactDesc') },
-    { punkte: 3, farbe: 'border-amber-500/30', bg: 'bg-amber-500/5', text: 'text-amber-400', titel: t('ruleExDiffTitle'), tipp: '3 : 1', erg: '2 : 0', erkl: t('ruleExDiffDesc') },
-    { punkte: 3, farbe: 'border-amber-500/30', bg: 'bg-amber-500/5', text: 'text-amber-400', titel: t('ruleExDrawTitle'), tipp: '1 : 1', erg: '2 : 2', erkl: t('ruleExDrawDesc') },
-    { punkte: 2, farbe: 'border-blue-500/30', bg: 'bg-blue-500/5', text: 'text-blue-400', titel: t('ruleExTendTitle'), tipp: '1 : 0', erg: '2 : 1', erkl: t('ruleExTendDesc') },
-    { punkte: 0, farbe: 'border-white/10', bg: 'bg-white/[0.02]', text: 'text-on-surface-variant', titel: t('ruleExMissTitle'), tipp: '2 : 0', erg: '0 : 2', erkl: t('ruleExMissDesc') },
+    { punkte: 3, farbe: 'border-amber-500/30', bg: 'bg-amber-500/5', text: 'text-amber-400', titel: t('ruleExDiffTitle'), tipp: '4 : 1', erg: '3 : 1', erkl: t('ruleExDiffDesc') },
+    { punkte: 2, farbe: 'border-blue-500/30', bg: 'bg-blue-500/5', text: 'text-blue-400', titel: t('ruleExTendTitle'), tipp: '2 : 0', erg: '3 : 1', erkl: t('ruleExTendDesc') },
+    { punkte: 1, farbe: 'border-purple-500/30', bg: 'bg-purple-500/5', text: 'text-purple-400', titel: t('ruleExFarTitle'), tipp: '1 : 0', erg: '4 : 1', erkl: t('ruleExFarDesc') },
+    { punkte: 0, farbe: 'border-white/10', bg: 'bg-white/[0.02]', text: 'text-on-surface-variant', titel: t('ruleExMissCloseTitle'), tipp: '1 : 1', erg: '2 : 1', erkl: t('ruleExMissCloseDesc') },
+    { punkte: -1, farbe: 'border-red-500/20', bg: 'bg-red-500/5', text: 'text-red-400/80', titel: t('ruleExMissTitle'), tipp: '1 : 2', erg: '2 : 1', erkl: t('ruleExMissDesc') },
+    { punkte: -2, farbe: 'border-red-600/30', bg: 'bg-red-600/5', text: 'text-red-500', titel: t('ruleExMissFarTitle'), tipp: '0 : 3', erg: '2 : 1', erkl: t('ruleExMissFarDesc') },
   ]
 
   return (
