@@ -294,9 +294,7 @@ export function LoginPage() {
 
       {/* Logo-Sektion */}
       <div className="mb-8 text-center select-none">
-        <div className="w-16 h-16 rounded-full bg-primary-container/10 flex items-center justify-center mx-auto mb-4 shadow-[0_0_30px_rgba(251,191,36,0.08)]">
-          <Trophy size={28} className="text-primary-fixed-dim" />
-        </div>
+
         <div className="superbet-header-logo mb-1 scale-125 origin-center">
           <HeaderLogo />
         </div>

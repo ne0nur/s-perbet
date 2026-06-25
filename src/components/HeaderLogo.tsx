@@ -12,7 +12,7 @@ interface HeaderLogoProps {
 
 export function HeaderLogo({ size = 'md' }: HeaderLogoProps) {
   const isSm = size === 'sm'
-  const ballSize = isSm ? 'w-9 h-9' : 'w-11 h-11'
+  const ballSize = isSm ? 'w-12 h-12 -mr-1.5' : 'w-16 h-16 -mr-2.5'
 
   const [isHovered, setIsHovered] = useState(false)
   const [isKicked, setIsKicked] = useState(false)

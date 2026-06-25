@@ -63,7 +63,7 @@ export function Football3D({ className, isHovered = false, isKicked = false, onK
         <directionalLight position={[5, 5, 5]} intensity={1.2} />
         <directionalLight position={[-3, -1, -2]} intensity={0.3} />
 
-        <Bounds fit clip observe margin={1.15}>
+        <Bounds fit clip observe margin={1.45}>
           <Center>
             <BallModel isHovered={isHovered} isKicked={isKicked} onKick={onKick} />
           </Center>
