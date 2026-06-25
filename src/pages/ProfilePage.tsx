@@ -10,6 +10,7 @@ import { useToastStore } from '../stores/toastStore'
 import { calculateLevelDetails } from '../lib/utils'
 import { useLanguageStore } from '../stores/languageStore'
 import { useTranslation } from '../utils/translations'
+import { invalidateCache } from '../lib/cache'
 
 // Import profile subcomponents
 import { UserInfoSettings } from '../components/profile/UserInfoSettings'
@@ -605,6 +606,10 @@ export function ProfilePage() {
       if (error) throw error
       useToastStore.getState().toast(data?.message || 'Benutzer gelöscht')
       setAdminMsg({ type: 'success', text: data?.message || 'Benutzer gelöscht' })
+      
+      // Clear global caches so deleted users disappear from rankings immediately
+      invalidateCache('leaderboard')
+      invalidateCache('global_stats')
     } catch (err) {
       const errorObj = err as Error
       useToastStore.getState().toast(errorObj?.message || 'Fehler beim Löschen', 'error')
