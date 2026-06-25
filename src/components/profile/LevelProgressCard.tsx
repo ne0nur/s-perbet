@@ -121,7 +121,7 @@ export function LevelProgressCard({
               <h3 className={`text-sm font-bold mt-0.5 ${titleColor}`}>{levelTitle}</h3>
             </div>
           </div>
-          <div className={`h-10 w-10 rounded-xl flex flex-col items-center justify-center shadow-inner border select-none animate-level-glow ${getLevelBadgeStyle(level)}`}>
+          <div className={`h-10 w-10 rounded-xl flex flex-col items-center justify-center shadow-inner border select-none ${getLevelBadgeStyle(level)}`}>
             <span className="text-[8px] font-mono opacity-80 uppercase leading-none font-bold">LVL</span>
             <span className="text-sm font-black font-mono leading-none mt-0.5">{level}</span>
           </div>
