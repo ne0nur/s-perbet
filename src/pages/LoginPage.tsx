@@ -233,7 +233,7 @@ export function LoginPage() {
       }
 
       // 2. Auth SignUp ausführen
-      const email = `${cleanUser}@gmail.com`
+      const email = `${cleanUser}@tipp.local`
       const { data: authResult, error: signupError } = await supabase.auth.signUp({
         email,
         password: regPassword,
