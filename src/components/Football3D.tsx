@@ -5,20 +5,59 @@ import * as THREE from 'three'
 
 const BALL_URL = import.meta.env.BASE_URL + 'ball.glb'
 
-function BallModel() {
+function BallModel({ isHovered, isKicked, onKick }: { isHovered: boolean; isKicked: boolean; onKick?: () => void }) {
   const ref = useRef<THREE.Group>(null!)
   const { scene } = useGLTF(BALL_URL)
+  const kickProgress = useRef(0)
 
   useFrame((_, delta) => {
     if (ref.current) {
-      ref.current.rotation.y += delta * 0.3
+      // Rotation um Y-Achse (schneller bei Hover)
+      const speedMultiplier = isHovered ? 6 : 1
+      ref.current.rotation.y += delta * 0.3 * speedMultiplier
+
+      // Kick-Animation (Flip & Hop)
+      if (isKicked) {
+        kickProgress.current = Math.min(1, kickProgress.current + delta * 2.2)
+        const t = kickProgress.current
+        
+        // 360-Grad Flip um X- und Z-Achse
+        ref.current.rotation.x = Math.sin(t * Math.PI) * Math.PI * 2
+        ref.current.rotation.z = Math.sin(t * Math.PI) * Math.PI * 1
+        
+        // Physikalischer Hopser nach rechts (Richtung Text)
+        ref.current.position.y = Math.sin(t * Math.PI) * 0.4
+        ref.current.position.x = Math.sin(t * Math.PI) * 0.25
+      } else {
+        kickProgress.current = 0
+        ref.current.rotation.x = THREE.MathUtils.lerp(ref.current.rotation.x, 0, 10 * delta)
+        ref.current.rotation.z = THREE.MathUtils.lerp(ref.current.rotation.z, 0, 10 * delta)
+        ref.current.position.y = THREE.MathUtils.lerp(ref.current.position.y, 0, 10 * delta)
+        ref.current.position.x = THREE.MathUtils.lerp(ref.current.position.x, 0, 10 * delta)
+      }
     }
   })
 
-  return <primitive ref={ref} object={scene} />
+  return (
+    <primitive 
+      ref={ref} 
+      object={scene} 
+      onClick={(e: { stopPropagation: () => void }) => {
+        e.stopPropagation()
+        if (onKick) onKick()
+      }} 
+    />
+  )
 }
 
-export function Football3D({ className }: { className?: string }) {
+interface Football3DProps {
+  className?: string
+  isHovered?: boolean
+  isKicked?: boolean
+  onKick?: () => void
+}
+
+export function Football3D({ className, isHovered = false, isKicked = false, onKick }: Football3DProps) {
   return (
     <div className={className}>
       <Canvas
@@ -32,7 +71,7 @@ export function Football3D({ className }: { className?: string }) {
 
         <Bounds fit clip observe margin={0.8}>
           <Center>
-            <BallModel />
+            <BallModel isHovered={isHovered} isKicked={isKicked} onKick={onKick} />
           </Center>
         </Bounds>
       </Canvas>
