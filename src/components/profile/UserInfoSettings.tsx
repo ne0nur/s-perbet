@@ -11,6 +11,7 @@ interface UserInfoSettingsProps {
   handleUsernameUpdate: () => Promise<void>
   isAdmin: boolean
   userRank: number | null
+  levelTitle?: string
 }
 
 export function UserInfoSettings({
@@ -22,7 +23,8 @@ export function UserInfoSettings({
   handleBildUpload,
   handleUsernameUpdate,
   isAdmin,
-  userRank
+  userRank,
+  levelTitle
 }: UserInfoSettingsProps) {
   const { t } = useTranslation()
 
@@ -63,9 +65,13 @@ export function UserInfoSettings({
                 <ShieldAlert size={10} /> {t('admin')}
               </span>
             )}
-            {userRank ? (
+            {userRank != null && userRank > 0 ? (
               <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 font-mono text-[9px] uppercase tracking-wider text-primary bg-primary-container/10 border border-primary-container/20 font-bold">
                 🏆 {t('rank')} {userRank}
+              </span>
+            ) : levelTitle ? (
+              <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 font-mono text-[9px] uppercase tracking-wider text-slate-300 bg-surface-container-high border border-surface-container-highest font-medium">
+                {levelTitle}
               </span>
             ) : (
               <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-mono text-[9px] uppercase tracking-wider text-on-surface-variant/40 bg-surface-container-high border border-surface-container-highest">
