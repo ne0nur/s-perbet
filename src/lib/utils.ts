@@ -56,19 +56,19 @@ export function getLevelBadgeStyle(level: number): string {
 
   // ── LVL 13 👑 EMPEROR: Alles kombiniert ──
   if (level >= 13) {
-    return 'bg-gradient-to-br from-red-900 via-rose-800 to-amber-900 border-2 border-red-400/70 text-red-50 shadow-[0_0_40px_rgba(239,68,68,1),0_0_16px_rgba(251,191,36,0.7)] ring-2 ring-red-400/50 ring-offset-1 ring-offset-black/60 animate-emperor font-geist font-black italic tracking-[0.06em]'
+    return 'badge-sweep badge-emperor text-amber-300 font-geist font-black italic tracking-[0.06em]'
   }
   // ── LVL 12 💎 SULTAN+: Fuchsia-Magenta, triple ring, schnellster Chroma-Pulse ──
   if (level >= 12) {
-    return 'bg-gradient-to-br from-purple-900 via-fuchsia-900 to-pink-950 border-2 border-fuchsia-300/70 text-fuchsia-50 shadow-[0_0_36px_rgba(192,132,252,1),0_0_16px_rgba(216,180,254,0.8),0_0_6px_rgba(167,139,250,0.5)] ring-[3px] ring-fuchsia-400/45 ring-offset-1 ring-offset-black/60 animate-sultan-plus font-geist font-black italic tracking-[0.06em]'
+    return 'badge-sweep badge-sultan-plus text-fuchsia-100 font-geist font-black italic tracking-[0.06em]'
   }
   // ── LVL 11 ⚔️ SULTAN: Purple-Fuchsia, Chroma-Shift — STÄRKER ALS 10 ──
   if (level >= 11) {
-    return 'bg-gradient-to-br from-purple-900 via-violet-900 to-fuchsia-950 border-2 border-purple-300/65 text-purple-50 shadow-[0_0_32px_rgba(167,139,250,1),0_0_14px_rgba(192,132,252,0.8),0_0_5px_rgba(129,140,248,0.5)] ring-2 ring-purple-400/40 ring-offset-1 ring-offset-black/60 animate-sultan font-geist font-black italic tracking-[0.06em]'
+    return 'badge-sweep badge-sultan text-purple-100 font-geist font-black italic tracking-[0.06em]'
   }
   // ── LVL 10 ⚡ NOSTRADAMUS: Amber-Orange, 4-Phasen Wobble, doppelter Aura-Ring ──
   if (level >= 10) {
-    return 'bg-gradient-to-br from-amber-800 via-orange-800 to-amber-950 border-2 border-amber-300/65 text-amber-50 shadow-[0_0_32px_rgba(245,158,11,1),0_0_14px_rgba(251,191,36,0.75),0_0_5px_rgba(249,115,22,0.5)] ring-2 ring-amber-400/45 ring-offset-1 ring-offset-black/60 animate-nostradamus font-geist font-black italic tracking-[0.06em]'
+    return 'badge-sweep badge-nostradamus text-amber-100 font-geist font-black italic tracking-[0.06em]'
   }
   // ── LVL 9 🏛️ BARON: Amber-Gold, Wobble-Pulse, doppelter Shadow ──
   if (level >= 9) {

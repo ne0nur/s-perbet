@@ -172,13 +172,13 @@ export function LevelProgressCard({
                 <div key={item.lvl} className={`flex items-start gap-3 p-2.5 rounded-lg border text-xs transition-colors duration-250 ${
                   level >= item.lvl 
                     ? 'bg-surface-container-lowest border-surface-container-high' 
-                    : 'bg-black/10 border-white/5 opacity-40'
+                    : 'bg-black/10 border-white/5'
                 }`}>
-                  <div className={`h-8 w-8 rounded-lg flex flex-col items-center justify-center font-black flex-shrink-0 border ${getLevelBadgeStyle(item.lvl)}`}>
-                    <span className="text-[6px] font-mono opacity-75 leading-none">LVL</span>
-                    <span className="text-xs leading-none mt-0.5 level-digit">{item.lvl}</span>
+                  <div className={`h-8 w-8 rounded-lg flex flex-col items-center justify-center font-black flex-shrink-0 border relative overflow-hidden ${getLevelBadgeStyle(item.lvl)}`}>
+                    <span className="text-[6px] font-mono opacity-75 leading-none z-10">LVL</span>
+                    <span className="text-xs leading-none mt-0.5 level-digit z-10">{item.lvl}</span>
                   </div>
-                  <div>
+                  <div className={level >= item.lvl ? 'opacity-100' : 'opacity-60'}>
                     <h5 className="font-bold text-on-surface leading-tight">{item.title}</h5>
                     <p className="text-[10px] text-on-surface-variant/80 mt-0.5 leading-snug">{item.desc}</p>
                     <span className="text-[7px] font-mono uppercase tracking-wider text-primary-fixed-dim/60 mt-1 block">{item.range}</span>
