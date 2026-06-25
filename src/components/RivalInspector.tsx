@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 import { BarChart2, Award, X, Swords, Target } from 'lucide-react'
 import { calculateLevelDetails, getLevelBadgeStyle } from '../lib/utils'
+import { LevelBadge } from './ui/LevelBadge'
 import { evaluateAchievements, type TipDetails } from '../utils/achievementEvaluator'
 import { AvatarLightbox } from './AvatarLightbox'
 import { useTranslation } from '../utils/translations'
@@ -407,7 +408,7 @@ export function RivalInspector({ userId, onClose }: RivalInspectorProps) {
             <div className="bg-surface-container-lowest/70 border border-surface-container-high/60 rounded-xl p-3 flex flex-col gap-2">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold shadow ${getLevelBadgeStyle(rivalStats.level)}`}>{rivalStats.level}</div>
+                  <LevelBadge level={rivalStats.level} className="w-7 h-7 rounded-full text-[10px] font-bold shadow">{rivalStats.level}</LevelBadge>
                   <div className="text-left">
                     <div className="text-[10px] font-mono font-bold text-on-surface uppercase tracking-wider">Level {rivalStats.level}</div>
                     <div className="text-[7px] font-mono text-on-surface-variant">{t('xpDesc')}</div>

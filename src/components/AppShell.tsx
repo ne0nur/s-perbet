@@ -6,6 +6,7 @@ import { useAuthStore } from '../stores/authStore'
 import { usePresenceStore } from '../stores/presenceStore'
 import { supabase } from '../lib/supabase'
 import { calculateLevelDetails, getLevelBadgeStyle } from '../lib/utils'
+import { LevelBadge } from './ui/LevelBadge'
 import { evaluateAchievements, type TipDetails } from '../utils/achievementEvaluator'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronLeft, ChevronRight, Trophy, Target, Sparkles, Award, Table2, BarChart2, Users, User, Gift, Rocket, Download, Share2 } from 'lucide-react'
@@ -350,9 +351,9 @@ export function AppShell() {
                   </span>
                 )}
               </div>
-              <div className={`absolute -bottom-1 -right-1 z-10 text-[8px] h-3.5 w-3.5 rounded-full flex items-center justify-center shadow shadow-black/80 select-none level-digit ${getLevelBadgeStyle(level)}`}>
+              <LevelBadge level={level} className="absolute -bottom-1 -right-1 z-10 text-[8px] h-3.5 w-3.5 rounded-full shadow shadow-black/80 select-none level-digit">
                 {level}
-              </div>
+              </LevelBadge>
             </div>
             <div className="flex-1 min-w-0 text-left">
               <p className="text-xs font-bold text-on-surface truncate">{user?.user_metadata?.username || t('myProfile')}</p>
@@ -415,9 +416,9 @@ export function AppShell() {
                       )}
                     </div>
                   </button>
-                  <div className={`absolute -bottom-1 -right-1 z-10 text-[9px] h-4.5 w-4.5 rounded-full flex items-center justify-center shadow shadow-black/80 select-none level-digit ${getLevelBadgeStyle(level)}`}>
+                  <LevelBadge level={level} className="absolute -bottom-1 -right-1 z-10 text-[9px] h-4.5 w-4.5 rounded-full shadow shadow-black/80 select-none level-digit">
                     {level}
-                  </div>
+                  </LevelBadge>
                 </div>
               </div>
             </div>
@@ -531,33 +532,29 @@ export function AppShell() {
                   
                   <div className="grid grid-cols-4 gap-2 pt-2 max-w-[280px] mx-auto">
                     <div className="flex flex-col items-center gap-1">
-                      <div className={`h-8 w-8 rounded-lg flex flex-col items-center justify-center shadow border text-[8px] leading-none ${getLevelBadgeStyle(1)}`}>
-                        <span className="text-[5px] font-mono font-bold leading-none">LVL</span>
-                        <span className="text-xs font-black font-mono leading-none mt-0.5">1</span>
-                      </div>
+                      <LevelBadge level={1} className="h-8 w-8 rounded-lg shadow border text-[8px] leading-none">
+                        <span className="opacity-70 text-[6px] block">LVL</span>1
+                      </LevelBadge>
                       <span className="text-[7px] font-mono text-on-surface-variant truncate w-full text-center">Alman</span>
                     </div>
                     <div className="flex flex-col items-center gap-1">
-                      <div className={`h-8 w-8 rounded-lg flex flex-col items-center justify-center shadow border text-[8px] leading-none ${getLevelBadgeStyle(5)}`}>
-                        <span className="text-[5px] font-mono font-bold leading-none">LVL</span>
-                        <span className="text-xs font-black font-mono leading-none mt-0.5">5</span>
-                      </div>
+                      <LevelBadge level={5} className="h-8 w-8 rounded-lg shadow border text-[8px] leading-none">
+                        <span className="opacity-70 text-[6px] block">LVL</span>5
+                      </LevelBadge>
                       <span className="text-[7px] font-mono text-on-surface-variant truncate w-full text-center">
                         {language === 'tr' ? 'Efsane' : language === 'en' ? 'Legend' : 'Legende'}
                       </span>
                     </div>
                     <div className="flex flex-col items-center gap-1">
-                      <div className={`h-8 w-8 rounded-lg flex flex-col items-center justify-center shadow border text-[8px] leading-none ${getLevelBadgeStyle(10)}`}>
-                        <span className="text-[5px] font-mono font-bold leading-none">LVL</span>
-                        <span className="text-xs font-black font-mono leading-none mt-0.5">10</span>
-                      </div>
+                      <LevelBadge level={10} className="h-8 w-8 rounded-lg shadow border text-[8px] leading-none">
+                        <span className="opacity-70 text-[6px] block">LVL</span>10
+                      </LevelBadge>
                       <span className="text-[7px] font-mono text-on-surface-variant truncate w-full text-center">Baba</span>
                     </div>
                     <div className="flex flex-col items-center gap-1">
-                      <div className={`h-8 w-8 rounded-lg flex flex-col items-center justify-center shadow border text-[8px] leading-none ${getLevelBadgeStyle(13)}`}>
-                        <span className="text-[5px] font-mono font-bold leading-none">LVL</span>
-                        <span className="text-xs font-black font-mono leading-none mt-0.5">13</span>
-                      </div>
+                      <LevelBadge level={13} className="h-8 w-8 rounded-lg shadow border text-[8px] leading-none">
+                        <span className="opacity-70 text-[6px] block">LVL</span>13
+                      </LevelBadge>
                       <span className="text-[7px] font-mono text-on-surface-variant truncate w-full text-center">Boss</span>
                     </div>
                   </div>

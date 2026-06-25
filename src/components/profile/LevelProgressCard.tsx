@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Trophy, ChevronDown, ChevronUp, Award } from 'lucide-react'
 import { calculateLevelDetails, getLevelBadgeStyle } from '../../lib/utils'
 import { useTranslation } from '../../utils/translations'
+import { LevelBadge } from '../ui/LevelBadge'
 
 function getRangTitelSystem(language: string) {
   // Using the exact 30 levels requested by the user
@@ -115,10 +116,10 @@ export function LevelProgressCard({
               <h3 className={`text-sm font-bold mt-0.5 ${titleColor}`}>{levelTitle}</h3>
             </div>
           </div>
-          <div className={`h-10 w-10 rounded-xl flex flex-col items-center justify-center shadow-inner border select-none ${getLevelBadgeStyle(level)}`}>
-            <span className="text-[8px] font-mono opacity-80 uppercase leading-none font-bold">LVL</span>
-            <span className="text-sm font-black leading-none mt-0.5 level-digit">{level}</span>
-          </div>
+          <LevelBadge level={level} className="h-10 w-10 rounded-xl shadow-inner border select-none">
+            <span className="text-[7px] font-mono opacity-75 leading-none mt-0.5">LVL</span>
+            <span className="text-[14px] leading-none mt-0.5 level-digit">{level}</span>
+          </LevelBadge>
         </div>
         <div className="space-y-1.5">
           <div className="flex justify-between text-[10px] font-mono">
@@ -168,10 +169,10 @@ export function LevelProgressCard({
                     ? 'bg-surface-container-lowest border-surface-container-high' 
                     : 'bg-black/10 border-white/5'
                 }`}>
-                  <div className={`h-10 w-10 rounded-xl flex flex-col items-center justify-center font-black flex-shrink-0 border relative overflow-hidden mb-2 ${getLevelBadgeStyle(item.lvl)}`}>
+                  <LevelBadge level={item.lvl} className="h-10 w-10 rounded-xl mb-2 border">
                     <span className="text-[7px] font-mono opacity-75 leading-none z-10 mt-0.5">LVL</span>
                     <span className="text-[14px] leading-none mt-0.5 level-digit z-10">{item.lvl}</span>
-                  </div>
+                  </LevelBadge>
                   <div className={level >= item.lvl ? 'opacity-100 w-full' : 'opacity-50 w-full'}>
                     <h5 className="font-bold text-on-surface leading-tight text-[10px] sm:text-[11px] line-clamp-2 break-words">{item.title}</h5>
                   </div>

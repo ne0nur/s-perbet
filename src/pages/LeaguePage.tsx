@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { LeagueChat } from '../components/LeagueChat'
 import { useToastStore } from '../stores/toastStore'
 import { calculateLevel, getLevelBadgeStyle } from '../lib/utils'
+import { LevelBadge } from '../components/ui/LevelBadge'
 import { useTranslation } from '../utils/translations'
 
 interface Profile {
@@ -653,9 +654,9 @@ export function LeaguePage() {
                                           </div>
                                         )}
                                       </div>
-                                      <div className={`absolute -bottom-0.5 -right-0.5 z-10 text-[7px] h-3.5 w-3.5 rounded-full flex items-center justify-center shadow shadow-black/80 select-none ${getLevelBadgeStyle(calculateLevel(m.gesamt_punkte))}`}>
+                                      <LevelBadge level={calculateLevel(m.gesamt_punkte)} className="absolute -bottom-0.5 -right-0.5 z-10 text-[7px] h-3.5 w-3.5 rounded-full shadow shadow-black/80 select-none">
                                         {calculateLevel(m.gesamt_punkte)}
-                                      </div>
+                                      </LevelBadge>
                                     </div>
                                     <span className={`text-[11px] font-medium truncate max-w-[80px] flex items-center gap-1 ${isMe ? 'text-primary-fixed-dim' : 'text-on-surface'}`}>
                                       {m.username}

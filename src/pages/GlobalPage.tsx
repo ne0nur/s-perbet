@@ -6,6 +6,7 @@ import { getTeamLogo } from '../lib/teamLogos'
 import { Trophy, Users, BarChart2, Gift, Award, Crown, Medal, Target } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { getLevelBadgeStyle, calculateLevel } from '../lib/utils'
+import { LevelBadge } from '../components/ui/LevelBadge'
 import { evaluateAchievements, type TipDetails } from '../utils/achievementEvaluator'
 import { RivalInspector } from '../components/RivalInspector'
 import { AvatarLightbox } from '../components/AvatarLightbox'
@@ -84,9 +85,9 @@ function LeaderboardSection({
                 {tie1_2 ? <Crown size={24} className="text-yellow-900" /> : <Medal size={16} className="text-slate-700" />}
               </div>
               <AvatarLightbox src={top3[1]?.avatar_url} username={top3[1]?.username || ''} size="sm" showLevel levelBadge={
-                <div className={`absolute -bottom-1 -right-1 z-10 text-[7px] h-3.5 w-3.5 rounded-full flex items-center justify-center shadow select-none ${getLevelBadgeStyle(calculateLevel(top3[1]?.gesamt_punkte || 0, top3[1]?.achievements_count || 0))}`}>
+                <LevelBadge level={calculateLevel(top3[1]?.gesamt_punkte || 0, top3[1]?.achievements_count || 0)} className="absolute -bottom-1 -right-1 z-10 text-[7px] h-3.5 w-3.5 rounded-full shadow select-none">
                   {calculateLevel(top3[1]?.gesamt_punkte || 0, top3[1]?.achievements_count || 0)}
-                </div>
+                </LevelBadge>
               } />
               <span className="text-[9px] text-on-surface-variant font-mono truncate w-full text-center flex items-center justify-center gap-1">
                 {top3[1]?.username}
@@ -117,9 +118,9 @@ function LeaderboardSection({
               <Crown size={24} className="text-yellow-900" />
             </div>
             <AvatarLightbox src={top3[0]?.avatar_url} username={top3[0]?.username || ''} size="md" showLevel levelBadge={
-              <div className={`absolute -bottom-1 -right-1 z-10 text-[8px] h-4 w-4 rounded-full flex items-center justify-center shadow select-none ${getLevelBadgeStyle(calculateLevel(top3[0]?.gesamt_punkte || 0, top3[0]?.achievements_count || 0))}`}>
+              <LevelBadge level={calculateLevel(top3[0]?.gesamt_punkte || 0, top3[0]?.achievements_count || 0)} className="absolute -bottom-1 -right-1 z-10 text-[8px] h-4 w-4 rounded-full shadow select-none">
                 {calculateLevel(top3[0]?.gesamt_punkte || 0, top3[0]?.achievements_count || 0)}
-              </div>
+              </LevelBadge>
             } />
             <span className="text-[9px] text-primary-fixed-dim font-mono font-bold truncate w-full text-center flex items-center justify-center gap-1">
               {top3[0]?.username}
@@ -150,9 +151,9 @@ function LeaderboardSection({
                 {tie2_3 ? <Medal size={16} className="text-slate-700" /> : <Medal size={16} className="text-amber-100" />}
               </div>
               <AvatarLightbox src={top3[2]?.avatar_url} username={top3[2]?.username || ''} size="sm" showLevel levelBadge={
-                <div className={`absolute -bottom-1 -right-1 z-10 text-[7px] h-3.5 w-3.5 rounded-full flex items-center justify-center shadow select-none ${getLevelBadgeStyle(calculateLevel(top3[2]?.gesamt_punkte || 0, top3[2]?.achievements_count || 0))}`}>
+                <LevelBadge level={calculateLevel(top3[2]?.gesamt_punkte || 0, top3[2]?.achievements_count || 0)} className="absolute -bottom-1 -right-1 z-10 text-[7px] h-3.5 w-3.5 rounded-full shadow select-none">
                   {calculateLevel(top3[2]?.gesamt_punkte || 0, top3[2]?.achievements_count || 0)}
-                </div>
+                </LevelBadge>
               } />
               <span className="text-[9px] text-on-surface-variant font-mono truncate w-full text-center flex items-center justify-center gap-1">
                 {top3[2]?.username}
@@ -192,9 +193,9 @@ function LeaderboardSection({
                   size="sm"
                   showLevel
                   levelBadge={
-                    <div className={`absolute -bottom-1 -right-1 z-10 text-[7px] h-3.5 w-3.5 rounded-full flex items-center justify-center shadow select-none ${getLevelBadgeStyle(calculateLevel(e.gesamt_punkte, e.achievements_count || 0))}`}>
+                    <LevelBadge level={calculateLevel(e.gesamt_punkte, e.achievements_count || 0)} className="absolute -bottom-1 -right-1 z-10 text-[7px] h-3.5 w-3.5 rounded-full shadow select-none">
                       {calculateLevel(e.gesamt_punkte, e.achievements_count || 0)}
-                    </div>
+                    </LevelBadge>
                   }
                 />
                 <span className="flex-1 text-sm text-on-surface truncate font-semibold flex items-center gap-1.5">
