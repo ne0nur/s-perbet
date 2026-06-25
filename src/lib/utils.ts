@@ -31,12 +31,12 @@ export function calculateLevelDetails(punkte: number, achievementsCount: number 
   
   let remainingExp = totalExp
   let level = 1
-  let xpRequired = 50 * level // Level 1->2 braucht 50, 2->3 braucht 100, etc.
+  let xpRequired = 80 + (level * 8) // Smooth curve: reaches Lvl 30 at ~5800 EXP (balanced for 1 season)
   
   while (remainingExp >= xpRequired) {
     remainingExp -= xpRequired
     level++
-    xpRequired = 50 * level
+    xpRequired = 80 + (level * 8)
   }
   
   const xpCurrent = remainingExp
@@ -50,58 +50,50 @@ export function calculateLevel(punkte: number, achievementsCount: number = 0, bo
 
 export function getLevelBadgeStyle(level: number): string {
   // ═══════════════════════════════════════════════
-  //  TIERED BADGE SYSTEM — Jedes Level stärker
+  //  TIERED BADGE SYSTEM — 30 Level Erweiterung
   //  Font: Geist Black Italic (fett, breit)
   // ═══════════════════════════════════════════════
 
-  // ── LVL 13 👑 EMPEROR: Alles kombiniert ──
-  if (level >= 13) {
+  // ── LVL 30 🌌 SECHSTER SINN (GOJO SATORU) ──
+  if (level >= 30) {
+    return 'badge-sweep badge-gojo text-purple-100 font-geist font-black italic tracking-[0.06em]'
+  }
+  // ── LVL 29 👑 ENDGEGNER (EMPEROR) ──
+  if (level >= 29) {
     return 'badge-sweep badge-emperor text-amber-300 font-geist font-black italic tracking-[0.06em]'
   }
-  // ── LVL 12 💎 SULTAN+: Fuchsia-Magenta, triple ring, schnellster Chroma-Pulse ──
-  if (level >= 12) {
+  // ── LVL 27-28 💎 LEGENDE/KRAL (SULTAN+) ──
+  if (level >= 27) {
     return 'badge-sweep badge-sultan-plus text-fuchsia-100 font-geist font-black italic tracking-[0.06em]'
   }
-  // ── LVL 11 ⚔️ SULTAN: Purple-Fuchsia, Chroma-Shift — STÄRKER ALS 10 ──
-  if (level >= 11) {
+  // ── LVL 24-26 ⚔️ BABA/PATRON/MASCHINE (SULTAN) ──
+  if (level >= 24) {
     return 'badge-sweep badge-sultan text-purple-100 font-geist font-black italic tracking-[0.06em]'
   }
-  // ── LVL 10 ⚡ NOSTRADAMUS: Amber-Orange, 4-Phasen Wobble, doppelter Aura-Ring ──
-  if (level >= 10) {
+  // ── LVL 20-23 ⚡ VIP/MEISTER/LÖWE (NOSTRADAMUS) ──
+  if (level >= 20) {
     return 'badge-sweep badge-nostradamus text-amber-100 font-geist font-black italic tracking-[0.06em]'
   }
-  // ── LVL 9 🏛️ BARON: Amber-Gold, Wobble-Pulse, doppelter Shadow ──
-  if (level >= 9) {
-    return 'bg-gradient-to-br from-amber-950 via-yellow-950 to-amber-900 border-2 border-yellow-400/55 text-amber-100 shadow-[0_0_26px_rgba(234,179,8,0.9),0_0_10px_rgba(250,204,21,0.5)] ring-2 ring-amber-400/35 animate-level-glow-wobble font-geist font-black italic tracking-[0.05em]'
+  // ── LVL 15-19 🏛️ MACHER bis WETT-PATE ──
+  if (level >= 15) {
+    return 'bg-gradient-to-br from-amber-950 via-yellow-950 to-amber-900 border border-yellow-400/55 text-amber-100 ring-2 ring-amber-400/35 animate-level-glow-wobble font-geist font-black italic tracking-[0.05em]'
   }
-  // ── LVL 8 🔮 ORAKEL II: Emerald-Teal, Wobble, starker Aura-Ring ──
-  if (level >= 8) {
-    return 'bg-gradient-to-br from-emerald-950 via-emerald-900 to-teal-950 border-2 border-emerald-400/55 text-emerald-50 shadow-[0_0_24px_rgba(16,185,129,0.9),0_0_10px_rgba(45,212,191,0.45)] ring-2 ring-emerald-400/30 animate-level-glow-wobble font-geist font-black italic tracking-[0.05em]'
+  // ── LVL 10-14 🔮 KREISKLASSE bis STAMMGAST ──
+  if (level >= 10) {
+    return 'bg-gradient-to-br from-emerald-950 to-emerald-900 border border-emerald-400/50 text-emerald-100 ring-1 ring-emerald-400/25 animate-level-glow-fast font-geist font-black italic tracking-[0.04em]'
   }
-  // ── LVL 7 🧿 ORAKEL I: Emerald, satter Glow, erster Wobble ──
+  // ── LVL 7-9 🎖️ SCHÖNWETTER bis KREISLIGA-MESSI ──
   if (level >= 7) {
-    return 'bg-gradient-to-br from-emerald-950 to-emerald-900 border-2 border-emerald-400/50 text-emerald-100 shadow-[0_0_20px_rgba(16,185,129,0.8),0_0_6px_rgba(52,211,153,0.35)] ring-1 ring-emerald-400/25 animate-level-glow-wobble font-geist font-black italic tracking-[0.04em]'
+    return 'bg-gradient-to-br from-blue-950 to-blue-900 border border-blue-400/45 text-blue-100 ring-1 ring-blue-400/20 animate-level-glow font-geist font-black italic tracking-[0.04em]'
   }
-  // ── LVL 6 🎖️ FELDWEBEL II: Blue-Indigo, schnelles Atmen, Aura-Ring ──
-  if (level >= 6) {
-    return 'bg-gradient-to-br from-blue-950 via-blue-900 to-indigo-950 border-2 border-blue-400/50 text-blue-50 shadow-[0_0_18px_rgba(59,130,246,0.8),0_0_6px_rgba(96,165,250,0.4)] ring-2 ring-blue-400/25 animate-level-glow-fast font-geist font-black italic tracking-[0.04em]'
-  }
-  // ── LVL 5 🪖 FELDWEBEL I: Blue, erste Aura ──
-  if (level >= 5) {
-    return 'bg-gradient-to-br from-blue-950 to-blue-900 border-2 border-blue-400/45 text-blue-100 shadow-[0_0_14px_rgba(59,130,246,0.65),0_0_4px_rgba(96,165,250,0.3)] ring-1 ring-blue-400/20 animate-level-glow-fast font-geist font-black italic tracking-[0.04em]'
-  }
-  // ── LVL 4 🎫 COUSENG: Teal, stärkeres Atmen ──
+  // ── LVL 4-6 🎫 ALMAN-TIPPER bis BALLJUNGE ──
   if (level >= 4) {
-    return 'bg-gradient-to-br from-teal-950 to-cyan-950 border-2 border-teal-400/45 text-teal-100 shadow-[0_0_12px_rgba(45,212,191,0.55),0_0_4px_rgba(34,211,238,0.25)] animate-level-glow font-geist font-black italic tracking-[0.03em]'
+    return 'bg-gradient-to-br from-cyan-950 to-slate-900 border border-cyan-400/40 text-cyan-200 animate-level-glow font-geist font-bold italic tracking-[0.03em]'
   }
-  // ── LVL 3 ⚽ FUSSSOLDAT: Cyan, erster Glow ──
-  if (level >= 3) {
-    return 'bg-gradient-to-br from-cyan-950 to-slate-900 border-2 border-cyan-400/40 text-cyan-200 shadow-[0_0_10px_rgba(34,211,238,0.4),0_0_3px_rgba(34,211,238,0.2)] animate-level-glow font-geist font-bold italic tracking-[0.03em]'
-  }
-  // ── LVL 2 🥤 PRAKTIKANT: Slate, leichter Highlight ──
+  // ── LVL 2-3 🥤 ÇAY-BRINGER bis LELLEK ──
   if (level >= 2) {
-    return 'bg-slate-800 border-2 border-slate-500/50 text-slate-200 shadow-[0_0_6px_rgba(148,163,184,0.2)] font-geist font-semibold'
+    return 'bg-slate-800 border border-slate-500/50 text-slate-200 font-geist font-semibold'
   }
-  // ── LVL 1 🌻 SPUCKER: Plain, kein Effekt ──
-  return 'bg-slate-900 border-2 border-slate-700/40 text-slate-400 font-geist font-medium'
+  // ── LVL 1 🌻 WASSERHOLER ──
+  return 'bg-slate-900 border border-slate-700/40 text-slate-400 font-geist font-medium'
 }

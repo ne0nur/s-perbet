@@ -960,6 +960,29 @@ body {
   background-color: #450a0a;
 }
 
+/* Lvl 30: GOJO SATORU (Hollow Purple) */
+.badge-gojo {
+  box-shadow: 0 0 50px rgba(168, 85, 247, 0.9), inset 0 0 25px rgba(236, 72, 153, 0.6);
+  animation: gojoHover 3.5s ease-in-out infinite;
+}
+@keyframes gojoHover {
+  0%, 100% { filter: drop-shadow(0 0 20px rgba(59, 130, 246, 0.8)); transform: translateY(0px); }
+  50% { filter: drop-shadow(0 0 60px rgba(168, 85, 247, 1)); transform: translateY(-3px); }
+}
+.badge-gojo::before {
+  background: conic-gradient(from 0deg, #ef4444 0%, transparent 20%, #3b82f6 50%, transparent 70%, #a855f7 100%);
+  animation: spinConic 0.8s linear infinite;
+}
+.badge-gojo::after {
+  background-image: 
+    radial-gradient(circle, rgba(255,255,255,1) 1.5px, transparent 1.5px),
+    radial-gradient(circle, rgba(168, 85, 247,0.8) 2px, transparent 2px),
+    linear-gradient(135deg, #1e1b4b, #4c1d95, #831843, #1e1b4b);
+  background-size: 15px 15px, 20px 20px, 200% 200%;
+  animation: particleRise 1.5s linear infinite, bgGradientShift 2s ease-in-out infinite;
+  background-color: #0f172a;
+}
+
 /* ─── Level-Ziffer: fette 3D-Typo mit Multi-Layer Text-Shadow ─── */
 .level-digit {
   font-family: 'Geist', system-ui, sans-serif;

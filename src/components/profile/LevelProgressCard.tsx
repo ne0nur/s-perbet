@@ -4,44 +4,38 @@ import { calculateLevelDetails, getLevelBadgeStyle } from '../../lib/utils'
 import { useTranslation } from '../../utils/translations'
 
 function getRangTitelSystem(language: string) {
-  if (language === 'tr') {
-    return [
-      { lvl: 1, title: 'Çekirdek Spucker', range: 'Lvl 1' },
-      { lvl: 2, title: 'Tipico Sponsor', range: 'Lvl 2' },
-      { lvl: 3, title: 'Halısaha Efsanesi', range: 'Lvl 3' },
-      { lvl: 4, title: 'Kuponcu Kuzen', range: 'Lvl 4' },
-      { lvl: 5, title: 'Kiralık AMG', range: 'Lvl 5-6' },
-      { lvl: 7, title: 'Nargile Scout', range: 'Lvl 7-8' },
-      { lvl: 9, title: 'Speyer Taktisyeni', range: 'Lvl 9' },
-      { lvl: 10, title: 'SüperLig Babası', range: 'Lvl 10' },
-      { lvl: 11, title: 'İddaa Sultanı', range: 'Lvl 11-12' },
-      { lvl: 13, title: 'Speyer Efsanesi 🏆', range: 'Lvl 13+' },
-    ]
-  } else if (language === 'en') {
-    return [
-      { lvl: 1, title: 'Seed Spitter', range: 'Lvl 1' },
-      { lvl: 2, title: 'Tipico Funder', range: 'Lvl 2' },
-      { lvl: 3, title: 'Sunday Legend', range: 'Lvl 3' },
-      { lvl: 4, title: 'Coupon Cousin', range: 'Lvl 4' },
-      { lvl: 5, title: 'AMG Renter', range: 'Lvl 5-6' },
-      { lvl: 7, title: 'Hookah Scout', range: 'Lvl 7-8' },
-      { lvl: 9, title: 'Speyer Tactician', range: 'Lvl 9' },
-      { lvl: 10, title: 'SüperLig Boss', range: 'Lvl 10' },
-      { lvl: 11, title: 'Betting Sultan', range: 'Lvl 11-12' },
-      { lvl: 13, title: 'Speyer Legend 🏆', range: 'Lvl 13+' },
-    ]
-  }
+  // Using the exact 30 levels requested by the user
   return [
-    { lvl: 1, title: 'Çekirdek Spucker', range: 'Lvl 1' },
-    { lvl: 2, title: 'Tipico Sponsor', range: 'Lvl 2' },
-    { lvl: 3, title: 'Kreisliga Legende', range: 'Lvl 3' },
-    { lvl: 4, title: 'Kupon Couseng', range: 'Lvl 4' },
-    { lvl: 5, title: 'AMG Mieter', range: 'Lvl 5-6' },
-    { lvl: 7, title: 'Shishabar Scout', range: 'Lvl 7-8' },
-    { lvl: 9, title: 'Speyer Taktiker', range: 'Lvl 9' },
-    { lvl: 10, title: 'SüperLig Baba', range: 'Lvl 10' },
-    { lvl: 11, title: 'Tipico Sultan', range: 'Lvl 11-12' },
-    { lvl: 13, title: 'Speyer Legende 🏆', range: 'Lvl 13+' },
+    { lvl: 1, title: 'Wasserholer', range: 'Lvl 1' },
+    { lvl: 2, title: 'Çay-Bringer', range: 'Lvl 2' },
+    { lvl: 3, title: 'Lellek', range: 'Lvl 3' },
+    { lvl: 4, title: 'Alman-Tipper', range: 'Lvl 4' },
+    { lvl: 5, title: 'Kreisliga-Bank', range: 'Lvl 5' },
+    { lvl: 6, title: 'Balljunge', range: 'Lvl 6' },
+    { lvl: 7, title: 'Schönwetter-Fan', range: 'Lvl 7' },
+    { lvl: 8, title: 'Tipico-Spender', range: 'Lvl 8' },
+    { lvl: 9, title: 'Kreisliga-Messi', range: 'Lvl 9' },
+    { lvl: 10, title: 'Kreisklasse', range: 'Lvl 10' },
+    { lvl: 11, title: 'Halbtags-Tipper', range: 'Lvl 11' },
+    { lvl: 12, title: 'Tipico-Azubi', range: 'Lvl 12' },
+    { lvl: 13, title: 'Stabil', range: 'Lvl 13' },
+    { lvl: 14, title: 'Stammgast', range: 'Lvl 14' },
+    { lvl: 15, title: 'Macher', range: 'Lvl 15' },
+    { lvl: 16, title: 'Taktik-Fuchs', range: 'Lvl 16' },
+    { lvl: 17, title: 'Ehrenmann', range: 'Lvl 17' },
+    { lvl: 18, title: 'Chef-Analyst', range: 'Lvl 18' },
+    { lvl: 19, title: 'Wett-Pate', range: 'Lvl 19' },
+    { lvl: 20, title: 'Löwe', range: 'Lvl 20' },
+    { lvl: 21, title: 'Speyer-Local', range: 'Lvl 21' },
+    { lvl: 22, title: 'VIP-Tipper', range: 'Lvl 22' },
+    { lvl: 23, title: 'Meister', range: 'Lvl 23' },
+    { lvl: 24, title: 'Baba', range: 'Lvl 24' },
+    { lvl: 25, title: 'Speyer-Patron', range: 'Lvl 25' },
+    { lvl: 26, title: 'Maschine', range: 'Lvl 26' },
+    { lvl: 27, title: 'Kral', range: 'Lvl 27' },
+    { lvl: 28, title: 'Legende', range: 'Lvl 28' },
+    { lvl: 29, title: 'Endgegner', range: 'Lvl 29' },
+    { lvl: 30, title: 'Sechster Sinn', range: 'Lvl 30+' },
   ]
 }
 
