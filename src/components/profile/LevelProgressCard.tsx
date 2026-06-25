@@ -161,20 +161,19 @@ export function LevelProgressCard({
             <p className="text-[9.5px] font-mono text-on-surface-variant leading-relaxed mb-3">
               {t('ranksLevelOverviewDesc')}
             </p>
-            <div className="space-y-2 max-h-[350px] overflow-y-auto pr-1">
+            <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 max-h-[380px] overflow-y-auto pr-1 pb-1">
               {rangTitelSystem.map(item => (
-                <div key={item.lvl} className={`flex items-start gap-3 p-2.5 rounded-lg border text-xs transition-colors duration-250 ${
+                <div key={item.lvl} className={`flex flex-col items-center justify-start p-2.5 rounded-lg border text-center transition-colors duration-250 ${
                   level >= item.lvl 
                     ? 'bg-surface-container-lowest border-surface-container-high' 
                     : 'bg-black/10 border-white/5'
                 }`}>
-                  <div className={`h-8 w-8 rounded-lg flex flex-col items-center justify-center font-black flex-shrink-0 border relative overflow-hidden ${getLevelBadgeStyle(item.lvl)}`}>
-                    <span className="text-[6px] font-mono opacity-75 leading-none z-10">LVL</span>
-                    <span className="text-xs leading-none mt-0.5 level-digit z-10">{item.lvl}</span>
+                  <div className={`h-10 w-10 rounded-xl flex flex-col items-center justify-center font-black flex-shrink-0 border relative overflow-hidden mb-2 ${getLevelBadgeStyle(item.lvl)}`}>
+                    <span className="text-[7px] font-mono opacity-75 leading-none z-10 mt-0.5">LVL</span>
+                    <span className="text-[14px] leading-none mt-0.5 level-digit z-10">{item.lvl}</span>
                   </div>
-                  <div className={level >= item.lvl ? 'opacity-100 flex flex-col justify-center' : 'opacity-60 flex flex-col justify-center'}>
-                    <h5 className="font-bold text-on-surface leading-tight text-[13px]">{item.title}</h5>
-                    <span className="text-[9px] font-mono uppercase tracking-wider text-primary-fixed-dim/70 mt-0.5 block">{item.range}</span>
+                  <div className={level >= item.lvl ? 'opacity-100 w-full' : 'opacity-50 w-full'}>
+                    <h5 className="font-bold text-on-surface leading-tight text-[10px] sm:text-[11px] line-clamp-2 break-words">{item.title}</h5>
                   </div>
                 </div>
               ))}
