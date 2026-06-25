@@ -25,7 +25,8 @@ export function berechnePunkte(
 }
 
 export function calculateLevelDetails(punkte: number, achievementsCount: number = 0, bonusTippsCount: number = 0) {
-  const calculatedExp = (punkte * 10) + (achievementsCount * 50) + (bonusTippsCount * 50)
+  // Nur positive Punkte geben EXP — 0 und Minuspunkte geben nichts
+  const calculatedExp = (Math.max(0, punkte) * 10) + (achievementsCount * 50) + (bonusTippsCount * 50)
   const totalExp = Math.max(0, calculatedExp)
   
   let remainingExp = totalExp
