@@ -350,7 +350,7 @@ export function AppShell() {
                   </span>
                 )}
               </div>
-              <div className={`absolute -bottom-1 -right-1 z-10 text-[8px] h-3.5 w-3.5 rounded-full flex items-center justify-center shadow shadow-black/80 select-none ${getLevelBadgeStyle(level)}`}>
+              <div className={`absolute -bottom-1 -right-1 z-10 text-[8px] h-3.5 w-3.5 rounded-full flex items-center justify-center shadow shadow-black/80 select-none level-digit ${getLevelBadgeStyle(level)}`}>
                 {level}
               </div>
             </div>
@@ -415,7 +415,7 @@ export function AppShell() {
                       )}
                     </div>
                   </button>
-                  <div className={`absolute -bottom-1 -right-1 z-10 text-[9px] h-4.5 w-4.5 rounded-full flex items-center justify-center shadow shadow-black/80 select-none ${getLevelBadgeStyle(level)}`}>
+                  <div className={`absolute -bottom-1 -right-1 z-10 text-[9px] h-4.5 w-4.5 rounded-full flex items-center justify-center shadow shadow-black/80 select-none level-digit ${getLevelBadgeStyle(level)}`}>
                     {level}
                   </div>
                 </div>

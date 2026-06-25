@@ -123,7 +123,7 @@ export function LevelProgressCard({
           </div>
           <div className={`h-10 w-10 rounded-xl flex flex-col items-center justify-center shadow-inner border select-none ${getLevelBadgeStyle(level)}`}>
             <span className="text-[8px] font-mono opacity-80 uppercase leading-none font-bold">LVL</span>
-            <span className="text-sm font-black font-mono leading-none mt-0.5">{level}</span>
+            <span className="text-sm font-black leading-none mt-0.5 level-digit">{level}</span>
           </div>
         </div>
         <div className="space-y-1.5">
@@ -174,9 +174,9 @@ export function LevelProgressCard({
                     ? 'bg-surface-container-lowest border-surface-container-high' 
                     : 'bg-black/10 border-white/5 opacity-40'
                 }`}>
-                  <div className={`h-8 w-8 rounded-lg flex flex-col items-center justify-center font-mono font-black flex-shrink-0 border ${getLevelBadgeStyle(item.lvl)}`}>
-                    <span className="text-[6px] opacity-75 leading-none">LVL</span>
-                    <span className="text-xs leading-none mt-0.5">{item.lvl}</span>
+                  <div className={`h-8 w-8 rounded-lg flex flex-col items-center justify-center font-black flex-shrink-0 border ${getLevelBadgeStyle(item.lvl)}`}>
+                    <span className="text-[6px] font-mono opacity-75 leading-none">LVL</span>
+                    <span className="text-xs leading-none mt-0.5 level-digit">{item.lvl}</span>
                   </div>
                   <div>
                     <h5 className="font-bold text-on-surface leading-tight">{item.title}</h5>
