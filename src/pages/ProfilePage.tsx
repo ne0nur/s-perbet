@@ -86,12 +86,10 @@ export function ProfilePage() {
   // Advanced Stats
   const [stats, setStats] = useState({
     total: 0,
-    exact: 0,
-    diff: 0,
-    tend: 0,
-    weak: 0,
-    miss: 0,
-    avg: 0,
+    correct: 0,
+    wrong: 0,
+    matchdayCount: 1,
+    avgPerMatchday: 0,
     rate: 0
   })
 
@@ -258,35 +256,29 @@ export function ProfilePage() {
     setUserTips(userTips)
 
     let total = 0
-    let exact = 0
-    let diff = 0
-    let tend = 0
-    let weak = 0
-    let miss = 0
+    let correct = 0
+    let wrong = 0
+    const matchdays = new Set<number>()
 
     if (userTips && userTips.length > 0) {
       total = userTips.length
       userTips.forEach((t) => {
-        if (t.punkte === 4) exact++
-        else if (t.punkte === 3) diff++
-        else if (t.punkte === 2) tend++
-        else if (t.punkte === 1) weak++
-        else miss++ // 0, -1, -2
+        if (t.punkte >= 1) correct++
+        else wrong++
+        if (t.match?.spieltag) matchdays.add(t.match.spieltag)
       })
     }
 
-    const positiveTotal = exact + diff + tend + weak
-    const avg = total > 0 ? (dbPoints / total) : 0
-    const rate = total > 0 ? Math.round((positiveTotal / total) * 100) : 0
+    const matchdayCount = matchdays.size || 1
+    const avgPerMatchday = dbPoints / matchdayCount
+    const rate = total > 0 ? Math.round((correct / total) * 100) : 0
 
     setStats({
       total,
-      exact,
-      diff,
-      tend,
-      weak,
-      miss,
-      avg,
+      correct,
+      wrong,
+      matchdayCount,
+      avgPerMatchday,
       rate
     })
 
