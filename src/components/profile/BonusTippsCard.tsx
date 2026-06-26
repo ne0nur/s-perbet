@@ -3,61 +3,103 @@ import { Gift, Lock, Check } from 'lucide-react'
 import { getTeamLogo } from '../../lib/teamLogos'
 import { useSettingsStore } from '../../stores/settingsStore'
 import { useTranslation } from '../../utils/translations'
+import type { TournamentConfig } from '../../pages/ProfilePage'
 
 interface BonusTipp { frage_id: number; antwort: string }
 
 interface BonusTippsCardProps {
-  bonusGesperrtSL: boolean
-  bonusGesperrtCL: boolean
+  tournaments: TournamentConfig[]
   bonusTipps: BonusTipp[]
   antworten: Record<number, string>
   setAntworten: React.Dispatch<React.SetStateAction<Record<number, string>>>
   handleSpeichernBonus: () => Promise<void>
   gespeichert: boolean
   setGespeichert: (g: boolean) => void
-  teamsSL: string[]
-  teamsCL: string[]
+}
+
+/** Return tournament tab emoji flag based on name */
+function getTournamentEmoji(name: string): string {
+  const n = name.toLowerCase()
+  if (n.includes('süper lig') || n.includes('super lig') || n.includes('türkei') || n.includes('turkey')) return '🇹🇷'
+  if (n.includes('champions league')) return '⭐'
+  if (n.includes('europa league')) return '🔵'
+  if (n.includes('bundesliga') || n.includes('deutschland') || n.includes('german')) return '🇩🇪'
+  if (n.includes('premier league') || n.includes('england')) return '🏴󠁧󠁢󠁥󠁮󠁧󠁿'
+  if (n.includes('la liga') || n.includes('spain') || n.includes('spanien')) return '🇪🇸'
+  if (n.includes('serie a') || n.includes('italy') || n.includes('italien')) return '🇮🇹'
+  if (n.includes('ligue 1') || n.includes('france') || n.includes('frankreich')) return '🇫🇷'
+  return '🏆'
+}
+
+/** Generate short tab label (max ~14 chars) from tournament name */
+function getTabLabel(name: string): string {
+  if (name.length <= 14) return name
+  // Champions League -> Champ. League, Süper Lig stays as-is, etc.
+  return name
+    .replace('Champions League', 'Champ. League')
+    .replace('Europa League', 'Europa L.')
+    .replace('Bundesliga', 'Bundesliga')
+    .replace('Premier League', 'Premier L.')
+    .replace('La Liga', 'La Liga')
+    .slice(0, 14)
+}
+
+/** Generate question labels for a tournament */
+function getQuestionsForTournament(tc: TournamentConfig, t: (key: string, params?: Record<string, string | number>) => string) {
+  return tc.questionIds.map((id, i) => {
+    // Try specific translation keys first (for SL & CL backward compat)
+    const norm = tc.name.toLowerCase().trim()
+    if (norm === 'süper lig') {
+      const keys = ['bonusTipMeisterSL', 'bonusTipToreSL', 'bonusTipGegentoreSL']
+      return { id, text: t(keys[i]) }
+    }
+    if (norm === 'champions league') {
+      const keys = ['bonusTipMeisterCL', 'bonusTipToreCL', 'bonusTipGegentoreCL']
+      return { id, text: t(keys[i]) }
+    }
+    // Generic: use dynamic template with tournament name
+    const genericKeys = ['bonusTipMeisterGeneric', 'bonusTipToreGeneric', 'bonusTipGegentoreGeneric']
+    return { id, text: t(genericKeys[i], { tournament: tc.name }) }
+  })
 }
 
 export function BonusTippsCard({
-  bonusGesperrtSL,
-  bonusGesperrtCL,
+  tournaments,
   bonusTipps,
   antworten,
   setAntworten,
   handleSpeichernBonus,
   gespeichert,
   setGespeichert,
-  teamsSL,
-  teamsCL
 }: BonusTippsCardProps) {
   const { t } = useTranslation()
   const tippsFreigeschaltet = useSettingsStore(s => s.tippsFreigeschaltet)
-  const [activeSubTab, setActiveSubTab] = useState<'SL' | 'CL'>('SL')
+  const [activeSubIndex, setActiveSubIndex] = useState(0)
 
-  const fragenSL = [
-    { id: 1, text: t('bonusTipMeisterSL') },
-    { id: 2, text: t('bonusTipToreSL') },
-    { id: 3, text: t('bonusTipGegentoreSL') },
-  ]
+  if (tournaments.length === 0) {
+    return (
+      <div className="bg-surface-container-low border border-surface-container-high rounded-xl p-6 text-center shadow-sm">
+        <Gift size={20} className="text-primary-fixed-dim mx-auto mb-2" />
+        <p className="text-xs text-on-surface-variant font-mono">{t('bonusTipsUpcoming')}</p>
+      </div>
+    )
+  }
 
-  const fragenCL = [
-    { id: 4, text: t('bonusTipMeisterCL') },
-    { id: 5, text: t('bonusTipToreCL') },
-    { id: 6, text: t('bonusTipGegentoreCL') },
-  ]
+  const safeIndex = Math.min(activeSubIndex, tournaments.length - 1)
+  const activeTournament = tournaments[safeIndex]
+  const currentFragen = getQuestionsForTournament(activeTournament, t)
+  const currentGesperrt = activeTournament.isLocked
+  const currentTeams = activeTournament.teams
 
-  const currentFragen = activeSubTab === 'SL' ? fragenSL : fragenCL
-  const currentGesperrt = activeSubTab === 'SL' ? bonusGesperrtSL : bonusGesperrtCL
-  const currentTeams = activeSubTab === 'SL' ? teamsSL : teamsCL
-
-  const gesamtTippsEingegeben = currentFragen.filter(f => antworten[f.id] || bonusTipps.find(t => t.frage_id === f.id)?.antwort).length
+  const gesamtTippsEingegeben = currentFragen.filter(f =>
+    antworten[f.id] || bonusTipps.find(tip => tip.frage_id === f.id)?.antwort
+  ).length
   const sollteGlowen = gesamtTippsEingegeben < currentFragen.length && !currentGesperrt
 
   return (
     <div className={`bg-surface-container-low border rounded-xl p-4 shadow-sm stagger-in transition-all duration-300 ${
-      sollteGlowen 
-        ? 'animate-glow-pulse border-primary-container/40' 
+      sollteGlowen
+        ? 'animate-glow-pulse border-primary-container/40'
         : 'border-surface-container-high'
     }`}>
       {/* Title */}
@@ -66,37 +108,28 @@ export function BonusTippsCard({
         <h3 className="text-xs font-mono text-on-surface uppercase tracking-wider font-bold">{t('myBonusTips')}</h3>
       </div>
 
-      {/* Internal Segmented Control */}
-      <div className="flex bg-surface-container/50 border border-white/5 p-0.5 rounded-xl mb-4 gap-1">
-        <button
-          type="button"
-          onClick={() => {
-            setActiveSubTab('SL')
-            setGespeichert(false)
-          }}
-          className={`flex-1 py-1.5 rounded-lg text-[9px] xs:text-[10px] md:text-xs font-mono font-black uppercase tracking-wider transition-all duration-200 cursor-pointer text-center whitespace-nowrap ${
-            activeSubTab === 'SL'
-              ? 'bg-primary-container text-on-primary-container shadow-[0_1.5px_6px_rgba(251,191,36,0.1)] border border-primary/25 scale-[1.01]'
-              : 'text-on-surface-variant hover:text-on-surface hover:bg-white/5 border border-transparent'
-          }`}
-        >
-          🇹🇷 Süper Lig
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            setActiveSubTab('CL')
-            setGespeichert(false)
-          }}
-          className={`flex-1 py-1.5 rounded-lg text-[9px] xs:text-[10px] md:text-xs font-mono font-black uppercase tracking-wider transition-all duration-200 cursor-pointer text-center whitespace-nowrap ${
-            activeSubTab === 'CL'
-              ? 'bg-primary-container text-on-primary-container shadow-[0_1.5px_6px_rgba(251,191,36,0.1)] border border-primary/25 scale-[1.01]'
-              : 'text-on-surface-variant hover:text-on-surface hover:bg-white/5 border border-transparent'
-          }`}
-        >
-          🇪🇺 Champ. League
-        </button>
-      </div>
+      {/* Dynamic Segmented Control – one button per discovered tournament */}
+      {tournaments.length > 1 && (
+        <div className="flex bg-surface-container/50 border border-white/5 p-0.5 rounded-xl mb-4 gap-1 overflow-x-auto no-scrollbar">
+          {tournaments.map((tc, idx) => (
+            <button
+              key={tc.name}
+              type="button"
+              onClick={() => {
+                setActiveSubIndex(idx)
+                setGespeichert(false)
+              }}
+              className={`flex-1 min-w-[70px] py-1.5 rounded-lg text-[9px] xs:text-[10px] md:text-xs font-mono font-black uppercase tracking-wider transition-all duration-200 cursor-pointer text-center whitespace-nowrap ${
+                safeIndex === idx
+                  ? 'bg-primary-container text-on-primary-container shadow-[0_1.5px_6px_rgba(251,191,36,0.1)] border border-primary/25 scale-[1.01]'
+                  : 'text-on-surface-variant hover:text-on-surface hover:bg-white/5 border border-transparent'
+              }`}
+            >
+              {getTournamentEmoji(tc.name)} {getTabLabel(tc.name)}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Content */}
       <div className="space-y-3 animate-fade-in text-left">
@@ -113,7 +146,7 @@ export function BonusTippsCard({
 
         <div className="space-y-3">
           {currentFragen.map(frage => {
-            const gespeicherterTipp = bonusTipps.find(t => t.frage_id === frage.id)
+            const gespeicherterTipp = bonusTipps.find(tip => tip.frage_id === frage.id)
             const wert = antworten[frage.id] || gespeicherterTipp?.antwort || ''
             const logoUrl = wert ? getTeamLogo(wert) : null
             return (
@@ -147,7 +180,7 @@ export function BonusTippsCard({
                       className="w-full bg-black/35 border border-surface-container-high rounded-lg pl-9 pr-8 py-2.5 text-sm text-on-surface focus:border-primary focus:outline-none appearance-none cursor-pointer"
                     >
                       <option value="">{t('selectTeam')}</option>
-                      {currentTeams.map(t => <option key={t} value={t}>{t}</option>)}
+                      {currentTeams.map(team => <option key={team} value={team}>{team}</option>)}
                     </select>
                     {wert && logoUrl ? (
                       <img src={logoUrl} alt="" className="absolute left-2.5 top-1/2 -translate-y-1/2 w-5 h-5 object-contain pointer-events-none" />

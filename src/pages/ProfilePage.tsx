@@ -11,6 +11,7 @@ import { calculateLevelDetails } from '../lib/utils'
 import { useLanguageStore } from '../stores/languageStore'
 import { useTranslation } from '../utils/translations'
 import { invalidateCache } from '../lib/cache'
+import { useMatchStore } from '../stores/matchStore'
 
 // Import profile subcomponents
 import { UserInfoSettings } from '../components/profile/UserInfoSettings'
@@ -24,7 +25,31 @@ import { evaluateAchievements, type TipDetails } from '../utils/achievementEvalu
 import { BonusTippsCard } from '../components/profile/BonusTippsCard'
 import { PointsChart } from '../components/profile/PointsChart'
 
+export interface TournamentConfig {
+  name: string
+  teams: string[]
+  isLocked: boolean
+  lockDeadline: Date | null
+  questionIds: number[]
+}
+
 interface BonusTipp { frage_id: number; antwort: string }
+
+const FALLBACK_SL_TEAMS = [
+  'Fenerbahçe', 'Galatasaray', 'Beşiktaş', 'Trabzonspor', 'Başakşehir',
+  'Adana Demirspor', 'Antalyaspor', 'Konyaspor', 'Sivasspor', 'Kayserispor',
+  'Gaziantep FK', 'Hatayspor', 'Alanyaspor', 'Kasımpaşa', 'Ankaragücü',
+  'Samsunspor', 'Pendikspor', 'Rizespor', 'Karagümrük', 'Bodrum FK', 'Eyüpspor', 'Göztepe',
+]
+
+const FALLBACK_CL_TEAMS = [
+  'Real Madrid', 'Manchester City', 'Bayern München', 'Paris Saint-Germain',
+  'Arsenal', 'Inter', 'Barcelona', 'Bayer Leverkusen', 'Atletico Madrid',
+  'Borussia Dortmund', 'Juventus', 'AC Milan', 'Liverpool', 'Aston Villa',
+  'Sporting CP', 'Benfica', 'Feyenoord', 'PSV Eindhoven', 'Celtic',
+  'Monaco', 'Lille', 'Brest', 'Stuttgart', 'Girona', 'Bologna',
+  'Galatasaray', 'Fenerbahçe'
+]
 
 
 
@@ -74,10 +99,7 @@ export function ProfilePage() {
   const [bonusTipps, setBonusTipps] = useState<BonusTipp[]>([])
   const [antworten, setAntworten] = useState<Record<number, string>>({})
   const [gespeichert, setGespeichert] = useState(false)
-  const [bonusGesperrtSL, setBonusGesperrtSL] = useState(false)
-  const [bonusGesperrtCL, setBonusGesperrtCL] = useState(false)
-  const [teamsSL, setTeamsSL] = useState<string[]>([])
-  const [teamsCL, setTeamsCL] = useState<string[]>([])
+  const [tournaments, setTournaments] = useState<TournamentConfig[]>([])
   const [userTips, setUserTips] = useState<TipDetails[]>([])
 
   // Level animation states
@@ -336,68 +358,98 @@ export function ProfilePage() {
       setAntworten(initialAntworten)
     }
 
-    // Smart Deadline Check per Tournament (Locked if current time is past Spieltag 3 start)
-    const { data: slSt3Check } = await supabase.from('matches')
-      .select('anpfiff')
-      .eq('tournament', 'Süper Lig')
-      .eq('spieltag', 3)
-      .limit(1)
-    if (slSt3Check && slSt3Check.length > 0) {
-      const slSt3Start = new Date(slSt3Check[0].anpfiff)
-      if (new Date() > slSt3Start) setBonusGesperrtSL(true)
-    }
+    // Smart Dynamic Tournament & Team Discovery
+    const currentSeason = useMatchStore.getState().aktuelleSaison || 2026
+    const { data: allMatches } = await supabase
+      .from('matches')
+      .select('tournament, heim_team, gast_team, spieltag, anpfiff')
+      .eq('season', currentSeason)
 
-    const { data: clSt3Check } = await supabase.from('matches')
-      .select('anpfiff')
-      .eq('tournament', 'Champions League')
-      .eq('spieltag', 3)
-      .limit(1)
-    if (clSt3Check && clSt3Check.length > 0) {
-      const clSt3Start = new Date(clSt3Check[0].anpfiff)
-      if (new Date() > clSt3Start) setBonusGesperrtCL(true)
-    }
+    const tournamentMap = new Map<string, {
+      teams: Set<string>;
+      st3Kickoffs: string[];
+      allKickoffs: string[];
+    }>()
 
-    // Dynamic Team Extraction from official schedules / matches table
-    const { data: matchesSL } = await supabase.from('matches')
-      .select('heim_team, gast_team')
-      .eq('tournament', 'Süper Lig')
-      .eq('season', 2026)
-    const slTeamsSet = new Set<string>()
-    if (matchesSL) {
-      matchesSL.forEach(m => {
-        if (m.heim_team && m.heim_team !== 'LIGA' && m.heim_team !== 'CHAT') slTeamsSet.add(m.heim_team)
-        if (m.gast_team && m.gast_team !== 'LIGA' && m.gast_team !== 'CHAT') slTeamsSet.add(m.gast_team)
+    if (allMatches) {
+      allMatches.forEach(m => {
+        if (!m.tournament) return
+        const tName = m.tournament
+        if (!tournamentMap.has(tName)) {
+          tournamentMap.set(tName, {
+            teams: new Set<string>(),
+            st3Kickoffs: [],
+            allKickoffs: []
+          })
+        }
+        const tObj = tournamentMap.get(tName)!
+        if (m.heim_team && m.heim_team !== 'LIGA' && m.heim_team !== 'CHAT') tObj.teams.add(m.heim_team)
+        if (m.gast_team && m.gast_team !== 'LIGA' && m.gast_team !== 'CHAT') tObj.teams.add(m.gast_team)
+        if (m.anpfiff) {
+          tObj.allKickoffs.push(m.anpfiff)
+          if (m.spieltag === 3) {
+            tObj.st3Kickoffs.push(m.anpfiff)
+          }
+        }
       })
     }
-    const FALLBACK_SL_TEAMS = [
-      'Fenerbahçe', 'Galatasaray', 'Beşiktaş', 'Trabzonspor', 'Başakşehir',
-      'Adana Demirspor', 'Antalyaspor', 'Konyaspor', 'Sivasspor', 'Kayserispor',
-      'Gaziantep FK', 'Hatayspor', 'Alanyaspor', 'Kasımpaşa', 'Ankaragücü',
-      'Samsunspor', 'Pendikspor', 'Rizespor', 'Karagümrük', 'Bodrum FK', 'Eyüpspor', 'Göztepe',
-    ]
-    setTeamsSL(slTeamsSet.size > 0 ? Array.from(slTeamsSet).sort() : FALLBACK_SL_TEAMS)
 
-    const { data: matchesCL } = await supabase.from('matches')
-      .select('heim_team, gast_team')
-      .eq('tournament', 'Champions League')
-      .eq('season', 2026)
-    const clTeamsSet = new Set<string>()
-    if (matchesCL) {
-      matchesCL.forEach(m => {
-        if (m.heim_team && m.heim_team !== 'LIGA' && m.heim_team !== 'CHAT') clTeamsSet.add(m.heim_team)
-        if (m.gast_team && m.gast_team !== 'LIGA' && m.gast_team !== 'CHAT') clTeamsSet.add(m.gast_team)
-      })
+    if (tournamentMap.size === 0) {
+      tournamentMap.set('Süper Lig', { teams: new Set(FALLBACK_SL_TEAMS), st3Kickoffs: [], allKickoffs: [] })
+      tournamentMap.set('Champions League', { teams: new Set(FALLBACK_CL_TEAMS), st3Kickoffs: [], allKickoffs: [] })
     }
-    const FALLBACK_CL_TEAMS = [
-      'Real Madrid', 'Manchester City', 'Bayern München', 'Paris Saint-Germain',
-      'Arsenal', 'Inter', 'Barcelona', 'Bayer Leverkusen', 'Atletico Madrid',
-      'Borussia Dortmund', 'Juventus', 'AC Milan', 'Liverpool', 'Aston Villa',
-      'Sporting CP', 'Benfica', 'Feyenoord', 'PSV Eindhoven', 'Celtic',
-      'Monaco', 'Lille', 'Brest', 'Stuttgart', 'Girona', 'Bologna',
-      'Galatasaray', 'Fenerbahçe'
-    ]
-    setTeamsCL(clTeamsSet.size > 0 ? Array.from(clTeamsSet).sort() : FALLBACK_CL_TEAMS)
 
+    const sortedNames = Array.from(tournamentMap.keys()).sort((a, b) => {
+      const na = a.toLowerCase().trim()
+      const nb = b.toLowerCase().trim()
+      if (na === 'süper lig') return -1
+      if (nb === 'süper lig') return 1
+      if (na === 'champions league') return -1
+      if (nb === 'champions league') return 1
+      return a.localeCompare(b)
+    })
+
+    const computedTournaments: TournamentConfig[] = sortedNames.map((tName, tIndex) => {
+      const tData = tournamentMap.get(tName)!
+      const teams = tData.teams.size > 0 
+        ? Array.from(tData.teams).sort() 
+        : (tName.toLowerCase().includes('lig') ? FALLBACK_SL_TEAMS : FALLBACK_CL_TEAMS)
+
+      let lockDeadline: Date | null = null
+      if (tData.st3Kickoffs.length > 0) {
+        const sorted = tData.st3Kickoffs.map(k => new Date(k)).sort((a, b) => a.getTime() - b.getTime())
+        lockDeadline = sorted[0]
+      } else if (tData.allKickoffs.length > 0) {
+        const sorted = tData.allKickoffs.map(k => new Date(k)).sort((a, b) => a.getTime() - b.getTime())
+        lockDeadline = sorted[0]
+      }
+
+      const isLocked = lockDeadline ? new Date() > lockDeadline : false
+
+      let questionIds: number[]
+      const norm = tName.toLowerCase().trim()
+      if (norm === 'süper lig') {
+        questionIds = [1, 2, 3]
+      } else if (norm === 'champions league') {
+        questionIds = [4, 5, 6]
+      } else {
+        questionIds = [
+          100 + tIndex * 3,
+          100 + tIndex * 3 + 1,
+          100 + tIndex * 3 + 2
+        ]
+      }
+
+      return {
+        name: tName,
+        teams,
+        isLocked,
+        lockDeadline,
+        questionIds
+      }
+    })
+
+    setTournaments(computedTournaments)
     setIsLaden(false)
   }, [user])
 
@@ -710,38 +762,54 @@ export function ProfilePage() {
   async function handleSpeichernBonus() {
     if (!user) return
 
-    // Smart Re-Check Deadline per Tournament before saving
-    const { data: slSt3Check } = await supabase.from('matches')
-      .select('anpfiff')
-      .eq('tournament', 'Süper Lig')
-      .eq('spieltag', 3)
-      .lte('anpfiff', new Date().toISOString())
-      .limit(1)
-    const slLocked = !!(slSt3Check && slSt3Check.length > 0)
+    // Dynamic Re-Check: Re-query lock state for all known tournaments
+    const currentSeason = useMatchStore.getState().aktuelleSaison || 2026
+    const now = new Date().toISOString()
 
-    const { data: clSt3Check } = await supabase.from('matches')
-      .select('anpfiff')
-      .eq('tournament', 'Champions League')
-      .eq('spieltag', 3)
-      .lte('anpfiff', new Date().toISOString())
-      .limit(1)
-    const clLocked = !!(clSt3Check && clSt3Check.length > 0)
+    // Build lock map per tournament based on Spieltag 3 kick-off times
+    const lockMap = new Map<string, boolean>()
+    await Promise.all(
+      tournaments.map(async (tc) => {
+        const { data } = await supabase.from('matches')
+          .select('anpfiff')
+          .eq('tournament', tc.name)
+          .eq('season', currentSeason)
+          .eq('spieltag', 3)
+          .lte('anpfiff', now)
+          .limit(1)
+        lockMap.set(tc.name, !!(data && data.length > 0))
+      })
+    )
 
-    setBonusGesperrtSL(slLocked)
-    setBonusGesperrtCL(clLocked)
+    // Update tournament lock states
+    setTournaments(prev =>
+      prev.map(tc => ({
+        ...tc,
+        isLocked: lockMap.get(tc.name) ?? tc.isLocked
+      }))
+    )
 
-    if (slLocked && clLocked) {
+    const allLocked = tournaments.every(tc => lockMap.get(tc.name) ?? tc.isLocked)
+    if (allLocked) {
       useToastStore.getState().toast('Alle Bonus-Tipps sind bereits gesperrt.', 'error')
       return
     }
 
     try {
+      // Build upsert rows: only include answers for questions whose tournament is not locked
+      const questionToTournament = new Map<number, string>()
+      tournaments.forEach(tc => {
+        tc.questionIds.forEach(qId => {
+          questionToTournament.set(qId, tc.name)
+        })
+      })
+
       const upsertRows = Object.entries(antworten)
         .filter(([frageId]) => {
           const idNum = Number(frageId)
-          if (idNum >= 1 && idNum <= 3) return !slLocked
-          if (idNum >= 4 && idNum <= 6) return !clLocked
-          return false
+          const tName = questionToTournament.get(idNum)
+          if (!tName) return false
+          return !(lockMap.get(tName) ?? false)
         })
         .map(([frageId, antwort]) => ({
           user_id: user.id,
@@ -753,10 +821,10 @@ export function ProfilePage() {
         const { error } = await supabase.from('bonus_tipps').upsert(upsertRows)
         if (error) throw error
       }
-      
+
       setGespeichert(true)
       useToastStore.getState().toast('Bonus-Tipps erfolgreich abgegeben!')
-      
+
       const { data: bonusData } = await supabase.from('bonus_tipps')
         .select('*')
         .eq('user_id', user.id)
@@ -891,16 +959,13 @@ export function ProfilePage() {
         {activeTab === 'bonus' && (
           <div className="animate-fade-in">
             <BonusTippsCard
-              bonusGesperrtSL={bonusGesperrtSL}
-              bonusGesperrtCL={bonusGesperrtCL}
+              tournaments={tournaments}
               bonusTipps={bonusTipps}
               antworten={antworten}
               setAntworten={setAntworten}
               handleSpeichernBonus={handleSpeichernBonus}
               gespeichert={gespeichert}
               setGespeichert={setGespeichert}
-              teamsSL={teamsSL}
-              teamsCL={teamsCL}
             />
           </div>
         )}

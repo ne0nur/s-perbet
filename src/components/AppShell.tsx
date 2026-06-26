@@ -60,28 +60,68 @@ export function AppShell() {
   const { level, xpCurrent, xpRequired, xpPct } = calculateLevelDetails(punkte, achievementsCount)
   const { initPresence, cleanupPresence } = usePresenceStore()
 
-  // Real-time Active Presence Tracking based on page visibility state
+  // Real-time Active Presence Tracking based on page visibility and user activity
   useEffect(() => {
     if (!user) {
       cleanupPresence()
       return
     }
 
+    let idleTimer: ReturnType<typeof setTimeout> | null = null
+    let isIdle = false
+
+    const markActive = () => {
+      if (idleTimer) clearTimeout(idleTimer)
+
+      if (isIdle && document.visibilityState === 'visible') {
+        isIdle = false
+        initPresence()
+      }
+
+      // Reset idle timer for 2 minutes
+      idleTimer = setTimeout(() => {
+        isIdle = true
+        cleanupPresence()
+      }, 120000) // 2 minutes idle timeout
+    }
+
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
+        isIdle = false
         initPresence()
+        markActive()
       } else {
+        if (idleTimer) clearTimeout(idleTimer)
         cleanupPresence()
       }
     }
 
+    // Initialize if visible
     if (document.visibilityState === 'visible') {
       initPresence()
+      markActive()
     }
 
+    // Event listeners for user activity
+    const activityEvents = ['mousemove', 'keydown', 'click', 'scroll', 'touchstart']
+    const registerActivityListeners = () => {
+      activityEvents.forEach(event => {
+        window.addEventListener(event, markActive, { passive: true })
+      })
+    }
+    
+    const removeActivityListeners = () => {
+      activityEvents.forEach(event => {
+        window.removeEventListener(event, markActive)
+      })
+    }
+
+    registerActivityListeners()
     document.addEventListener('visibilitychange', handleVisibilityChange)
 
     return () => {
+      if (idleTimer) clearTimeout(idleTimer)
+      removeActivityListeners()
       document.removeEventListener('visibilitychange', handleVisibilityChange)
       cleanupPresence()
     }

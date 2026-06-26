@@ -263,6 +263,9 @@ export const translations = {
     bonusTipMeisterCL: 'Wer gewinnt die Champions League?',
     bonusTipToreCL: 'Welches Team schießt die meisten Tore (Champions League)?',
     bonusTipGegentoreCL: 'Welches Team kassiert die wenigsten Gegentore (Champions League)?',
+    bonusTipMeisterGeneric: 'Wer gewinnt die {tournament}?',
+    bonusTipToreGeneric: 'Welches Team schießt die meisten Tore ({tournament})?',
+    bonusTipGegentoreGeneric: 'Welches Team kassiert die wenigsten Gegentore ({tournament})?',
     bonusTitle1: 'Meisterschafts-Tipps',
     bonusTitle2: 'Meiste Tore (Tipp)',
     bonusTitle3: 'Wenigste Gegentore (Tipp)',
@@ -700,6 +703,9 @@ export const translations = {
     bonusTipMeisterCL: 'Who will win the Champions League?',
     bonusTipToreCL: 'Which team will score the most goals in the Champions League?',
     bonusTipGegentoreCL: 'Which team will concede the fewest goals in the Champions League?',
+    bonusTipMeisterGeneric: 'Who will win {tournament}?',
+    bonusTipToreGeneric: 'Which team will score the most goals in {tournament}?',
+    bonusTipGegentoreGeneric: 'Which team will concede the fewest goals in {tournament}?',
     bonusTitle1: 'Championship Predictions',
     bonusTitle2: 'Most Goals (Prediction)',
     bonusTitle3: 'Fewest Goals Conceded (Prediction)',
@@ -1137,6 +1143,9 @@ export const translations = {
     bonusTipMeisterCL: 'Şampiyonlar Ligi: Kupayı kim kazanır?',
     bonusTipToreCL: 'Şampiyonlar Ligi: En çok golü hangi takım atar?',
     bonusTipGegentoreCL: 'Şampiyonlar Ligi: En az golü hangi takım yer?',
+    bonusTipMeisterGeneric: '{tournament}: Kupayı kim kazanır?',
+    bonusTipToreGeneric: '{tournament}: En çok golü hangi takım atar?',
+    bonusTipGegentoreGeneric: '{tournament}: En az golü hangi takım yer?',
     bonusTitle1: 'Şampiyonluk Tahminleri',
     bonusTitle2: 'En Çok Gol (Tahmin)',
     bonusTitle3: 'En Az Gol Yiyen (Tahmin)',
@@ -1317,7 +1326,7 @@ export const translations = {
 export function useTranslation() {
   const language = useLanguageStore((state) => state.language)
   
-  const t = (key: keyof typeof translations['de'], params?: Record<string, string | number>) => {
+  const t = (key: keyof typeof translations['de'] | string, params?: Record<string, string | number>) => {
     const dict = (translations[language] || translations['de']) as Record<string, string>
     const fallbackDict = translations['de'] as Record<string, string>
     let text = dict[key] || fallbackDict[key] || String(key)

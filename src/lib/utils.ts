@@ -85,3 +85,19 @@ export function getLevelBadgeStyle(level: number): string {
   // ── LVL 1-4 🪨 SLATE (Gray/Steel) ──
   return 'bg-slate-900 border border-slate-700/50 text-slate-300 font-geist font-medium'
 }
+
+export function getTournamentLogo(tournamentName: string): string {
+  const base = import.meta.env.BASE_URL || '/'
+  const cleanName = tournamentName ? tournamentName.toLowerCase() : ''
+  if (cleanName.includes('champions league')) {
+    return `${base}logos/UEFA_Champions_League_logo.png`
+  }
+  if (cleanName.includes('süper lig')) {
+    return `${base}logos/Süper_Lig.png`
+  }
+  if (cleanName.includes('europa league')) {
+    return `${base}logos/UEFA_Europa_League_logo.png`
+  }
+  return `${base}logos/soccer_ball.png`
+}
+

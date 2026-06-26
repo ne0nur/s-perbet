@@ -5,7 +5,7 @@ import { Users, Copy, Check, Plus, LogIn, X, Trophy, LogOut, Trash2, MoreHorizon
 import { motion, AnimatePresence } from 'framer-motion'
 import { LeagueChat } from '../components/LeagueChat'
 import { useToastStore } from '../stores/toastStore'
-import { calculateLevel, getLevelBadgeStyle } from '../lib/utils'
+import { calculateLevel, getLevelBadgeStyle, getTournamentLogo } from '../lib/utils'
 import { LevelBadge } from '../components/ui/LevelBadge'
 import { useTranslation } from '../utils/translations'
 
@@ -515,11 +515,7 @@ export function LeaguePage() {
                     onClick={() => setViewTournament(t)}
                     className={`px-3 py-2 text-[9px] xs:text-[10px] md:text-xs font-mono font-black uppercase tracking-wider rounded-xl whitespace-nowrap transition-all duration-200 cursor-pointer flex items-center gap-2 ${viewTournament === t ? 'bg-primary-container text-on-primary-container shadow-[0_2px_8px_rgba(251,191,36,0.15)] border border-primary/20 scale-[1.01]' : 'text-on-surface-variant hover:text-on-surface hover:bg-white/5 border border-transparent'}`}
                   >
-                    {t === 'Champions League' ? (
-                      <img src={`${import.meta.env.BASE_URL}logos/UEFA_Champions_League_logo.png`} alt="CL" className="w-5 h-5 object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.6)] brightness-110 shrink-0" />
-                    ) : t === 'Süper Lig' ? (
-                      <img src={`${import.meta.env.BASE_URL}logos/Süper_Lig.png`} alt="SL" className="w-5 h-5 object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.6)] brightness-110 shrink-0" />
-                    ) : null}
+                    <img src={getTournamentLogo(t)} alt={t} className="w-5 h-5 object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.6)] brightness-110 shrink-0" />
                     {t}
                   </button>
                 ))}

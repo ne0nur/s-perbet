@@ -6,6 +6,7 @@ import { getTeamLogo } from '../lib/teamLogos'
 import { TeamInspector } from '../components/TeamInspector'
 import { TournamentBracket } from '../components/TournamentBracket'
 import { useTranslation } from '../utils/translations'
+import { getTournamentLogo } from '../lib/utils'
 
 interface LeagueRow {
   team: string
@@ -28,9 +29,10 @@ export function StandingsPage() {
   const [saison, setSaison] = useState(2026)
   const [selectedTeam, setSelectedTeam] = useState<string | null>(null)
   const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 1024)
-  const [viewTournament, setViewTournament] = useState<'Süper Lig' | 'Champions League'>('Süper Lig')
+  const [viewTournament, setViewTournament] = useState<string>('Süper Lig')
   const [viewPhase, setViewPhase] = useState<'table' | 'baum'>('table')
   const [availablePhases, setAvailablePhases] = useState<number[]>([])
+  const [availableTournaments, setAvailableTournaments] = useState<string[]>(['Süper Lig', 'Champions League'])
 
   const ladeMatchesTabelle = useCallback(async (targetSeason: number) => {
     setIsLaden(true)
@@ -43,9 +45,18 @@ export function StandingsPage() {
         m => m.spieltag !== 999 && m.heim_team !== 'LIGA' && m.gast_team !== 'CHAT' && (m.tournament || 'Süper Lig') === viewTournament
       )
 
-      // Für Champions League: Verfügbare Phasen ermitteln (spieltag > 8)
-      if (viewTournament === 'Champions League') {
-        const knockoutMatches = tournamentMatches.filter(m => m.spieltag > 8)
+      // Extract tournaments dynamically
+      const uniqueTournaments = new Set<string>()
+      ;(matchesData || []).forEach(m => {
+        if (m.tournament) uniqueTournaments.add(m.tournament)
+      })
+      if (uniqueTournaments.size > 0) {
+        setAvailableTournaments(Array.from(uniqueTournaments).sort())
+      }
+
+      // Dynamische K.o.-Phasen Ermittlung (wenn Spieltage > 8 vorhanden sind)
+      const knockoutMatches = tournamentMatches.filter(m => m.spieltag > 8)
+      if (knockoutMatches.length > 0) {
         setMatchesForPhase(knockoutMatches)
         const knockoutPhases = new Set(knockoutMatches.map(m => m.spieltag))
         setAvailablePhases(Array.from(knockoutPhases).sort((a, b) => a - b))
@@ -168,28 +179,20 @@ export function StandingsPage() {
       {/* Turnier-Filter & Saison-Selector */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 md:mb-6 max-w-[1600px] w-full gap-3">
         <div className="flex bg-surface-container/50 border border-white/5 p-1 rounded-2xl gap-1.5 backdrop-blur-md">
-          <button
-            onClick={() => {
-              setViewTournament('Süper Lig')
-              setViewPhase('table')
-              setSaison(2026)
-            }}
-            className={`px-3 py-2 text-[9px] xs:text-[10px] md:text-xs font-mono font-black uppercase tracking-wider rounded-xl whitespace-nowrap transition-all duration-200 cursor-pointer flex items-center gap-2 ${viewTournament === 'Süper Lig' ? 'bg-primary-container text-on-primary-container shadow-[0_2px_8px_rgba(251,191,36,0.15)] border border-primary/20 scale-[1.01]' : 'text-on-surface-variant hover:text-on-surface hover:bg-white/5 border border-transparent'}`}
-          >
-            <img src={`${import.meta.env.BASE_URL}logos/Süper_Lig.png`} alt="SL" className="w-5 h-5 object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.6)] brightness-110 shrink-0" />
-            Süper Lig
-          </button>
-          <button
-            onClick={() => {
-              setViewTournament('Champions League')
-              setViewPhase('table')
-              setSaison(2026)
-            }}
-            className={`px-3 py-2 text-[9px] xs:text-[10px] md:text-xs font-mono font-black uppercase tracking-wider rounded-xl whitespace-nowrap transition-all duration-200 cursor-pointer flex items-center gap-2 ${viewTournament === 'Champions League' ? 'bg-primary-container text-on-primary-container shadow-[0_2px_8px_rgba(251,191,36,0.15)] border border-primary/20 scale-[1.01]' : 'text-on-surface-variant hover:text-on-surface hover:bg-white/5 border border-transparent'}`}
-          >
-            <img src={`${import.meta.env.BASE_URL}logos/UEFA_Champions_League_logo.png`} alt="CL" className="w-5 h-5 object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.6)] brightness-110 shrink-0" />
-            Champions League
-          </button>
+          {availableTournaments.map(tName => (
+            <button
+              key={tName}
+              onClick={() => {
+                setViewTournament(tName)
+                setViewPhase('table')
+                setSaison(2026)
+              }}
+              className={`px-3 py-2 text-[9px] xs:text-[10px] md:text-xs font-mono font-black uppercase tracking-wider rounded-xl whitespace-nowrap transition-all duration-200 cursor-pointer flex items-center gap-2 ${viewTournament === tName ? 'bg-primary-container text-on-primary-container shadow-[0_2px_8px_rgba(251,191,36,0.15)] border border-primary/20 scale-[1.01]' : 'text-on-surface-variant hover:text-on-surface hover:bg-white/5 border border-transparent'}`}
+            >
+              <img src={getTournamentLogo(tName)} alt={tName} className="w-5 h-5 object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.6)] brightness-110 shrink-0" />
+              {tName}
+            </button>
+          ))}
         </div>
 
         <select
@@ -214,7 +217,7 @@ export function StandingsPage() {
       </div>
 
       {/* CL Phasen Tabs Segmented Control */}
-      {viewTournament === 'Champions League' && (
+      {availablePhases.length > 0 && (
         <div className="flex bg-surface-container/40 border border-white/5 p-1 rounded-2xl mb-4 overflow-x-auto hide-scrollbar gap-1.5 backdrop-blur-sm">
           <button
             onClick={() => setViewPhase('table')}
@@ -233,7 +236,7 @@ export function StandingsPage() {
         </div>
       )}
 
-      {viewPhase === 'baum' && viewTournament === 'Champions League' ? (
+      {viewPhase === 'baum' && availablePhases.length > 0 ? (
         // ─── Matches Ansicht für K.o.-Phasen (Turnierbaum) ───
         <div className="w-full">
           {matchesForPhase.length === 0 ? (
