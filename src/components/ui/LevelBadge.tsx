@@ -11,15 +11,9 @@ function pseudoRand(seed: number): number {
   return x - Math.floor(x);
 }
 
-// Quality over quantity — deliberate, slow, elegant
+// Escalating per level — floor(lvl × 0.5) + 3 → 3 at lvl 1, 18 at lvl 30
 function getParticleCount(level: number): number {
-  if (level >= 30) return 8;
-  if (level >= 25) return 7;
-  if (level >= 20) return 6;
-  if (level >= 15) return 5;
-  if (level >= 10) return 4;
-  if (level >= 5)  return 3;
-  return 2;
+  return Math.floor(level * 0.5) + 3;
 }
 
 // AAA palette: warm gold base, platinum at high tiers
