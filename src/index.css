@@ -910,9 +910,9 @@ body {
 @keyframes premiumParticleFloat {
   0% { transform: translate(0, 0) scale(0.5); opacity: 0; }
   20% { opacity: 1; }
-  50% { transform: translate(calc(var(--tw-translate-x, 0) + 10px), -25px) scale(1.3); }
+  50% { transform: translate(calc(var(--tw-translate-x, 0) + 4px), -8px) scale(1.3); }
   80% { opacity: 1; }
-  100% { transform: translate(calc(var(--tw-translate-x, 0) - 10px), -50px) scale(0.5); opacity: 0; }
+  100% { transform: translate(calc(var(--tw-translate-x, 0) - 4px), -14px) scale(0.5); opacity: 0; }
 }
 
 .animate-premium-particle {
@@ -933,7 +933,7 @@ body {
 
 /* Tier 5: RUBY (Lvl 20-23) */
 .badge-ruby {
-  box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.4);
 }
 .badge-ruby::before {
   /* Fast aggressive red/amber dual sweep */
@@ -946,7 +946,7 @@ body {
 
 /* Tier 6: SAPPHIRE (Lvl 24-26) */
 .badge-sapphire {
-  box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+  box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
 }
 .badge-sapphire::before {
   /* Reverse rotation, cool cyan/blue triple sweep */
@@ -959,7 +959,7 @@ body {
 
 /* Tier 7: AMETHYST (Lvl 27-29) */
 .badge-amethyst {
-  box-shadow: 0 0 30px rgba(168, 85, 247, 0.6);
+  box-shadow: 0 0 12px rgba(168, 85, 247, 0.55);
 }
 .badge-amethyst::before {
   /* Thick pulsing purple and fuchsia sweep with whip effect */
@@ -972,12 +972,12 @@ body {
 
 /* Tier 8: GOJO SATORU (Lvl 30 - Majestic Epic) */
 .badge-gojo {
-  box-shadow: 0 0 45px rgba(6, 182, 212, 0.6), inset 0 0 20px rgba(168, 85, 247, 0.3);
+  box-shadow: 0 0 16px rgba(6, 182, 212, 0.5), inset 0 0 10px rgba(168, 85, 247, 0.25);
   animation: gojoHover 4s ease-in-out infinite;
 }
 @keyframes gojoHover {
-  0%, 100% { filter: drop-shadow(0 0 15px rgba(6, 182, 212, 0.5)); transform: scale(1); }
-  50% { filter: drop-shadow(0 0 40px rgba(168, 85, 247, 0.8)); transform: scale(1.05); }
+  0%, 100% { filter: drop-shadow(0 0 6px rgba(6, 182, 212, 0.4)); transform: scale(1); }
+  50% { filter: drop-shadow(0 0 14px rgba(168, 85, 247, 0.6)); transform: scale(1.05); }
 }
 .badge-gojo::before {
   /* Majestic, slow dual sweep of bright cyan and pure white with a hint of hollow purple */
@@ -1015,6 +1015,51 @@ body {
     0 0 44px currentColor,
     0 0 70px rgba(251,191,36,0.6),
     0 2px 6px rgba(0,0,0,0.9);
+}
+
+/* ─── Badge Particles: organische nicht-lineare Drift ─── */
+@keyframes particleFloat {
+  0% {
+    transform: translate(0, 0) scale(0.3);
+    opacity: 0;
+  }
+  8% {
+    transform: translate(3px, -4px) scale(1.6);
+    opacity: var(--peak-opacity, 0.8);
+  }
+  18% {
+    transform: translate(-1px, -6px) scale(0.7);
+    opacity: 0.45;
+  }
+  30% {
+    transform: translate(-5px, 1px) scale(1.4);
+    opacity: var(--peak-opacity, 0.8);
+  }
+  44% {
+    transform: translate(2px, 5px) scale(0.5);
+    opacity: 0.25;
+  }
+  58% {
+    transform: translate(5px, -2px) scale(1.7);
+    opacity: var(--peak-opacity, 0.8);
+  }
+  72% {
+    transform: translate(-3px, 3px) scale(0.6);
+    opacity: 0.35;
+  }
+  86% {
+    transform: translate(-4px, -3px) scale(1.2);
+    opacity: 0.55;
+  }
+  100% {
+    transform: translate(0, 0) scale(0.3);
+    opacity: 0;
+  }
+}
+.animate-particle-float {
+  animation: particleFloat var(--dur, 3s) ease-in-out infinite;
+  animation-delay: var(--delay, 0s);
+  will-change: transform, opacity;
 }
 
 @keyframes expShimmer {
