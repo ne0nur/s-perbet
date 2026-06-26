@@ -1017,47 +1017,35 @@ body {
     0 2px 6px rgba(0,0,0,0.9);
 }
 
-/* ─── Badge Particles: organische nicht-lineare Drift ─── */
-@keyframes particleFloat {
+/* ─── Badge Particles: AAA-style — langsamer Aufstieg + sanfte seitliche Wiege ─── */
+@keyframes particleAscend {
   0% {
-    transform: translate(0, 0) scale(0.3);
+    transform: translate(0, 6px) scale(0.3);
     opacity: 0;
   }
-  8% {
-    transform: translate(3px, -4px) scale(1.6);
-    opacity: var(--peak-opacity, 0.8);
+  15% {
+    transform: translate(var(--sway, 2px), 2px) scale(0.85);
+    opacity: 0.65;
   }
-  18% {
-    transform: translate(-1px, -6px) scale(0.7);
-    opacity: 0.45;
+  40% {
+    transform: translate(calc(var(--sway, 2px) * -0.7), -3px) scale(1.0);
+    opacity: 0.5;
   }
-  30% {
-    transform: translate(-5px, 1px) scale(1.4);
-    opacity: var(--peak-opacity, 0.8);
-  }
-  44% {
-    transform: translate(2px, 5px) scale(0.5);
+  65% {
+    transform: translate(var(--sway, 2px), -8px) scale(0.6);
     opacity: 0.25;
   }
-  58% {
-    transform: translate(5px, -2px) scale(1.7);
-    opacity: var(--peak-opacity, 0.8);
-  }
-  72% {
-    transform: translate(-3px, 3px) scale(0.6);
-    opacity: 0.35;
-  }
-  86% {
-    transform: translate(-4px, -3px) scale(1.2);
-    opacity: 0.55;
+  85% {
+    transform: translate(calc(var(--sway, 2px) * -0.4), -12px) scale(0.25);
+    opacity: 0.08;
   }
   100% {
-    transform: translate(0, 0) scale(0.3);
+    transform: translate(0, -16px) scale(0.05);
     opacity: 0;
   }
 }
 .animate-particle-float {
-  animation: particleFloat var(--dur, 3s) ease-in-out infinite;
+  animation: particleAscend var(--dur, 3.5s) cubic-bezier(0.33, 0, 0.67, 1) infinite;
   animation-delay: var(--delay, 0s);
   will-change: transform, opacity;
 }
