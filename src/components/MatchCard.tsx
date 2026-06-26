@@ -6,6 +6,7 @@ import { ChevronRight, Check, Minus, Plus, Lock, WifiOff } from 'lucide-react'
 import { useSettingsStore } from '../stores/settingsStore'
 import { useNetworkStore } from '../stores/networkStore'
 import type { Match } from '../stores/matchStore'
+import { motion, AnimatePresence } from 'framer-motion'
 
 function punkteFarbe(punkte: number): string {
   if (punkte === 4) return 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30'
@@ -51,36 +52,50 @@ function formatUhrzeit(iso: string): string {
 function Stepper({ value, onChange, disabled }: { value: number; onChange: (v: number) => void; disabled?: boolean }) {
   return (
     <div className="flex items-center gap-2">
-      <button
+      <motion.button
         type="button"
         onPointerDown={(e) => e.stopPropagation()}
         onClick={(e) => { e.stopPropagation(); onChange(Math.max(0, value - 1)) }}
         disabled={disabled || value === 0}
+        whileTap={{ scale: 0.85 }}
         className="w-8 h-8 rounded-full bg-surface-container-highest border border-surface-container-high flex items-center justify-center text-on-surface-variant
           hover:border-primary-container/40 hover:text-on-surface active:scale-90
-          disabled:opacity-30 transition-all duration-150"
+          disabled:opacity-30 transition-all duration-150 cursor-pointer"
       >
         <Minus size={13} />
-      </button>
+      </motion.button>
 
-      <span className="w-7 text-center font-mono text-xl font-bold text-on-surface tabular-nums select-none">
-        {value}
-      </span>
+      <div className="w-7 h-8 relative overflow-hidden flex items-center justify-center">
+        <AnimatePresence mode="popLayout">
+          <motion.span
+            key={value}
+            initial={{ y: 12, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: -12, opacity: 0 }}
+            transition={{ type: "spring", stiffness: 450, damping: 22 }}
+            className="absolute font-mono text-xl font-bold text-on-surface tabular-nums select-none"
+          >
+            {value}
+          </motion.span>
+        </AnimatePresence>
+      </div>
 
-      <button
+      <motion.button
         type="button"
         onPointerDown={(e) => e.stopPropagation()}
         onClick={(e) => { e.stopPropagation(); onChange(Math.min(20, value + 1)) }}
         disabled={disabled || value === 20}
+        whileTap={{ scale: 0.85 }}
         className="w-8 h-8 rounded-full bg-surface-container-highest border border-surface-container-high flex items-center justify-center text-on-surface-variant
           hover:border-primary-container/40 hover:text-on-surface active:scale-90
-          disabled:opacity-30 transition-all duration-150"
+          disabled:opacity-30 transition-all duration-150 cursor-pointer"
       >
         <Plus size={13} />
-      </button>
+      </motion.button>
     </div>
   )
 }
+
 
 interface MatchCardProps {
   match: Match
@@ -140,13 +155,17 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
   }
 
   return (
-    <div className={`glass-card card-lift p-3 transition-all duration-300 ${
-      istVorbei && punkte !== null 
-        ? randFarbe(punkte) 
-        : istLive && livePunkte !== null 
-          ? liveGlowKlasse(livePunkte) 
-          : ''
-    } ${className}`}>
+    <motion.div 
+      whileHover={{ y: -2, scale: 1.01 }}
+      transition={{ type: 'spring', stiffness: 350, damping: 25 }}
+      className={`glass-card p-3 transition-all duration-300 hover:border-white/15 hover:shadow-[0_8px_24px_rgba(0,0,0,0.4)] ${
+        istVorbei && punkte !== null 
+          ? randFarbe(punkte) 
+          : istLive && livePunkte !== null 
+            ? liveGlowKlasse(livePunkte) 
+            : ''
+      } ${className}`}
+    >
 
       {/* Status-Leiste */}
       <div className="flex items-center justify-between mb-2">
@@ -190,7 +209,7 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
         <div className="flex-1 flex items-center justify-end gap-2">
           <span className="text-sm font-medium text-white truncate">{match.heim_team}</span>
           <img src={getTeamLogo(match.heim_team)} alt={match.heim_team}
-            className="w-11 h-11 object-contain opacity-90"
+            className="w-11 h-11 object-contain opacity-90 transition-transform duration-300 group-hover/score:scale-110"
             onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
         </div>
 
@@ -217,7 +236,7 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
         {/* Gast */}
         <div className="flex-1 flex items-center gap-2">
           <img src={getTeamLogo(match.gast_team)} alt={match.gast_team}
-            className="w-11 h-11 object-contain opacity-90"
+            className="w-11 h-11 object-contain opacity-90 transition-transform duration-300 group-hover/score:scale-110"
             onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
           <span className="text-sm font-medium text-white truncate">{match.gast_team}</span>
         </div>
@@ -268,27 +287,41 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
             <Stepper value={tippHeim} onChange={setTippHeim} disabled={isSaving || !isOnline} />
 
             {/* Speichern-Button */}
-            <button
+            <motion.button
               onClick={handleSpeichern}
               disabled={isSaving || !isOnline}
-              className={`flex-shrink-0 flex items-center justify-center gap-1.5 px-4 py-2 rounded-full text-[11px] font-mono font-bold uppercase tracking-wider transition-all duration-200 ${
+              whileTap={{ scale: 0.95 }}
+              className={`flex-shrink-0 flex items-center justify-center gap-1.5 px-4 py-2 rounded-full text-[11px] font-mono font-bold uppercase tracking-wider transition-all duration-200 cursor-pointer ${
                 !isOnline
                   ? 'bg-red-500/10 border border-red-500/20 text-red-400'
                   : saved
-                    ? 'bg-green-500/20 border border-green-500/40 text-green-400'
-                    : 'bg-primary-container/15 border border-primary-container/30 text-primary-fixed-dim hover:bg-primary-container/25 active:scale-95'
+                    ? 'bg-green-500/20 border border-green-500/40 text-green-400 shadow-[0_0_12px_rgba(34,197,94,0.2)]'
+                    : 'bg-primary-container/15 border border-primary-container/30 text-primary-fixed-dim hover:bg-primary-container/25'
               } disabled:opacity-50`}
             >
-              {!isOnline ? (
-                <><WifiOff size={12} /> Offline</>
-              ) : isSaving ? (
-                <div className="w-3.5 h-3.5 border-2 border-primary-fixed-dim border-t-transparent rounded-full animate-spin" />
-              ) : saved ? (
-                <><Check size={12} /> Gespeichert</>
-              ) : (
-                eigenerTipp ? 'Ändern' : 'Tippen'
-              )}
-            </button>
+              <AnimatePresence mode="wait">
+                {!isOnline ? (
+                  <motion.span key="offline" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-1.5"><WifiOff size={12} /> Offline</motion.span>
+                ) : isSaving ? (
+                  <motion.div key="saving" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="w-3.5 h-3.5 border-2 border-primary-fixed-dim border-t-transparent rounded-full animate-spin" />
+                ) : saved ? (
+                  <motion.span 
+                    key="saved" 
+                    initial={{ scale: 0.8, opacity: 0 }} 
+                    animate={{ scale: 1, opacity: 1 }} 
+                    exit={{ scale: 0.8, opacity: 0 }}
+                    transition={{ type: 'spring', stiffness: 500, damping: 15 }}
+                    className="flex items-center gap-1.5"
+                  >
+                    <Check size={12} className="stroke-[3]" /> Gespeichert
+                  </motion.span>
+                ) : (
+                  <motion.span key="idle" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                    {eigenerTipp ? 'Ändern' : 'Tippen'}
+                  </motion.span>
+                )}
+              </AnimatePresence>
+            </motion.button>
 
             {/* Gast-Stepper */}
             <Stepper value={tippGast} onChange={setTippGast} disabled={isSaving || !isOnline} />
@@ -314,6 +347,6 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
           </div>
         )}
       </div>
-    </div>
+    </motion.div>
   )
 })

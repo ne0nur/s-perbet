@@ -502,10 +502,10 @@ export function LeaguePage() {
 
             {/* Turnier-Filter */}
             {aktiveLiga.active_tournaments?.length > 1 && (
-              <div className="flex bg-surface-container border border-surface-container-high p-1 rounded-lg mb-3 mx-4 md:mx-0 overflow-x-auto hide-scrollbar">
+              <div className="flex bg-surface-container/50 border border-white/5 p-1 rounded-2xl mb-3 mx-4 md:mx-0 overflow-x-auto hide-scrollbar backdrop-blur-md gap-1">
                 <button
                   onClick={() => setViewTournament('Alle')}
-                  className={`px-3 py-1.5 text-xs font-medium rounded-md whitespace-nowrap transition-all ${viewTournament === 'Alle' ? 'bg-primary text-on-primary font-bold shadow-md' : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container/50'}`}
+                  className={`px-3 py-2 text-[10px] font-mono font-black uppercase tracking-wider rounded-xl whitespace-nowrap transition-all duration-200 cursor-pointer ${viewTournament === 'Alle' ? 'bg-primary-container text-on-primary-container shadow-[0_2px_8px_rgba(251,191,36,0.15)] border border-primary/20 scale-[1.01]' : 'text-on-surface-variant hover:text-on-surface hover:bg-white/5 border border-transparent'}`}
                 >
                   {t('filterAll')}
                 </button>
@@ -513,12 +513,12 @@ export function LeaguePage() {
                   <button
                     key={t}
                     onClick={() => setViewTournament(t)}
-                    className={`px-3 py-1.5 text-xs font-medium rounded-md whitespace-nowrap transition-all flex items-center gap-2 ${viewTournament === t ? 'bg-primary text-on-primary font-bold shadow-md' : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container/50'}`}
+                    className={`px-3 py-2 text-[10px] font-mono font-black uppercase tracking-wider rounded-xl whitespace-nowrap transition-all duration-200 cursor-pointer flex items-center gap-2 ${viewTournament === t ? 'bg-primary-container text-on-primary-container shadow-[0_2px_8px_rgba(251,191,36,0.15)] border border-primary/20 scale-[1.01]' : 'text-on-surface-variant hover:text-on-surface hover:bg-white/5 border border-transparent'}`}
                   >
                     {t === 'Champions League' ? (
-                      <img src={`${import.meta.env.BASE_URL}logos/UEFA_Champions_League_logo.png`} alt="CL" className="w-6 h-6 object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.6)] brightness-110" />
+                      <img src={`${import.meta.env.BASE_URL}logos/UEFA_Champions_League_logo.png`} alt="CL" className="w-5 h-5 object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.6)] brightness-110 shrink-0" />
                     ) : t === 'Süper Lig' ? (
-                      <img src={`${import.meta.env.BASE_URL}logos/Süper_Lig.png`} alt="SL" className="w-6 h-6 object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.6)] brightness-110" />
+                      <img src={`${import.meta.env.BASE_URL}logos/Süper_Lig.png`} alt="SL" className="w-5 h-5 object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.6)] brightness-110 shrink-0" />
                     ) : null}
                     {t}
                   </button>
@@ -549,31 +549,32 @@ export function LeaguePage() {
                     </div>
                   </div>
                 )}
-                {/* Spieltag-Tabs */}
-                <div className="flex items-stretch -mx-4 px-4 md:mx-0 md:px-0">
+                {/* Spieltag-Tabs Segmented Control */}
+                <div className="bg-surface-container/40 border border-white/5 p-1 rounded-2xl flex items-center gap-1.5 overflow-hidden backdrop-blur-sm -mx-4 md:mx-0">
                   {/* Sticky "Gesamt" Button */}
                   <button
                     data-st="gesamt"
                     onClick={() => setViewSpieltag('gesamt')}
-                    className={`tab-transition shrink-0 px-3 py-1.5 rounded-lg text-[11px] font-mono font-medium uppercase tracking-wider whitespace-nowrap border z-10 ${
+                    className={`shrink-0 px-3.5 py-2 rounded-xl text-[10px] font-mono font-black uppercase tracking-wider whitespace-nowrap transition-all duration-200 cursor-pointer ${
                       viewSpieltag === 'gesamt'
-                        ? 'bg-primary-container text-on-primary-container border-primary-container'
-                        : 'bg-surface-container-low border-surface-container-high text-on-surface-variant hover:border-on-surface-variant/30'
+                        ? 'bg-primary-container text-on-primary-container shadow-[0_2px_8px_rgba(251,191,36,0.15)] border border-primary/20 scale-[1.01]'
+                        : 'text-on-surface-variant hover:text-on-surface hover:bg-white/5 border border-transparent'
                     }`}
-                    style={{ marginRight: '1px' }}
                   >
                     {t('gesamt')}
                   </button>
 
+                  <span className="w-[1px] h-4 bg-white/10 shrink-0" />
+
                   {/* Scrollable Spieltag-Nummern */}
                   <div ref={tabRef} className="overflow-x-auto no-scrollbar flex-1" style={{ maskImage: 'linear-gradient(to right, transparent 0px, black 8px, black calc(100% - 16px), transparent 100%)', WebkitMaskImage: 'linear-gradient(to right, transparent 0px, black 8px, black calc(100% - 16px), transparent 100%)' }}>
-                    <div className="flex gap-1 px-4 min-w-max">
+                    <div className="flex gap-1.5 px-3 min-w-max">
                       {tabs.filter(t => t.key !== 'gesamt').map(t => (
                         <button key={t.key} data-st={t.key} onClick={() => setViewSpieltag(t.key)}
-                          className={`tab-transition px-3 py-1.5 rounded-lg text-[11px] font-mono font-medium uppercase tracking-wider whitespace-nowrap border ${
+                          className={`px-3 py-2 rounded-xl text-[10px] font-mono font-black uppercase tracking-wider whitespace-nowrap transition-all duration-200 cursor-pointer ${
                             viewSpieltag === t.key
-                              ? 'bg-primary-container text-on-primary-container border-primary-container'
-                              : 'bg-surface-container-low border-surface-container-high text-on-surface-variant hover:border-on-surface-variant/30'
+                              ? 'bg-primary-container text-on-primary-container shadow-[0_2px_8px_rgba(251,191,36,0.15)] border border-primary/20 scale-[1.01]'
+                              : 'text-on-surface-variant hover:text-on-surface hover:bg-white/5 border border-transparent'
                           }`}>
                           {t.label}
                         </button>
@@ -628,12 +629,20 @@ export function LeaguePage() {
                           {mitglieder.map((m, idx) => {
                             const isMe = m.id === user?.id
                             return (
-                              <tr key={m.id} className={`border-b border-surface-container-high/50 last:border-0 ${isMe ? 'bg-primary-container/5' : ''}`}>
+                              <tr key={m.id} className={`border-b border-surface-container-high/50 last:border-0 hover:bg-white/[0.02] transition-colors duration-200 group/row border-l-2 ${isMe ? 'bg-primary-container/8 border-l-primary-container shadow-[inset_3px_0_0_#fbbf24]' : 'border-l-transparent hover:border-l-white/20'}`}>
                                 <td className="py-2.5 pr-2 pl-3">
                                   <div className="flex flex-col items-center justify-center">
-                                    <span className="text-[11px] font-mono font-bold text-on-surface">{idx + 1}</span>
+                                    {idx === 0 ? (
+                                      <span className="text-base select-none drop-shadow-[0_0_6px_rgba(251,191,36,0.6)]" title="1. Platz">🥇</span>
+                                    ) : idx === 1 ? (
+                                      <span className="text-base select-none drop-shadow-[0_0_6px_rgba(226,232,240,0.5)]" title="2. Platz">🥈</span>
+                                    ) : idx === 2 ? (
+                                      <span className="text-base select-none drop-shadow-[0_0_6px_rgba(254,215,170,0.5)]" title="3. Platz">🥉</span>
+                                    ) : (
+                                      <span className="text-[11px] font-mono font-bold text-on-surface-variant/80">{idx + 1}</span>
+                                    )}
                                     {m.trend !== undefined && m.trend !== 0 && (
-                                      <span className={`text-[8px] font-bold ${m.trend > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                                      <span className={`text-[8px] font-bold ${m.trend > 0 ? 'text-emerald-400' : 'text-red-400'} animate-bounce`}>
                                         {m.trend > 0 ? '▲' : '▼'} {Math.abs(m.trend)}
                                       </span>
                                     )}

@@ -76,13 +76,34 @@
 /* ============================================
    Basis
    ============================================ */
+html, body, #root {
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+}
+
 body {
   background: #0e131f;
   color: #dde2f3;
   font-family: 'Geist', system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
-  overflow-x: hidden;
 }
+
+input, textarea, [contenteditable], .selectable-text {
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+.native-scroll {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
 
 /* ============================================
    View Transitions API (smooth page transitions)

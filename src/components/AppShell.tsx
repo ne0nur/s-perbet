@@ -60,13 +60,39 @@ export function AppShell() {
   const { level, xpCurrent, xpRequired, xpPct } = calculateLevelDetails(punkte, achievementsCount)
   const { initPresence, cleanupPresence } = usePresenceStore()
 
+  // Real-time Active Presence Tracking based on page visibility state
+  useEffect(() => {
+    if (!user) {
+      cleanupPresence()
+      return
+    }
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        initPresence()
+      } else {
+        cleanupPresence()
+      }
+    }
+
+    if (document.visibilityState === 'visible') {
+      initPresence()
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+      cleanupPresence()
+    }
+  }, [user, initPresence, cleanupPresence])
+
   useEffect(() => {
     if (user) {
       const completed = localStorage.getItem(`superbet_onboarding_completed_${user.id}`)
       if (!completed) {
         setShowOnboarding(true)
       }
-      initPresence()
 
       // Auto-join pending league if set in localStorage
       const pendingLeagueId = localStorage.getItem('superbet_pending_league_id')
@@ -113,9 +139,8 @@ export function AppShell() {
       }
     } else {
       setShowOnboarding(false)
-      cleanupPresence()
     }
-  }, [user, initPresence, cleanupPresence, t])
+  }, [user, t])
 
   useEffect(() => {
     const handleTrigger = () => {
@@ -270,7 +295,7 @@ export function AppShell() {
   ]
 
   return (
-    <div className="min-h-screen bg-background flex flex-col md:flex-row">
+    <div className="h-[100dvh] w-full bg-background flex flex-col md:flex-row overflow-hidden select-none">
       <NetworkIndicator />
       {/* Desktop Sidebar Navigation */}
       <aside className="hidden md:flex md:flex-col w-64 border-r border-white/5 bg-surface/30 backdrop-blur-xl shrink-0 p-5 justify-between sticky top-0 h-screen">
@@ -427,7 +452,7 @@ export function AppShell() {
 
         {/* Main Page Content */}
         <main className="flex-1 min-h-0 flex flex-col md:p-5 md:pb-5 overflow-hidden">
-          <div className="flex-1 flex flex-col min-h-0 md:bg-surface-container-low/20 md:border md:border-white/5 md:rounded-2xl md:shadow-2xl overflow-y-auto">
+          <div className="flex-1 flex flex-col min-h-0 md:bg-surface-container-low/20 md:border md:border-white/5 md:rounded-2xl md:shadow-2xl native-scroll pb-28 md:pb-5">
             <AnimatedOutlet />
           </div>
         </main>

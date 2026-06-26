@@ -198,14 +198,14 @@ function LeaderboardSection({
               <div
                 key={e.id}
                 onClick={() => handleUserClick(e.id)}
-                className={`flex items-center gap-3 px-3.5 py-3 cursor-pointer transition-colors hover:bg-surface-container border-b border-surface-container-high last:border-0 ${
-                  isSelected ? 'bg-primary-container/10 border-r-2 border-primary font-bold' : i % 2 === 0 ? '' : 'bg-surface-container-lowest'
-                }`}
+                className={`flex items-center gap-3 px-3.5 py-3 cursor-pointer transition-all duration-200 hover:bg-white/[0.03] border-b border-surface-container-high last:border-0 border-l-2 ${
+                  isSelected ? 'bg-primary-container/12 border-l-primary-container font-bold shadow-[inset_3px_0_0_#fbbf24]' : i % 2 === 0 ? 'border-l-transparent' : 'bg-surface-container-lowest border-l-transparent'
+                } hover:border-l-white/20`}
               >
                 <span className="w-6 flex flex-col items-center justify-center gap-0.5 font-mono text-on-surface-variant">
                   <span className="text-[11px]">{e.displayRank}</span>
                   {e.trend !== undefined && e.trend !== 0 && (
-                    <span className={`text-[8px] font-bold ${e.trend > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                    <span className={`text-[8px] font-bold ${e.trend > 0 ? 'text-emerald-400' : 'text-red-400'} animate-bounce`}>
                       {e.trend > 0 ? '▲' : '▼'} {Math.abs(e.trend)}
                     </span>
                   )}
@@ -643,14 +643,14 @@ export function GlobalPage() {
 
   return (
     <div className="min-h-full px-3 md:px-6 lg:px-8 pt-4 md:pt-6 pb-24 md:pb-8 max-w-[1600px] mx-auto w-full animate-page-enter">
-      {/* Mobile Switcher Tab - hidden on desktop */}
-      <div className="flex gap-1 mb-5 bg-surface-container-low border border-surface-container-high rounded-xl p-1 lg:hidden">
+      {/* Mobile Switcher Tab - hidden on desktop (Segmented Control) */}
+      <div className="flex gap-1.5 mb-5 bg-surface-container/50 border border-white/5 rounded-2xl p-1 lg:hidden backdrop-blur-md">
         <button
           onClick={() => setActiveTab('rangliste')}
-          className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-xs font-mono font-medium uppercase tracking-wider transition-all duration-200 ${
+          className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-[10px] font-mono font-black uppercase tracking-wider transition-all duration-200 cursor-pointer ${
             activeTab === 'rangliste'
-              ? 'bg-primary-container/20 text-primary border border-primary-container/35 shadow-sm'
-              : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container'
+              ? 'bg-primary-container text-on-primary-container shadow-[0_2px_8px_rgba(251,191,36,0.15)] border border-primary/20 scale-[1.01]'
+              : 'text-on-surface-variant hover:text-on-surface hover:bg-white/5 border border-transparent'
           }`}
         >
           <Trophy size={13} />
@@ -658,10 +658,10 @@ export function GlobalPage() {
         </button>
         <button
           onClick={() => setActiveTab('stats')}
-          className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-xs font-mono font-medium uppercase tracking-wider transition-all duration-200 ${
+          className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-[10px] font-mono font-black uppercase tracking-wider transition-all duration-200 cursor-pointer ${
             activeTab === 'stats'
-              ? 'bg-primary-container/20 text-primary border border-primary-container/35 shadow-sm'
-              : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container'
+              ? 'bg-primary-container text-on-primary-container shadow-[0_2px_8px_rgba(251,191,36,0.15)] border border-primary/20 scale-[1.01]'
+              : 'text-on-surface-variant hover:text-on-surface hover:bg-white/5 border border-transparent'
           }`}
         >
           <BarChart2 size={13} />
@@ -694,24 +694,24 @@ export function GlobalPage() {
         {/* Right column - handles both stats and selected rival inspector */}
         <div className={`col-span-1 lg:col-span-5 space-y-4 ${activeTab !== 'stats' && !isDesktop ? 'hidden' : ''} lg:sticky lg:top-[80px]`}>
           
-          {/* Desktop Right Column Header with mini tabs */}
-          <div className="hidden lg:flex gap-1.5 bg-surface-container border border-surface-container-high rounded-xl p-1 mb-2">
+          {/* Desktop Right Column Header with mini tabs (Segmented Control) */}
+          <div className="hidden lg:flex gap-1.5 bg-surface-container/50 border border-white/5 rounded-2xl p-1 mb-2 backdrop-blur-md">
             <button
               onClick={() => setDesktopRightTab('analyse')}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-[10px] font-mono font-bold uppercase tracking-wider transition-all border ${
+              className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-[10px] font-mono font-black uppercase tracking-wider transition-all duration-200 cursor-pointer ${
                 desktopRightTab === 'analyse'
-                  ? 'bg-primary-container/15 text-primary border-primary-container/25 shadow-sm'
-                  : 'border-transparent text-on-surface-variant hover:text-on-surface'
+                  ? 'bg-primary-container text-on-primary-container shadow-[0_2px_8px_rgba(251,191,36,0.15)] border border-primary/20 scale-[1.01]'
+                  : 'text-on-surface-variant hover:text-on-surface hover:bg-white/5 border border-transparent'
               }`}
             >
               <Award size={12} /> {t('rivalAnalysis')}
             </button>
             <button
               onClick={() => setDesktopRightTab('stats')}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-[10px] font-mono font-bold uppercase tracking-wider transition-all border ${
+              className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-[10px] font-mono font-black uppercase tracking-wider transition-all duration-200 cursor-pointer ${
                 desktopRightTab === 'stats'
-                  ? 'bg-primary-container/15 text-primary border-primary-container/25 shadow-sm'
-                  : 'border-transparent text-on-surface-variant hover:text-on-surface'
+                  ? 'bg-primary-container text-on-primary-container shadow-[0_2px_8px_rgba(251,191,36,0.15)] border border-primary/20 scale-[1.01]'
+                  : 'text-on-surface-variant hover:text-on-surface hover:bg-white/5 border border-transparent'
               }`}
             >
               <BarChart2 size={12} /> {t('communityStats')}

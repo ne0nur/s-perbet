@@ -273,7 +273,24 @@ export function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4 animate-page-enter relative">
+    <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4 animate-page-enter relative overflow-hidden">
+      {/* Stadium Light & Grid Backdrop */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none select-none z-0 opacity-30">
+        {/* Pitch Lines (Stadion Spielfeldlinien) */}
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.012)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.012)_1px,transparent_1px)] bg-[size:40px_40px]" />
+        
+        {/* Center circle and pitch divider simulation */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[320px] h-[320px] rounded-full border border-white/[0.015] flex items-center justify-center">
+          <div className="w-2 h-2 rounded-full bg-white/5" />
+        </div>
+        <div className="absolute top-0 bottom-0 left-1/2 w-px bg-white/[0.015]" />
+
+        {/* Floating Flutlicht Glows (Scheinwerfer-Kegel-Simulation) */}
+        <div className="absolute -top-40 -left-40 w-[500px] h-[500px] rounded-full bg-primary-container/8 blur-[120px] animate-pulse" style={{ animationDuration: '6s' }} />
+        <div className="absolute -bottom-40 -right-40 w-[500px] h-[500px] rounded-full bg-cyan-500/8 blur-[120px] animate-pulse" style={{ animationDuration: '8s', animationDelay: '2s' }} />
+        <div className="absolute top-1/4 left-1/3 w-[300px] h-[300px] rounded-full bg-purple-500/5 blur-[100px] animate-pulse" style={{ animationDuration: '10s', animationDelay: '4s' }} />
+      </div>
+
       {/* Floating Language Switcher */}
       <div className="absolute top-4 right-4 flex items-center gap-1 bg-surface-container-high/45 border border-white/5 rounded-full p-1 backdrop-blur-md z-50">
         {(['de', 'en', 'tr'] as const).map((lang) => (
@@ -281,7 +298,7 @@ export function LoginPage() {
             key={lang}
             type="button"
             onClick={() => setLanguage(lang)}
-            className={`px-2.5 py-1 rounded-full text-[10px] font-mono font-bold uppercase transition-all ${
+            className={`px-2.5 py-1 rounded-full text-[10px] font-mono font-bold uppercase transition-all cursor-pointer ${
               language === lang
                 ? 'bg-primary-container text-on-primary-container shadow-[0_0_8px_rgba(251,191,36,0.25)]'
                 : 'text-on-surface-variant hover:text-on-surface'
@@ -293,7 +310,7 @@ export function LoginPage() {
       </div>
 
       {/* Logo-Sektion */}
-      <div className="mb-8 text-center select-none">
+      <div className="mb-8 text-center select-none relative z-10">
 
         <div className="superbet-header-logo mb-1 scale-125 origin-center">
           <HeaderLogo />
@@ -303,7 +320,7 @@ export function LoginPage() {
         </p>
       </div>
 
-      <div className="w-full max-w-sm">
+      <div className="w-full max-w-sm relative z-10">
         {/* LOGIN-ANSICHT */}
         {view === 'login' && (
           <form
@@ -330,9 +347,9 @@ export function LoginPage() {
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   placeholder="dein_username"
-                  className="w-full bg-black/30 border border-outline-variant rounded-md px-10 py-2.5 text-on-surface
-                             font-mono text-sm focus:border-primary-container focus:outline-none focus:shadow-[0_0_10px_rgba(251,191,36,0.2)]
-                             transition-all duration-200"
+                  className="w-full bg-black/40 border border-white/10 hover:border-white/20 rounded-lg px-10 py-2.5 text-on-surface
+                             font-mono text-sm focus:border-primary focus:outline-none focus:shadow-[0_0_15px_rgba(251,191,36,0.25)]
+                             transition-all duration-300"
                   required autoFocus autoComplete="username"
                 />
               </div>
@@ -349,13 +366,13 @@ export function LoginPage() {
                   value={passwort}
                   onChange={(e) => setPasswort(e.target.value)}
                   placeholder="••••••"
-                  className="w-full bg-black/30 border border-outline-variant rounded-md px-10 py-2.5 text-on-surface
-                             font-mono text-sm focus:border-primary-container focus:outline-none focus:shadow-[0_0_10px_rgba(251,191,36,0.2)]
-                             transition-all duration-200"
+                  className="w-full bg-black/40 border border-white/10 hover:border-white/20 rounded-lg px-10 py-2.5 text-on-surface
+                             font-mono text-sm focus:border-primary focus:outline-none focus:shadow-[0_0_15px_rgba(251,191,36,0.25)]
+                             transition-all duration-300"
                   required autoComplete="current-password"
                 />
                 <button type="button" onClick={() => setZeigePasswort(!zeigePasswort)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-on-surface transition-colors">
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-on-surface transition-colors cursor-pointer">
                   {zeigePasswort ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>

@@ -405,19 +405,33 @@ export function RivalInspector({ userId, onClose }: RivalInspectorProps) {
         {/* ─── Single Mode: Generelle Statistiken & Level (Fallback) ─── */}
         {!isH2H && rivalStats && (
           <div className="space-y-3">
-            <div className="bg-surface-container-lowest/70 border border-surface-container-high/60 rounded-xl p-3 flex flex-col gap-2">
-              <div className="flex items-center justify-between">
+            <div className={`bg-surface-container-lowest/70 border border-surface-container-high/60 rounded-xl p-3 flex flex-col gap-2 relative overflow-hidden ${
+              rivalStats.level >= 30 ? 'border-cyan-500/25 bg-gradient-to-r from-purple-950/10 via-surface-container-lowest/70 to-cyan-950/10 shadow-[0_0_15px_rgba(6,182,212,0.1)]' : ''
+            }`}>
+              {rivalStats.level >= 30 && (
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_right,rgba(6,182,212,0.06),transparent)] pointer-events-none" />
+              )}
+              <div className="flex items-center justify-between relative z-10">
                 <div className="flex items-center gap-2">
                   <LevelBadge level={rivalStats.level} className="w-7 h-7 rounded-full text-[10px] font-bold shadow">{rivalStats.level}</LevelBadge>
                   <div className="text-left">
-                    <div className="text-[10px] font-mono font-bold text-on-surface uppercase tracking-wider">Level {rivalStats.level}</div>
+                    <div className={`text-[10px] font-mono font-bold uppercase tracking-wider ${
+                      rivalStats.level >= 30 ? 'text-cyan-400 drop-shadow-[0_0_8px_rgba(6,182,212,0.4)]' : 'text-on-surface'
+                    }`}>Level {rivalStats.level}</div>
                     <div className="text-[7px] font-mono text-on-surface-variant">{t('xpDesc')}</div>
                   </div>
                 </div>
-                <span className="text-[10px] font-mono text-primary font-bold">{rivalStats.xpCurrent} / {rivalStats.xpRequired} XP</span>
+                <span className={`text-[10px] font-mono font-bold ${rivalStats.level >= 30 ? 'text-cyan-400' : 'text-primary'}`}>{rivalStats.xpCurrent} / {rivalStats.xpRequired} XP</span>
               </div>
-              <div className="h-1.5 w-full bg-surface-container rounded-full overflow-hidden p-[1px] border border-white/5">
-                <div className="h-full bg-primary rounded-full transition-all duration-500" style={{ width: `${rivalStats.xpPct}%` }} />
+              <div className="h-1.5 w-full bg-surface-container rounded-full overflow-hidden p-[1px] border border-white/5 relative z-10">
+                <div 
+                  className={`h-full rounded-full transition-all duration-500 ${
+                    rivalStats.level >= 30 
+                      ? 'bg-gradient-to-r from-cyan-400 via-white to-purple-500 animate-pulse shadow-[0_0_8px_rgba(6,182,212,0.6)]' 
+                      : 'bg-primary'
+                  }`} 
+                  style={{ width: `${rivalStats.xpPct}%` }} 
+                />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-2">

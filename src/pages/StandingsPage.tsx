@@ -167,16 +167,16 @@ export function StandingsPage() {
     <div className="min-h-full px-3 md:px-6 lg:px-8 pt-4 md:pt-6 pb-24 md:pb-8 max-w-[1600px] mx-auto w-full animate-page-enter">
       {/* Turnier-Filter & Saison-Selector */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 md:mb-6 max-w-[1600px] w-full gap-3">
-        <div className="flex bg-surface-container border border-surface-container-high p-1 rounded-lg">
+        <div className="flex bg-surface-container/50 border border-white/5 p-1 rounded-2xl gap-1.5 backdrop-blur-md">
           <button
             onClick={() => {
               setViewTournament('Süper Lig')
               setViewPhase('table')
               setSaison(2026)
             }}
-            className={`px-3 py-1.5 text-xs font-medium rounded-md whitespace-nowrap transition-all flex items-center gap-2 ${viewTournament === 'Süper Lig' ? 'bg-primary text-on-primary font-bold shadow-md' : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container/50'}`}
+            className={`px-3 py-2 text-[10px] font-mono font-black uppercase tracking-wider rounded-xl whitespace-nowrap transition-all duration-200 cursor-pointer flex items-center gap-2 ${viewTournament === 'Süper Lig' ? 'bg-primary-container text-on-primary-container shadow-[0_2px_8px_rgba(251,191,36,0.15)] border border-primary/20 scale-[1.01]' : 'text-on-surface-variant hover:text-on-surface hover:bg-white/5 border border-transparent'}`}
           >
-            <img src={`${import.meta.env.BASE_URL}logos/Süper_Lig.png`} alt="SL" className="w-6 h-6 object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.6)] brightness-110" />
+            <img src={`${import.meta.env.BASE_URL}logos/Süper_Lig.png`} alt="SL" className="w-5 h-5 object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.6)] brightness-110 shrink-0" />
             Süper Lig
           </button>
           <button
@@ -185,9 +185,9 @@ export function StandingsPage() {
               setViewPhase('table')
               setSaison(2026)
             }}
-            className={`px-3 py-1.5 text-xs font-medium rounded-md whitespace-nowrap transition-all flex items-center gap-2 ${viewTournament === 'Champions League' ? 'bg-primary text-on-primary font-bold shadow-md' : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container/50'}`}
+            className={`px-3 py-2 text-[10px] font-mono font-black uppercase tracking-wider rounded-xl whitespace-nowrap transition-all duration-200 cursor-pointer flex items-center gap-2 ${viewTournament === 'Champions League' ? 'bg-primary-container text-on-primary-container shadow-[0_2px_8px_rgba(251,191,36,0.15)] border border-primary/20 scale-[1.01]' : 'text-on-surface-variant hover:text-on-surface hover:bg-white/5 border border-transparent'}`}
           >
-            <img src={`${import.meta.env.BASE_URL}logos/UEFA_Champions_League_logo.png`} alt="CL" className="w-6 h-6 object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.6)] brightness-110" />
+            <img src={`${import.meta.env.BASE_URL}logos/UEFA_Champions_League_logo.png`} alt="CL" className="w-5 h-5 object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.6)] brightness-110 shrink-0" />
             Champions League
           </button>
         </div>
@@ -213,19 +213,19 @@ export function StandingsPage() {
         </select>
       </div>
 
-      {/* CL Phasen Tabs */}
+      {/* CL Phasen Tabs Segmented Control */}
       {viewTournament === 'Champions League' && (
-        <div className="flex bg-surface-container-lowest border border-surface-container-high p-1 rounded-lg mb-4 overflow-x-auto hide-scrollbar">
+        <div className="flex bg-surface-container/40 border border-white/5 p-1 rounded-2xl mb-4 overflow-x-auto hide-scrollbar gap-1.5 backdrop-blur-sm">
           <button
             onClick={() => setViewPhase('table')}
-            className={`px-4 py-2 text-xs font-medium rounded-md whitespace-nowrap transition-all ${viewPhase === 'table' ? 'bg-surface-container-high text-on-surface font-bold shadow-sm' : 'text-on-surface-variant hover:text-on-surface'}`}
+            className={`flex-1 px-4 py-2.5 text-[10px] font-mono font-black uppercase tracking-wider rounded-xl whitespace-nowrap transition-all duration-200 cursor-pointer text-center ${viewPhase === 'table' ? 'bg-primary-container text-on-primary-container shadow-[0_2px_8px_rgba(251,191,36,0.15)] border border-primary/20 scale-[1.01]' : 'text-on-surface-variant hover:text-on-surface hover:bg-white/5 border border-transparent'}`}
           >
             {t('clLeaguePhaseTable')}
           </button>
           {availablePhases.length > 0 && (
             <button
               onClick={() => setViewPhase('baum')}
-              className={`px-4 py-2 text-xs font-medium rounded-md whitespace-nowrap transition-all ${viewPhase === 'baum' ? 'bg-surface-container-high text-on-surface font-bold shadow-sm' : 'text-on-surface-variant hover:text-on-surface'}`}
+              className={`flex-1 px-4 py-2.5 text-[10px] font-mono font-black uppercase tracking-wider rounded-xl whitespace-nowrap transition-all duration-200 cursor-pointer text-center ${viewPhase === 'baum' ? 'bg-primary-container text-on-primary-container shadow-[0_2px_8px_rgba(251,191,36,0.15)] border border-primary/20 scale-[1.01]' : 'text-on-surface-variant hover:text-on-surface hover:bg-white/5 border border-transparent'}`}
             >
               {t('clKnockoutPhase')}
             </button>

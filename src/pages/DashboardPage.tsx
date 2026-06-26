@@ -227,19 +227,19 @@ export function DashboardPage() {
         <div className="max-w-[1600px] mx-auto w-full">
           {/* Turnier-Filter & Saison-Selector */}
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-3">
-            <div className="flex bg-surface-container border border-surface-container-high p-1 rounded-lg">
+            <div className="flex bg-surface-container/50 border border-white/5 p-1 rounded-2xl gap-1.5 backdrop-blur-md">
               <button
                 onClick={() => { setSelectedTournament('Süper Lig'); setSpieltag(1); }}
-                className={`px-3 py-1.5 text-xs font-medium rounded-md whitespace-nowrap transition-all flex items-center gap-2 ${selectedTournament === 'Süper Lig' ? 'bg-primary text-on-primary font-bold shadow-md' : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container/50'}`}
+                className={`px-3 py-2 text-[10px] font-mono font-black uppercase tracking-wider rounded-xl whitespace-nowrap transition-all duration-200 cursor-pointer flex items-center gap-2 ${selectedTournament === 'Süper Lig' ? 'bg-primary-container text-on-primary-container shadow-[0_2px_8px_rgba(251,191,36,0.15)] border border-primary/20 scale-[1.01]' : 'text-on-surface-variant hover:text-on-surface hover:bg-white/5 border border-transparent'}`}
               >
-                <img src={`${import.meta.env.BASE_URL}logos/Süper_Lig.png`} alt="SL" className="w-6 h-6 object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.6)] brightness-110" />
+                <img src={`${import.meta.env.BASE_URL}logos/Süper_Lig.png`} alt="SL" className="w-5 h-5 object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.6)] brightness-110 shrink-0" />
                 Süper Lig
               </button>
               <button
                 onClick={() => { setSelectedTournament('Champions League'); setSpieltag(1); }}
-                className={`px-3 py-1.5 text-xs font-medium rounded-md whitespace-nowrap transition-all flex items-center gap-2 ${selectedTournament === 'Champions League' ? 'bg-primary text-on-primary font-bold shadow-md' : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container/50'}`}
+                className={`px-3 py-2 text-[10px] font-mono font-black uppercase tracking-wider rounded-xl whitespace-nowrap transition-all duration-200 cursor-pointer flex items-center gap-2 ${selectedTournament === 'Champions League' ? 'bg-primary-container text-on-primary-container shadow-[0_2px_8px_rgba(251,191,36,0.15)] border border-primary/20 scale-[1.01]' : 'text-on-surface-variant hover:text-on-surface hover:bg-white/5 border border-transparent'}`}
               >
-                <img src={`${import.meta.env.BASE_URL}logos/UEFA_Champions_League_logo.png`} alt="CL" className="w-6 h-6 object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.6)] brightness-110" />
+                <img src={`${import.meta.env.BASE_URL}logos/UEFA_Champions_League_logo.png`} alt="CL" className="w-5 h-5 object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.6)] brightness-110 shrink-0" />
                 Champions League
               </button>
             </div>
@@ -255,73 +255,76 @@ export function DashboardPage() {
             </select>
           </div>
 
-          {/* Spieltag-Slider */}
-          <div className="pt-2 pb-3 border-t border-white/5 relative flex items-center gap-1.5">
-            {/* Sticky "ALLE" Button — immer sichtbar */}
-            <button
-              onClick={() => { setSpieltag(0); ladeMatches(0); }}
-              className={`flex-shrink-0 px-3 py-2 rounded-full border text-[11px] font-mono font-medium transition-all z-20 ${
-                aktuellerSpieltag === 0
-                  ? 'bg-primary-container text-on-primary border-primary-container shadow-[0_0_15px_rgba(251,191,36,0.4)] font-bold'
-                  : 'bg-surface-container/80 border-white/10 text-on-surface-variant hover:bg-white/5'
-              }`}
-            >
-              {t('filterAll')}
-            </button>
-            {/* Slider (scrollbar) */}
-            <div className="relative flex-1 min-w-0">
-            <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-background to-transparent z-10 pointer-events-none" />
-            <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-background to-transparent z-10 pointer-events-none" />
-            <div ref={sliderRef} className="flex overflow-x-auto no-scrollbar gap-2 px-2 relative z-0">
-              {Array.from({ length: getTabsCount() }, (_, i) => i + 1).map(st => {
-                const isActive = st === aktuellerSpieltag
-                const info = spieltagInfo[st]
-                const isLive = info?.isLive
-                const fullyTipped = info?.fullyTipped
+          {/* Spieltag-Slider Segmented Control */}
+          <div className="pt-2.5 pb-3 border-t border-white/5 relative flex items-center gap-1.5">
+            <div className="bg-surface-container/40 border border-white/5 p-1 rounded-2xl flex items-center gap-1.5 overflow-hidden backdrop-blur-sm w-full">
+              {/* Sticky "ALLE" Button — immer sichtbar */}
+              <button
+                onClick={() => { setSpieltag(0); ladeMatches(0); }}
+                className={`flex-shrink-0 px-3.5 py-2 rounded-xl text-[10px] font-mono font-black uppercase tracking-wider transition-all duration-200 cursor-pointer ${
+                  aktuellerSpieltag === 0
+                    ? 'bg-primary-container text-on-primary-container shadow-[0_2px_8px_rgba(251,191,36,0.15)] border border-primary/20 scale-[1.01]'
+                    : 'text-on-surface-variant hover:text-on-surface hover:bg-white/5 border border-transparent'
+                }`}
+              >
+                {t('filterAll')}
+              </button>
 
-                let btnStyle = 'border-white/10 text-on-surface hover:bg-white/5'
-                if (isActive) {
-                  btnStyle = 'bg-primary-container text-on-primary border-primary-container shadow-[0_0_15px_rgba(251,191,36,0.4)] font-bold'
-                } else if (st < aktuellerSpieltag) {
-                  if (fullyTipped) {
-                    btnStyle = 'border-green-500/30 text-green-400/90 bg-green-500/5 hover:bg-green-500/10'
-                  } else {
-                    btnStyle = 'border-amber-500/20 text-amber-500/60 bg-amber-500/5 opacity-60 hover:opacity-100 hover:bg-amber-500/10'
-                  }
-                }
+              <span className="w-[1px] h-4 bg-white/10 shrink-0" />
 
-                return (
-                  <button
-                    key={st}
-                    data-st={st}
-                    onClick={() => setSpieltag(st)}
-                    className={`flex-shrink-0 px-3 py-2 rounded-full border text-[11px] font-mono font-medium transition-all relative flex items-center gap-1 ${btnStyle}`}
-                  >
-                    {getPhaseLabel(st, selectedTournament)}
-                    {fullyTipped && st < aktuellerSpieltag && !isActive && (
-                      <Check size={11} className="text-green-400" />
-                    )}
-                    {isLive && (
-                      <span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse" />
-                    )}
-                  </button>
-                )
-              })}
-            </div>
+              {/* Slider (scrollbar) */}
+              <div className="relative flex-1 min-w-0">
+                <div ref={sliderRef} className="flex overflow-x-auto no-scrollbar gap-1.5 px-1 relative z-0" style={{ maskImage: 'linear-gradient(to right, transparent 0px, black 8px, black calc(100% - 16px), transparent 100%)', WebkitMaskImage: 'linear-gradient(to right, transparent 0px, black 8px, black calc(100% - 16px), transparent 100%)' }}>
+                  {Array.from({ length: getTabsCount() }, (_, i) => i + 1).map(st => {
+                    const isActive = st === aktuellerSpieltag
+                    const info = spieltagInfo[st]
+                    const isLive = info?.isLive
+                    const fullyTipped = info?.fullyTipped
+
+                    let btnStyle = 'text-on-surface-variant hover:text-on-surface hover:bg-white/5 border border-transparent'
+                    if (isActive) {
+                      btnStyle = 'bg-primary-container text-on-primary-container font-black shadow-[0_2px_8px_rgba(251,191,36,0.15)] border border-primary/20 scale-[1.01]'
+                    } else if (st < aktuellerSpieltag) {
+                      if (fullyTipped) {
+                        btnStyle = 'border border-green-500/20 text-green-400 bg-green-500/5 hover:bg-green-500/10'
+                      } else {
+                        btnStyle = 'border border-amber-500/10 text-amber-500/70 bg-amber-500/5 hover:bg-amber-500/10 opacity-70'
+                      }
+                    }
+
+                    return (
+                      <button
+                        key={st}
+                        data-st={st}
+                        onClick={() => setSpieltag(st)}
+                        className={`flex-shrink-0 px-3 py-2 rounded-xl text-[10px] font-mono font-black uppercase tracking-wider transition-all duration-200 cursor-pointer relative flex items-center gap-1 ${btnStyle}`}
+                      >
+                        {getPhaseLabel(st, selectedTournament)}
+                        {fullyTipped && st < aktuellerSpieltag && !isActive && (
+                          <Check size={11} className="text-green-400" />
+                        )}
+                        {isLive && (
+                          <span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse" />
+                        )}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
             </div>
           </div>
 
           {/* Filter-Toggle + Letztes Update Badge */}
           <div className="flex justify-between items-center py-2.5 border-t border-white/5">
-            <div className="flex gap-2">
+            <div className="flex bg-surface-container/50 border border-white/5 p-0.5 rounded-xl gap-1">
               {(['alle', 'live'] as const).map(f => (
                 <button
                   key={f}
                   onClick={() => setFilter(f)}
-                  className={`text-[11px] font-mono font-medium uppercase tracking-wider px-3 py-1 rounded-full border transition-all ${
+                  className={`text-[9px] font-mono font-black uppercase tracking-wider px-3 py-1.5 rounded-lg transition-all duration-200 cursor-pointer ${
                     filter === f
-                      ? 'bg-primary-container/20 border-primary-container/50 text-primary'
-                      : 'border-white/10 text-on-surface-variant hover:border-white/20'
+                      ? 'bg-primary-container text-on-primary-container shadow-[0_1.5px_6px_rgba(251,191,36,0.1)] border border-primary/25 scale-[1.01]'
+                      : 'text-on-surface-variant hover:text-on-surface hover:bg-white/5 border border-transparent'
                   }`}
                 >
                   {f === 'alle' ? t('filterAll') : t('filterLive')}

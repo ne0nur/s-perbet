@@ -19,6 +19,7 @@ interface BonusTippsCardProps {
   setAntworten: React.Dispatch<React.SetStateAction<Record<number, string>>>
   handleSpeichernBonus: () => Promise<void>
   gespeichert: boolean
+  setGespeichert: (g: boolean) => void
 }
 
 export function BonusTippsCard({
@@ -27,7 +28,8 @@ export function BonusTippsCard({
   antworten,
   setAntworten,
   handleSpeichernBonus,
-  gespeichert
+  gespeichert,
+  setGespeichert
 }: BonusTippsCardProps) {
   const { t } = useTranslation()
   const tippsFreigeschaltet = useSettingsStore(s => s.tippsFreigeschaltet)
@@ -91,8 +93,11 @@ export function BonusTippsCard({
                     <div className="relative">
                       <select
                         value={wert}
-                        onChange={e => setAntworten(prev => ({ ...prev, [frage.id]: e.target.value }))}
-                        className="w-full bg-black/35 border border-surface-container-high rounded-lg pl-9 pr-3 py-2.5 text-sm text-on-surface focus:border-primary focus:outline-none appearance-none"
+                        onChange={e => {
+                          setAntworten(prev => ({ ...prev, [frage.id]: e.target.value }))
+                          setGespeichert(false)
+                        }}
+                        className="w-full bg-black/35 border border-surface-container-high rounded-lg pl-9 pr-3 py-2.5 text-sm text-on-surface focus:border-primary focus:outline-none appearance-none cursor-pointer"
                       >
                         <option value="">{t('selectTeam')}</option>
                         {TEAMS.map(t => <option key={t} value={t}>{t}</option>)}

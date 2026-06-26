@@ -103,36 +103,49 @@ export function LevelProgressCard({
   return (
     <>
       {/* Fortschritts-Karte */}
-      <div className="bg-surface-container-low border border-surface-container-high rounded-xl p-4 shadow-sm text-left stagger-in">
-        <div className="flex items-center justify-between mb-3">
+      <div className={`bg-surface-container-low border border-surface-container-high rounded-xl p-4 shadow-sm text-left stagger-in relative overflow-hidden ${
+        level >= 30 ? 'border-cyan-500/30 bg-gradient-to-b from-purple-950/20 via-surface-container-low to-cyan-950/20 shadow-[0_0_20px_rgba(6,182,212,0.15)]' : ''
+      }`}>
+        {level >= 30 && (
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_right,rgba(6,182,212,0.06),transparent)] pointer-events-none" />
+        )}
+        <div className="flex items-center justify-between mb-3 relative z-10">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-lg bg-primary-container/10 text-primary border border-primary-container/20">
+            <div className={`p-2 rounded-lg text-primary border ${
+              level >= 30 ? 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20' : 'bg-primary-container/10 border-primary-container/20'
+            }`}>
               <LevelIcon size={20} />
             </div>
             <div className="text-left">
               <span className="text-[9px] font-mono text-on-surface-variant uppercase tracking-wider">
                 {t('leagueProgress')}
               </span>
-              <h3 className={`text-sm font-bold mt-0.5 ${titleColor}`}>{levelTitle}</h3>
+              <h3 className={`text-sm font-bold mt-0.5 ${
+                level >= 30 ? 'bg-gradient-to-r from-cyan-400 via-white to-purple-400 bg-clip-text text-transparent font-black drop-shadow-[0_0_12px_rgba(6,182,212,0.5)]' : titleColor
+              }`}>{levelTitle}</h3>
             </div>
           </div>
           <LevelBadge level={level} className="h-10 w-10 rounded-xl shadow-inner border select-none">
-            <span className="text-[7px] font-mono opacity-75 leading-none mt-0.5">LVL</span>
-            <span className="text-[14px] leading-none mt-0.5 level-digit">{level}</span>
+            <span className="text-[7px] font-mono opacity-75 leading-none mt-0.5 z-10">LVL</span>
+            <span className="text-[14px] leading-none mt-0.5 level-digit z-10">{level}</span>
           </LevelBadge>
         </div>
-        <div className="space-y-1.5">
+        <div className="space-y-1.5 relative z-10">
           <div className="flex justify-between text-[10px] font-mono">
             <span className="text-on-surface-variant">
               {t('expTotal', { totalExp })}
             </span>
-            <span className="text-primary font-bold">
+            <span className={level >= 30 ? 'text-cyan-400 font-bold' : 'text-primary font-bold'}>
               {t('expToLevel', { current: xpCurrent, required: xpRequired, level: level + 1 })}
             </span>
           </div>
           <div className="h-2.5 w-full bg-black/40 rounded-full overflow-hidden p-[1.5px] border border-white/10">
             <div 
-              className="h-full bg-gradient-to-r from-amber-500 to-yellow-400 rounded-full transition-all duration-1000 ease-out shadow-[0_0_12px_rgba(251,191,36,0.5)]"
+              className={`h-full rounded-full transition-all duration-1000 ease-out ${
+                level >= 30 
+                  ? 'bg-gradient-to-r from-cyan-400 via-white to-purple-500 shadow-[0_0_16px_rgba(6,182,212,0.6)] animate-pulse' 
+                  : 'bg-gradient-to-r from-amber-500 to-yellow-400 shadow-[0_0_12px_rgba(251,191,36,0.5)]'
+              }`}
               style={{ width: `${xpPct}%` }}
             />
           </div>

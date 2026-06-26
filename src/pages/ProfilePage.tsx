@@ -668,22 +668,17 @@ export function ProfilePage() {
       return
     }
     try {
-      for (const [frageId, antwort] of Object.entries(antworten)) {
-        const existing = bonusTipps.find(t => t.frage_id === Number(frageId))
-        if (existing) {
-          if (existing.antwort !== antwort) {
-            await supabase.from('bonus_tipps')
-              .update({ antwort })
-              .match({ user_id: user.id, frage_id: Number(frageId) })
-          }
-        } else {
-          await supabase.from('bonus_tipps').insert({
-            user_id: user.id,
-            frage_id: Number(frageId),
-            antwort
-          })
-        }
+      const upsertRows = Object.entries(antworten).map(([frageId, antwort]) => ({
+        user_id: user.id,
+        frage_id: Number(frageId),
+        antwort
+      }))
+
+      if (upsertRows.length > 0) {
+        const { error } = await supabase.from('bonus_tipps').upsert(upsertRows)
+        if (error) throw error
       }
+      
       setGespeichert(true)
       useToastStore.getState().toast('Bonus-Tipps erfolgreich abgegeben!')
       
@@ -691,8 +686,9 @@ export function ProfilePage() {
         .select('*')
         .eq('user_id', user.id)
       if (bonusData) setBonusTipps(bonusData as BonusTipp[])
-    } catch {
-      useToastStore.getState().toast('Fehler beim Speichern der Bonus-Tipps', 'error')
+    } catch (e: any) {
+      console.error('Fehler beim Speichern der Bonus-Tipps:', e)
+      useToastStore.getState().toast(e?.message || 'Fehler beim Speichern der Bonus-Tipps', 'error')
     }
   }
 
@@ -731,47 +727,47 @@ export function ProfilePage() {
         />
       </div>
 
-      {/* Tabs Navigation */}
-      <div className="flex overflow-x-auto no-scrollbar gap-2 mb-6 border-b border-surface-container-high/60 pb-2">
+      {/* Segmented Control Navigation */}
+      <div className="bg-surface-container/50 border border-white/5 p-1 rounded-2xl flex overflow-x-auto no-scrollbar gap-1.5 mb-6 backdrop-blur-md">
         <button
           onClick={() => setActiveTab('overview')}
-          className={`flex-shrink-0 px-4 py-2 rounded-full border text-[11px] font-mono font-medium transition-all ${
+          className={`flex-1 min-w-[90px] px-3 py-2 rounded-xl text-[10px] font-mono uppercase tracking-wider transition-all duration-200 cursor-pointer text-center ${
             activeTab === 'overview'
-              ? 'bg-primary-container text-on-primary border-primary-container shadow-[0_0_15px_rgba(251,191,36,0.3)] font-bold'
-              : 'border-white/10 text-on-surface hover:bg-white/5'
+              ? 'bg-primary-container text-on-primary-container font-black shadow-[0_2px_10px_rgba(251,191,36,0.15)] border border-primary/20 scale-[1.01]'
+              : 'text-on-surface-variant hover:text-on-surface hover:bg-white/5 border border-transparent'
           }`}
         >
           📊 {t('profileOverview')}
         </button>
         <button
           onClick={() => setActiveTab('achievements')}
-          className={`flex-shrink-0 relative px-4 py-2 rounded-full border text-[11px] font-mono font-medium transition-all ${
+          className={`flex-1 min-w-[95px] relative px-3 py-2 rounded-xl text-[10px] font-mono uppercase tracking-wider transition-all duration-200 cursor-pointer text-center ${
             activeTab === 'achievements'
-              ? 'bg-primary-container text-on-primary border-primary-container shadow-[0_0_15px_rgba(251,191,36,0.3)] font-bold'
-              : 'border-white/10 text-on-surface hover:bg-white/5'
+              ? 'bg-primary-container text-on-primary-container font-black shadow-[0_2px_10px_rgba(251,191,36,0.15)] border border-primary/20 scale-[1.01]'
+              : 'text-on-surface-variant hover:text-on-surface hover:bg-white/5 border border-transparent'
           }`}
         >
           🏆 {t('myAchievements')}
           {newlyUnlockedCount > 0 && (
-            <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-[#1E1E1E] animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.8)]" />
+            <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-red-500 rounded-full border border-surface-container-high animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.8)]" />
           )}
         </button>
         <button
           onClick={() => setActiveTab('bonus')}
-          className={`flex-shrink-0 px-4 py-2 rounded-full border text-[11px] font-mono font-medium transition-all ${
+          className={`flex-1 min-w-[90px] px-3 py-2 rounded-xl text-[10px] font-mono uppercase tracking-wider transition-all duration-200 cursor-pointer text-center ${
             activeTab === 'bonus'
-              ? 'bg-primary-container text-on-primary border-primary-container shadow-[0_0_15px_rgba(251,191,36,0.3)] font-bold'
-              : 'border-white/10 text-on-surface hover:bg-white/5'
+              ? 'bg-primary-container text-on-primary-container font-black shadow-[0_2px_10px_rgba(251,191,36,0.15)] border border-primary/20 scale-[1.01]'
+              : 'text-on-surface-variant hover:text-on-surface hover:bg-white/5 border border-transparent'
           }`}
         >
           ⭐ {t('bonusTipsTab')}
         </button>
         <button
           onClick={() => setActiveTab('settings')}
-          className={`flex-shrink-0 px-4 py-2 rounded-full border text-[11px] font-mono font-medium transition-all ${
+          className={`flex-1 min-w-[90px] px-3 py-2 rounded-xl text-[10px] font-mono uppercase tracking-wider transition-all duration-200 cursor-pointer text-center ${
             activeTab === 'settings'
-              ? 'bg-primary-container text-on-primary border-primary-container shadow-[0_0_15px_rgba(251,191,36,0.3)] font-bold'
-              : 'border-white/10 text-on-surface hover:bg-white/5'
+              ? 'bg-primary-container text-on-primary-container font-black shadow-[0_2px_10px_rgba(251,191,36,0.15)] border border-primary/20 scale-[1.01]'
+              : 'text-on-surface-variant hover:text-on-surface hover:bg-white/5 border border-transparent'
           }`}
         >
           ⚙️ {t('profileSettings')}
@@ -779,10 +775,10 @@ export function ProfilePage() {
         {profil?.is_admin && (
           <button
             onClick={() => setActiveTab('admin')}
-            className={`flex-shrink-0 px-4 py-2 rounded-full border text-[11px] font-mono font-medium transition-all ${
+            className={`flex-1 min-w-[90px] px-3 py-2 rounded-xl text-[10px] font-mono uppercase tracking-wider transition-all duration-200 cursor-pointer text-center ${
               activeTab === 'admin'
-                ? 'bg-red-500/20 text-red-400 border-red-500/50 shadow-[0_0_15px_rgba(239,68,68,0.2)] font-bold'
-                : 'border-white/10 text-red-400/70 hover:bg-white/5'
+                ? 'bg-red-500/20 text-red-400 font-black shadow-[0_2px_10px_rgba(239,68,68,0.15)] border border-red-500/30 scale-[1.01]'
+                : 'text-red-400/60 hover:text-red-400 hover:bg-red-500/5 border border-transparent'
             }`}
           >
             🛡️ {t('admin')}
@@ -826,6 +822,7 @@ export function ProfilePage() {
               setAntworten={setAntworten}
               handleSpeichernBonus={handleSpeichernBonus}
               gespeichert={gespeichert}
+              setGespeichert={setGespeichert}
             />
           </div>
         )}
