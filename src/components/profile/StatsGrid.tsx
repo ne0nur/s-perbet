@@ -6,6 +6,7 @@ interface Stats {
   exact: number
   diff: number
   tend: number
+  weak: number
   miss: number
   avg: number | string
   rate: number | string
@@ -23,6 +24,7 @@ export function StatsGrid({ stats, remainingPoints = { sl: 0, cl: 0, total: 0 },
   const exactPct = totalTips > 0 ? (stats.exact / totalTips) * 100 : 0
   const diffPct = totalTips > 0 ? (stats.diff / totalTips) * 100 : 0
   const tendPct = totalTips > 0 ? (stats.tend / totalTips) * 100 : 0
+  const weakPct = totalTips > 0 ? (stats.weak / totalTips) * 100 : 0
   const missPct = totalTips > 0 ? (stats.miss / totalTips) * 100 : 0
 
   const displayAvg = typeof stats.avg === 'string' ? parseFloat(stats.avg) : stats.avg
@@ -122,7 +124,8 @@ export function StatsGrid({ stats, remainingPoints = { sl: 0, cl: 0, total: 0 },
               {stats.exact > 0 && <div className="h-full bg-green-500 transition-all duration-500 shadow-inner" style={{ width: `${exactPct}%` }} title="Exakt (4P)" />}
               {stats.diff > 0 && <div className="h-full bg-amber-500 transition-all duration-500 shadow-inner" style={{ width: `${diffPct}%` }} title="Differenz (3P)" />}
               {stats.tend > 0 && <div className="h-full bg-blue-500 transition-all duration-500 shadow-inner" style={{ width: `${tendPct}%` }} title="Tendenz (2P)" />}
-              {stats.miss > 0 && <div className="h-full bg-slate-600 transition-all duration-500 shadow-inner" style={{ width: `${missPct}%` }} title="Falsch (0P)" />}
+              {stats.weak > 0 && <div className="h-full bg-cyan-500 transition-all duration-500 shadow-inner" style={{ width: `${weakPct}%` }} title="Schwache Tendenz (1P)" />}
+              {stats.miss > 0 && <div className="h-full bg-slate-600 transition-all duration-500 shadow-inner" style={{ width: `${missPct}%` }} title="Daneben (≤0P)" />}
             </div>
           ) : (
             <div className="h-2 w-full bg-surface-container-highest rounded-full mb-3" />
@@ -132,7 +135,8 @@ export function StatsGrid({ stats, remainingPoints = { sl: 0, cl: 0, total: 0 },
             <div className="flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-green-500 block shrink-0" /><span className="truncate">{t('exactLabel')}: <b className="text-on-surface">{stats.exact}</b></span></div>
             <div className="flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-amber-500 block shrink-0" /><span className="truncate">{t('diffLabel')}: <b className="text-on-surface">{stats.diff}</b></span></div>
             <div className="flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-blue-500 block shrink-0" /><span className="truncate">{t('tendLabel')}: <b className="text-on-surface">{stats.tend}</b></span></div>
-            <div className="flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-slate-600 block shrink-0" /><span className="truncate">{t('wrongLabel')}: <b className="text-on-surface">{stats.miss}</b></span></div>
+            <div className="flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-cyan-500 block shrink-0" /><span className="truncate">{t('weakLabel')}: <b className="text-on-surface">{stats.weak}</b></span></div>
+            <div className="flex items-center gap-1.5 col-span-2"><span className="w-1.5 h-1.5 rounded-full bg-slate-600 block shrink-0" /><span className="truncate">{t('wrongLabel')}: <b className="text-on-surface">{stats.miss}</b></span></div>
           </div>
         </div>
       </div>

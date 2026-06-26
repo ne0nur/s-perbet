@@ -15,6 +15,7 @@ import { invalidateCache } from '../lib/cache'
 // Import profile subcomponents
 import { UserInfoSettings } from '../components/profile/UserInfoSettings'
 import { LevelProgressCard } from '../components/profile/LevelProgressCard'
+import { getRangTitelSystem } from '../components/profile/LevelProgressCard'
 import { AdminSection } from '../components/profile/AdminSection'
 import { NotificationSettings } from '../components/profile/NotificationSettings'
 import { StatsGrid } from '../components/profile/StatsGrid'
@@ -88,6 +89,7 @@ export function ProfilePage() {
     exact: 0,
     diff: 0,
     tend: 0,
+    weak: 0,
     miss: 0,
     avg: 0,
     rate: 0
@@ -259,6 +261,7 @@ export function ProfilePage() {
     let exact = 0
     let diff = 0
     let tend = 0
+    let weak = 0
     let miss = 0
 
     if (userTips && userTips.length > 0) {
@@ -266,19 +269,22 @@ export function ProfilePage() {
       userTips.forEach((t) => {
         if (t.punkte === 4) exact++
         else if (t.punkte === 3) diff++
-        else if (t.punkte === 2 || t.punkte === 1) tend++
-        else if (t.punkte <= 0) miss++
+        else if (t.punkte === 2) tend++
+        else if (t.punkte === 1) weak++
+        else miss++ // 0, -1, -2
       })
     }
 
+    const positiveTotal = exact + diff + tend + weak
     const avg = total > 0 ? (dbPoints / total) : 0
-    const rate = total > 0 ? Math.round(((exact + diff + tend) / total) * 100) : 0
+    const rate = total > 0 ? Math.round((positiveTotal / total) * 100) : 0
 
     setStats({
       total,
       exact,
       diff,
       tend,
+      weak,
       miss,
       avg,
       rate
@@ -724,15 +730,11 @@ export function ProfilePage() {
           levelTitle={(() => {
             if (!profil) return undefined
             const lvl = calculateLevelDetails(profil.gesamt_punkte).level
-            const titles: Record<string, Record<number, string>> = {
-              de: { 1: 'Sonnenblumenkern-Spucker', 2: 'Kiosk-Praktikant Habibi', 3: 'Ascheplatz-Fußsoldat', 4: 'Wettschein-Jäger Couseng', 5: 'Taktik-Feldwebel', 7: 'Fußball-Orakel Abi', 9: 'Transfermarkt-Baron', 10: 'Süper-Lig-Nostradamus', 11: 'Wettschein-Sultan', 13: 'Fußball-Imperator 🏆' },
-              en: { 1: 'Seed-Spitting Spectator', 2: 'Kiosk Intern Habibi', 3: 'Astro Turf Foot Soldier', 4: 'Bet Slip Hunter Couseng', 5: 'Tactical Staff Sergeant', 7: 'Football Oracle Abi', 9: 'Transfer Market Baron', 10: 'Süper Lig Nostradamus', 11: 'Bet Slip Sultan', 13: 'Football Emperor 🏆' },
-              tr: { 1: 'Çekirdek Çıtlatan Seyirci', 2: 'Büfe Stajyeri Habibi', 3: 'Halı Saha Piyadesi', 4: 'Kupon Avcısı Kuzen', 5: 'Taktik Kurmay Çavuş', 7: 'Futbol Kahini Abi', 9: 'Transfer Çarlığı Baronu', 10: 'Süper Lig Nostradamus\'u', 11: 'Kupon Kâşifi Sultan', 13: 'Futbol İmparatoru 🏆' },
+            const ranks = getRangTitelSystem(language)
+            for (let i = ranks.length - 1; i >= 0; i--) {
+              if (lvl >= ranks[i].lvl) return ranks[i].title
             }
-            const tSet = titles[language] || titles.de
-            const thresholds = Object.keys(tSet).map(Number).sort((a, b) => b - a)
-            for (const t of thresholds) { if (lvl >= t) return tSet[t] }
-            return tSet[1]
+            return ranks[0].title
           })()}
         />
       </div>

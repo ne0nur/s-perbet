@@ -4,7 +4,7 @@ import { calculateLevelDetails, getLevelBadgeStyle } from '../../lib/utils'
 import { useTranslation } from '../../utils/translations'
 import { LevelBadge } from '../ui/LevelBadge'
 
-function getRangTitelSystem(language: string) {
+export function getRangTitelSystem(language: string) {
   // Using the exact 30 levels requested by the user
   return [
     { lvl: 1, title: 'Wasserholer', range: 'Lvl 1' },
