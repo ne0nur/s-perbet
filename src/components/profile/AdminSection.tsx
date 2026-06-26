@@ -2,6 +2,7 @@ import { useState, type ChangeEvent } from 'react'
 import { Shield, Check, X, Copy } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { useTranslation } from '../../utils/translations'
+import { useAuthStore } from '../../stores/authStore'
 import { TippsFreigabeToggle } from './TippsFreigabeToggle'
 import type { Match } from '../../stores/matchStore'
 
@@ -121,11 +122,17 @@ export function AdminSection({
   const [resetPassword, setResetPassword] = useState('')
   const [adminMatches, setAdminMatches] = useState<Match[]>([])
   const [loadingMatches, setLoadingMatches] = useState(false)
-  const { t } = useTranslation()
+  const { t, language } = useTranslation()
 
   // Reset Requests States
   const [pendingRequests, setPendingRequests] = useState<{ id: string; username: string; email_hint: string | null; created_at: string }[]>([])
   const [loadingRequests, setLoadingRequests] = useState(false)
+  
+  // Broadcast state
+  const [broadcastMessage, setBroadcastMessage] = useState('')
+  const [sendingBroadcast, setSendingBroadcast] = useState(false)
+  const [broadcastResult, setBroadcastResult] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+  const user = useAuthStore(s => s.user)
   
   // Funktion um offene Reset-Anfragen zu laden
   const fetchPendingRequests = async () => {
@@ -231,6 +238,26 @@ export function AdminSection({
     }
   }
 
+  // Broadcast handler
+  const handleSendBroadcast = async () => {
+    if (!broadcastMessage.trim()) return
+    setSendingBroadcast(true)
+    setBroadcastResult(null)
+    try {
+      const { error } = await supabase.from('admin_broadcasts').insert({
+        message: broadcastMessage.trim(),
+        created_by: user?.user_metadata?.username || 'admin'
+      })
+      if (error) throw error
+      setBroadcastMessage('')
+      setBroadcastResult({ type: 'success', text: t('broadcastSent') })
+    } catch (err) {
+      setBroadcastResult({ type: 'error', text: (err as Error).message })
+    } finally {
+      setSendingBroadcast(false)
+    }
+  }
+
   return (
     <div className="bg-surface-container-low border border-primary-container/20 rounded-xl overflow-hidden shadow-sm stagger-in text-left">
       <div className="px-4 py-2.5 bg-surface-container border-b border-surface-container-high flex flex-col gap-2">
@@ -324,6 +351,31 @@ export function AdminSection({
             <div className="border-t border-surface-container-high pt-3">
               <p className="text-[10px] font-mono text-on-surface-variant uppercase tracking-wider mb-2">⚙️ Tipp-Freigabe</p>
               <TippsFreigabeToggle />
+            </div>
+
+            {/* Broadcast an alle User */}
+            <div className="border-t border-surface-container-high pt-3">
+              <p className="text-[10px] font-mono text-on-surface-variant uppercase tracking-wider mb-2">📢 {language === 'tr' ? 'Duyuru Gönder' : language === 'en' ? 'Send Broadcast' : 'Broadcast senden'}</p>
+              <textarea
+                value={broadcastMessage}
+                onChange={e => setBroadcastMessage(e.target.value)}
+                placeholder={language === 'tr' ? 'Tüm kullanıcılara mesaj...' : language === 'en' ? 'Message to all users...' : 'Nachricht an alle User...'}
+                className="w-full bg-black/30 border border-outline-variant rounded-lg px-3 py-2.5 text-on-surface font-mono text-xs focus:border-red-500/50 focus:outline-none resize-none h-20 mb-3"
+              />
+              <button
+                onClick={handleSendBroadcast}
+                disabled={!broadcastMessage.trim() || sendingBroadcast}
+                className="w-full bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 py-2.5 rounded-lg font-mono text-xs font-bold uppercase tracking-wider transition-all active:scale-[0.98] disabled:opacity-30 disabled:cursor-not-allowed"
+              >
+                {sendingBroadcast
+                  ? (language === 'tr' ? 'Gönderiliyor...' : language === 'en' ? 'Sending...' : 'Sende...')
+                  : (language === 'tr' ? 'Herkese Gönder' : language === 'en' ? 'Send to All' : 'An Alle senden')}
+              </button>
+              {broadcastResult && (
+                <p className={`text-[10px] font-mono mt-2 ${broadcastResult.type === 'success' ? 'text-green-400' : 'text-red-400'}`}>
+                  {broadcastResult.text}
+                </p>
+              )}
             </div>
           </div>
         )}

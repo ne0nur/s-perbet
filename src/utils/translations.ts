@@ -424,6 +424,7 @@ export const translations = {
     adminMatchSaved: 'Spiel erfolgreich aktualisiert!',
     adminMatchError: 'Fehler beim Aktualisieren des Spiels.',
     adminCreatedUsersList: 'Erstellte Benutzer ({count}):',
+    broadcastSent: 'Broadcast gesendet!',
     adminNoLeagues: 'Es gibt noch keine Ligen.',
   },
   en: {
@@ -849,6 +850,7 @@ export const translations = {
     adminMatchSaved: 'Match updated successfully!',
     adminMatchError: 'Error updating match.',
     adminCreatedUsersList: 'Created Users ({count}):',
+    broadcastSent: 'Broadcast sent!',
     adminNoLeagues: 'There are no leagues yet.',
   },
   tr: {
@@ -1274,6 +1276,7 @@ export const translations = {
     adminMatchSaved: 'Maç başarıyla güncellendi!',
     adminMatchError: 'Maç güncellenirken hata oluştu.',
     adminCreatedUsersList: 'Oluşturulan Kullanıcılar ({count}):',
+    broadcastSent: 'Duyuru gönderildi!',
     adminNoLeagues: 'Henüz lig bulunmuyor.',
   }
 }

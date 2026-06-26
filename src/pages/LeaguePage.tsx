@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuthStore } from '../stores/authStore'
-import { Users, Copy, Check, Plus, LogIn, X, Trophy, LogOut, Trash2, MoreHorizontal, MessageCircle, Target } from 'lucide-react'
+import { Users, Copy, Check, Plus, LogIn, X, Trophy, LogOut, Trash2, MoreHorizontal, MessageCircle, Target, Share2 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { LeagueChat } from '../components/LeagueChat'
 import { useToastStore } from '../stores/toastStore'
@@ -64,7 +64,7 @@ function subscriptPunkte(p: number): string {
 
 // ─── Komponente ──────────────────────────────────────
 export function LeaguePage() {
-  const { t } = useTranslation()
+  const { t, language } = useTranslation()
   const { user } = useAuthStore()
   const [meineLigen, setMeineLigen] = useState<Liga[]>([])
   const [ligaMeta, setLigaMeta] = useState<Record<string, { mitglieder: number; rang: number }>>({})
@@ -710,11 +710,30 @@ export function LeaguePage() {
                 <div className="bg-surface-container-low border border-surface-container-high rounded-xl px-4 py-3 flex items-center gap-2 shrink-0">
                   <span className="text-[10px] text-on-surface-variant/60 shrink-0">{t('shareThisCode')}</span>
                   <span className="text-[11px] font-mono font-bold text-primary-fixed-dim tracking-wider truncate">{aktiveLiga.invite_code}</span>
-                  <button onClick={() => handleCodeKopieren(aktiveLiga.invite_code)}
-                    className="btn-press bg-primary-container text-on-primary-container px-3 py-1.5 rounded-lg font-mono text-[10px] font-bold uppercase tracking-wider hover:opacity-90 flex items-center gap-1.5 shrink-0 ml-auto border border-primary-container/20">
-                    {codeKopiert ? <Check size={12} /> : <Copy size={12} />}
-                    {codeKopiert ? t('copied') : t('copy')}
-                  </button>
+                  <div className="flex items-center gap-1.5 shrink-0 ml-auto">
+                    <button onClick={() => handleCodeKopieren(aktiveLiga.invite_code)}
+                      className="btn-press bg-primary-container text-on-primary-container px-3 py-1.5 rounded-lg font-mono text-[10px] font-bold uppercase tracking-wider hover:opacity-90 flex items-center gap-1.5 border border-primary-container/20">
+                      {codeKopiert ? <Check size={12} /> : <Copy size={12} />}
+                      {codeKopiert ? t('copied') : t('copy')}
+                    </button>
+                    <button onClick={async () => {
+                      const joinUrl = `${window.location.origin}${import.meta.env.BASE_URL}?join=${aktiveLiga.invite_code}`
+                      const text = language === 'tr'
+                        ? `SüperBET ligime katıl! Kod: ${aktiveLiga.invite_code}`
+                        : language === 'en'
+                        ? `Join my SüperBET league! Code: ${aktiveLiga.invite_code}`
+                        : `Tritt meiner SüperBET-Liga bei! Code: ${aktiveLiga.invite_code}`
+                      if (navigator.share) {
+                        try { await navigator.share({ title: 'SüperBET Liga', text, url: joinUrl }) } catch {}
+                      } else {
+                        try { await navigator.clipboard.writeText(joinUrl) } catch {}
+                        useToastStore.getState().toast(language === 'tr' ? 'Link kopyalandı!' : language === 'en' ? 'Link copied!' : 'Link kopiert!')
+                      }
+                    }}
+                      className="btn-press bg-surface-container-high text-on-surface-variant px-3 py-1.5 rounded-lg font-mono text-[10px] font-bold uppercase tracking-wider hover:bg-primary-container/10 hover:text-primary border border-white/10 flex items-center gap-1.5">
+                      <Share2 size={12} />
+                    </button>
+                  </div>
                 </div>
 
                 {/* Liga-Chat Trigger-Button (only visible on mobile) */}

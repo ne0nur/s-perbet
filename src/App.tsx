@@ -27,6 +27,8 @@ function PageLoader() {
 }
 
 import { usePwaStore, type BeforeInstallPromptEvent } from './stores/pwaStore'
+import { supabase } from './lib/supabase'
+import { useToastStore } from './stores/toastStore'
 
 export default function App() {
   const { ladeUser } = useAuthStore()
@@ -63,6 +65,25 @@ export default function App() {
       window.removeEventListener('appinstalled', handleAppInstalled)
     }
   }, [])
+
+  // Admin broadcast polling
+  const user = useAuthStore(s => s.user)
+  useEffect(() => {
+    if (!user) return
+    const storageKey = `superbet_last_broadcast_${user.id}`
+    const lastSeenId = localStorage.getItem(storageKey)
+    supabase.from('admin_broadcasts')
+      .select('id, message')
+      .order('id', { ascending: false })
+      .limit(1)
+      .single()
+      .then(({ data }) => {
+        if (data && String(data.id) !== lastSeenId) {
+          useToastStore.getState().toast(`📢 ${data.message}`, 'info')
+          localStorage.setItem(storageKey, String(data.id))
+        }
+      })
+  }, [user])
 
   return (
     <ErrorBoundary>

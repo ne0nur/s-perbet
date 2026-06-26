@@ -32,7 +32,8 @@ export function AvatarLightbox({
     <>
       <div
         onClick={(e) => { e.stopPropagation(); if (src) setIsOpen(true) }}
-        className={`relative ${sizeClasses[size]} shrink-0 ${src ? 'cursor-pointer' : ''} ${className}`}
+        className={`relative ${sizeClasses[size]} shrink-0 ${src ? 'cursor-pointer' : ''} ${showLevel ? 'mr-2' : ''} ${className}`}
+        style={showLevel ? { overflow: 'visible' } : undefined}
       >
         <div className="w-full h-full rounded-full bg-surface-container-high border border-surface-container-highest overflow-hidden flex items-center justify-center">
           {src ? (
