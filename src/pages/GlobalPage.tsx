@@ -22,6 +22,7 @@ interface RanglisteEintrag {
   exakte_treffer: number
   achievements_count?: number
   is_admin?: boolean
+  trend?: number
 }
 
 interface BonusStat {
@@ -91,6 +92,11 @@ function LeaderboardSection({
               } />
               <span className="text-[9px] text-on-surface-variant font-mono truncate w-full text-center flex items-center justify-center gap-1">
                 {top3[1]?.username}
+                {top3[1]?.trend !== undefined && top3[1]?.trend !== 0 && (
+                  <span className={`text-[7px] font-bold ${top3[1].trend > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                    {top3[1].trend > 0 ? '▲' : '▼'}{Math.abs(top3[1].trend)}
+                  </span>
+                )}
                 {top3[1]?.is_admin && <span className="inline-flex shrink-0 px-1 py-0.2 rounded text-[7px] font-black bg-amber-500/20 text-amber-400 border border-amber-500/30 font-mono tracking-wide scale-90">ADM</span>}
               </span>
               <div className={`w-full rounded-t-lg border-x border-t flex flex-col items-center justify-start pt-2 relative overflow-hidden ${
@@ -124,6 +130,11 @@ function LeaderboardSection({
             } />
             <span className="text-[9px] text-primary-fixed-dim font-mono font-bold truncate w-full text-center flex items-center justify-center gap-1">
               {top3[0]?.username}
+              {top3[0]?.trend !== undefined && top3[0]?.trend !== 0 && (
+                <span className={`text-[7px] font-bold ${top3[0].trend > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                  {top3[0].trend > 0 ? '▲' : '▼'}{Math.abs(top3[0].trend)}
+                </span>
+              )}
               {top3[0]?.is_admin && <span className="inline-flex shrink-0 px-1 py-0.2 rounded text-[7px] font-black bg-amber-500/20 text-amber-400 border border-amber-500/30 font-mono tracking-wide scale-90">ADM</span>}
             </span>
             <div className="w-full h-24 bg-gradient-to-t from-primary/30 to-transparent rounded-t-lg border-x border-t border-primary/40 flex flex-col items-center justify-start pt-2 relative overflow-hidden">
@@ -148,7 +159,7 @@ function LeaderboardSection({
                   ? 'w-8 h-8 bg-gradient-to-br from-slate-200 to-slate-400 shadow-[0_0_10px_rgba(148,163,184,0.5)]'
                   : 'w-8 h-8 bg-gradient-to-br from-amber-600 to-amber-800 shadow-[0_0_10px_rgba(217,119,6,0.5)]'
               }`}>
-                {tie2_3 ? <Medal size={16} className="text-slate-700" /> : <Medal size={16} className="text-amber-100" />}
+                {tie2_3 ? <Medal size={16} className="text-slate-700" /> : <Medal size={16} className="text-amber-900" />}
               </div>
               <AvatarLightbox src={top3[2]?.avatar_url} username={top3[2]?.username || ''} size="sm" showLevel levelBadge={
                 <LevelBadge level={calculateLevel(top3[2]?.gesamt_punkte || 0, top3[2]?.achievements_count || 0)} className="absolute -bottom-1 -right-1 z-10 text-[7px] h-3.5 w-3.5 rounded-full shadow select-none">
@@ -157,6 +168,11 @@ function LeaderboardSection({
               } />
               <span className="text-[9px] text-on-surface-variant font-mono truncate w-full text-center flex items-center justify-center gap-1">
                 {top3[2]?.username}
+                {top3[2]?.trend !== undefined && top3[2]?.trend !== 0 && (
+                  <span className={`text-[7px] font-bold ${top3[2].trend > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                    {top3[2].trend > 0 ? '▲' : '▼'}{Math.abs(top3[2].trend)}
+                  </span>
+                )}
                 {top3[2]?.is_admin && <span className="inline-flex shrink-0 px-1 py-0.2 rounded text-[7px] font-black bg-amber-500/20 text-amber-400 border border-amber-500/30 font-mono tracking-wide scale-90">ADM</span>}
               </span>
               <div className={`w-full rounded-t-lg border-x border-t flex flex-col items-center justify-start pt-2 relative overflow-hidden ${
@@ -186,7 +202,17 @@ function LeaderboardSection({
                   isSelected ? 'bg-primary-container/10 border-r-2 border-primary font-bold' : i % 2 === 0 ? '' : 'bg-surface-container-lowest'
                 }`}
               >
-                <span className="w-6 text-center font-mono text-[11px] text-on-surface-variant">{e.displayRank}</span>
+                <span className="w-6 flex flex-col items-center justify-center gap-0.5 font-mono text-on-surface-variant">
+                  <span className="text-[11px]">{e.displayRank}</span>
+                  {e.trend !== undefined && e.trend !== 0 && (
+                    <span className={`text-[8px] font-bold ${e.trend > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                      {e.trend > 0 ? '▲' : '▼'} {Math.abs(e.trend)}
+                    </span>
+                  )}
+                  {e.trend === 0 && (
+                    <span className="text-[8px] font-bold text-on-surface-variant/30">—</span>
+                  )}
+                </span>
                 <AvatarLightbox
                   src={e.avatar_url}
                   username={e.username || ''}
@@ -405,16 +431,33 @@ export function GlobalPage() {
         rangData = cachedRangliste
         // Stats & Bonus trotzdem live laden (sind billiger)
       } else {
-        // 1. Leaderboard (frisch von DB)
-        const { data: rawRangData } = await supabase
-          .from('profiles')
-          .select('id,username,avatar_url,gesamt_punkte,exakte_treffer,is_admin')
-          .order('gesamt_punkte', { ascending: false })
-          .order('exakte_treffer', { ascending: false })
-          .limit(50)
+        // 1. Leaderboard (Versuche RPC für Trend-Pfeile)
+        let rawRangData: any[] | null = null
+        try {
+          const { data, error } = await supabase.rpc('get_ranking_with_trend')
+          if (!error && data) {
+            rawRangData = data
+          }
+        } catch (e) {
+          // ignore
+        }
+
+        // Fallback wenn RPC (noch) nicht existiert
+        if (!rawRangData) {
+          const { data: fallbackData } = await supabase
+            .from('profiles')
+            .select('id,username,avatar_url,gesamt_punkte,exakte_treffer,is_admin')
+            .order('gesamt_punkte', { ascending: false })
+            .order('exakte_treffer', { ascending: false })
+            .limit(50)
+          
+          if (fallbackData) {
+            rawRangData = fallbackData.map((d: any) => ({ ...d, trend: 0 }))
+          }
+        }
 
         if (rawRangData && rawRangData.length > 0) {
-          const userIds = rawRangData.map(r => r.id)
+          const userIds = rawRangData.map((r: any) => r.id)
           
           // Fetch all tips for these top users to evaluate achievements
           const { data: allUsersTips } = await supabase
@@ -468,8 +511,14 @@ export function GlobalPage() {
             )
 
             return {
-              ...userEntry,
-              achievements_count: unlockedSet.size
+              id: userEntry.id,
+              username: userEntry.username,
+              avatar_url: userEntry.avatar_url,
+              gesamt_punkte: userEntry.gesamt_punkte,
+              exakte_treffer: userEntry.exakte_treffer,
+              is_admin: userEntry.is_admin,
+              achievements_count: unlockedSet.size,
+              trend: userEntry.trend || 0
             } as RanglisteEintrag
           })
 

@@ -23,6 +23,8 @@ export const translations = {
     pwaInstallSubtitle: 'Direkt vom Desktop starten',
     leagueAutoJoinSuccess: '🎉 Du bist erfolgreich der Liga "{name}" beigetreten!',
     achievementsUnlockedToast: '🏆 Du hast {count} neue(n) Erfolg(e) freigeschaltet! Schau in dein Profil.',
+    onlineAgain: 'Verbindung wiederhergestellt',
+    offlineWarning: 'Du bist offline. Tipps können nur mit Internetverbindung gespeichert werden.',
     
     // Login / Register
     invalidCredentials: 'Der Benutzername oder das Passwort ist falsch.',
@@ -452,6 +454,8 @@ export const translations = {
     pwaInstallSubtitle: 'Start directly from desktop',
     leagueAutoJoinSuccess: '🎉 You have successfully joined the league "{name}"!',
     achievementsUnlockedToast: '🏆 You have unlocked {count} new achievement(s)! Check your profile.',
+    onlineAgain: 'Connection restored',
+    offlineWarning: 'You are offline. Tips can only be saved with an internet connection.',
     
     // Login / Register
     invalidCredentials: 'Invalid username or password.',
@@ -881,6 +885,8 @@ export const translations = {
     pwaInstallSubtitle: 'Doğrudan masaüstünden başlat',
     leagueAutoJoinSuccess: '🎉 "{name}" ligine başarıyla katıldınız!',
     achievementsUnlockedToast: '🏆 {count} yeni başarının kilidini açtınız! Profilinizi kontrol edin.',
+    onlineAgain: 'Bağlantı yeniden kuruldu',
+    offlineWarning: 'Çevrimdışısın. Tahminler yalnızca internet bağlantısı ile kaydedilebilir.',
     
     // Login / Register
     invalidCredentials: 'Geçersiz kullanıcı adı veya şifre.',

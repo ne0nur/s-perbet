@@ -10,7 +10,4 @@ export const useNetworkStore = create<NetworkState>((set) => ({
   setIsOnline: (status) => set({ isOnline: status }),
 }))
 
-if (typeof window !== 'undefined') {
-  window.addEventListener('online', () => useNetworkStore.getState().setIsOnline(true))
-  window.addEventListener('offline', () => useNetworkStore.getState().setIsOnline(false))
-}
+

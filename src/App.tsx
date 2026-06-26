@@ -29,10 +29,13 @@ function PageLoader() {
 import { usePwaStore, type BeforeInstallPromptEvent } from './stores/pwaStore'
 import { supabase } from './lib/supabase'
 import { useToastStore } from './stores/toastStore'
+import { useNetworkStore } from './stores/networkStore'
+import { useTranslation } from './utils/translations'
 
 export default function App() {
   const { ladeUser } = useAuthStore()
   const ladeSettings = useSettingsStore(s => s.ladeSettings)
+  const { t } = useTranslation()
 
   useEffect(() => {
     ladeUser()
@@ -63,6 +66,26 @@ export default function App() {
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
       window.removeEventListener('appinstalled', handleAppInstalled)
+    }
+  }, [])
+
+  // Network listener
+  useEffect(() => {
+    const handleOnline = () => {
+      useNetworkStore.getState().setIsOnline(true)
+      useToastStore.getState().toast('🟢 ' + t('onlineAgain'), 'info')
+    }
+    const handleOffline = () => {
+      useNetworkStore.getState().setIsOnline(false)
+      useToastStore.getState().toast('🔴 ' + t('offlineWarning'), 'error')
+    }
+
+    window.addEventListener('online', handleOnline)
+    window.addEventListener('offline', handleOffline)
+
+    return () => {
+      window.removeEventListener('online', handleOnline)
+      window.removeEventListener('offline', handleOffline)
     }
   }, [])
 
