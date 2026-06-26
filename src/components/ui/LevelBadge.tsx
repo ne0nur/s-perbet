@@ -6,30 +6,33 @@ interface LevelBadgeProps extends React.HTMLAttributes<HTMLDivElement> {
   children?: React.ReactNode;
 }
 
-// Pseudo-random for deterministic variety per level
+// Deterministic pseudo-random — same level always produces same particles
 function pseudoRand(seed: number): number {
   const x = Math.sin(seed * 127.1 + 311.7) * 43758.5453;
   return x - Math.floor(x);
 }
 
+function getParticleCount(level: number): number {
+  return Math.floor(level * 0.6) + 2;
+}
+
+function getGlowColor(level: number): string {
+  if (level >= 30) return 'rgba(255,255,255,0.9)';   // gojo: pure white
+  if (level >= 27) return 'rgba(192,132,252,0.85)';    // amethyst: bright purple
+  if (level >= 24) return 'rgba(56,189,248,0.85)';     // sapphire: bright cyan
+  if (level >= 20) return 'rgba(251,113,133,0.85)';    // ruby: bright red
+  if (level >= 10) return 'rgba(52,211,153,0.8)';      // emerald: bright green
+  if (level >= 5)  return 'rgba(96,165,250,0.8)';      // blue
+  return 'rgba(148,163,184,0.65)';                      // slate (lvl 1-4)
+}
+
 export function LevelBadge({ level, className = '', children, ...props }: LevelBadgeProps) {
   const baseStyle = getLevelBadgeStyle(level);
-  const hasParticles = level >= 5;
-  const isPremium = level >= 20;
-  const isGojo = level >= 30;
 
-  // Organic particles — each gets unique random params via seed
   const particles = useMemo(() => {
-    if (!hasParticles) return [];
-
-    const count = isGojo ? 20
-      : level >= 27 ? 14
-      : level >= 24 ? 10
-      : level >= 20 ? 8
-      : level >= 10 ? 5
-      : 3; // level 5-9: 3 particles
-
+    const count = getParticleCount(level);
     const seed = level * 137;
+    const glow = getGlowColor(level);
     const p: Array<{
       id: number;
       size: number;
@@ -38,70 +41,71 @@ export function LevelBadge({ level, className = '', children, ...props }: LevelB
       dur: string;
       delay: string;
       opacity: number;
-      bg: string;
-      shadow: string;
+      glow: string;
+      behind: boolean;
     }> = [];
 
     for (let i = 0; i < count; i++) {
       const s = seed + i * 7;
 
-      // Color per tier
-      let bg = 'bg-amber-300';
-      let shadow = 'rgba(251,191,36,0.7)';
-      if (isGojo) {
+      // Gojo-level: occasional colored particle for variety
+      let particleGlow = glow;
+      if (level >= 30) {
         const r = pseudoRand(s + 10);
-        if (r > 0.7) { bg = 'bg-white'; shadow = 'rgba(255,255,255,0.9)'; }
-        else if (r > 0.3) { bg = 'bg-cyan-300'; shadow = 'rgba(6,182,212,0.9)'; }
-        else { bg = 'bg-purple-400'; shadow = 'rgba(168,85,247,0.9)'; }
-      } else if (level >= 27) {
-        bg = pseudoRand(s + 10) > 0.5 ? 'bg-fuchsia-300' : 'bg-purple-300';
-        shadow = pseudoRand(s + 10) > 0.5 ? 'rgba(217,70,239,0.8)' : 'rgba(168,85,247,0.8)';
-      } else if (level >= 24) {
-        bg = pseudoRand(s + 10) > 0.5 ? 'bg-cyan-300' : 'bg-blue-300';
-        shadow = pseudoRand(s + 10) > 0.5 ? 'rgba(34,211,238,0.8)' : 'rgba(96,165,250,0.8)';
-      } else if (level >= 20) {
-        bg = pseudoRand(s + 10) > 0.5 ? 'bg-red-400' : 'bg-amber-300';
-        shadow = pseudoRand(s + 10) > 0.5 ? 'rgba(248,113,113,0.8)' : 'rgba(251,191,36,0.8)';
-      } else if (level >= 10) {
-        bg = 'bg-emerald-300';
-        shadow = 'rgba(16,185,129,0.7)';
-      } else {
-        bg = 'bg-blue-300';
-        shadow = 'rgba(59,130,246,0.65)';
+        if (r < 0.33) particleGlow = 'rgba(6,182,212,0.9)';      // cyan
+        else if (r < 0.66) particleGlow = 'rgba(168,85,247,0.9)'; // purple
       }
 
-      // Random params: spawn 15-85% (close to center), size 1-3px, dur 2-5s
-      const size = 1 + pseudoRand(s + 2) * 2;
-      const left = 15 + pseudoRand(s) * 70;     // 15–85% — nah am Badge
-      const top = 15 + pseudoRand(s + 1) * 70;
-      const dur = 2 + pseudoRand(s + 3) * 3;     // 2–5s
-      const delay = pseudoRand(s + 4) * 2.5;     // 0–2.5s
-      const opacity = 0.5 + pseudoRand(s + 5) * 0.5;
+      const size = 1.5 + pseudoRand(s + 2) * 2.5;  // 1.5–4px
+      const left = 10 + pseudoRand(s) * 80;          // 10–90%
+      const top = 10 + pseudoRand(s + 1) * 80;
+      const dur = 2 + pseudoRand(s + 3) * 3;         // 2–5s
+      const delay = pseudoRand(s + 4) * 3;           // 0–3s
+      const opacity = 0.45 + pseudoRand(s + 5) * 0.55; // 0.45–1.0
+      const behind = pseudoRand(s + 6) < 0.4;        // 40% behind badge
 
-      p.push({
-        id: i,
-        size,
-        left: `${left}%`,
-        top: `${top}%`,
-        dur: `${dur}s`,
-        delay: `${delay}s`,
-        opacity,
-        bg,
-        shadow,
-      });
+      p.push({ id: i, size, left: `${left}%`, top: `${top}%`, dur: `${dur}s`, delay: `${delay}s`, opacity, glow: particleGlow, behind });
     }
     return p;
-  }, [level, hasParticles, isPremium, isGojo]);
+  }, [level]);
+
+  const behindParticles = particles.filter(p => p.behind);
+  const frontParticles = particles.filter(p => !p.behind);
 
   return (
     <div className={`relative flex items-center justify-center ${className}`} {...props}>
-      {/* Particles — tighter inset, organic non-linear animation */}
-      {hasParticles && (
-        <div className="absolute inset-[-4px] pointer-events-none z-0 overflow-visible">
-          {particles.map(p => (
+      {/* ── BEHIND: particles rendered under the badge ── */}
+      {behindParticles.length > 0 && (
+        <div className="absolute inset-[-3px] pointer-events-none z-0 overflow-visible">
+          {behindParticles.map(p => (
             <div
-              key={p.id}
-              className={`absolute rounded-full animate-particle-float ${p.bg}`}
+              key={`b-${p.id}`}
+              className="absolute rounded-full bg-white animate-particle-float"
+              style={{
+                width: `${p.size}px`,
+                height: `${p.size}px`,
+                left: p.left,
+                top: p.top,
+                opacity: p.opacity * 0.7,
+                animationDuration: p.dur,
+                animationDelay: p.delay,
+                boxShadow: `0 0 ${p.size * 3}px ${p.glow}, 0 0 ${p.size * 6}px ${p.glow}`,
+              }}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* ── BADGE BODY: conic sweep + gradient background ── */}
+      <div className={`absolute inset-0 rounded-[inherit] overflow-hidden ${baseStyle}`} />
+
+      {/* ── FRONT: particles rendered over the badge ── */}
+      {frontParticles.length > 0 && (
+        <div className="absolute inset-[-3px] pointer-events-none z-20 overflow-visible">
+          {frontParticles.map(p => (
+            <div
+              key={`f-${p.id}`}
+              className="absolute rounded-full bg-white animate-particle-float"
               style={{
                 width: `${p.size}px`,
                 height: `${p.size}px`,
@@ -110,18 +114,15 @@ export function LevelBadge({ level, className = '', children, ...props }: LevelB
                 opacity: p.opacity,
                 animationDuration: p.dur,
                 animationDelay: p.delay,
-                boxShadow: `0 0 ${p.size * 2}px ${p.shadow}`,
+                boxShadow: `0 0 ${p.size * 3}px ${p.glow}, 0 0 ${p.size * 6}px ${p.glow}`,
               }}
             />
           ))}
         </div>
       )}
 
-      {/* Inner Badge — overflow hidden clips the sweep ::before/::after */}
-      <div className={`absolute inset-0 rounded-[inherit] overflow-hidden ${baseStyle}`} />
-
-      {/* Content on top */}
-      <div className="relative z-10 flex flex-col items-center justify-center w-full h-full">
+      {/* ── CONTENT: LVL text, number ── */}
+      <div className="relative z-30 flex flex-col items-center justify-center w-full h-full">
         {children}
       </div>
     </div>
