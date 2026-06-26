@@ -232,8 +232,8 @@ export const translations = {
     
     // Profile / Profil
     profileOverview: 'Übersicht',
-    myAchievements: 'Meine Erfolge',
-    bonusTipsTab: 'Bonus-Tipps',
+    myAchievements: 'Erfolge',
+    bonusTipsTab: 'Bonus',
     profileSettings: 'Einstellungen',
     levelTitle: 'Level {level}',
     xpText: '{current} / {required} XP',
@@ -663,8 +663,8 @@ export const translations = {
     
     // Profile / Profil
     profileOverview: 'Overview',
-    myAchievements: 'My Achievements',
-    bonusTipsTab: 'Bonus Tips',
+    myAchievements: 'Achievements',
+    bonusTipsTab: 'Bonus',
     profileSettings: 'Settings',
     levelTitle: 'Level {level}',
     xpText: '{current} / {required} XP',
@@ -1094,8 +1094,8 @@ export const translations = {
     
     // Profile / Profil
     profileOverview: 'Genel Bakış',
-    myAchievements: 'Başarılarım',
-    bonusTipsTab: 'Bonus Tahminler',
+    myAchievements: 'Başarılar',
+    bonusTipsTab: 'Bonus',
     profileSettings: 'Ayarlar',
     levelTitle: 'Seviye {level}',
     xpText: '{current} / {required} XP',

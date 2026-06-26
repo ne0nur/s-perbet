@@ -17,7 +17,7 @@ export function BottomNav() {
   const activeIndex = tabs.findIndex(tab => location.pathname === tab.to)
 
   return (
-    <nav className="fixed bottom-4 left-4 right-4 max-w-md mx-auto z-50 glass-panel rounded-2xl shadow-[0_12px_40px_rgba(0,0,0,0.6)] md:hidden border border-white/10 overflow-hidden">
+    <nav className="fixed bottom-4 left-4 right-4 max-w-md mx-auto z-50 bg-surface/85 backdrop-blur-2xl rounded-2xl shadow-[0_12px_40px_rgba(0,0,0,0.7)] md:hidden border border-white/10 overflow-hidden">
       <div className="flex justify-around items-center h-[60px] px-1 relative">
         {/* Sliding Pill */}
         {activeIndex !== -1 && (

@@ -728,10 +728,10 @@ export function ProfilePage() {
       </div>
 
       {/* Segmented Control Navigation */}
-      <div className="bg-surface-container/50 border border-white/5 p-1 rounded-2xl flex overflow-x-auto no-scrollbar gap-1.5 mb-6 backdrop-blur-md">
+      <div className="bg-surface-container/50 border border-white/5 p-1 rounded-2xl flex overflow-x-auto no-scrollbar gap-1 mb-6 backdrop-blur-md">
         <button
           onClick={() => setActiveTab('overview')}
-          className={`flex-1 min-w-[90px] px-3 py-2 rounded-xl text-[10px] font-mono uppercase tracking-wider transition-all duration-200 cursor-pointer text-center ${
+          className={`flex-1 min-w-[65px] xs:min-w-[75px] md:min-w-[90px] px-1.5 xs:px-3 py-2 rounded-xl text-[9px] xs:text-[10px] md:text-xs font-mono uppercase tracking-wider transition-all duration-200 cursor-pointer text-center whitespace-nowrap ${
             activeTab === 'overview'
               ? 'bg-primary-container text-on-primary-container font-black shadow-[0_2px_10px_rgba(251,191,36,0.15)] border border-primary/20 scale-[1.01]'
               : 'text-on-surface-variant hover:text-on-surface hover:bg-white/5 border border-transparent'
@@ -741,7 +741,7 @@ export function ProfilePage() {
         </button>
         <button
           onClick={() => setActiveTab('achievements')}
-          className={`flex-1 min-w-[95px] relative px-3 py-2 rounded-xl text-[10px] font-mono uppercase tracking-wider transition-all duration-200 cursor-pointer text-center ${
+          className={`flex-1 min-w-[70px] xs:min-w-[80px] md:min-w-[95px] relative px-1.5 xs:px-3 py-2 rounded-xl text-[9px] xs:text-[10px] md:text-xs font-mono uppercase tracking-wider transition-all duration-200 cursor-pointer text-center whitespace-nowrap ${
             activeTab === 'achievements'
               ? 'bg-primary-container text-on-primary-container font-black shadow-[0_2px_10px_rgba(251,191,36,0.15)] border border-primary/20 scale-[1.01]'
               : 'text-on-surface-variant hover:text-on-surface hover:bg-white/5 border border-transparent'
@@ -749,12 +749,12 @@ export function ProfilePage() {
         >
           🏆 {t('myAchievements')}
           {newlyUnlockedCount > 0 && (
-            <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-red-500 rounded-full border border-surface-container-high animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.8)]" />
+            <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-red-500 rounded-full border border-surface-container-high animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.8)]" />
           )}
         </button>
         <button
           onClick={() => setActiveTab('bonus')}
-          className={`flex-1 min-w-[90px] px-3 py-2 rounded-xl text-[10px] font-mono uppercase tracking-wider transition-all duration-200 cursor-pointer text-center ${
+          className={`flex-1 min-w-[65px] xs:min-w-[75px] md:min-w-[90px] px-1.5 xs:px-3 py-2 rounded-xl text-[9px] xs:text-[10px] md:text-xs font-mono uppercase tracking-wider transition-all duration-200 cursor-pointer text-center whitespace-nowrap ${
             activeTab === 'bonus'
               ? 'bg-primary-container text-on-primary-container font-black shadow-[0_2px_10px_rgba(251,191,36,0.15)] border border-primary/20 scale-[1.01]'
               : 'text-on-surface-variant hover:text-on-surface hover:bg-white/5 border border-transparent'
@@ -764,7 +764,7 @@ export function ProfilePage() {
         </button>
         <button
           onClick={() => setActiveTab('settings')}
-          className={`flex-1 min-w-[90px] px-3 py-2 rounded-xl text-[10px] font-mono uppercase tracking-wider transition-all duration-200 cursor-pointer text-center ${
+          className={`flex-1 min-w-[65px] xs:min-w-[75px] md:min-w-[90px] px-1.5 xs:px-3 py-2 rounded-xl text-[9px] xs:text-[10px] md:text-xs font-mono uppercase tracking-wider transition-all duration-200 cursor-pointer text-center whitespace-nowrap ${
             activeTab === 'settings'
               ? 'bg-primary-container text-on-primary-container font-black shadow-[0_2px_10px_rgba(251,191,36,0.15)] border border-primary/20 scale-[1.01]'
               : 'text-on-surface-variant hover:text-on-surface hover:bg-white/5 border border-transparent'
@@ -775,7 +775,7 @@ export function ProfilePage() {
         {profil?.is_admin && (
           <button
             onClick={() => setActiveTab('admin')}
-            className={`flex-1 min-w-[90px] px-3 py-2 rounded-xl text-[10px] font-mono uppercase tracking-wider transition-all duration-200 cursor-pointer text-center ${
+            className={`flex-1 min-w-[65px] xs:min-w-[75px] md:min-w-[90px] px-1.5 xs:px-3 py-2 rounded-xl text-[9px] xs:text-[10px] md:text-xs font-mono uppercase tracking-wider transition-all duration-200 cursor-pointer text-center whitespace-nowrap ${
               activeTab === 'admin'
                 ? 'bg-red-500/20 text-red-400 font-black shadow-[0_2px_10px_rgba(239,68,68,0.15)] border border-red-500/30 scale-[1.01]'
                 : 'text-red-400/60 hover:text-red-400 hover:bg-red-500/5 border border-transparent'

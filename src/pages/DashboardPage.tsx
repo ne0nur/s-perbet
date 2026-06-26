@@ -230,14 +230,14 @@ export function DashboardPage() {
             <div className="flex bg-surface-container/50 border border-white/5 p-1 rounded-2xl gap-1.5 backdrop-blur-md">
               <button
                 onClick={() => { setSelectedTournament('Süper Lig'); setSpieltag(1); }}
-                className={`px-3 py-2 text-[10px] font-mono font-black uppercase tracking-wider rounded-xl whitespace-nowrap transition-all duration-200 cursor-pointer flex items-center gap-2 ${selectedTournament === 'Süper Lig' ? 'bg-primary-container text-on-primary-container shadow-[0_2px_8px_rgba(251,191,36,0.15)] border border-primary/20 scale-[1.01]' : 'text-on-surface-variant hover:text-on-surface hover:bg-white/5 border border-transparent'}`}
+                className={`px-3 py-2 text-[9px] xs:text-[10px] md:text-xs font-mono font-black uppercase tracking-wider rounded-xl whitespace-nowrap transition-all duration-200 cursor-pointer flex items-center gap-2 ${selectedTournament === 'Süper Lig' ? 'bg-primary-container text-on-primary-container shadow-[0_2px_8px_rgba(251,191,36,0.15)] border border-primary/20 scale-[1.01]' : 'text-on-surface-variant hover:text-on-surface hover:bg-white/5 border border-transparent'}`}
               >
                 <img src={`${import.meta.env.BASE_URL}logos/Süper_Lig.png`} alt="SL" className="w-5 h-5 object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.6)] brightness-110 shrink-0" />
                 Süper Lig
               </button>
               <button
                 onClick={() => { setSelectedTournament('Champions League'); setSpieltag(1); }}
-                className={`px-3 py-2 text-[10px] font-mono font-black uppercase tracking-wider rounded-xl whitespace-nowrap transition-all duration-200 cursor-pointer flex items-center gap-2 ${selectedTournament === 'Champions League' ? 'bg-primary-container text-on-primary-container shadow-[0_2px_8px_rgba(251,191,36,0.15)] border border-primary/20 scale-[1.01]' : 'text-on-surface-variant hover:text-on-surface hover:bg-white/5 border border-transparent'}`}
+                className={`px-3 py-2 text-[9px] xs:text-[10px] md:text-xs font-mono font-black uppercase tracking-wider rounded-xl whitespace-nowrap transition-all duration-200 cursor-pointer flex items-center gap-2 ${selectedTournament === 'Champions League' ? 'bg-primary-container text-on-primary-container shadow-[0_2px_8px_rgba(251,191,36,0.15)] border border-primary/20 scale-[1.01]' : 'text-on-surface-variant hover:text-on-surface hover:bg-white/5 border border-transparent'}`}
               >
                 <img src={`${import.meta.env.BASE_URL}logos/UEFA_Champions_League_logo.png`} alt="CL" className="w-5 h-5 object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.6)] brightness-110 shrink-0" />
                 Champions League
@@ -261,7 +261,7 @@ export function DashboardPage() {
               {/* Sticky "ALLE" Button — immer sichtbar */}
               <button
                 onClick={() => { setSpieltag(0); ladeMatches(0); }}
-                className={`flex-shrink-0 px-3.5 py-2 rounded-xl text-[10px] font-mono font-black uppercase tracking-wider transition-all duration-200 cursor-pointer ${
+                className={`flex-shrink-0 px-3.5 py-2 rounded-xl text-[9px] xs:text-[10px] md:text-xs font-mono font-black uppercase tracking-wider transition-all duration-200 cursor-pointer ${
                   aktuellerSpieltag === 0
                     ? 'bg-primary-container text-on-primary-container shadow-[0_2px_8px_rgba(251,191,36,0.15)] border border-primary/20 scale-[1.01]'
                     : 'text-on-surface-variant hover:text-on-surface hover:bg-white/5 border border-transparent'
@@ -297,7 +297,7 @@ export function DashboardPage() {
                         key={st}
                         data-st={st}
                         onClick={() => setSpieltag(st)}
-                        className={`flex-shrink-0 px-3 py-2 rounded-xl text-[10px] font-mono font-black uppercase tracking-wider transition-all duration-200 cursor-pointer relative flex items-center gap-1 ${btnStyle}`}
+                        className={`flex-shrink-0 px-3 py-2 rounded-xl text-[9px] xs:text-[10px] md:text-xs font-mono font-black uppercase tracking-wider transition-all duration-200 cursor-pointer relative flex items-center gap-1 ${btnStyle}`}
                       >
                         {getPhaseLabel(st, selectedTournament)}
                         {fullyTipped && st < aktuellerSpieltag && !isActive && (
