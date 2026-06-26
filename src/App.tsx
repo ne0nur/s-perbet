@@ -73,13 +73,19 @@ export default function App() {
     const storageKey = `superbet_last_broadcast_${user.id}`
     const lastSeenId = localStorage.getItem(storageKey)
     supabase.from('admin_broadcasts')
-      .select('id, message')
+      .select('id, message, created_at')
       .order('id', { ascending: false })
       .limit(1)
       .single()
       .then(({ data }) => {
         if (data && String(data.id) !== lastSeenId) {
-          useToastStore.getState().toast(`📢 ${data.message}`, 'info')
+          // Zeige die Nachricht nicht für User, die NACH dem Broadcast erstellt wurden
+          const userCreatedAt = new Date(user.created_at || Date.now())
+          const broadcastCreatedAt = new Date(data.created_at)
+          
+          if (broadcastCreatedAt > userCreatedAt) {
+            useToastStore.getState().toast(`📢 ${data.message}`, 'info')
+          }
           localStorage.setItem(storageKey, String(data.id))
         }
       })
