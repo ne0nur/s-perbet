@@ -74,7 +74,10 @@ export function ProfilePage() {
   const [bonusTipps, setBonusTipps] = useState<BonusTipp[]>([])
   const [antworten, setAntworten] = useState<Record<number, string>>({})
   const [gespeichert, setGespeichert] = useState(false)
-  const [bonusGesperrt, setBonusGesperrt] = useState(false)
+  const [bonusGesperrtSL, setBonusGesperrtSL] = useState(false)
+  const [bonusGesperrtCL, setBonusGesperrtCL] = useState(false)
+  const [teamsSL, setTeamsSL] = useState<string[]>([])
+  const [teamsCL, setTeamsCL] = useState<string[]>([])
   const [userTips, setUserTips] = useState<TipDetails[]>([])
 
   // Level animation states
@@ -333,17 +336,67 @@ export function ProfilePage() {
       setAntworten(initialAntworten)
     }
 
-    const { data: st2Matches } = await supabase.from('matches')
+    // Smart Deadline Check per Tournament (Locked if current time is past Spieltag 3 start)
+    const { data: slSt3Check } = await supabase.from('matches')
       .select('anpfiff')
-      .eq('spieltag', 2)
+      .eq('tournament', 'Süper Lig')
+      .eq('spieltag', 3)
       .limit(1)
-
-    if (st2Matches && st2Matches.length > 0) {
-      const st2Start = new Date(st2Matches[0].anpfiff)
-      if (new Date() > st2Start) {
-        setBonusGesperrt(true)
-      }
+    if (slSt3Check && slSt3Check.length > 0) {
+      const slSt3Start = new Date(slSt3Check[0].anpfiff)
+      if (new Date() > slSt3Start) setBonusGesperrtSL(true)
     }
+
+    const { data: clSt3Check } = await supabase.from('matches')
+      .select('anpfiff')
+      .eq('tournament', 'Champions League')
+      .eq('spieltag', 3)
+      .limit(1)
+    if (clSt3Check && clSt3Check.length > 0) {
+      const clSt3Start = new Date(clSt3Check[0].anpfiff)
+      if (new Date() > clSt3Start) setBonusGesperrtCL(true)
+    }
+
+    // Dynamic Team Extraction from official schedules / matches table
+    const { data: matchesSL } = await supabase.from('matches')
+      .select('heim_team, gast_team')
+      .eq('tournament', 'Süper Lig')
+      .eq('season', 2026)
+    const slTeamsSet = new Set<string>()
+    if (matchesSL) {
+      matchesSL.forEach(m => {
+        if (m.heim_team && m.heim_team !== 'LIGA' && m.heim_team !== 'CHAT') slTeamsSet.add(m.heim_team)
+        if (m.gast_team && m.gast_team !== 'LIGA' && m.gast_team !== 'CHAT') slTeamsSet.add(m.gast_team)
+      })
+    }
+    const FALLBACK_SL_TEAMS = [
+      'Fenerbahçe', 'Galatasaray', 'Beşiktaş', 'Trabzonspor', 'Başakşehir',
+      'Adana Demirspor', 'Antalyaspor', 'Konyaspor', 'Sivasspor', 'Kayserispor',
+      'Gaziantep FK', 'Hatayspor', 'Alanyaspor', 'Kasımpaşa', 'Ankaragücü',
+      'Samsunspor', 'Pendikspor', 'Rizespor', 'Karagümrük', 'Bodrum FK', 'Eyüpspor', 'Göztepe',
+    ]
+    setTeamsSL(slTeamsSet.size > 0 ? Array.from(slTeamsSet).sort() : FALLBACK_SL_TEAMS)
+
+    const { data: matchesCL } = await supabase.from('matches')
+      .select('heim_team, gast_team')
+      .eq('tournament', 'Champions League')
+      .eq('season', 2026)
+    const clTeamsSet = new Set<string>()
+    if (matchesCL) {
+      matchesCL.forEach(m => {
+        if (m.heim_team && m.heim_team !== 'LIGA' && m.heim_team !== 'CHAT') clTeamsSet.add(m.heim_team)
+        if (m.gast_team && m.gast_team !== 'LIGA' && m.gast_team !== 'CHAT') clTeamsSet.add(m.gast_team)
+      })
+    }
+    const FALLBACK_CL_TEAMS = [
+      'Real Madrid', 'Manchester City', 'Bayern München', 'Paris Saint-Germain',
+      'Arsenal', 'Inter', 'Barcelona', 'Bayer Leverkusen', 'Atletico Madrid',
+      'Borussia Dortmund', 'Juventus', 'AC Milan', 'Liverpool', 'Aston Villa',
+      'Sporting CP', 'Benfica', 'Feyenoord', 'PSV Eindhoven', 'Celtic',
+      'Monaco', 'Lille', 'Brest', 'Stuttgart', 'Girona', 'Bologna',
+      'Galatasaray', 'Fenerbahçe'
+    ]
+    setTeamsCL(clTeamsSet.size > 0 ? Array.from(clTeamsSet).sort() : FALLBACK_CL_TEAMS)
 
     setIsLaden(false)
   }, [user])
@@ -656,23 +709,45 @@ export function ProfilePage() {
 
   async function handleSpeichernBonus() {
     if (!user) return
-    // Re-Check Deadline vor jedem Speicher-Versuch
-    const { data: st3Check } = await supabase.from('matches')
+
+    // Smart Re-Check Deadline per Tournament before saving
+    const { data: slSt3Check } = await supabase.from('matches')
       .select('anpfiff')
+      .eq('tournament', 'Süper Lig')
       .eq('spieltag', 3)
       .lte('anpfiff', new Date().toISOString())
       .limit(1)
-    if (st3Check && st3Check.length > 0) {
-      useToastStore.getState().toast('Bonus-Tipps sind nach dem 2. Spieltag gesperrt.', 'error')
-      setBonusGesperrt(true)
+    const slLocked = !!(slSt3Check && slSt3Check.length > 0)
+
+    const { data: clSt3Check } = await supabase.from('matches')
+      .select('anpfiff')
+      .eq('tournament', 'Champions League')
+      .eq('spieltag', 3)
+      .lte('anpfiff', new Date().toISOString())
+      .limit(1)
+    const clLocked = !!(clSt3Check && clSt3Check.length > 0)
+
+    setBonusGesperrtSL(slLocked)
+    setBonusGesperrtCL(clLocked)
+
+    if (slLocked && clLocked) {
+      useToastStore.getState().toast('Alle Bonus-Tipps sind bereits gesperrt.', 'error')
       return
     }
+
     try {
-      const upsertRows = Object.entries(antworten).map(([frageId, antwort]) => ({
-        user_id: user.id,
-        frage_id: Number(frageId),
-        antwort
-      }))
+      const upsertRows = Object.entries(antworten)
+        .filter(([frageId]) => {
+          const idNum = Number(frageId)
+          if (idNum >= 1 && idNum <= 3) return !slLocked
+          if (idNum >= 4 && idNum <= 6) return !clLocked
+          return false
+        })
+        .map(([frageId, antwort]) => ({
+          user_id: user.id,
+          frage_id: Number(frageId),
+          antwort
+        }))
 
       if (upsertRows.length > 0) {
         const { error } = await supabase.from('bonus_tipps').upsert(upsertRows)
@@ -816,13 +891,16 @@ export function ProfilePage() {
         {activeTab === 'bonus' && (
           <div className="animate-fade-in">
             <BonusTippsCard
-              bonusGesperrt={bonusGesperrt}
+              bonusGesperrtSL={bonusGesperrtSL}
+              bonusGesperrtCL={bonusGesperrtCL}
               bonusTipps={bonusTipps}
               antworten={antworten}
               setAntworten={setAntworten}
               handleSpeichernBonus={handleSpeichernBonus}
               gespeichert={gespeichert}
               setGespeichert={setGespeichert}
+              teamsSL={teamsSL}
+              teamsCL={teamsCL}
             />
           </div>
         )}
