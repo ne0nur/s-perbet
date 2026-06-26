@@ -86,9 +86,10 @@ interface MatchCardProps {
   match: Match
   onNavigate?: () => void
   className?: string
+  trendStats?: { home: number; draw: number; away: number }
 }
 
-export const MatchCard = memo(function MatchCard({ match, onNavigate, className = '' }: MatchCardProps) {
+export const MatchCard = memo(function MatchCard({ match, onNavigate, className = '', trendStats }: MatchCardProps) {
   const eigenerTipp = useTipStore(s => s.meineTipps.find(t => t.match_id === match.id))
   const tippSpeichern = useTipStore(s => s.tippSpeichern)
   const tippsFreigeschaltet = useSettingsStore(s => s.tippsFreigeschaltet)
@@ -221,6 +222,31 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
           <span className="text-sm font-medium text-white truncate">{match.gast_team}</span>
         </div>
       </div>
+
+      {/* Community Trend (Schwarmintelligenz) */}
+      {trendStats && (trendStats.home > 0 || trendStats.draw > 0 || trendStats.away > 0) && (
+        <div className="px-1 mb-3">
+          <div className="flex w-full h-1.5 rounded-full overflow-hidden bg-surface-container-high relative">
+            <div 
+              className="h-full bg-blue-500/80 transition-all duration-500" 
+              style={{ width: `${(trendStats.home / (trendStats.home + trendStats.draw + trendStats.away)) * 100}%` }}
+            />
+            <div 
+              className="h-full bg-slate-400/80 transition-all duration-500" 
+              style={{ width: `${(trendStats.draw / (trendStats.home + trendStats.draw + trendStats.away)) * 100}%` }}
+            />
+            <div 
+              className="h-full bg-rose-500/80 transition-all duration-500" 
+              style={{ width: `${(trendStats.away / (trendStats.home + trendStats.draw + trendStats.away)) * 100}%` }}
+            />
+          </div>
+          <div className="flex justify-between mt-1 text-[9px] font-mono font-medium text-on-surface-variant/60 px-0.5">
+            <span className="text-blue-400/80">{Math.round((trendStats.home / (trendStats.home + trendStats.draw + trendStats.away)) * 100)}%</span>
+            <span className="text-slate-400/80">{Math.round((trendStats.draw / (trendStats.home + trendStats.draw + trendStats.away)) * 100)}%</span>
+            <span className="text-rose-400/80">{Math.round((trendStats.away / (trendStats.home + trendStats.draw + trendStats.away)) * 100)}%</span>
+          </div>
+        </div>
+      )}
 
       {/* ─── Tipp-Bereich ─── */}
       <div className="pt-2 border-t border-white/5">

@@ -122,8 +122,45 @@ export function DashboardPage() {
   const anzeigeMatches = filter === 'live'
     ? matches.filter(m => m.status === 'live')
     : matches
+  const [trendStatsMap, setTrendStatsMap] = useState<Record<string, { home: number, draw: number, away: number }>>({})
+
+  // Fetch trend stats for displayed matches
+  useEffect(() => {
+    const matchIds = anzeigeMatches.map(m => m.id)
+    if (matchIds.length === 0) return
+    
+    let isMounted = true
+    // Try RPC first
+    supabase.rpc('get_match_trends', { p_match_ids: matchIds }).then(({ data, error }) => {
+      if (error || !data) {
+        // Fallback to querying tips directly
+        supabase.from('tips').select('match_id, tipp_heim, tipp_gast').in('match_id', matchIds).then(({ data: fallbackData }) => {
+          if (!fallbackData || !isMounted) return
+          const map: Record<string, { home: number, draw: number, away: number }> = {}
+          matchIds.forEach(id => map[id] = { home: 0, draw: 0, away: 0 })
+          fallbackData.forEach((t: any) => {
+            if (!map[t.match_id]) map[t.match_id] = { home: 0, draw: 0, away: 0 }
+            if (t.tipp_heim > t.tipp_gast) map[t.match_id].home++
+            else if (t.tipp_heim === t.tipp_gast) map[t.match_id].draw++
+            else map[t.match_id].away++
+          })
+          setTrendStatsMap(map)
+        })
+        return
+      }
+      
+      if (isMounted) {
+        const map: Record<string, { home: number, draw: number, away: number }> = {}
+        data.forEach((d: any) => {
+          map[d.match_id] = { home: Number(d.home_tips), draw: Number(d.draw_tips), away: Number(d.away_tips) }
+        })
+        setTrendStatsMap(map)
+      }
+    })
+    
+    return () => { isMounted = false }
+  }, [anzeigeMatches])  // Group matches by tournament
   
-  // Group matches by tournament
   const matchesByTournament = useMemo(() => {
     const groups: Record<string, typeof anzeigeMatches> = {}
     anzeigeMatches.forEach(m => {
@@ -385,6 +422,7 @@ export function DashboardPage() {
                           <div key={match.id} className="stagger-in">
                             <MatchCard
                               match={match}
+                              trendStats={trendStatsMap[match.id]}
                               onNavigate={() => {
                                 if (isDesktop) {
                                   setSelectedMatchId(match.id)
