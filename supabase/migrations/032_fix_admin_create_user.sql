@@ -59,9 +59,10 @@ BEGIN
   );
 
   -- Insert identity with DIFFERENT UUID from user_id (matches GoTrue)
+  -- Note: auth.identities.email is a GENERATED column from identity_data, DO NOT INSERT
   INSERT INTO auth.identities (
     id, user_id, provider_id, identity_data,
-    provider, email,
+    provider,
     last_sign_in_at, created_at, updated_at
   ) VALUES (
     identity_id,
@@ -74,7 +75,6 @@ BEGIN
       'phone_verified', false
     ),
     'email',
-    new_username || '@tipp.local',
     NULL, now(), now()
   );
 
