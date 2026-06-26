@@ -31,6 +31,24 @@ interface BonusStat {
   percentage: number
 }
 
+interface BonusQuestionStats {
+  fragenId: number
+  title: string  // generierter Titel
+  stats: BonusStat[]
+}
+
+// Mappt frage_id → Turnier-Name + Index (für Titel-Generierung)
+// SL: 1-3, CL: 4-6, neue Turniere: 100+
+function getTournamentForFrageId(fragenId: number): { tournament: string; questionIndex: number } {
+  if (fragenId >= 1 && fragenId <= 3) return { tournament: 'Süper Lig', questionIndex: fragenId - 1 }
+  if (fragenId >= 4 && fragenId <= 6) return { tournament: 'Champions League', questionIndex: fragenId - 4 }
+  // Neue Turniere: 100+ (tIndex * 3 + base)
+  const base = fragenId - 100
+  const tIndex = Math.floor(base / 3)
+  const qIndex = base % 3
+  return { tournament: `Turnier ${tIndex + 3}`, questionIndex: qIndex }
+}
+
 // ─── Sub-Component Leaderboard ────────────────────────
 function LeaderboardSection({
   rangliste,
@@ -256,15 +274,27 @@ function StatsSection({
   totalTips,
   avgPoints,
   remainingPoints,
-  bonusStats,
+  bonusStatsByTournament,
 }: {
   totalUsers: number
   totalTips: number
   avgPoints: number
   remainingPoints: number
-  bonusStats: Record<number, BonusStat[]>
+  bonusStatsByTournament: Record<string, BonusQuestionStats[]>
 }) {
   const { t } = useTranslation()
+  const tournamentNames = Object.keys(bonusStatsByTournament)
+  const [activeStatTournament, setActiveStatTournament] = useState<string>('')
+
+  // Aktives Turnier initialisieren
+  useEffect(() => {
+    if (tournamentNames.length > 0 && !activeStatTournament) {
+      setActiveStatTournament(tournamentNames[0])
+    }
+  }, [tournamentNames, activeStatTournament])
+
+  const activeTournamentStats = bonusStatsByTournament[activeStatTournament] || []
+
   return (
     <div className="space-y-4">
       {/* Erklärungstext für neue User */}
@@ -307,59 +337,88 @@ function StatsSection({
         </div>
       </div>
 
-      {/* Community Vote Stats on Bonus wetten */}
+      {/* Community Vote Stats — dynamisch per Turnier */}
       <div className="pt-4">
         <h2 className="text-sm font-bold text-on-surface mb-1">{t('prognosisTitle')}</h2>
         <p className="text-[11px] text-on-surface-variant mb-4 leading-relaxed">
           {t('prognosisDesc')}
         </p>
+
+        {/* Turnier-Tabs (nur wenn > 1 Turnier) */}
+        {tournamentNames.length > 1 && (
+          <div className="flex bg-surface-container/50 border border-white/5 p-0.5 rounded-xl mb-4 gap-1 overflow-x-auto no-scrollbar">
+            {tournamentNames.map(tName => (
+              <button
+                key={tName}
+                type="button"
+                onClick={() => setActiveStatTournament(tName)}
+                className={`flex-1 min-w-[80px] py-1.5 rounded-lg text-[9px] xs:text-[10px] font-mono font-black uppercase tracking-wider transition-all duration-200 cursor-pointer text-center whitespace-nowrap ${
+                  activeStatTournament === tName
+                    ? 'bg-primary-container text-on-primary-container shadow-[0_1.5px_6px_rgba(251,191,36,0.1)] border border-primary/25 scale-[1.01]'
+                    : 'text-on-surface-variant hover:text-on-surface hover:bg-white/5 border border-transparent'
+                }`}
+              >
+                {tName}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Fragen des aktiven Turniers */}
         <div className="space-y-4">
-      {[
-        { id: 1, title: t('bonusTitle1'), color: 'bg-gradient-to-r from-amber-500 to-yellow-400' },
-        { id: 2, title: t('bonusTitle2'), color: 'bg-emerald-500/80' },
-        { id: 3, title: t('bonusTitle3'), color: 'bg-purple-500/80' },
-      ].map(q => (
-        <div key={q.id} className="bg-surface-container-low border border-surface-container-high rounded-xl p-4 shadow-sm">
-          <div className="flex items-center gap-2 mb-4">
-            <BarChart2 size={16} className="text-primary-fixed-dim" />
-            <h3 className="text-xs font-mono font-bold text-on-surface-variant uppercase tracking-wider">{q.title}</h3>
-          </div>
-          
-          <div className="space-y-3">
-            {bonusStats[q.id] && bonusStats[q.id].length > 0 ? (
-              bonusStats[q.id].slice(0, 5).map((item, index) => {
-                const logoUrl = getTeamLogo(item.team)
-                const isFirst = index === 0
-                return (
-                  <div key={item.team} className="space-y-1">
-                    <div className="flex items-center justify-between text-xs">
-                      <div className="flex items-center gap-1.5 min-w-0">
-                        {logoUrl && (
-                          <img src={logoUrl} alt="" className="w-5 h-5 object-contain" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
-                        )}
-                        <span className={`truncate text-xs ${isFirst ? 'text-primary-fixed-dim font-bold' : 'text-on-surface'}`}>
-                          {item.team}
-                        </span>
-                      </div>
-                      <span className="font-mono text-[10px] text-on-surface-variant/80">{item.percentage}% ({item.votes}x)</span>
-                    </div>
-                    <div className="h-2 w-full bg-surface-container-highest rounded-full overflow-hidden p-[1px] border border-surface-container-high">
-                      <div
-                        className={`h-full rounded-full transition-all duration-1000 ${
-                          isFirst ? `${q.color} shadow-[0_0_8px_rgba(251,191,36,0.25)]` : 'bg-blue-500/50'
-                        }`}
-                        style={{ width: `${item.percentage}%` }}
-                      />
-                    </div>
+          {activeTournamentStats.length === 0 ? (
+            <p className="text-xs text-on-surface-variant/40 font-mono text-center py-4">{t('noPrognosis')}</p>
+          ) : (
+            activeTournamentStats.map((q, qi) => {
+              const barColors = [
+                'bg-gradient-to-r from-amber-500 to-yellow-400',
+                'bg-emerald-500/80',
+                'bg-purple-500/80',
+              ]
+              const barColor = barColors[qi % barColors.length]
+              return (
+                <div key={q.fragenId} className="bg-surface-container-low border border-surface-container-high rounded-xl p-4 shadow-sm">
+                  <div className="flex items-center gap-2 mb-4">
+                    <BarChart2 size={16} className="text-primary-fixed-dim" />
+                    <h3 className="text-xs font-mono font-bold text-on-surface-variant uppercase tracking-wider">{q.title}</h3>
                   </div>
-                )
-              })
-            ) : (
-              <p className="text-xs text-on-surface-variant/40 font-mono text-center py-4">{t('noPrognosis')}</p>
-            )}
-          </div>
-        </div>
-      ))}
+                  <div className="space-y-3">
+                    {q.stats.length > 0 ? (
+                      q.stats.slice(0, 5).map((item, index) => {
+                        const logoUrl = getTeamLogo(item.team)
+                        const isFirst = index === 0
+                        return (
+                          <div key={item.team} className="space-y-1">
+                            <div className="flex items-center justify-between text-xs">
+                              <div className="flex items-center gap-1.5 min-w-0">
+                                {logoUrl && (
+                                  <img src={logoUrl} alt="" className="w-5 h-5 object-contain" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
+                                )}
+                                <span className={`truncate text-xs ${isFirst ? 'text-primary-fixed-dim font-bold' : 'text-on-surface'}`}>
+                                  {item.team}
+                                </span>
+                              </div>
+                              <span className="font-mono text-[10px] text-on-surface-variant/80">{item.percentage}% ({item.votes}x)</span>
+                            </div>
+                            <div className="h-2 w-full bg-surface-container-highest rounded-full overflow-hidden p-[1px] border border-surface-container-high">
+                              <div
+                                className={`h-full rounded-full transition-all duration-1000 ${
+                                  isFirst ? `${barColor} shadow-[0_0_8px_rgba(251,191,36,0.25)]` : 'bg-blue-500/50'
+                                }`}
+                                style={{ width: `${item.percentage}%` }}
+                              />
+                            </div>
+                          </div>
+                        )
+                      })
+                    ) : (
+                      <p className="text-xs text-on-surface-variant/40 font-mono text-center py-4">{t('noPrognosis')}</p>
+                    )}
+                  </div>
+                </div>
+              )
+            })
+          )}
         </div>
       </div>
     </div>
@@ -384,8 +443,8 @@ export function GlobalPage() {
   const [avgPoints, setAvgPoints] = useState(0)
   const [remainingPoints, setRemainingPoints] = useState(0)
   
-  // Bonus stats
-  const [bonusStats, setBonusStats] = useState<Record<number, BonusStat[]>>({ 1: [], 2: [], 3: [] })
+  // Bonus stats — dynamisch nach Turnier gruppiert
+  const [bonusStatsByTournament, setBonusStatsByTournament] = useState<Record<string, BonusQuestionStats[]>>({})
   
   const [isLaden, setIsLaden] = useState(true)
 
@@ -554,14 +613,19 @@ export function GlobalPage() {
       
       setRemainingPoints((unplayedMatches || 0) * 4)
 
-      // 4. Bonus Tipp Statistics
+      // 4. Bonus Tipp Statistics — dynamisch, alle frage_ids
       const { data: allBonus } = await supabase
         .from('bonus_tipps')
         .select('frage_id, antwort')
       
-      if (allBonus) {
-        const tempCounts: Record<number, Record<string, number>> = { 1: {}, 2: {}, 3: {} }
-        const questionTotals: Record<number, number> = { 1: 0, 2: 0, 3: 0 }
+      if (allBonus && allBonus.length > 0) {
+        // Alle distinct frage_ids ermitteln
+        const allFrageIds = [...new Set(allBonus.map(b => b.frage_id))].sort((a, b) => a - b)
+
+        // Counts und Totals aufbauen
+        const tempCounts: Record<number, Record<string, number>> = {}
+        const questionTotals: Record<number, number> = {}
+        allFrageIds.forEach(fId => { tempCounts[fId] = {}; questionTotals[fId] = 0 })
 
         allBonus.forEach(item => {
           const fId = item.frage_id
@@ -572,9 +636,15 @@ export function GlobalPage() {
           }
         })
 
-        const computedStats: Record<number, BonusStat[]> = { 1: [], 2: [], 3: [] }
-        
-        for (const fId of [1, 2, 3]) {
+        // Turnier-Gruppen aufbauen
+        const byTournament: Record<string, BonusQuestionStats[]> = {}
+        const questionTitles = [
+          (t: string) => `${t} – Meister`,
+          (t: string) => `${t} – Meiste Tore`,
+          (t: string) => `${t} – Wenigste Gegentore`,
+        ]
+
+        allFrageIds.forEach(fId => {
           const totalVotes = questionTotals[fId] || 1
           const sortedTeams = Object.entries(tempCounts[fId])
             .map(([team, votes]) => ({
@@ -583,11 +653,28 @@ export function GlobalPage() {
               percentage: Math.round((votes / totalVotes) * 100)
             }))
             .sort((a, b) => b.votes - a.votes)
-            
-          computedStats[fId] = sortedTeams
-        }
-        
-        setBonusStats(computedStats)
+
+          const { tournament, questionIndex } = getTournamentForFrageId(fId)
+          if (!byTournament[tournament]) byTournament[tournament] = []
+          byTournament[tournament].push({
+            fragenId: fId,
+            title: questionTitles[questionIndex % 3](tournament),
+            stats: sortedTeams
+          })
+        })
+
+        // Sortierung: Süper Lig zuerst
+        const sortedTournaments: Record<string, BonusQuestionStats[]> = {}
+        const tNames = Object.keys(byTournament).sort((a, b) => {
+          if (a.toLowerCase().includes('süper lig')) return -1
+          if (b.toLowerCase().includes('süper lig')) return 1
+          if (a.toLowerCase().includes('champions')) return -1
+          if (b.toLowerCase().includes('champions')) return 1
+          return a.localeCompare(b)
+        })
+        tNames.forEach(name => { sortedTournaments[name] = byTournament[name] })
+
+        setBonusStatsByTournament(sortedTournaments)
       }
 
     } catch (e) {
@@ -723,11 +810,11 @@ export function GlobalPage() {
             desktopRightTab === 'analyse' && selectedUserId ? (
               <RivalInspector userId={selectedUserId} />
             ) : (
-              <StatsSection totalUsers={totalUsers} totalTips={totalTips} avgPoints={avgPoints} remainingPoints={remainingPoints} bonusStats={bonusStats} />
+              <StatsSection totalUsers={totalUsers} totalTips={totalTips} avgPoints={avgPoints} remainingPoints={remainingPoints} bonusStatsByTournament={bonusStatsByTournament} />
             )
           ) : (
             // Mobile fallback: only show stats here (since mobile analysis has its own route)
-            <StatsSection totalUsers={totalUsers} totalTips={totalTips} avgPoints={avgPoints} remainingPoints={remainingPoints} bonusStats={bonusStats} />
+            <StatsSection totalUsers={totalUsers} totalTips={totalTips} avgPoints={avgPoints} remainingPoints={remainingPoints} bonusStatsByTournament={bonusStatsByTournament} />
           )}
         </div>
       </div>

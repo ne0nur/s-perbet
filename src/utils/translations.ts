@@ -180,6 +180,8 @@ export const translations = {
     prognosisTitle: 'Saison-Prognosen der Tipper',
     prognosisDesc: 'Vor dem ersten Spieltag konnte jeder Spieler Bonus-Tipps abgeben. Hier siehst du das Stimmungsbild der gesamten Community.',
     noPrognosis: 'Noch keine Abgaben vorhanden.',
+    noHistoricalData: 'Für dieses Turnier sind keine historischen Daten verfügbar.',
+    bonusStatsTournamentLabel: '{tournament} · Prognosen',
     
     // League / Ligen
     myLeagues: 'Meine Ligen',
@@ -620,6 +622,8 @@ export const translations = {
     prognosisTitle: 'Players\' Season Forecasts',
     prognosisDesc: 'Before the first matchday, every player could submit bonus tips. Here is the overview of the entire community.',
     noPrognosis: 'No submissions yet.',
+    noHistoricalData: 'No historical data available for this tournament.',
+    bonusStatsTournamentLabel: '{tournament} · Forecasts',
     
     // League / Ligen
     myLeagues: 'My Leagues',
@@ -1060,6 +1064,8 @@ export const translations = {
     prognosisTitle: 'Tahmincilerin Sezon Tahminleri',
     prognosisDesc: 'İlk haftadan önce her oyuncu bonus tahminler verebilirdi. İşte tüm topluluğun görüşü.',
     noPrognosis: 'Henüz katılım yok.',
+    noHistoricalData: 'Bu turnuva için geçmiş veriler mevcut değil.',
+    bonusStatsTournamentLabel: '{tournament} · Tahminler',
     
     // League / Ligen
     myLeagues: 'Liglerim',
