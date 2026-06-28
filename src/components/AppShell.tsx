@@ -9,11 +9,15 @@ import { calculateLevelDetails, getLevelBadgeStyle } from '../lib/utils'
 import { LevelBadge } from './ui/LevelBadge'
 import { evaluateAchievements, type TipDetails } from '../utils/achievementEvaluator'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ChevronLeft, ChevronRight, Trophy, Target, Sparkles, Award, Table2, BarChart2, Users, User, Gift, Rocket, Download, Share2 } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Sparkles, Award, Gift, Rocket, Share2, Table2 } from 'lucide-react'
 import { usePwaStore } from '../stores/pwaStore'
 import { useTranslation } from '../utils/translations'
 import { HeaderLogo } from './HeaderLogo'
 import { NetworkIndicator } from './NetworkIndicator'
+import {
+  HoverTrophyIcon, HoverChartBarIcon, HoverUsersIcon, HoverUserIcon,
+  HoverGlobeIcon, HoverDownloadIcon
+} from './icons/HoverIcons'
 
 /** Nur der Page-Content animiert — AppShell & BottomNav bleiben stabil */
 function AnimatedOutlet() {
@@ -327,11 +331,11 @@ export function AppShell() {
   const tabName = tabNames[location.pathname] || ''
 
   const sidebarTabs = [
-    { to: '/dashboard', icon: Trophy, label: t('games') },
-    { to: '/tabelle', icon: Table2, label: t('table') },
-    { to: '/global', icon: BarChart2, label: t('global') },
-    { to: '/league', icon: Users, label: t('league') },
-    { to: '/profile', icon: User, label: t('profile') },
+    { to: '/dashboard', icon: HoverTrophyIcon,  label: t('games') },
+    { to: '/tabelle',   icon: Table2,           label: t('table') },
+    { to: '/global',    icon: HoverChartBarIcon, label: t('global') },
+    { to: '/league',    icon: HoverUsersIcon,   label: t('league') },
+    { to: '/profile',   icon: HoverUserIcon,    label: t('profile') },
   ]
 
   return (
@@ -378,7 +382,7 @@ export function AppShell() {
               }}
               className="w-full bg-primary/5 hover:bg-primary/10 border border-primary/20 hover:border-primary/30 text-primary-fixed-dim p-3 rounded-xl flex items-center gap-2.5 transition-all text-left group cursor-pointer"
             >
-              <Download size={14} className="shrink-0 group-hover:translate-y-0.5 transition-transform" />
+              <HoverDownloadIcon size={14} className="shrink-0 group-hover:translate-y-0.5 transition-transform" />
               <div className="min-w-0">
                 <p className="text-[10px] font-mono font-bold uppercase tracking-wider leading-none">{t('pwaInstallBtn')}</p>
                 <p className="text-[8px] text-on-surface-variant/80 font-mono mt-0.5 truncate leading-none">{t('pwaInstallSubtitle')}</p>
@@ -586,7 +590,7 @@ export function AppShell() {
               {onboardingSlide === 8 && (
                 <div className="animate-fade-in space-y-4">
                   <div className="w-12 h-12 rounded-full bg-purple-500/10 border border-purple-500/30 flex items-center justify-center mx-auto mb-1">
-                    <Trophy size={24} className="text-purple-400" />
+                    <HoverTrophyIcon size={24} className="text-purple-400" />
                   </div>
                   <h2 className="text-lg font-black text-on-surface">
                     {t('onboardingLevelTitle')}

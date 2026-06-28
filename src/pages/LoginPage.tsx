@@ -3,7 +3,9 @@ import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../stores/authStore'
 import { supabase } from '../lib/supabase'
 import { useToastStore } from '../stores/toastStore'
-import { Trophy, User, Lock, ArrowRight, Eye, EyeOff, ChevronLeft, Sparkles, ShieldAlert } from 'lucide-react'
+import { Trophy, User, ArrowRight, ChevronLeft, Sparkles, ShieldAlert } from 'lucide-react'
+import { HoverLockIcon, HoverEyeIcon, HoverEyeOffIcon, HoverTrophyIcon, HoverUserIcon, HoverUserPlusIcon } from '../components/icons/HoverIcons'
+
 import { useLanguageStore } from '../stores/languageStore'
 import { useTranslation } from '../utils/translations'
 import { HeaderLogo } from '../components/HeaderLogo'
@@ -354,7 +356,7 @@ export function LoginPage() {
                 {t('username')}
               </label>
               <div className="relative">
-                <User size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/70" />
+                <HoverUserIcon size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/70" />
                 <input
                   type="text"
                   value={username}
@@ -373,7 +375,7 @@ export function LoginPage() {
                 {t('password')}
               </label>
               <div className="relative">
-                <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/70" />
+                <HoverLockIcon size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/70" />
                 <input
                   type={zeigePasswort ? 'text' : 'password'}
                   value={passwort}
@@ -386,7 +388,7 @@ export function LoginPage() {
                 />
                 <button type="button" onClick={() => setZeigePasswort(!zeigePasswort)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-on-surface transition-colors cursor-pointer">
-                  {zeigePasswort ? <EyeOff size={16} /> : <Eye size={16} />}
+                  {zeigePasswort ? <HoverEyeOffIcon size={16} /> : <HoverEyeIcon size={16} />}
                 </button>
               </div>
             </div>
@@ -746,7 +748,7 @@ export function LoginPage() {
                 {t('setPassword')}
               </label>
               <div className="relative">
-                <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/70" />
+                <HoverLockIcon size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/70" />
                 <input
                   type={zeigeRegPassword ? 'text' : 'password'}
                   value={regPassword}
@@ -759,7 +761,7 @@ export function LoginPage() {
                 />
                 <button type="button" onClick={() => setZeigeRegPassword(!zeigeRegPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-on-surface transition-colors">
-                  {zeigeRegPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  {zeigeRegPassword ? <HoverEyeOffIcon size={16} /> : <HoverEyeIcon size={16} />}
                 </button>
               </div>
             </div>
@@ -769,7 +771,7 @@ export function LoginPage() {
                 {t('confirmPassword')}
               </label>
               <div className="relative">
-                <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/70" />
+                <HoverLockIcon size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/70" />
                 <input
                   type={zeigeRegPassword ? 'text' : 'password'}
                   value={regPasswordConfirm}
