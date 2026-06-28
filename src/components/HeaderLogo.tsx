@@ -34,19 +34,35 @@ export function HeaderLogo({ size = 'md' }: HeaderLogoProps) {
         {showUsername ? (
           <motion.span
             key="username"
-            initial={{ opacity: 0, scale: 0.8, filter: "blur(10px)" }}
-            animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
-            exit={{ opacity: 0, scale: 1.1, filter: "blur(10px)", transition: { duration: 0.8, ease: "easeInOut" } }}
-            transition={{ duration: 1.2, ease: "easeOut" }}
+            initial={{ opacity: 1 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0, transition: { delay: username.length * 0.08 + 0.3, duration: 0.1 } }}
             className="inline-flex items-center justify-center"
           >
             <motion.span
               animate={{ y: [0, -2, 0] }}
               transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
-              className={`superbet-text-super-new ${isSm ? 'text-xl' : 'text-3xl'} tracking-widest text-primary-fixed-dim drop-shadow-[0_0_15px_rgba(251,191,36,0.5)]`}
-              style={{ fontFamily: 'Monr', fontWeight: 700 }}
+              className="inline-flex"
             >
-              {username.toUpperCase()}
+              {username.toUpperCase().split('').map((letter: string, index: number) => (
+                <motion.span
+                  key={index}
+                  initial={{ opacity: 0, scale: 0.5, filter: "blur(10px)", y: 10 }}
+                  animate={{ opacity: 1, scale: 1, filter: "blur(0px)", y: 0 }}
+                  exit={{ 
+                    opacity: 0, 
+                    scale: 1.5, 
+                    filter: "blur(10px)", 
+                    y: -10, 
+                    transition: { duration: 0.4, ease: "easeIn", delay: index * 0.08 } 
+                  }}
+                  transition={{ duration: 0.6, ease: "easeOut", delay: index * 0.05 }}
+                  className={`liquid-gradient-text ${isSm ? 'text-xl' : 'text-3xl'} tracking-widest drop-shadow-[0_0_15px_rgba(251,191,36,0.3)]`}
+                  style={{ fontFamily: 'Monr', fontWeight: 700, display: 'inline-block' }}
+                >
+                  {letter === ' ' ? '\u00A0' : letter}
+                </motion.span>
+              ))}
             </motion.span>
           </motion.span>
         ) : (
