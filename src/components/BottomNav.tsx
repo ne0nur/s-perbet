@@ -1,4 +1,5 @@
 import { NavLink, useLocation } from 'react-router-dom'
+import { motion } from 'framer-motion'
 import { HoverTrophyIcon, HoverGlobeIcon, HoverUserIcon, HoverUsersIcon, HoverChartBarIcon } from './icons/HoverIcons'
 import { useTranslation } from '../utils/translations'
 
@@ -17,53 +18,62 @@ export function BottomNav() {
   const activeIndex = tabs.findIndex(tab => location.pathname === tab.to)
 
   return (
-    <nav className="fixed bottom-4 left-4 right-4 max-w-md mx-auto z-50 bg-surface/85 backdrop-blur-2xl rounded-2xl shadow-[0_12px_40px_rgba(0,0,0,0.7)] md:hidden border border-white/10 overflow-hidden">
-      <div className="flex justify-around items-center h-[60px] px-1 relative">
-        {/* Sliding Pill */}
-        {activeIndex !== -1 && (
-          <div
-            className="absolute top-0 bottom-0 left-0 right-0 flex items-center pointer-events-none z-0"
-          >
-            <div
-              className="w-[20%] flex items-center justify-center"
-              style={{
-                transform: `translateX(${activeIndex * 100}%)`,
-                transition: 'transform 0.32s cubic-bezier(0.34, 1.56, 0.64, 1)',
-              }}
-            >
-              <div className="w-12 h-9 rounded-xl bg-primary-container/12 border border-primary-container/25 shadow-[0_0_15px_rgba(251,191,36,0.1)]" />
-            </div>
-          </div>
-        )}
-
-        {tabs.map(({ to, icon: Icon, label }) => {
-          const isActive = location.pathname === to
+    <nav className="fixed bottom-4 left-4 right-4 max-w-md mx-auto z-50 bg-surface/85 backdrop-blur-3xl rounded-2xl shadow-[0_12px_40px_rgba(0,0,0,0.8)] md:hidden border border-white/10 overflow-hidden select-none">
+      <div className="flex justify-around items-center h-[64px] px-2 relative">
+        {tabs.map(({ to, icon: Icon, label }, index) => {
+          const isActive = activeIndex === index
 
           return (
             <NavLink
               key={to}
               to={to}
-              className="flex-1 flex flex-col items-center justify-center gap-0.5 py-1.5 relative active:scale-90 transition-transform duration-150 z-10 cursor-pointer"
+              className="flex-1 flex flex-col items-center justify-center gap-1 py-1.5 relative active:scale-95 transition-transform duration-150 z-10 cursor-pointer h-full"
             >
-              {/* Icon */}
-              <span className={`relative z-10 transition-all duration-300 ease-out ${
-                isActive
-                  ? 'text-primary-fixed-dim scale-110 drop-shadow-[0_0_8px_rgba(249,189,34,0.5)]'
-                  : 'text-on-surface-variant/60 scale-100'
-              }`}>
-                <Icon
-                  size={20}
-                  strokeWidth={isActive ? 2.5 : 1.5}
-                  className="transition-all duration-300"
+              {/* Premium Animated Sliding Pill (Background) */}
+              {isActive && (
+                <motion.div
+                  layoutId="bottom-nav-indicator"
+                  className="absolute inset-0 m-auto w-14 h-[42px] bg-primary-container/15 border border-primary-container/30 rounded-xl shadow-[0_0_20px_rgba(251,191,36,0.15)] z-0"
+                  transition={{
+                    type: "spring",
+                    stiffness: 400,
+                    damping: 30,
+                    mass: 0.8
+                  }}
                 />
-              </span>
+              )}
+
+              {/* Icon */}
+              <motion.span 
+                animate={{ 
+                  scale: isActive ? 1.15 : 1,
+                  y: isActive ? -2 : 0 
+                }}
+                transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                className={`relative z-10 transition-colors duration-300 ease-out ${
+                  isActive
+                    ? 'text-primary-fixed-dim drop-shadow-[0_0_10px_rgba(249,189,34,0.6)]'
+                    : 'text-on-surface-variant/60'
+                }`}
+              >
+                <Icon
+                  size={22}
+                  strokeWidth={isActive ? 2.5 : 1.5}
+                />
+              </motion.span>
 
               {/* Label */}
-              <span className={`relative z-10 text-[9px] font-mono font-medium tracking-widest uppercase transition-all duration-300 ${
-                isActive ? 'text-primary-fixed-dim' : 'text-on-surface-variant/50'
-              }`}>
+              <motion.span 
+                animate={{ 
+                  opacity: isActive ? 1 : 0.6,
+                  y: isActive ? 0 : 2
+                }}
+                className={`relative z-10 text-[9px] font-mono font-bold tracking-widest uppercase transition-colors duration-300 ${
+                  isActive ? 'text-primary-fixed-dim' : 'text-on-surface-variant/50'
+                }`}
+              >
                 {label}
-              </span>
+              </motion.span>
             </NavLink>
           )
         })}
