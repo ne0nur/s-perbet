@@ -7,7 +7,7 @@ import { usePresenceStore } from '../stores/presenceStore'
 import { BookOpen, Sparkles, Download } from 'lucide-react'
 import { usePwaStore } from '../stores/pwaStore'
 import { useToastStore } from '../stores/toastStore'
-import { calculateLevelDetails } from '../lib/utils'
+import { calculateLevelDetails, getRangTitelSystem } from '../lib/utils'
 import { useLanguageStore } from '../stores/languageStore'
 import { useTranslation } from '../utils/translations'
 import { invalidateCache } from '../lib/cache'
@@ -15,8 +15,6 @@ import { useMatchStore } from '../stores/matchStore'
 
 // Import profile subcomponents
 import { UserInfoSettings } from '../components/profile/UserInfoSettings'
-import { LevelProgressCard } from '../components/profile/LevelProgressCard'
-import { getRangTitelSystem } from '../components/profile/LevelProgressCard'
 import { AdminSection } from '../components/profile/AdminSection'
 import { NotificationSettings } from '../components/profile/NotificationSettings'
 import { StatsGrid } from '../components/profile/StatsGrid'
@@ -852,26 +850,42 @@ export function ProfilePage() {
       
       {/* Profile Header (Always visible) */}
       <div className="mb-6">
-        <UserInfoSettings
-          username={username}
-          setUsername={setUsername}
-          avatarUrl={avatarUrl}
-          uploading={uploading}
-          fileRef={fileRef}
-          handleBildUpload={handleBildUpload}
-          handleUsernameUpdate={handleUsernameUpdate}
-          isAdmin={!!profil?.is_admin}
-          userRank={profil?.rang ?? null}
-          levelTitle={(() => {
-            if (!profil) return undefined
-            const lvl = calculateLevelDetails(profil.gesamt_punkte).level
+        {(() => {
+          const levelDetails = profil 
+            ? calculateLevelDetails(profil.gesamt_punkte)
+            : { level: 1, xpCurrent: 0, xpRequired: 100, xpPct: 0 }
+            
+          let levelTitle = undefined
+          if (profil) {
             const ranks = getRangTitelSystem(language)
             for (let i = ranks.length - 1; i >= 0; i--) {
-              if (lvl >= ranks[i].lvl) return ranks[i].title
+              if (levelDetails.level >= ranks[i].lvl) {
+                levelTitle = ranks[i].title
+                break
+              }
             }
-            return ranks[0].title
-          })()}
-        />
+            if (!levelTitle) levelTitle = ranks[0].title
+          }
+
+          return (
+            <UserInfoSettings
+              username={username}
+              setUsername={setUsername}
+              avatarUrl={avatarUrl}
+              uploading={uploading}
+              fileRef={fileRef}
+              handleBildUpload={handleBildUpload}
+              handleUsernameUpdate={handleUsernameUpdate}
+              isAdmin={!!profil?.is_admin}
+              userRank={profil?.rang ?? null}
+              levelTitle={levelTitle}
+              xpCurrent={levelDetails.xpCurrent}
+              xpRequired={levelDetails.xpRequired}
+              xpPct={levelDetails.xpPct}
+              level={levelDetails.level}
+            />
+          )
+        })()}
       </div>
 
       {/* Segmented Control Navigation */}
@@ -938,12 +952,8 @@ export function ProfilePage() {
         
         {/* OVERVIEW TAB */}
         {activeTab === 'overview' && (
-          <div className="space-y-6 animate-fade-in">
-            <LevelProgressCard
-              animatedPoints={animatedPoints}
-              showLevelUpModal={showLevelUpModal}
-              setShowLevelUpModal={setShowLevelUpModal}
-            />
+          <div className="space-y-6 stagger-in">
+            {/* Stats Overview */}
             <StatsGrid stats={stats} remainingPoints={remainingPoints} gesamtPunkte={profil?.gesamt_punkte || 0} />
             <PointsChart tips={userTips} />
           </div>
