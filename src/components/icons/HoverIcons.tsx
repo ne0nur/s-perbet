@@ -64,7 +64,9 @@ function makeAnimatedIcon(
       <span 
         onMouseEnter={handleEnter}
         onMouseLeave={handleLeave}
-        className="inline-flex items-center justify-center"
+        onClick={handleEnter}
+        onTouchStart={handleEnter}
+        className="inline-flex items-center justify-center cursor-pointer"
       >
         <Component
           ref={ref}

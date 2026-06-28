@@ -446,19 +446,17 @@ export function AppShell() {
         {isMainTab && (
           <header className="md:hidden sticky top-0 z-40 bg-surface/60 backdrop-blur-xl border-b border-white/5 shrink-0">
             <div className="flex items-center justify-between px-4 h-16 max-w-lg mx-auto w-full">
-              {/* Logo + Tab Name */}
-              <div className="flex items-center gap-2.5">
-              <HeaderLogo size="sm" />
-                <span className="h-4 w-px bg-white/10" />
-                <span className="text-[10px] font-mono font-bold text-on-surface-variant uppercase tracking-widest">{tabName}</span>
+              {/* Logo */}
+              <div className="flex items-center">
+                <HeaderLogo size="md" />
               </div>
 
               {/* Profile Avatar Button + EXP Bar + Level Badge */}
-              <div className="flex items-center gap-2.5">
+              <div className="flex items-center gap-3">
                 {/* Dünner horizontaler EXP-Fortschrittsbalken */}
                 <div className="flex flex-col items-end justify-center">
-                  <span className="text-[7px] font-mono text-on-surface-variant/80 uppercase leading-none mb-1">XP: {xpCurrent} / {xpRequired}</span>
-                  <div className="w-24 h-2 bg-black/50 border border-white/20 rounded-full overflow-hidden p-[1px] relative">
+                  <span className="text-[8px] font-mono text-on-surface-variant/80 uppercase leading-none mb-1.5">XP: {xpCurrent} / {xpRequired}</span>
+                  <div className="w-28 h-2.5 bg-black/50 border border-white/20 rounded-full overflow-hidden p-[1px] relative">
                     <div 
                       className="h-full bg-gradient-to-r from-amber-500 to-yellow-400 rounded-full transition-all duration-1000 ease-out shadow-[0_0_10px_rgba(251,191,36,0.5)]"
                       style={{ width: `${xpPct}%` }}
@@ -469,9 +467,9 @@ export function AppShell() {
                 <div className="relative shrink-0">
                   <button
                     onClick={() => navigate('/profile')}
-                    className={`w-8 h-8 rounded-full border bg-surface-container-high flex items-center justify-center transition-all ${
+                    className={`w-10 h-10 rounded-full border bg-surface-container-high flex items-center justify-center transition-all ${
                       location.pathname === '/profile'
-                        ? 'border-primary shadow-[0_0_10px_rgba(251,191,36,0.3)] scale-105'
+                        ? 'border-primary shadow-[0_0_12px_rgba(251,191,36,0.4)] scale-105'
                         : 'border-white/10 hover:border-white/20'
                     }`}
                   >
@@ -479,13 +477,13 @@ export function AppShell() {
                       {avatarUrl ? (
                         <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
                       ) : (
-                        <span className="text-on-surface-variant text-xs font-mono font-bold">
+                        <span className="text-on-surface-variant text-sm font-mono font-bold">
                           {user?.user_metadata?.username?.[0]?.toUpperCase() || '?'}
                         </span>
                       )}
                     </div>
                   </button>
-                  <LevelBadge level={level} className="absolute -bottom-1 -right-1 z-10 text-[9px] h-4.5 w-4.5 rounded-full shadow shadow-black/80 select-none level-digit">
+                  <LevelBadge level={level} className="absolute -bottom-1 -right-1 z-10 text-[10px] h-5 w-5 rounded-full shadow shadow-black/80 select-none level-digit">
                     {level}
                   </LevelBadge>
                 </div>
