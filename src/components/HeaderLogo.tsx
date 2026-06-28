@@ -58,7 +58,13 @@ export function HeaderLogo({ size = 'md' }: HeaderLogoProps) {
                     transition: { duration: 0.4, ease: "easeIn", delay: index * 0.08 } 
                   }}
                   transition={{ duration: 0.6, ease: "easeOut", delay: index * 0.05 }}
-                  className="inline-block"
+                  className={`liquid-gradient-text ${isSm ? 'text-xl' : 'text-3xl'} tracking-widest drop-shadow-[0_0_15px_rgba(251,191,36,0.3)]`}
+                  style={{ 
+                    fontFamily: 'Monr', 
+                    fontWeight: 700, 
+                    display: 'inline-block',
+                    '--bg-offset': `-${(index / username.length) * 100}%`
+                  } as React.CSSProperties}
                 >
                   {letter === ' ' ? '\u00A0' : letter}
                 </motion.span>
