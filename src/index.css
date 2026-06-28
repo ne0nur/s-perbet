@@ -12,6 +12,14 @@
   font-display: swap;
 }
 
+@font-face {
+  font-family: 'Parceh';
+  src: url('/fonts/parceh.otf') format('opentype');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
 
 /* ============================================
    Pitch Dark Elite — Stitch Design System
@@ -74,7 +82,7 @@
   --color-on-error-container: #ffdad6;
 
   /* Typography */
-  --font-geist: 'Geist', system-ui, sans-serif;
+  --font-parceh: 'Parceh', system-ui, sans-serif;
   --font-mono-display: 'JetBrains Mono', monospace;
 
   /* Border Radius */
@@ -101,7 +109,7 @@ html, body, #root {
 body {
   background: #0e131f;
   color: #dde2f3;
-  font-family: 'Geist', system-ui, sans-serif;
+  font-family: 'Parceh', system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -1051,7 +1059,7 @@ body {
 
 /* ─── Level-Ziffer: fette 3D-Typo mit Multi-Layer Text-Shadow ─── */
 .level-digit {
-  font-family: 'Geist', system-ui, sans-serif;
+  font-family: 'Parceh', system-ui, sans-serif;
   font-weight: 900;
   font-style: italic;
   letter-spacing: 0.06em;

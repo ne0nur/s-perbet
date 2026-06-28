@@ -38,12 +38,12 @@ export function HeaderLogo({ size = 'md' }: HeaderLogoProps) {
             animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
             exit={{ opacity: 0, scale: 1.1, filter: "blur(10px)", transition: { duration: 0.8, ease: "easeInOut" } }}
             transition={{ duration: 1.2, ease: "easeOut" }}
-            className="inline-flex flex-col items-center justify-center"
+            className="inline-flex items-center justify-center"
           >
             <motion.span
-              animate={{ y: [0, -4, 0] }}
+              animate={{ y: [0, -2, 0] }}
               transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
-              className={`superbet-text-super-new ${isSm ? 'text-2xl' : 'text-3xl'} tracking-widest text-primary-fixed-dim drop-shadow-[0_0_15px_rgba(251,191,36,0.5)]`}
+              className={`superbet-text-super-new ${isSm ? 'text-xl' : 'text-3xl'} tracking-widest text-primary-fixed-dim drop-shadow-[0_0_15px_rgba(251,191,36,0.5)]`}
               style={{ fontFamily: 'Monr', fontWeight: 700 }}
             >
               {username.toUpperCase()}
@@ -55,15 +55,15 @@ export function HeaderLogo({ size = 'md' }: HeaderLogoProps) {
             initial={{ opacity: 0, scale: 0.9, filter: "blur(5px)" }}
             animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
             transition={{ duration: 0.8, ease: "easeOut" }}
-            className="inline-flex flex-col items-center justify-center"
+            className="inline-flex items-center justify-center gap-1.5"
           >
             {/* SÜPER */}
             <motion.span
-              animate={{ y: [0, -3, 0] }}
+              animate={{ y: [0, -2, 0] }}
               transition={{ repeat: Infinity, duration: 3.5, ease: "easeInOut", delay: 0.1 }}
               className="inline-flex"
             >
-              <span className={`superbet-text-super-new ${isSm ? 'text-2xl' : 'text-4xl'} ${isHovered ? 'drop-shadow-[0_0_20px_rgba(251,191,36,0.6)]' : 'drop-shadow-[0_0_10px_rgba(251,191,36,0.3)]'} transition-all duration-500`}>
+              <span className={`superbet-text-super-new ${isSm ? 'text-xl' : 'text-4xl'} ${isHovered ? 'drop-shadow-[0_0_20px_rgba(251,191,36,0.6)]' : 'drop-shadow-[0_0_10px_rgba(251,191,36,0.3)]'} transition-all duration-500`}>
                 SÜPER
               </span>
             </motion.span>
@@ -74,7 +74,7 @@ export function HeaderLogo({ size = 'md' }: HeaderLogoProps) {
               transition={{ repeat: Infinity, duration: 3.5, ease: "easeInOut", delay: 0.2 }}
               className="inline-flex"
             >
-              <span className={`superbet-badge-bet-new ${isSm ? 'text-[9px]' : 'text-xs'} ${isHovered ? 'drop-shadow-[0_0_15px_rgba(251,191,36,0.8)] bg-primary-container text-on-primary font-black' : ''} transition-all duration-500`}>
+              <span className={`superbet-badge-bet-new ${isSm ? 'text-[8px] px-1 py-0.5' : 'text-xs px-1.5 py-0.5'} rounded shrink-0 ${isHovered ? 'drop-shadow-[0_0_15px_rgba(251,191,36,0.8)] bg-primary-container text-on-primary font-black' : ''} transition-all duration-500`}>
                 BET
               </span>
             </motion.span>

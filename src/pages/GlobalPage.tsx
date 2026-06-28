@@ -108,14 +108,9 @@ function LeaderboardSection({
                   {calculateLevel(top3[1]?.gesamt_punkte || 0, top3[1]?.achievements_count || 0)}
                 </LevelBadge>
               } />
-              <span className="text-[9px] text-on-surface-variant font-mono truncate w-full text-center flex items-center justify-center gap-1">
+              <span className="text-[8px] text-on-surface-variant font-mono truncate w-full text-center mt-2">
                 {top3[1]?.username}
-                {top3[1]?.trend !== undefined && top3[1]?.trend !== 0 && (
-                  <span className={`text-[7px] font-bold ${top3[1].trend > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                    {top3[1].trend > 0 ? '▲' : '▼'}{Math.abs(top3[1].trend)}
-                  </span>
-                )}
-                {top3[1]?.is_admin && <span className="inline-flex shrink-0 px-1 py-0.2 rounded text-[7px] font-black bg-amber-500/20 text-amber-400 border border-amber-500/30 font-mono tracking-wide scale-90">ADM</span>}
+                {top3[1]?.is_admin && <span className="ml-1 inline-flex shrink-0 px-1 py-0.5 rounded text-[7px] font-black bg-amber-500/20 text-amber-400 border border-amber-500/30 font-mono tracking-wide scale-90">ADM</span>}
               </span>
               <div className={`w-full rounded-t-lg border-x border-t flex flex-col items-center justify-start pt-2 relative overflow-hidden ${
                 tie1_2
@@ -146,14 +141,14 @@ function LeaderboardSection({
                 {calculateLevel(top3[0]?.gesamt_punkte || 0, top3[0]?.achievements_count || 0)}
               </LevelBadge>
             } />
-            <span className="text-[9px] text-primary-fixed-dim font-mono font-bold truncate w-full text-center flex items-center justify-center gap-1">
+            <span className="text-[9px] text-primary-fixed-dim font-mono font-bold truncate w-full text-center mt-2">
               {top3[0]?.username}
               {top3[0]?.trend !== undefined && top3[0]?.trend !== 0 && (
-                <span className={`text-[7px] font-bold ${top3[0].trend > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                <span className={`ml-1 text-[7px] font-bold ${top3[0].trend > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                   {top3[0].trend > 0 ? '▲' : '▼'}{Math.abs(top3[0].trend)}
                 </span>
               )}
-              {top3[0]?.is_admin && <span className="inline-flex shrink-0 px-1 py-0.2 rounded text-[7px] font-black bg-amber-500/20 text-amber-400 border border-amber-500/30 font-mono tracking-wide scale-90">ADM</span>}
+              {top3[0]?.is_admin && <span className="ml-1 inline-flex shrink-0 px-1 py-0.5 rounded text-[7px] font-black bg-amber-500/20 text-amber-400 border border-amber-500/30 font-mono tracking-wide">ADM</span>}
             </span>
             <div className="w-full h-24 bg-gradient-to-t from-primary/30 to-transparent rounded-t-lg border-x border-t border-primary/40 flex flex-col items-center justify-start pt-2 relative overflow-hidden">
               <div className="absolute inset-0 bg-surface-container-low/30 backdrop-blur-[2px] -z-10" />
@@ -234,10 +229,10 @@ function LeaderboardSection({
                 <AvatarLightbox
                   src={e.avatar_url}
                   username={e.username || ''}
-                  size="sm"
+                  size="md"
                   showLevel
                   levelBadge={
-                    <LevelBadge level={calculateLevel(e.gesamt_punkte, e.achievements_count || 0)} className="absolute -bottom-1 -right-1 z-10 text-[7px] h-3.5 w-3.5 rounded-full shadow select-none">
+                    <LevelBadge level={calculateLevel(e.gesamt_punkte, e.achievements_count || 0)} className="absolute -bottom-1 -right-1 z-10 text-[10px] h-5 w-5 rounded-full shadow select-none">
                       {calculateLevel(e.gesamt_punkte, e.achievements_count || 0)}
                     </LevelBadge>
                   }

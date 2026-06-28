@@ -483,7 +483,7 @@ export function AppShell() {
                       )}
                     </div>
                   </button>
-                  <LevelBadge level={level} className="absolute -bottom-1 -right-1 z-10 text-[10px] h-5 w-5 rounded-full shadow shadow-black/80 select-none level-digit">
+                  <LevelBadge level={level} className="absolute -bottom-1.5 -right-1.5 z-10 text-[10px] h-5 w-5 rounded-full shadow shadow-black/80 select-none level-digit">
                     {level}
                   </LevelBadge>
                 </div>
