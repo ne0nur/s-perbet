@@ -13,9 +13,49 @@
 }
 
 @font-face {
-  font-family: 'Parceh';
-  src: url('/fonts/parceh.otf') format('opentype');
-  font-weight: 100 900;
+  font-family: 'Montserrat';
+  src: url('/fonts/Montserrat-Regular.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Montserrat';
+  src: url('/fonts/Montserrat-Medium.otf') format('opentype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Montserrat';
+  src: url('/fonts/Montserrat-SemiBold.otf') format('opentype');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Montserrat';
+  src: url('/fonts/Montserrat-Bold.otf') format('opentype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Montserrat';
+  src: url('/fonts/Montserrat-ExtraBold.otf') format('opentype');
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Montserrat';
+  src: url('/fonts/Montserrat-Black.otf') format('opentype');
+  font-weight: 900;
   font-style: normal;
   font-display: swap;
 }
@@ -82,8 +122,9 @@
   --color-on-error-container: #ffdad6;
 
   /* Typography */
-  --font-parceh: 'Parceh', system-ui, sans-serif;
-  --font-mono-display: 'JetBrains Mono', monospace;
+  --font-sans: 'Montserrat', system-ui, sans-serif;
+  --font-mono: 'Montserrat', system-ui, sans-serif;
+  --font-mono-display: 'Montserrat', system-ui, sans-serif;
 
   /* Border Radius */
   --radius-sm: 0.25rem;
@@ -109,7 +150,7 @@ html, body, #root {
 body {
   background: #0e131f;
   color: #dde2f3;
-  font-family: 'Parceh', system-ui, sans-serif;
+  font-family: 'Montserrat', system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -1081,7 +1122,7 @@ body {
 
 /* ─── Level-Ziffer: fette 3D-Typo mit Multi-Layer Text-Shadow ─── */
 .level-digit {
-  font-family: 'Parceh', system-ui, sans-serif;
+  font-family: 'Montserrat', system-ui, sans-serif;
   font-weight: 900;
   font-style: italic;
   letter-spacing: 0.06em;
