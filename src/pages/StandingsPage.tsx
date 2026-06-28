@@ -131,11 +131,11 @@ export function StandingsPage() {
 
   // Lade verfügbare Saisons aus DB
   useEffect(() => {
-    supabase.from('seasons').select('id, label').order('id', { ascending: false }).then(({ data }) => {
+    supabase.from('seasons').select('*').order('id', { ascending: false }).then(({ data }) => {
       if (data && data.length > 0) {
-        setAvailableSeasons(data.map((s: { id: number; label?: string }) => ({
+        setAvailableSeasons(data.map((s: any) => ({
           id: s.id,
-          label: s.label || `${s.id}/${(s.id + 1).toString().slice(-2)}`
+          label: s.name || s.label || `${s.id}/${(s.id + 1).toString().slice(-2)}`
         })))
       }
     })
@@ -285,18 +285,19 @@ export function StandingsPage() {
   }, [availableTournaments, viewTournament])
 
   useEffect(() => {
-    if (!viewTournament) return
+    // Wenn ViewTournament noch leer ist, setzen wir einen Default, damit die Tabelle überhaupt lädt
+    const currentTournament = viewTournament || 'Süper Lig'
     const isCurrentSeason = saison === (availableSeasons[0]?.id ?? 2026)
     const hasKnockout = activeConfig?.has_knockout ?? false
     const hasHistoricalData = activeConfig?.has_historical_data ?? false
 
     if (isCurrentSeason || hasKnockout) {
-      ladeMatchesTabelle(saison, viewTournament)
+      ladeMatchesTabelle(saison, currentTournament)
     } else {
       if (hasHistoricalData) {
         ladeTabelleHistorisch(saison)
       } else {
-        ladeMatchesTabelle(saison, viewTournament)
+        ladeMatchesTabelle(saison, currentTournament)
       }
     }
   }, [saison, viewTournament, activeConfig, availableSeasons, ladeMatchesTabelle, ladeTabelleHistorisch])
