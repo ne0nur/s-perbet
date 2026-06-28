@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#0e131f" />
+    
+    <!-- PWA Manifest & Service Worker -->
+    <link rel="manifest" href="/manifest.json" />
+    <script>
+      if ('serviceWorker' in navigator && !window.location.hostname.includes('localhost') && !window.location.hostname.includes('127.0.0.1')) {
+        // Auto-refresh when a new service worker takes over, but ONLY if the page was already controlled
+        let refreshing = false;
+        const alreadyControlled = !!navigator.serviceWorker.controller;
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+          if (alreadyControlled && !refreshing) {
+            refreshing = true;
+            window.location.reload();
+          }
+        });
+
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then(reg => console.log('ServiceWorker registered:', reg.scope))
+            .catch(err => console.log('ServiceWorker registration failed:', err));
+        });
+      }
+    </script>
+    
+    <!-- Google Fonts: Geist & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Geist:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    
+    <title>SüperBET — Süper Lig Tipprunde</title>
+    <script type="module" crossorigin src="/assets/index-DSJhizXp.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/jsx-runtime-Bd7NTAAb.js">
+    <link rel="modulepreload" crossorigin href="/assets/utils-BLu_f11b.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-DvXt39qe.css">
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>
