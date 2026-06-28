@@ -46,6 +46,19 @@ export function LoginPage() {
   const { login, fehler, isLaden, isEingeloggt } = useAuthStore()
   const navigate = useNavigate()
 
+  // Beim Mount: ausstehende Liga aus localStorage wiederherstellen
+  // (Falls die Seite während des Einladungs-Flows neu geladen wurde)
+  useEffect(() => {
+    const savedId = localStorage.getItem('superbet_pending_league_id')
+    if (savedId) {
+      setPendingLeagueId(savedId)
+      // Liga-Name aus DB nachladen für UI-Anzeige
+      supabase.from('leagues').select('id, name').eq('id', savedId).single().then(({ data }) => {
+        if (data) setInviteLeague(data)
+      })
+    }
+  }, [])
+
   useEffect(() => {
     if (isEingeloggt) navigate('/dashboard')
   }, [isEingeloggt, navigate])

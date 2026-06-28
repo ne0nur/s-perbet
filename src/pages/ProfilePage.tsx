@@ -584,6 +584,10 @@ export function ProfilePage() {
                          error.message.includes('signature')
 
       if (isSigError) {
+        // Warnung ausgeben wenn Liga-ID durch Fallback verloren geht
+        if (leagueId) {
+          useToastStore.getState().toast('⚠️ Liga konnte nicht zugewiesen werden (alte RPC-Version — bitte Migration 032 ausführen)', 'error')
+        }
         const { data: fallbackData, error: fallbackError } = await supabase.rpc('admin_create_user', {
           new_username: usr,
           new_password: pw

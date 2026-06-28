@@ -8,6 +8,36 @@ import { AvatarLightbox } from './AvatarLightbox'
 import { useTranslation } from '../utils/translations'
 import { useAuthStore } from '../stores/authStore'
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
+import { getTeamLogo } from '../lib/teamLogos'
+
+const TEAM_ABBREV: Record<string, string> = {
+  'Galatasaray': 'Gala', 'Fenerbahçe': 'Fener', 'Beşiktaş': 'Beşiktaş',
+  'Trabzonspor': 'Trabzon', 'Başakşehir': 'Başakşehir', 'Sivasspor': 'Sivas',
+  'Konyaspor': 'Konya', 'Antalyaspor': 'Antalya', 'Kayserispor': 'Kayseri',
+  'Kasımpaşa': 'Kasımpaşa', 'Alanyaspor': 'Alanya', 'Gaziantep': 'Antep',
+  'Rizespor': 'Rize', 'Samsunspor': 'Samsun', 'Hatayspor': 'Hatay',
+  'Eyüpspor': 'Eyüp', 'Bodrum': 'Bodrum', 'Göztepe': 'Göztepe',
+  'Karagümrük': 'Karagümrük', 'Ankaragücü': 'Ankara G.', 'Adana Demirspor': 'Adana D.',
+  'Pendikspor': 'Pendik', 'İstanbulspor': 'İstanbul',
+  'Bayern München': 'Bayern', 'Borussia Dortmund': 'Dortmund',
+  'Bayer Leverkusen': 'Leverkusen', 'RB Leipzig': 'Leipzig',
+  'VfB Stuttgart': 'Stuttgart', 'Real Madrid': 'Real', 'Barcelona': 'Barça',
+  'Atlético Madrid': 'Atlético', 'Manchester City': 'Man City',
+  'Liverpool': 'Liverpool', 'Arsenal': 'Arsenal', 'Aston Villa': 'A. Villa',
+  'AC Milan': 'Milan', 'Inter': 'Inter', 'Juventus': 'Juve',
+  'Paris Saint-Germain': 'PSG', 'Monaco': 'Monaco', 'Lille': 'Lille',
+  'Benfica': 'Benfica', 'Sporting CP': 'Sporting', 'PSV': 'PSV',
+  'Feyenoord': 'Feyenoord', 'Celtic': 'Celtic', 'Shakhtar': 'Shakhtar',
+  'Atalanta': 'Atalanta', 'Bologna': 'Bologna', 'Girona': 'Girona',
+  'Sturm Graz': 'Sturm Graz', 'Red Bull Salzburg': 'Salzburg',
+  'Club Brugge': 'Brugge', 'Sparta Praha': 'Sparta', 'Dinamo Zagreb': 'Dinamo',
+  'Slovan Bratislava': 'Slovan', 'FK Crvena Zvezda': 'Crvena Z.',
+  'BSC Young Boys': 'Young Boys', 'Stade Brestois': 'Brest',
+}
+
+function abbrevTeam(name: string): string {
+  return TEAM_ABBREV[name] || name
+}
 
 interface Profil {
   id: string
@@ -506,17 +536,25 @@ export function RivalInspector({ userId, onClose }: RivalInspectorProps) {
             ) : (
               tipps.filter(t => t.match?.status === 'finished').map((tip) => (
                 <div key={tip.id} className="bg-surface-container-lowest/60 border border-white/5 rounded-xl p-2.5 flex items-center justify-between text-xs font-mono">
-                  <div className="flex flex-col gap-0.5">
-                    <span className="text-[8px] text-on-surface-variant/50 uppercase">{t('spieltagShort')} {tip.match.spieltag}</span>
-                    <span className="text-on-surface font-medium max-w-[150px] truncate">{tip.match.heim_team} - {tip.match.gast_team}</span>
+                  <div className="flex items-center gap-2 min-w-0 flex-1">
+                    <span className="text-[8px] text-on-surface-variant/50 uppercase shrink-0">{t('spieltagShort')} {tip.match.spieltag}</span>
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <img src={getTeamLogo(tip.match.heim_team)} alt="" className="w-5 h-5 object-contain shrink-0 opacity-80" />
+                      <span className="text-on-surface font-medium truncate text-[11px]">{abbrevTeam(tip.match.heim_team)}</span>
+                    </div>
+                    <span className="text-on-surface-variant/30 shrink-0">-</span>
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <img src={getTeamLogo(tip.match.gast_team)} alt="" className="w-5 h-5 object-contain shrink-0 opacity-80" />
+                      <span className="text-on-surface font-medium truncate text-[11px]">{abbrevTeam(tip.match.gast_team)}</span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 shrink-0">
                     <div className="text-right">
                       <span className="font-bold text-[10px] text-on-surface bg-surface-container px-1.5 py-0.5 rounded border border-white/5">{t('tipColon')} {tip.tipp_heim}:{tip.tipp_gast}</span>
                       <div className="text-[9px] text-on-surface-variant/40 mt-0.5">{t('endColon')} {tip.match.tore_heim}:{tip.match.tore_gast}</div>
                     </div>
                     <span className={`w-8 text-center font-bold text-[10px] ${PunkteFarbe(tip.punkte)} bg-surface-container px-1 py-0.5 rounded border border-white/5`}>
-                      {tip.punkte > 0 ? `+${tip.punkte}P` : '0P'}
+                      {tip.punkte > 0 ? `+${tip.punkte}P` : `${tip.punkte}P`}
                     </span>
                   </div>
                 </div>

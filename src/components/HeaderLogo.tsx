@@ -1,10 +1,8 @@
 /**
- * Header-Logo: Text als Overlay über dem 3D-Ball.
- * Ball größer, Text absolut positioniert zentriert darauf.
+ * Header-Logo: "SÜPER" + "BET" Badge — Monr Font, kein 3D-Objekt.
  */
 
 import { useState } from 'react'
-import { Football3D } from './Football3D'
 
 interface HeaderLogoProps {
   size?: 'sm' | 'md'
@@ -12,7 +10,6 @@ interface HeaderLogoProps {
 
 export function HeaderLogo({ size = 'md' }: HeaderLogoProps) {
   const isSm = size === 'sm'
-  const ballSize = isSm ? 'w-[84px] h-[84px]' : 'w-[120px] h-[120px]'
 
   const [isHovered, setIsHovered] = useState(false)
   const [isKicked, setIsKicked] = useState(false)
@@ -35,41 +32,24 @@ export function HeaderLogo({ size = 'md' }: HeaderLogoProps) {
       onMouseLeave={() => setIsHovered(false)}
       onClick={handleKick}
     >
-      {/* Container: Ball als Basis, Text absolut drüber */}
-      <span className="relative inline-flex items-center justify-center">
-        {/* 3D-Ball (groß) */}
+      <span className="inline-flex flex-col items-center justify-center">
+        {/* SÜPER */}
         <span
-          className={`animate-logo-float inline-flex ${isKicked ? 'animate-ball-hop' : ''}`}
-          style={{ '--float-delay': '0s' } as React.CSSProperties}
+          className={`animate-logo-float inline-flex ${superShake ? 'animate-super-hit' : ''}`}
+          style={{ '--float-delay': '0.12s' } as React.CSSProperties}
         >
-          <Football3D
-            className={ballSize}
-            isHovered={isHovered}
-            isKicked={isKicked}
-            onKick={handleKick}
-          />
+          <span className={`superbet-text-super-new ${isSm ? 'text-2xl' : 'text-4xl'} ${isHovered ? 'hover-glow' : ''}`}>
+            SÜPER
+          </span>
         </span>
 
-        {/* Text-Overlay (absolut positioniert auf dem Ball) */}
-        <span className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-          {/* SÜPER */}
-          <span
-            className={`animate-logo-float inline-flex ${superShake ? 'animate-super-hit' : ''}`}
-            style={{ '--float-delay': '0.12s' } as React.CSSProperties}
-          >
-            <span className={`superbet-text-super-new text-sm ${isHovered ? 'hover-glow' : ''}`}>
-              SÜPER
-            </span>
-          </span>
-
-          {/* BET Badge */}
-          <span
-            className={`animate-logo-float inline-flex ${betFlicker ? 'animate-bet-discharge' : ''}`}
-            style={{ '--float-delay': '0.24s' } as React.CSSProperties}
-          >
-            <span className={`superbet-badge-bet-new text-[9px] ${isHovered ? 'hover-glow' : ''}`}>
-              BET
-            </span>
+        {/* BET Badge */}
+        <span
+          className={`animate-logo-float inline-flex ${betFlicker ? 'animate-bet-discharge' : ''}`}
+          style={{ '--float-delay': '0.24s' } as React.CSSProperties}
+        >
+          <span className={`superbet-badge-bet-new ${isSm ? 'text-[9px]' : 'text-xs'} ${isHovered ? 'hover-glow' : ''}`}>
+            BET
           </span>
         </span>
       </span>

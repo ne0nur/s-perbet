@@ -190,15 +190,17 @@ export function evaluateAchievements(
     }
   }
 
-  // Hayalet: Forgot to tip for 3 consecutive matchdays
-  const finishedMatchdays = Array.from(
-    new Set(finishedTips.map(t => t.match.spieltag))
+  // Hayalet: Forgot to tip for 3 consecutive matchdays (only count matchdays that actually exist in DB)
+  const allMatchdays = Array.from(
+    new Set(userTips.map(t => t.match?.spieltag).filter(Boolean))
   ).sort((a, b) => a - b)
-  if (finishedMatchdays.length >= 1) {
+  if (allMatchdays.length >= 3) {
+    const minMd = allMatchdays[0]
+    const maxMd = allMatchdays[allMatchdays.length - 1]
     let missingStreak = 0
-    const minMd = 1
-    const maxMd = 38
     for (let md = minMd; md <= maxMd; md++) {
+      const mdHasMatches = allMatchdays.includes(md)
+      if (!mdHasMatches) continue
       const userTipped = tipsByMatchday[md] && tipsByMatchday[md].length > 0
       if (!userTipped) {
         missingStreak++

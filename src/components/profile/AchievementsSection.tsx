@@ -229,35 +229,23 @@ export function AchievementsSection({
                   )}
                 </div>
                 <div className="flex-1 min-w-0 flex flex-col justify-between h-full py-0.5">
-                  <div>
-                    <div className="flex items-center justify-between gap-1 mb-1">
-                      <h4 className={`text-[12px] font-bold truncate leading-tight ${unlocked ? 'text-on-surface' : 'text-on-surface-variant'}`}>
-                        {ach.name}
-                      </h4>
-                      {unlocked ? (
-                        <span className="flex items-center gap-1 text-[7px] font-mono uppercase tracking-wider text-green-400 bg-green-500/10 px-1.5 py-0.5 rounded border border-green-500/20 font-bold shrink-0">
-                          <Check size={8} strokeWidth={3} /> {t('unlockedLabel')}
-                        </span>
-                      ) : (
-                        <span className="flex items-center gap-1 text-[7px] font-mono uppercase tracking-wider text-slate-400 bg-slate-500/10 px-1.5 py-0.5 rounded border border-slate-500/20 shrink-0 font-bold">
-                          <Lock size={8} strokeWidth={3} /> {t('lockedLabel')}
-                        </span>
-                      )}
-                    </div>
-                    <p className={`text-[10px] leading-snug font-normal ${unlocked ? 'text-on-surface-variant' : 'text-on-surface-variant/60'}`}>
-                      {ach.desc}
-                    </p>
-                  </div>
-                  <div className={`flex items-start gap-1.5 mt-2.5 p-1.5 rounded-lg border ${unlocked ? 'bg-primary-container/20 border-primary/20 text-primary-fixed-dim' : 'bg-surface-container border-surface-container-high text-on-surface-variant/70'}`}>
-                    <Target size={12} className="shrink-0 mt-0.5" />
-                    <span className="text-[8.5px] font-mono leading-snug font-semibold">
-                      <span className="uppercase tracking-wider opacity-70 block text-[7px] mb-0.5">
-                        {t('missionLabel')}
+                <div>
+                  <div className="flex items-center justify-between gap-1 mb-0.5">
+                    <h4 className={`text-[12px] font-bold truncate leading-tight ${unlocked ? 'text-on-surface' : 'text-on-surface-variant'}`}>
+                      {ach.name}
+                    </h4>
+                    {unlocked ? (
+                      <span className="flex items-center gap-1 text-[7px] font-mono uppercase tracking-wider text-green-400 bg-green-500/10 px-1.5 py-0.5 rounded border border-green-500/20 font-bold shrink-0">
+                        <Check size={8} strokeWidth={3} /> {t('unlockedLabel')}
                       </span>
-                      {ach.req}
-                    </span>
+                    ) : (
+                      <span className="flex items-center gap-1 text-[7px] font-mono uppercase tracking-wider text-slate-400 bg-slate-500/10 px-1.5 py-0.5 rounded border border-slate-500/20 shrink-0 font-bold">
+                        <Lock size={8} strokeWidth={3} /> {t('lockedLabel')}
+                      </span>
+                    )}
                   </div>
                 </div>
+              </div>
               </div>
             )
           })}

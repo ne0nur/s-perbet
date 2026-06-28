@@ -2,6 +2,18 @@
 @import "tailwindcss";
 
 /* ============================================
+   Monr Font — Premium Logo Typeface
+   ============================================ */
+@font-face {
+  font-family: 'Monr';
+  src: url('/fonts/monr.otf') format('opentype');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+
+/* ============================================
    Pitch Dark Elite — Stitch Design System
    ============================================ */
 
@@ -511,6 +523,7 @@ input, textarea, [contenteditable], .selectable-text {
 }
 
 .superbet-text-super-new {
+  font-family: 'Monr', sans-serif;
   color: #ffffff;
   font-weight: 900;
   text-transform: uppercase;
@@ -588,13 +601,12 @@ input, textarea, [contenteditable], .selectable-text {
 }
 
 .superbet-badge-bet-new {
+  font-family: 'Monr', sans-serif;
   background: rgba(0, 0, 0, 0.7);
   border: 1px solid rgba(251, 191, 36, 0.35);
   padding: 1px 5px;
   border-radius: 5px;
-  font-family: 'JetBrains Mono', monospace;
   font-weight: 900;
-  font-style: italic;
   letter-spacing: 0.05em;
   display: inline-block;
   animation:
