@@ -42,7 +42,7 @@ export function HeaderLogo({ size = 'md' }: HeaderLogoProps) {
             <motion.span
               animate={{ y: [0, -2, 0] }}
               transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
-              className={`liquid-gradient-text inline-flex px-4 py-4 -mx-4 -my-4 ${isSm ? 'text-xl' : 'text-3xl'} tracking-widest drop-shadow-[0_0_15px_rgba(251,191,36,0.3)]`}
+              className={`inline-flex px-4 py-4 -mx-4 -my-4 ${isSm ? 'text-xl' : 'text-3xl'} tracking-widest drop-shadow-[0_0_15px_rgba(251,191,36,0.3)]`}
               style={{ fontFamily: 'Montserrat', fontWeight: 900 }}
             >
               {username.toUpperCase().split('').map((letter: string, index: number) => (
@@ -58,11 +58,12 @@ export function HeaderLogo({ size = 'md' }: HeaderLogoProps) {
                     transition: { duration: 0.4, ease: "easeIn", delay: index * 0.08 } 
                   }}
                   transition={{ duration: 0.6, ease: "easeOut", delay: index * 0.05 }}
-                  className={`${isSm ? 'text-xl' : 'text-3xl'} tracking-widest`}
+                  className={`liquid-gradient-text ${isSm ? 'text-xl' : 'text-3xl'} tracking-widest`}
                   style={{ 
                     fontFamily: 'Montserrat', 
                     fontWeight: 900, 
                     display: 'inline-block',
+                    '--bg-offset': `-${(index / username.length) * 100}%`
                   } as React.CSSProperties}
                 >
                   {letter === ' ' ? '\u00A0' : letter}

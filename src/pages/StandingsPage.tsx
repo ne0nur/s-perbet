@@ -120,11 +120,16 @@ export function StandingsPage() {
 
   // Lade Tournament-Configs aus DB (einmalig)
   useEffect(() => {
-    supabase.from('tournament_configs').select('*').then(({ data }) => {
+    supabase.from('tournament_configs').select('*').order('id', { ascending: true }).then(({ data }) => {
       if (data && data.length > 0) {
         const map: Record<string, TournamentConfig> = {}
-        data.forEach((cfg: TournamentConfig) => { map[cfg.name] = cfg })
+        const tNames: string[] = []
+        data.forEach((cfg: TournamentConfig) => { 
+          map[cfg.name] = cfg 
+          tNames.push(cfg.name)
+        })
         setConfigMap(map)
+        setAvailableTournaments(tNames)
       }
     })
   }, [])
@@ -150,24 +155,8 @@ export function StandingsPage() {
         .from('matches').select('*').eq('season', targetSeason).order('anpfiff', { ascending: true })
       if (error) throw error
 
-      // Turniere dynamisch ermitteln
-      const uniqueTournaments = new Set<string>()
-      ;(matchesData || []).forEach(m => {
-        if (m.tournament && m.heim_team !== 'LIGA' && m.gast_team !== 'CHAT') {
-          uniqueTournaments.add(m.tournament)
-        }
-      })
-      const sorted = Array.from(uniqueTournaments).sort((a, b) => {
-        const na = a.toLowerCase()
-        const nb = b.toLowerCase()
-        if (na.includes('süper lig')) return -1
-        if (nb.includes('süper lig')) return 1
-        return a.localeCompare(b)
-      })
-      if (sorted.length > 0) setAvailableTournaments(sorted)
-
       // Aktives Turnier setzen (beim ersten Laden)
-      const activeTournament = tournament || sorted[0] || 'Süper Lig'
+      const activeTournament = tournament || availableTournaments[0] || 'Süper Lig'
 
       const tournamentMatches = (matchesData || []).filter(
         m => m.spieltag !== 999 && m.heim_team !== 'LIGA' && m.gast_team !== 'CHAT' &&
@@ -228,7 +217,7 @@ export function StandingsPage() {
         return hasTeam ? prev : (list[0]?.team || null)
       })
     } catch (e) { console.error(e) } finally { setIsLaden(false) }
-  }, [configMap, viewTournament])
+  }, [configMap, viewTournament, availableTournaments])
 
   const ladeTabelleHistorisch = useCallback(async (seasonYear: number) => {
     setIsLaden(true)
