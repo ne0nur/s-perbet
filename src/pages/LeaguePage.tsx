@@ -206,11 +206,10 @@ export function LeaguePage() {
     }
     const activeMatchIds = new Set(activeMatches.map(m => m.id))
     
-    // For season points, we also want to filter by tournament if 'Alle' is NOT selected
-    // If 'Alle' is selected, season points are across ALL tournaments the league has active
+    // For season points, we ALWAYS want to sum across ALL tournaments the league has active,
+    // regardless of the current viewTournament filter. The global ranking should always represent total points.
     const leagueTournaments = new Set(aktiveLiga?.active_tournaments || ['Süper Lig'])
     const validMatchesForPoints = allMatches.filter(m => {
-      if (viewTournament !== 'Alle') return (m.tournament || 'Süper Lig') === viewTournament
       return leagueTournaments.has(m.tournament || 'Süper Lig')
     })
     const validMatchesForPointsIds = new Set(validMatchesForPoints.map(m => m.id))
@@ -596,7 +595,7 @@ export function LeaguePage() {
                         className="w-full"
                       >
                         <div ref={tableScrollRef} className="overflow-x-auto no-scrollbar border border-surface-container-high rounded-xl bg-surface-container-low/40">
-                          <table className={`w-full text-left border-collapse ${viewSpieltag === 'gesamt' ? 'min-w-0' : 'min-w-[600px]'}`}>
+                          <table className="w-full text-left border-collapse min-w-max">
                         <thead>
                           <tr className="border-b border-surface-container-high bg-surface-container-low">
                             <th className="py-2.5 pl-3 pr-2 text-[10px] font-mono font-medium text-on-surface-variant/60 uppercase tracking-wider w-8" title={t('rank')}>#</th>
