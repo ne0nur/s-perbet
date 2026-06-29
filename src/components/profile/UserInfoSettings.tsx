@@ -57,8 +57,9 @@ export function UserInfoSettings({
               <span className="text-on-surface-variant text-2xl font-bold">{username.slice(0, 1).toUpperCase()}</span>
             )}
             
-            <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-              <Camera size={20} className="text-white" />
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm rounded-full flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
+              <Camera size={20} className="text-white mb-0.5" />
+              <span className="text-[8px] font-bold text-white uppercase tracking-wider">Ändern</span>
             </div>
             
             {uploading && (
@@ -97,7 +98,7 @@ export function UserInfoSettings({
             </div>
             <div className="w-full h-3 bg-black/50 border border-white/20 rounded-full overflow-hidden p-[1px] relative">
               <div 
-                className="h-full bg-gradient-to-r from-amber-500 to-yellow-400 rounded-full transition-all duration-1000 ease-out shadow-[0_0_10px_rgba(251,191,36,0.5)]"
+                className="h-full bg-primary rounded-full transition-all duration-1000 ease-out shadow-[0_0_10px_rgba(var(--primary-rgb),0.5)]"
                 style={{ width: `${xpPct}%` }}
               />
             </div>

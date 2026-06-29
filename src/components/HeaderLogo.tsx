@@ -85,7 +85,7 @@ export function HeaderLogo({ size = 'md' }: HeaderLogoProps) {
               transition={{ repeat: Infinity, duration: 3.5, ease: "easeInOut", delay: 0.1 }}
               className="inline-flex"
             >
-              <span className={`superbet-text-super-new ${isSm ? 'text-xl' : 'text-4xl'} ${isHovered ? 'drop-shadow-[0_0_20px_rgba(251,191,36,0.6)]' : 'drop-shadow-[0_0_10px_rgba(251,191,36,0.3)]'} transition-all duration-500`}>
+              <span className={`superbet-text-super-new ${isSm ? 'text-xl' : 'text-4xl'} ${isHovered ? 'drop-shadow-[0_0_20px_rgba(var(--primary-rgb),0.6)]' : 'drop-shadow-[0_0_10px_rgba(var(--primary-rgb),0.3)]'} transition-all duration-500`}>
                 SÜPER
               </span>
             </motion.span>
@@ -96,7 +96,7 @@ export function HeaderLogo({ size = 'md' }: HeaderLogoProps) {
               transition={{ repeat: Infinity, duration: 3.5, ease: "easeInOut", delay: 0.2 }}
               className="inline-flex"
             >
-              <span className={`superbet-badge-bet-new ${isSm ? 'text-[8px] px-1 py-0.5' : 'text-xs px-1.5 py-0.5'} rounded shrink-0 ${isHovered ? 'drop-shadow-[0_0_15px_rgba(251,191,36,0.8)] bg-primary-container text-on-primary font-black' : ''} transition-all duration-500`}>
+              <span className={`superbet-badge-bet-new ${isSm ? 'text-[8px] px-1 py-0.5' : 'text-xs px-1.5 py-0.5'} rounded shrink-0 ${isHovered ? 'drop-shadow-[0_0_15px_rgba(var(--primary-rgb),0.8)] bg-primary-container text-on-primary font-black' : ''} transition-all duration-500`}>
                 BET
               </span>
             </motion.span>

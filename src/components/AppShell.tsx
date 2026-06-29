@@ -430,7 +430,7 @@ export function AppShell() {
                 <span className="text-[8px] text-on-surface-variant font-mono uppercase shrink-0">Lvl {level}</span>
                 <div className="flex-1 h-2 bg-black/50 border border-white/20 rounded-full overflow-hidden p-[1px] relative">
                   <div 
-                    className="h-full bg-gradient-to-r from-amber-500 to-yellow-400 rounded-full transition-all duration-1000 ease-out shadow-[0_0_8px_rgba(251,191,36,0.4)]"
+                    className="h-full bg-primary rounded-full transition-all duration-1000 ease-out shadow-[0_0_8px_rgba(var(--primary-rgb),0.5)]"
                     style={{ width: `${xpPct}%` }}
                   />
                 </div>
@@ -465,7 +465,7 @@ export function AppShell() {
                       <span className="text-[8px] font-mono text-on-surface-variant/80 uppercase leading-none mb-1.5">XP: {xpCurrent} / {xpRequired}</span>
                       <div className="w-28 h-2.5 bg-black/50 border border-white/20 rounded-full overflow-hidden p-[1px] relative">
                         <div 
-                          className="h-full bg-gradient-to-r from-amber-500 to-yellow-400 rounded-full transition-all duration-1000 ease-out shadow-[0_0_10px_rgba(251,191,36,0.5)]"
+                          className="h-full bg-primary rounded-full transition-all duration-1000 ease-out shadow-[0_0_10px_rgba(var(--primary-rgb),0.5)]"
                           style={{ width: `${xpPct}%` }}
                         />
                       </div>
