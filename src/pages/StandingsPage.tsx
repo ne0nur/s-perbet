@@ -1,5 +1,5 @@
  
-import { useEffect, useState, useCallback } from 'react'
+import React, { useEffect, useState, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 import type { Match } from '../stores/matchStore'
 import { getTeamLogo } from '../lib/teamLogos'
