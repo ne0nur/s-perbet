@@ -1,5 +1,5 @@
 import { memo, useMemo, useEffect } from 'react'
-import { Award, Lock, Check, Target } from 'lucide-react'
+import { Award, Lock, Check, Star, Flame, Skull, MapPin } from 'lucide-react'
 import { useAuthStore } from '../../stores/authStore'
 import { useTranslation } from '../../utils/translations'
 
@@ -9,22 +9,82 @@ interface AchievementBadgeProps {
   rarity: 'common' | 'rare' | 'epic' | 'legendary' | 'toxic' | 'local'
 }
 
-const AchievementBadge = memo(function AchievementBadge({ id, unlocked, rarity }: AchievementBadgeProps) {
-  // Rarity styling mapping
-  const rarityColors = {
-    common: 'border-slate-500/30 text-slate-400 shadow-[0_0_8px_rgba(148,163,184,0.15)]',
-    rare: 'border-blue-500/30 text-blue-400 shadow-[0_0_10px_rgba(59,130,246,0.2)]',
-    epic: 'border-purple-500/30 text-purple-400 shadow-[0_0_12px_rgba(16,185,129,0.25)]',
-    legendary: 'border-yellow-500/40 text-yellow-400 shadow-[0_0_15px_rgba(234,179,8,0.35)]',
-    toxic: 'border-red-500/30 text-red-400 shadow-[0_0_10px_rgba(239,68,68,0.2)]',
-    local: 'border-emerald-500/45 text-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.3)]'
-  }
+const RARITY_CONFIG = {
+  legendary: {
+    order: 0,
+    name: 'Legendär',
+    border: 'border-yellow-500/40',
+    bg: 'bg-yellow-500/5',
+    text: 'text-yellow-400',
+    glow: 'shadow-[0_0_15px_rgba(234,179,8,0.3)]',
+    icon: Star,
+    iconColor: 'text-yellow-400',
+    badge: 'bg-yellow-500/10 border-yellow-500/30 text-yellow-400',
+  },
+  epic: {
+    order: 1,
+    name: 'Episch',
+    border: 'border-purple-500/30',
+    bg: 'bg-purple-500/5',
+    text: 'text-purple-400',
+    glow: 'shadow-[0_0_12px_rgba(168,85,247,0.2)]',
+    icon: Flame,
+    iconColor: 'text-purple-400',
+    badge: 'bg-purple-500/10 border-purple-500/30 text-purple-400',
+  },
+  rare: {
+    order: 2,
+    name: 'Selten',
+    border: 'border-blue-500/30',
+    bg: 'bg-blue-500/5',
+    text: 'text-blue-400',
+    glow: 'shadow-[0_0_10px_rgba(59,130,246,0.15)]',
+    icon: Star,
+    iconColor: 'text-blue-400',
+    badge: 'bg-blue-500/10 border-blue-500/30 text-blue-400',
+  },
+  common: {
+    order: 3,
+    name: 'Normal',
+    border: 'border-slate-500/30',
+    bg: 'bg-slate-500/3',
+    text: 'text-slate-400',
+    glow: 'shadow-[0_0_8px_rgba(148,163,184,0.1)]',
+    icon: Star,
+    iconColor: 'text-slate-400',
+    badge: 'bg-slate-500/10 border-slate-500/30 text-slate-400',
+  },
+  local: {
+    order: 4,
+    name: 'Speyer',
+    border: 'border-emerald-500/40',
+    bg: 'bg-emerald-500/5',
+    text: 'text-emerald-400',
+    glow: 'shadow-[0_0_12px_rgba(16,185,129,0.25)]',
+    icon: MapPin,
+    iconColor: 'text-emerald-400',
+    badge: 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400',
+  },
+  toxic: {
+    order: 5,
+    name: 'Toxic',
+    border: 'border-red-500/30',
+    bg: 'bg-red-500/5',
+    text: 'text-red-400',
+    glow: 'shadow-[0_0_10px_rgba(239,68,68,0.15)]',
+    icon: Skull,
+    iconColor: 'text-red-400',
+    badge: 'bg-red-500/10 border-red-500/30 text-red-400',
+  },
+}
 
-  const borderClass = rarityColors[rarity] || rarityColors.common
+const AchievementBadge = memo(function AchievementBadge({ id, unlocked, rarity }: AchievementBadgeProps) {
+  const cfg = RARITY_CONFIG[rarity]
+  const RarityIcon = cfg.icon
 
   if (!unlocked) {
     return (
-      <div className="relative w-14 h-14 p-1 flex items-center justify-center bg-black/85 border border-white/5 rounded-xl flex-shrink-0 shadow-inner opacity-30 grayscale grayscale hover:grayscale-0 hover:opacity-100 transition-all duration-300">
+      <div className="relative w-14 h-14 p-1 flex items-center justify-center bg-black/85 border border-white/5 rounded-xl flex-shrink-0 opacity-30 grayscale hover:grayscale-0 hover:opacity-100 transition-all duration-300">
         <img 
           src={`${import.meta.env.BASE_URL}achievements/${id}.webp`} 
           alt="" 
@@ -36,16 +96,23 @@ const AchievementBadge = memo(function AchievementBadge({ id, unlocked, rarity }
   }
 
   return (
-    <div className={`relative w-14 h-14 p-1 flex items-center justify-center rounded-xl border bg-black ${borderClass} flex-shrink-0 transition-all duration-300 hover:scale-110 cursor-pointer`}>
-      {/* Outer Ring */}
-      <div className="absolute -inset-0.5 rounded-xl border border-white/5 opacity-20" />
-      {/* Image Loader */}
+    <div className={`relative w-14 h-14 p-1 flex items-center justify-center rounded-xl border bg-black/80 ${cfg.border} ${cfg.glow} flex-shrink-0 transition-all duration-300 hover:scale-110 cursor-pointer`}>
       <img 
         src={`${import.meta.env.BASE_URL}achievements/${id}.webp`} 
         alt="" 
         className="relative z-10 w-full h-full object-contain rounded-lg drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)]" 
       />
     </div>
+  )
+})
+
+const RarityPill = memo(function RarityPill({ rarity }: { rarity: string }) {
+  const cfg = RARITY_CONFIG[rarity as keyof typeof RARITY_CONFIG]
+  if (!cfg) return null
+  return (
+    <span className={`text-[7px] font-mono uppercase tracking-wider px-1.5 py-0.5 rounded border font-bold ${cfg.badge}`}>
+      {cfg.name}
+    </span>
   )
 })
 
@@ -168,35 +235,33 @@ function getAchievementsList(language: string) {
   ]
 }
 
-export function AchievementsSection({
-  unlockedSet,
-  newlyUnlocked
-}: AchievementsSectionProps) {
+export function AchievementsSection({ unlockedSet, newlyUnlocked }: AchievementsSectionProps) {
   const { user } = useAuthStore()
   const { t, language } = useTranslation()
-
   const achievementsList = useMemo(() => getAchievementsList(language), [language])
-
   const unlockedCount = unlockedSet.size
 
-  const sortedAchievementsList = useMemo(() => {
+  // Sort by rarity (legendary > epic > rare > common > local > toxic), then unlocked first
+  const sortedAchievements = useMemo(() => {
     return [...achievementsList].sort((a, b) => {
       const aUnlocked = unlockedSet.has(a.id)
       const bUnlocked = unlockedSet.has(b.id)
+      // Unlocked first within same rarity
       if (aUnlocked && !bUnlocked) return -1
       if (!aUnlocked && bUnlocked) return 1
-      return 0
+      // Then by rarity order
+      const aOrder = RARITY_CONFIG[a.rarity]?.order ?? 99
+      const bOrder = RARITY_CONFIG[b.rarity]?.order ?? 99
+      return aOrder - bOrder
     })
-  }, [unlockedSet, achievementsList])
+  }, [achievementsList, unlockedSet])
 
-  // Speichere den Count im localStorage, damit andere Komponenten (wie AppShell) darauf zugreifen können
   useEffect(() => {
     localStorage.setItem('superbet_achievements_count', unlockedCount.toString())
     if (user?.id) {
       const storageKey = `superbet_unlocked_achievements_${user.id}`
       localStorage.setItem(storageKey, JSON.stringify(Array.from(unlockedSet)))
     }
-    // Optional: Event dispatchen, falls AppShell sofort updaten soll
     window.dispatchEvent(new Event('achievements_updated'))
   }, [unlockedCount, unlockedSet, user])
 
@@ -210,49 +275,54 @@ export function AchievementsSection({
       </div>
       
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 animate-fade-in text-left">
-          {sortedAchievementsList.map(ach => {
-            const unlocked = unlockedSet.has(ach.id)
-            const isNew = newlyUnlocked.has(ach.id)
-            return (
-              <div
-                key={ach.id}
-                className={`flex items-center gap-3 border rounded-xl p-2.5 transition-all duration-300 ${
-                  unlocked
-                    ? `bg-surface-container-lowest border-surface-container-high shadow-sm`
-                    : 'bg-black/15 border-surface-container-high/60 text-on-surface-variant'
-                }`}
-              >
-                <div className="relative">
-                  <AchievementBadge id={ach.id} unlocked={unlocked} rarity={ach.rarity} />
-                  {isNew && (
-                    <div className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-red-500 rounded-full border-2 border-[#1E1E1E] animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.8)] z-20" />
-                  )}
-                </div>
-                <div className="flex-1 min-w-0 flex flex-col justify-between h-full py-0.5">
+        {sortedAchievements.map(ach => {
+          const unlocked = unlockedSet.has(ach.id)
+          const isNew = newlyUnlocked.has(ach.id)
+          const cfg = RARITY_CONFIG[ach.rarity]
+          
+          return (
+            <div
+              key={ach.id}
+              className={`flex items-center gap-3 border rounded-xl p-2.5 transition-all duration-300 ${
+                unlocked
+                  ? `${cfg.border} ${cfg.bg} ${cfg.glow}`
+                  : 'bg-black/15 border-surface-container-high/60 text-on-surface-variant'
+              }`}
+            >
+              <div className="relative">
+                <AchievementBadge id={ach.id} unlocked={unlocked} rarity={ach.rarity} />
+                {isNew && (
+                  <div className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-red-500 rounded-full border-2 border-[#1E1E1E] animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.8)] z-20" />
+                )}
+              </div>
+              <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
                 <div>
                   <div className="flex items-center justify-between gap-1 mb-0.5">
-                    <h4 className="text-[12px] font-bold truncate leading-tight text-on-surface">
+                    <h4 className={`text-[12px] font-bold truncate leading-tight ${unlocked ? 'text-on-surface' : 'text-on-surface-variant'}`}>
                       {ach.name}
                     </h4>
-                    {unlocked ? (
-                      <span className="flex items-center gap-1 text-[7px] font-mono uppercase tracking-wider text-green-400 bg-green-500/10 px-1.5 py-0.5 rounded border border-green-500/20 font-bold shrink-0">
-                        <Check size={8} strokeWidth={3} /> {t('unlockedLabel')}
-                      </span>
-                    ) : (
-                      <span className="flex items-center gap-1 text-[7px] font-mono uppercase tracking-wider text-slate-400 bg-slate-500/10 px-1.5 py-0.5 rounded border border-slate-500/20 shrink-0 font-bold">
-                        <Lock size={8} strokeWidth={3} /> {t('lockedLabel')}
-                      </span>
-                    )}
+                    <div className="flex items-center gap-1 shrink-0">
+                      <RarityPill rarity={ach.rarity} />
+                      {unlocked ? (
+                        <span className="flex items-center gap-1 text-[7px] font-mono uppercase tracking-wider text-green-400 bg-green-500/10 px-1.5 py-0.5 rounded border border-green-500/20 font-bold">
+                          <Check size={8} strokeWidth={3} />
+                        </span>
+                      ) : (
+                        <span className="flex items-center gap-1 text-[7px] font-mono uppercase tracking-wider text-slate-400 bg-slate-500/10 px-1.5 py-0.5 rounded border border-slate-500/20 shrink-0 font-bold">
+                          <Lock size={8} strokeWidth={3} />
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <p className="text-[9px] font-mono leading-tight text-on-surface-variant">
                     {ach.desc}
                   </p>
                 </div>
               </div>
-              </div>
-            )
-          })}
-        </div>
+            </div>
+          )
+        })}
+      </div>
     </div>
   )
 }
