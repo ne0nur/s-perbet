@@ -6,92 +6,29 @@ config({ path: resolve(import.meta.dirname, '../.env') })
 
 const supabaseUrl = process.env.VITE_SUPABASE_URL
 const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-const apiKey = process.env.API_FOOTBALL_KEY
 
-if (!supabaseUrl || !serviceRoleKey || !apiKey) {
+if (!supabaseUrl || !serviceRoleKey) {
   console.error('❌ Konfiguration fehlt in .env')
   process.exit(1)
 }
 
 const supabase = createClient(supabaseUrl, serviceRoleKey)
 
+// Mapping der lokalen Turniere auf ESPN Ligen
+const espnLeagueMap = {
+  'Süper Lig': 'tur.1',
+  'Champions League': 'uefa.champions',
+  'World Cup 2026': 'fifa.world'
+}
+
 function cleanName(name) {
   if (!name) return ''
   return name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/ı/g, 'i').replace(/[^a-z0-9]/g, '')
 }
 
-function mapStatus(apiStatus) {
-  switch (apiStatus) {
-    case 'NS': case 'TBD': return 'upcoming'
-    case '1H': case '2H': case 'HT': case 'ET': case 'BT': case 'P': case 'LIVE': return 'live'
-    case 'FT': case 'AET': case 'PEN': return 'finished'
-    case 'PST': case 'CANC': case 'ABD': return 'postponed'
-    default: return 'upcoming'
-  }
-}
-
-async function fetchESPNFallback(dateStr, dbMatches) {
-  console.log(`🔄 API-Football blockiert/Fehler. Starte automatischen ESPN Fallback für ${dateStr}...`)
-  
-  const espnUrl = `http://site.api.espn.com/apis/site/v2/sports/soccer/all/scoreboard?dates=${dateStr.replace(/-/g, '')}`
-  try {
-    const res = await fetch(espnUrl)
-    if (!res.ok) throw new Error(`ESPN HTTP ${res.status}`)
-    const data = await res.json()
-    const events = data.events || []
-    
-    console.log(`📥 ${events.length} Fixtures bei ESPN gefunden.`)
-    
-    let updatedCount = 0
-    for (const dbMatch of dbMatches) {
-      const event = events.find(e => {
-        const competitors = e.competitions[0].competitors
-        const homeTeam = competitors.find(c => c.homeAway === 'home')?.team?.name || ''
-        const awayTeam = competitors.find(c => c.homeAway === 'away')?.team?.name || ''
-        return cleanName(homeTeam) === cleanName(dbMatch.heim_team) && cleanName(awayTeam) === cleanName(dbMatch.gast_team)
-      })
-      
-      if (!event) {
-        console.warn(`⚠️ Kein ESPN-Match für ${dbMatch.heim_team} vs ${dbMatch.gast_team}`)
-        continue
-      }
-      
-      const comp = event.competitions[0]
-      const homeScore = parseInt(comp.competitors.find(c => c.homeAway === 'home')?.score || '0', 10)
-      const awayScore = parseInt(comp.competitors.find(c => c.homeAway === 'away')?.score || '0', 10)
-      
-      const statusName = event.status.type.name
-      let newStatus = 'upcoming'
-      if (statusName.includes('FULL_TIME') || statusName.includes('FINAL')) newStatus = 'finished'
-      else if (statusName.includes('HALF') || statusName.includes('IN_PROGRESS')) newStatus = 'live'
-      else if (statusName.includes('POSTPONED') || statusName.includes('CANCELED')) newStatus = 'postponed'
-      
-      const scoreChanged = dbMatch.tore_heim !== homeScore || dbMatch.tore_gast !== awayScore
-      const statusChanged = dbMatch.status !== newStatus
-      
-      if (scoreChanged || statusChanged) {
-        const tourney = dbMatch.tournament || ''
-        console.log(`🆙 [ESPN][${tourney}] ${dbMatch.heim_team} ${homeScore}:${awayScore} ${dbMatch.gast_team} (${newStatus})`)
-        
-        const { error: updateError } = await supabase
-          .from('matches')
-          .update({ tore_heim: homeScore, tore_gast: awayScore, status: newStatus })
-          .eq('id', dbMatch.id)
-        
-        if (updateError) console.error(`❌ Update:`, updateError.message)
-        else updatedCount++
-      }
-    }
-    
-    console.log(`✅ ESPN Fallback Sync done. ${updatedCount} Spiele aktualisiert.`)
-  } catch(err) {
-    console.error('❌ ESPN Fallback Fehler:', err.message)
-  }
-}
-
 async function syncScores() {
   const force = process.argv.includes('--force')
-  console.log(`🔄 Sync gestartet (Force: ${force})`)
+  console.log(`🔄 ESPN Sync gestartet (Force: ${force})`)
 
   const now = new Date()
   const startOfToday = new Date(now); startOfToday.setHours(0,0,0,0)
@@ -106,10 +43,7 @@ async function syncScores() {
 
   if (dbError) { console.error('❌ DB-Fehler:', dbError.message); return }
 
-  // Separate WC and non-WC
-  const wcMatches = dbMatches.filter(m => m.tournament === 'World Cup 2026')
-  const otherMatches = dbMatches.filter(m => m.tournament !== 'World Cup 2026')
-  console.log(`📋 DB: ${wcMatches.length} WM-Spiele, ${otherMatches.length} andere heute`)
+  console.log(`📋 DB: ${dbMatches.length} Spiele heute anstehend.`)
 
   // Smart check: skip if no matches or all finished
   if (!force && dbMatches.length === 0) {
@@ -138,76 +72,82 @@ async function syncScores() {
     }
   }
 
-  // 2. API-Football: ALL fixtures for today (tournament-agnostic)
+  // Datum formatieren für ESPN (YYYYMMDD)
   const yyyy = now.getFullYear()
   const mm = String(now.getMonth() + 1).padStart(2, '0')
   const dd = String(now.getDate()).padStart(2, '0')
-  const dateStr = `${yyyy}-${mm}-${dd}`
+  const dateStr = `${yyyy}${mm}${dd}`
 
-  const apiUrl = `https://v3.football.api-sports.io/fixtures?date=${dateStr}`
-  console.log(`🌐 API: ${apiUrl}`)
+  // Turniere aus den heutigen Matches extrahieren
+  const tournamentsToday = [...new Set(dbMatches.map(m => m.tournament || 'Süper Lig'))]
+  
+  let updatedCount = 0
 
-  try {
-    const response = await fetch(apiUrl, { headers: { 'x-apisports-key': apiKey } })
-    if (!response.ok) throw new Error(`HTTP ${response.status}`)
-
-    const result = await response.json()
-    if (result.errors && Object.keys(result.errors).length > 0) {
-      console.error('❌ API-Fehler:', result.errors)
-      await fetchESPNFallback(dateStr, dbMatches)
-      return
+  // 2. Für jedes Turnier die spezifische ESPN API abfragen
+  for (const tournament of tournamentsToday) {
+    const espnCode = espnLeagueMap[tournament]
+    if (!espnCode) {
+      console.warn(`⚠️ Warnung: Keine ESPN Liga für "${tournament}" konfiguriert!`)
+      continue
     }
 
-    const fixtures = result.response || []
-    console.log(`📥 ${fixtures.length} Fixtures von heute`)
+    const apiUrl = `http://site.api.espn.com/apis/site/v2/sports/soccer/${espnCode}/scoreboard?dates=${dateStr}`
+    console.log(`🌐 ESPN API [${tournament}]: ${apiUrl}`)
 
-    let updatedCount = 0
-    let unmatchedDbMatches = []
+    try {
+      const response = await fetch(apiUrl)
+      if (!response.ok) throw new Error(`HTTP ${response.status}`)
 
-    for (const dbMatch of dbMatches) {
-      const fixture = fixtures.find(f => {
-        const homeMatch = cleanName(f.teams.home.name) === cleanName(dbMatch.heim_team)
-        const awayMatch = cleanName(f.teams.away.name) === cleanName(dbMatch.gast_team)
-        return homeMatch && awayMatch
-      })
+      const data = await response.json()
+      const events = data.events || []
+      console.log(`📥 ${events.length} Fixtures bei ESPN für ${tournament} gefunden.`)
 
-      if (!fixture) {
-        console.warn(`⚠️ Kein API-Match für ${dbMatch.heim_team} vs ${dbMatch.gast_team}`)
-        unmatchedDbMatches.push(dbMatch)
-        continue
+      const tournamentMatches = dbMatches.filter(m => (m.tournament || 'Süper Lig') === tournament)
+
+      for (const dbMatch of tournamentMatches) {
+        const event = events.find(e => {
+          const competitors = e.competitions[0].competitors
+          const homeTeam = competitors.find(c => c.homeAway === 'home')?.team?.name || ''
+          const awayTeam = competitors.find(c => c.homeAway === 'away')?.team?.name || ''
+          return cleanName(homeTeam) === cleanName(dbMatch.heim_team) && cleanName(awayTeam) === cleanName(dbMatch.gast_team)
+        })
+
+        if (!event) {
+          console.warn(`⚠️ Kein ESPN-Match für ${dbMatch.heim_team} vs ${dbMatch.gast_team}`)
+          continue
+        }
+
+        const comp = event.competitions[0]
+        const homeScore = parseInt(comp.competitors.find(c => c.homeAway === 'home')?.score || '0', 10)
+        const awayScore = parseInt(comp.competitors.find(c => c.homeAway === 'away')?.score || '0', 10)
+
+        const statusName = event.status.type.name
+        let newStatus = 'upcoming'
+        if (statusName.includes('FULL_TIME') || statusName.includes('FINAL')) newStatus = 'finished'
+        else if (statusName.includes('HALF') || statusName.includes('IN_PROGRESS')) newStatus = 'live'
+        else if (statusName.includes('POSTPONED') || statusName.includes('CANCELED')) newStatus = 'postponed'
+
+        const scoreChanged = dbMatch.tore_heim !== homeScore || dbMatch.tore_gast !== awayScore
+        const statusChanged = dbMatch.status !== newStatus
+
+        if (scoreChanged || statusChanged) {
+          console.log(`🆙 [${tournament}] ${dbMatch.heim_team} ${homeScore}:${awayScore} ${dbMatch.gast_team} (${newStatus})`)
+
+          const { error: updateError } = await supabase
+            .from('matches')
+            .update({ tore_heim: homeScore, tore_gast: awayScore, status: newStatus })
+            .eq('id', dbMatch.id)
+
+          if (updateError) console.error(`❌ Update:`, updateError.message)
+          else updatedCount++
+        }
       }
-
-      const goalsHome = fixture.goals.home
-      const goalsAway = fixture.goals.away
-      const apiStatus = fixture.fixture.status.short
-      const newStatus = mapStatus(apiStatus)
-
-      const scoreChanged = dbMatch.tore_heim !== goalsHome || dbMatch.tore_gast !== goalsAway
-      const statusChanged = dbMatch.status !== newStatus
-
-      if (scoreChanged || statusChanged) {
-        const tourney = dbMatch.tournament || ''
-        console.log(`🆙 [API][${tourney}] ${dbMatch.heim_team} ${goalsHome}:${goalsAway} ${dbMatch.gast_team} (${newStatus})`)
-
-        const { error: updateError } = await supabase
-          .from('matches')
-          .update({ tore_heim: goalsHome, tore_gast: goalsAway, status: newStatus })
-          .eq('id', dbMatch.id)
-
-        if (updateError) console.error(`❌ Update:`, updateError.message)
-        else updatedCount++
-      }
+    } catch (error) {
+      console.error(`❌ ESPN-Fehler für ${tournament}:`, error.message)
     }
-
-    if (unmatchedDbMatches.length > 0) {
-      console.log(`\n🔍 ${unmatchedDbMatches.length} Matches nicht in API-Football gefunden. Versuche ESPN Fallback...`)
-      await fetchESPNFallback(dateStr, unmatchedDbMatches)
-    }
-
-    console.log(`✅ Sync done. ${updatedCount} Spiele über API-Football aktualisiert.`)
-  } catch (error) {
-    console.error('❌ API-Fehler:', error.message)
   }
+
+  console.log(`✅ Sync done. ${updatedCount} Spiele aktualisiert.`)
 }
 
 syncScores()
