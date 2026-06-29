@@ -1125,25 +1125,26 @@ body {
 }
 
 @keyframes liquid-gradient {
-  0% { background-position: calc(0% + var(--bg-offset, 0%)) 50%; }
-  50% { background-position: calc(150% + var(--bg-offset, 0%)) 50%; }
-  100% { background-position: calc(300% + var(--bg-offset, 0%)) 50%; }
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
 
 .liquid-gradient-text {
   background: linear-gradient(
-    90deg,
+    120deg,
     #ff0080,
     #7928ca,
     #00b4d8,
     #ffdf9f,
+    #00f5d4,
     #ff0080
   );
-  background-size: 300% 100%;
+  background-size: 400% 100%;
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  animation: liquid-gradient 10s linear infinite;
+  animation: liquid-gradient 12s ease-in-out infinite;
   filter: url(#liquid-distortion-logo);
   will-change: background-position;
 }
