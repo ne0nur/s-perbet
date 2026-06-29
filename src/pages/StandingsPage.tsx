@@ -344,7 +344,7 @@ export function StandingsPage() {
             onClick={() => setViewPhase('table')}
             className={`flex-1 px-4 py-2.5 text-[9px] xs:text-[10px] md:text-xs font-mono font-black uppercase tracking-wider rounded-xl whitespace-nowrap transition-all duration-200 cursor-pointer text-center ${viewPhase === 'table' ? 'bg-primary-container text-on-primary-container shadow-[0_2px_8px_rgba(251,191,36,0.15)] border border-primary/20 scale-[1.01]' : 'text-on-surface-variant hover:text-on-surface hover:bg-white/5 border border-transparent'}`}
           >
-            {t('clLeaguePhaseTable')}
+            {viewTournament.toLowerCase().includes('world cup') || viewTournament.toLowerCase().includes('wm') ? 'Gruppenphase' : t('clLeaguePhaseTable')}
           </button>
           <button
             onClick={() => setViewPhase('baum')}
@@ -408,12 +408,18 @@ export function StandingsPage() {
                       // Gruppierung-Logik für World Cup und CL
                       const isGrouped = viewTournament === 'World Cup 2026' || viewTournament === 'Champions League'
                       
+                      const allTeams = Array.from(new Set(standings.map(s => s.team))).sort()
+
                       const getTeamGroup = (team: string) => {
                         if (!isGrouped) return 'Tabelle'
                         const numGroups = viewTournament === 'World Cup 2026' ? 12 : 8
-                        // Stable pseudo-group based on team name
-                        const hash = team.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)
-                        const groupIndex = hash % numGroups
+                        
+                        // Perfekte Verteilung: Jede Gruppe bekommt exakt gleich viele Teams
+                        // Wir nutzen den alphabetischen Index des Teams
+                        const teamIndex = allTeams.indexOf(team)
+                        const teamsPerGroup = Math.ceil(allTeams.length / numGroups)
+                        const groupIndex = Math.floor(teamIndex / teamsPerGroup) % numGroups
+                        
                         return `Group ${String.fromCharCode(65 + groupIndex)}`
                       }
 

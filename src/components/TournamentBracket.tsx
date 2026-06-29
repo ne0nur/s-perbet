@@ -86,8 +86,16 @@ export function TournamentBracket({ matches, config }: TournamentBracketProps) {
       )
     }
 
-    const h = m.heim_team
-    const a = m.gast_team
+    const formatTeamName = (name: string) => {
+      const lower = name.toLowerCase()
+      if (lower.includes('winner') || lower.includes('loser') || lower.includes('round of') || lower.includes('tbd')) {
+        return 'TBD'
+      }
+      return name
+    }
+
+    const h = formatTeamName(m.heim_team)
+    const a = formatTeamName(m.gast_team)
     const ht = m.tore_heim
     const at = m.tore_gast
     const isFinished = m.status === 'finished'

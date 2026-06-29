@@ -96,6 +96,17 @@ export function LeaguePage() {
   const initialized = useRef(false)
   const datenGeladen = useRef(false)
   const allTipsRef = useRef<TipSummary[]>([])
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
+
+  // Auto-Scroll zur aktiven Tab-Schaltfläche
+  useEffect(() => {
+    if (scrollContainerRef.current) {
+      const activeBtn = scrollContainerRef.current.querySelector(`[data-st="${viewSpieltag}"]`) as HTMLElement
+      if (activeBtn) {
+        activeBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' })
+      }
+    }
+  }, [viewSpieltag, maxSpieltag])
   const allProfilesRef = useRef<Profile[]>([])
 
   const tabRef = useRef<HTMLDivElement>(null)
@@ -160,13 +171,6 @@ export function LeaguePage() {
     if (!profiles) { setIsLaden(false); return }
     allProfilesRef.current = profiles as Profile[]
 
-    if (!initialized.current) {
-      initialized.current = true
-      const { data: stData } = await supabase.from('matches').select('spieltag').eq('status', 'upcoming').order('anpfiff', { ascending: true }).limit(1)
-      const currentST = stData?.[0]?.spieltag || 1
-      setViewSpieltag(currentST)
-    }
-
     // 3. Matches für die gewählte Saison laden
     let query = supabase.from('matches')
       .select('id,heim_team,gast_team,tore_heim,tore_gast,status,spieltag,tournament')
@@ -177,6 +181,23 @@ export function LeaguePage() {
     const { data: matchesData } = await query
     const fetchedMatches = (matchesData || []) as MatchInfo[]
     setAllMatches(fetchedMatches)
+
+    if (!initialized.current) {
+      initialized.current = true
+      let currentST = 1
+      const liveMatch = fetchedMatches.find(m => m.status === 'live')
+      if (liveMatch) {
+        currentST = liveMatch.spieltag
+      } else {
+        const upcomingMatch = fetchedMatches.find(m => m.status === 'upcoming')
+        if (upcomingMatch) currentST = upcomingMatch.spieltag
+        else if (fetchedMatches.length > 0) {
+          const lastFinished = [...fetchedMatches].reverse().find(m => m.status === 'finished')
+          if (lastFinished) currentST = lastFinished.spieltag
+        }
+      }
+      setViewSpieltag(currentST)
+    }
 
     // MaxSpieltag updaten
     if (fetchedMatches.length > 0) {
@@ -589,7 +610,7 @@ export function LeaguePage() {
                   </div>
                 )}
                 {/* Spieltag-Tabs Segmented Control */}
-                <div className="bg-surface-container/40 border border-white/5 p-1 rounded-2xl flex items-center gap-1.5 overflow-x-auto no-scrollbar backdrop-blur-sm -mx-4 md:mx-0 max-w-full">
+                <div ref={scrollContainerRef} className="bg-surface-container/40 border border-white/5 p-1 rounded-2xl flex items-center gap-1.5 overflow-x-auto no-scrollbar backdrop-blur-sm -mx-4 md:mx-0 max-w-full">
                   {/* Sticky "Gesamt" Button */}
                   <button
                     data-st="gesamt"

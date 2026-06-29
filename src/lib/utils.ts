@@ -139,7 +139,7 @@ export function getTournamentLogo(tournamentName: string): string {
 
   // World Cup / WM
   if (cleanName.includes('world cup') || cleanName.includes('wm ') || cleanName === 'wm') {
-    return 'https://upload.wikimedia.org/wikipedia/en/thumb/9/91/FIFA_World_Cup_2026_Logo.svg/320px-FIFA_World_Cup_2026_Logo.svg.png'
+    return `${base}logos/wm2026.svg`
   }
 
   // Teil-Matches: suche nach bekannten Turnier-Logos

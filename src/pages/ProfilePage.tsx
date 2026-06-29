@@ -284,11 +284,17 @@ export function ProfilePage() {
     const matchdays = new Set<number>()
 
     if (userTips && userTips.length > 0) {
-      total = userTips.length
       userTips.forEach((t) => {
-        if (t.punkte >= 1) correct++
-        else wrong++
-        if (t.match?.spieltag) matchdays.add(t.match.spieltag)
+        const isFinished = t.match?.status === 'finished'
+        const hasTipped = t.tipp_heim !== null && t.tipp_gast !== null
+        
+        if (isFinished && hasTipped) {
+          total++
+          if (t.punkte >= 1) correct++
+          else wrong++
+          
+          if (t.match?.spieltag) matchdays.add(t.match.spieltag)
+        }
       })
     }
 
