@@ -328,13 +328,24 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
           </div>
         )}
 
-        {/* FALL C: Tipp gesperrt (nach Anpfiff) — zeigt gespeicherten Tipp */}
+        {/* FALL C: Tipp gesperrt (nach Anpfiff) — zeigt gespeicherten Tipp + Live-Punkte */}
         {!istUpcoming && eigenerTipp && (
           <div className="flex items-center justify-center gap-2 py-0.5">
             <Lock size={11} className="text-on-surface-variant/30" />
             <span className="text-[10px] text-on-surface-variant/40 font-mono uppercase tracking-wider">
               Tipp: {eigenerTipp.tipp_heim}:{eigenerTipp.tipp_gast}
             </span>
+            {istLive && livePunkte !== null && (
+              <span className={`px-1.5 py-0.5 rounded-full text-[9px] font-mono font-black border animate-pulse ${
+                livePunkte === 4 ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30' :
+                livePunkte === 3 ? 'text-amber-400 bg-amber-500/10 border-amber-500/30' :
+                livePunkte === 2 ? 'text-blue-400 bg-blue-500/10 border-blue-500/30' :
+                livePunkte >= 1 ? 'text-purple-400 bg-purple-500/10 border-purple-500/30' :
+                'text-slate-400 bg-slate-500/10 border-slate-500/30'
+              }`}>
+                {livePunkte > 0 ? `+${livePunkte}` : livePunkte}
+              </span>
+            )}
           </div>
         )}
 
