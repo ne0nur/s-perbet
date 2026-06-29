@@ -4,6 +4,7 @@ import { useAuthStore } from '../stores/authStore'
 import { useTournamentStore } from '../stores/tournamentStore'
 import { Users, Copy, Check, Plus, LogIn, X, Trophy, LogOut, Trash2, MoreHorizontal, MessageCircle, Target, Share2 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { RivalInspector } from '../components/RivalInspector'
 import { LeagueChat } from '../components/LeagueChat'
 import { useToastStore } from '../stores/toastStore'
 import { calculateLevel, getLevelBadgeStyle, getTournamentLogo } from '../lib/utils'
@@ -87,7 +88,15 @@ export function LeaguePage() {
   const [viewTournament, setViewTournament] = useState<string>('Alle')
   const [neueLigaTurniere, setNeueLigaTurniere] = useState<string[]>(['Süper Lig'])
   const [hasUnreadChat, setHasUnreadChat] = useState(false)
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null)
+  const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 1024)
   const chatNotifyChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null)
+  
+  useEffect(() => {
+    const checkIsDesktop = () => setIsDesktop(window.innerWidth >= 1024)
+    window.addEventListener('resize', checkIsDesktop)
+    return () => window.removeEventListener('resize', checkIsDesktop)
+  }, [])
   
   const tournamentConfigs = useTournamentStore(s => s.tournaments)
 
@@ -456,15 +465,32 @@ export function LeaguePage() {
 
   // ─── Dynamische Tabs ───────────────────────────────
   const getPhaseLabel = (st: number, tournament: string) => {
-    if (tournament === 'Champions League') {
-      if (st <= 8) return t('clRoundLeague', { st })
-      if (st === 9) return t('clRoundPlayoffs')
-      if (st === 10) return t('clRoundLast16')
-      if (st === 11) return t('clRoundQuarter')
-      if (st === 12) return t('clRoundSemi')
-      if (st === 13) return t('clRoundFinal')
-      return `${st}.`
+    const config = useTournamentStore.getState().getTournament(tournament)
+
+    // K.o.-Turniere (WM, CL, etc.)
+    if (config?.has_knockout) {
+      const gs = config.group_stage_matchdays
+      if (st <= gs) return t('clRoundLeague', { st })
+
+      const koRound = st - gs
+      const isWC = tournament.toLowerCase().includes('world cup') || tournament.toLowerCase().includes('wm')
+
+      if (isWC) {
+        const wmPhases: Record<number, string> = {
+          1: t('koPhase16'), 2: t('koPhase8'), 3: t('koPhase4'), 4: t('koPhase2')
+        }
+        return wmPhases[koRound] || `Runde ${koRound}`
+      }
+
+      // CL-Style
+      const clPhases: Record<number, string> = {
+        1: t('clRoundPlayoffs'), 2: t('clRoundLast16'), 3: t('clRoundQuarter'),
+        4: t('clRoundSemi'), 5: t('clRoundFinal')
+      }
+      return clPhases[koRound] || `Runde ${koRound}`
     }
+
+    // Liga: einfache Spieltag-Nummer
     return `${st}.`
   }
 
@@ -667,14 +693,20 @@ export function LeaguePage() {
                           <tr className="border-b border-surface-container-high bg-surface-container-low">
                             <th className="py-2.5 pl-3 pr-2 text-[10px] font-mono font-medium text-on-surface-variant/60 uppercase tracking-wider w-8" title={t('rank')}>#</th>
                             <th className="py-2.5 pr-2 text-[10px] font-mono font-medium text-on-surface-variant/60 uppercase tracking-wider text-left" title={t('player')}>{t('player')}</th>
-                            {viewSpieltag !== 'gesamt' && filteredMatches.map(m => (
-                              <th key={m.id} className="py-2.5 px-1 text-[10px] font-mono font-medium text-on-surface-variant/60 uppercase tracking-wider text-center w-10 relative" title={`${m.heim_team} vs ${m.gast_team}`}>
+                            {filteredMatches.map(m => (
+                              <th key={m.id} className="py-2.5 px-1 text-[10px] font-mono font-medium text-on-surface-variant/60 uppercase tracking-wider text-center w-12 relative" title={`${m.heim_team} vs ${m.gast_team}`}>
                                 {(m.tournament === 'Champions League') && (
                                   <div className="absolute top-0 right-1/2 translate-x-1/2 -mt-1 text-[8px] opacity-70">⭐</div>
                                 )}
-                                <span className="block mt-1">{teamKuerzel(m.heim_team)}</span>
-                                <span className="block text-[8px]">vs</span>
-                                <span className="block">{teamKuerzel(m.gast_team)}</span>
+                                <div className="flex flex-col items-center gap-[1px]">
+                                  <span className="block">{teamKuerzel(m.heim_team)}</span>
+                                  <span className="block">{teamKuerzel(m.gast_team)}</span>
+                                  <span className={`block text-[9px] mt-0.5 ${(m.status === 'finished' || m.status === 'live') ? 'text-on-surface' : 'text-on-surface-variant/40'}`}>
+                                    {(m.status === 'finished' || m.status === 'live') && m.tore_heim !== null && m.tore_gast !== null
+                                      ? `${m.tore_heim}:${m.tore_gast}`
+                                      : '-:-'}
+                                  </span>
+                                </div>
                               </th>
                             ))}
                             <th className="py-2.5 pr-3 text-[10px] font-mono font-medium text-on-surface-variant/60 uppercase tracking-wider w-14 text-right" title={t('pointsLong')}>{t('pointsShort')}</th>
@@ -684,7 +716,7 @@ export function LeaguePage() {
                           {mitglieder.map((m, idx) => {
                             const isMe = m.id === user?.id
                             return (
-                              <tr key={m.id} className={`border-b border-surface-container-high/50 last:border-0 hover:bg-white/[0.02] transition-colors duration-200 group/row border-l-2 ${isMe ? 'bg-primary-container/8 border-l-primary-container shadow-[inset_3px_0_0_var(--primary)]' : 'border-l-transparent hover:border-l-white/20'}`}>
+                              <tr key={m.id} onClick={() => setSelectedUserId(m.id)} className={`border-b border-surface-container-high/50 last:border-0 hover:bg-white/[0.04] transition-colors duration-200 group/row border-l-2 cursor-pointer ${isMe ? 'bg-primary-container/8 border-l-primary-container shadow-[inset_3px_0_0_var(--primary)]' : 'border-l-transparent hover:border-l-white/20'}`}>
                                 <td className="py-2.5 pr-2 pl-3">
                                   <div className="flex flex-col items-center justify-center">
                                     <span className="text-[11px] font-mono font-bold text-on-surface-variant/80">{idx + 1}</span>
@@ -720,7 +752,7 @@ export function LeaguePage() {
                                     </span>
                                   </div>
                                 </td>
-                                {viewSpieltag !== 'gesamt' && filteredMatches.map(match => {
+                                {filteredMatches.map(match => {
                                   const tipp = m.tipps[match.id]
                                   const hasResult = match.status === 'finished' && match.tore_heim !== null && match.tore_gast !== null
                                   const punkteValue = hasResult && tipp ? tipp.punkte : null
@@ -739,12 +771,14 @@ export function LeaguePage() {
 
                                   return (
                                     <td key={match.id} className={`py-2.5 px-1 text-center rounded ${punkteValue ? punkteKlasse(punkteValue) : ''}`}>
-                                      <div className="flex flex-col items-center">
-                                        <span className={`text-[10px] font-mono leading-tight ${hasResult ? 'text-on-surface font-bold' : showHidden ? 'text-on-surface-variant/40' : 'text-on-surface-variant/60'}`}>
+                                      <div className="flex items-center justify-center">
+                                        <span className={`text-[11px] font-mono leading-tight ${hasResult ? 'text-on-surface font-bold' : showHidden ? 'text-on-surface-variant/40' : 'text-on-surface-variant/60'}`}>
                                           {displayHeim}:{displayGast}
                                         </span>
-                                        {punkteValue != null && punkteValue > 0 && (
-                                          <span className="text-[8px] font-mono leading-tight">{punkteValue}{subscriptPunkte(punkteValue)}</span>
+                                        {punkteValue != null && (
+                                          <sub className={`text-[7px] font-mono font-bold ml-[1px] -mb-1 ${punkteValue > 0 ? 'text-on-surface' : 'text-on-surface-variant/50'}`}>
+                                            {punkteValue}
+                                          </sub>
                                         )}
                                       </div>
                                     </td>
@@ -862,6 +896,30 @@ export function LeaguePage() {
                     <div className="flex-1 min-h-0 overflow-y-auto">
                       <LeagueChat leagueId={aktiveLiga.id} />
                     </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Mobile Overlay for Rival Inspector */}
+              {!isDesktop && selectedUserId && (
+                <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-4 sm:p-6 pb-20 sm:pb-6 bg-black/60 backdrop-blur-sm" onClick={() => setSelectedUserId(null)}>
+                  <div className="w-full max-w-lg" onClick={e => e.stopPropagation()}>
+                    <RivalInspector 
+                      userId={selectedUserId}
+                      onClose={() => setSelectedUserId(null)}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Desktop Modal for Rival Inspector */}
+              {isDesktop && selectedUserId && (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center p-6 bg-black/60 backdrop-blur-sm" onClick={() => setSelectedUserId(null)}>
+                  <div className="w-full max-w-xl" onClick={e => e.stopPropagation()}>
+                    <RivalInspector 
+                      userId={selectedUserId}
+                      onClose={() => setSelectedUserId(null)}
+                    />
                   </div>
                 </div>
               )}
