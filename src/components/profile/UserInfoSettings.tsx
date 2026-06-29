@@ -48,7 +48,7 @@ export function UserInfoSettings({
         <div className="relative shrink-0">
           <motion.div 
             layoutId="header-avatar"
-            className="relative w-[72px] h-[72px] rounded-full border-2 border-primary-container/40 group cursor-pointer shadow-[0_0_20px_rgba(251,191,36,0.15)] overflow-hidden flex items-center justify-center bg-surface-container-high"
+            className="relative w-[72px] h-[72px] rounded-full border-2 border-primary-container/40 group cursor-pointer shadow-[0_0_20px_rgba(var(--primary-rgb),0.15)] overflow-hidden flex items-center justify-center bg-surface-container-high"
             onClick={() => fileRef.current?.click()}
           >
             {avatarUrl ? (

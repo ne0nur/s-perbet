@@ -33,7 +33,7 @@ export function BottomNav() {
               {isActive && (
                 <motion.div
                   layoutId="bottom-nav-indicator"
-                  className="absolute inset-0 m-auto w-14 h-[42px] bg-primary-container/15 border border-primary-container/30 rounded-xl shadow-[0_0_20px_rgba(251,191,36,0.15)] z-0"
+                  className="absolute inset-0 m-auto w-14 h-[42px] bg-primary-container/15 border border-primary-container/30 rounded-xl shadow-[0_0_20px_rgba(var(--primary-rgb),0.15)] z-0"
                   transition={{
                     type: "spring",
                     stiffness: 400,
@@ -52,7 +52,7 @@ export function BottomNav() {
                 transition={{ type: "spring", stiffness: 400, damping: 25 }}
                 className={`relative z-10 transition-colors duration-300 ease-out ${
                   isActive
-                    ? 'text-primary-fixed-dim drop-shadow-[0_0_10px_rgba(249,189,34,0.6)]'
+                    ? 'text-primary-fixed-dim drop-shadow-[0_0_10px_rgba(var(--primary-rgb),0.6)]'
                     : 'text-on-surface-variant/60'
                 }`}
               >

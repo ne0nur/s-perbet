@@ -103,6 +103,17 @@ export function HeaderLogo({ size = 'md' }: HeaderLogoProps) {
           </motion.span>
         )}
       </AnimatePresence>
+      {/* SVG Liquid Filter Definition */}
+      <svg className="absolute w-0 h-0 pointer-events-none" aria-hidden="true" style={{ position: 'absolute' }}>
+        <defs>
+          <filter id="liquid-distortion-logo">
+            <feTurbulence type="fractalNoise" baseFrequency="0.015 0.03" numOctaves="3" result="noise">
+              <animate attributeName="baseFrequency" dur="10s" values="0.015 0.03;0.012 0.024;0.015 0.03" repeatCount="indefinite" />
+            </feTurbulence>
+            <feDisplacementMap in="SourceGraphic" in2="noise" scale="5" xChannelSelector="R" yChannelSelector="G" />
+          </filter>
+        </defs>
+      </svg>
     </span>
   )
 }

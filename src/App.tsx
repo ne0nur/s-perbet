@@ -32,7 +32,10 @@ import { useToastStore } from './stores/toastStore'
 import { useNetworkStore } from './stores/networkStore'
 import { useTranslation } from './utils/translations'
 
+import { useThemeStore } from './stores/themeStore'
+
 export default function App() {
+  const { theme } = useThemeStore()
   const { ladeUser } = useAuthStore()
   const ladeSettings = useSettingsStore(s => s.ladeSettings)
   const { t } = useTranslation()

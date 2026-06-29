@@ -852,7 +852,7 @@ export function ProfilePage() {
       <div className="mb-6">
         {(() => {
           const levelDetails = profil 
-            ? calculateLevelDetails(profil.gesamt_punkte)
+            ? calculateLevelDetails(profil.gesamt_punkte, unlockedSet.size)
             : { level: 1, xpCurrent: 0, xpRequired: 100, xpPct: 0 }
             
           let levelTitle = undefined

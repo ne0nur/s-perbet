@@ -129,7 +129,7 @@ function LeaderboardSection({
             onClick={() => handleUserClick(top3[0]?.id)}
             className={`flex flex-col items-center gap-1 flex-1 cursor-pointer p-1.5 rounded-xl border transition-all ${
               selectedUserId === top3[0]?.id && isDesktop
-                ? 'bg-primary-container/15 border-primary/50 shadow-[0_0_15px_rgba(251,191,36,0.15)]'
+                ? 'bg-primary-container/15 border-primary/50 shadow-[0_0_15px_rgba(var(--primary-rgb),0.15)]'
                 : 'border-transparent hover:bg-white/5'
             }`}
           >
@@ -732,7 +732,7 @@ export function GlobalPage() {
           onClick={() => setActiveTab('rangliste')}
           className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-[10px] font-mono font-black uppercase tracking-wider transition-all duration-200 cursor-pointer ${
             activeTab === 'rangliste'
-              ? 'bg-primary-container text-on-primary-container shadow-[0_2px_8px_rgba(251,191,36,0.15)] border border-primary/20 scale-[1.01]'
+              ? 'bg-primary-container text-on-primary-container shadow-[0_2px_8px_rgba(var(--primary-rgb),0.15)] border border-primary/20 scale-[1.01]'
               : 'text-on-surface-variant hover:text-on-surface hover:bg-white/5 border border-transparent'
           }`}
         >
@@ -743,7 +743,7 @@ export function GlobalPage() {
           onClick={() => setActiveTab('stats')}
           className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-[10px] font-mono font-black uppercase tracking-wider transition-all duration-200 cursor-pointer ${
             activeTab === 'stats'
-              ? 'bg-primary-container text-on-primary-container shadow-[0_2px_8px_rgba(251,191,36,0.15)] border border-primary/20 scale-[1.01]'
+              ? 'bg-primary-container text-on-primary-container shadow-[0_2px_8px_rgba(var(--primary-rgb),0.15)] border border-primary/20 scale-[1.01]'
               : 'text-on-surface-variant hover:text-on-surface hover:bg-white/5 border border-transparent'
           }`}
         >
@@ -783,7 +783,7 @@ export function GlobalPage() {
               onClick={() => setDesktopRightTab('analyse')}
               className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-[10px] font-mono font-black uppercase tracking-wider transition-all duration-200 cursor-pointer ${
                 desktopRightTab === 'analyse'
-                  ? 'bg-primary-container text-on-primary-container shadow-[0_2px_8px_rgba(251,191,36,0.15)] border border-primary/20 scale-[1.01]'
+                  ? 'bg-primary-container text-on-primary-container shadow-[0_2px_8px_rgba(var(--primary-rgb),0.15)] border border-primary/20 scale-[1.01]'
                   : 'text-on-surface-variant hover:text-on-surface hover:bg-white/5 border border-transparent'
               }`}
             >
@@ -793,7 +793,7 @@ export function GlobalPage() {
               onClick={() => setDesktopRightTab('stats')}
               className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-[10px] font-mono font-black uppercase tracking-wider transition-all duration-200 cursor-pointer ${
                 desktopRightTab === 'stats'
-                  ? 'bg-primary-container text-on-primary-container shadow-[0_2px_8px_rgba(251,191,36,0.15)] border border-primary/20 scale-[1.01]'
+                  ? 'bg-primary-container text-on-primary-container shadow-[0_2px_8px_rgba(var(--primary-rgb),0.15)] border border-primary/20 scale-[1.01]'
                   : 'text-on-surface-variant hover:text-on-surface hover:bg-white/5 border border-transparent'
               }`}
             >

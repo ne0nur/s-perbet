@@ -89,8 +89,9 @@ export function LevelBadge({ level, className = '', children, ...props }: LevelB
   const behindParticles = particles.filter(p => p.behind);
   const frontParticles = particles.filter(p => !p.behind);
 
+  const hasPos = className.includes('relative') || className.includes('absolute') || className.includes('fixed');
   return (
-    <div className={`relative flex items-center justify-center ${className}`} {...props}>
+    <div className={`${hasPos ? '' : 'relative'} flex items-center justify-center ${className}`} {...props}>
       {/* ── BEHIND: subtle depth particles ── */}
       {behindParticles.length > 0 && (
         <div className="absolute inset-[-2px] pointer-events-none z-0 overflow-visible">
