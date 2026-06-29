@@ -36,7 +36,8 @@ export function HeaderLogo({ size = 'md' }: HeaderLogoProps) {
             key="username"
             initial={{ opacity: 1 }}
             animate={{ opacity: 1 }}
-            exit={{ opacity: 0, transition: { delay: 3.5, duration: 0.1 } }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
             className="inline-flex items-center justify-center"
           >
             <motion.span
@@ -53,7 +54,7 @@ export function HeaderLogo({ size = 'md' }: HeaderLogoProps) {
                   scale: 1.05, 
                   filter: "blur(8px)", 
                   y: -6, 
-                  transition: { duration: 0.4, ease: "easeIn" } 
+                  transition: { duration: 0.3, ease: "easeIn" } 
                 }}
                 transition={{ duration: 0.8, ease: "easeOut" }}
                 className={`liquid-gradient-text ${isSm ? 'text-xl' : 'text-3xl'} tracking-widest`}
@@ -103,10 +104,10 @@ export function HeaderLogo({ size = 'md' }: HeaderLogoProps) {
       <svg className="absolute w-0 h-0 pointer-events-none" aria-hidden="true" style={{ position: 'absolute' }}>
         <defs>
           <filter id="liquid-distortion-logo">
-            <feTurbulence type="turbulence" baseFrequency="0.01 0.02" numOctaves="3" result="noise">
-              <animate attributeName="baseFrequency" dur="8s" values="0.01 0.02;0.02 0.04;0.01 0.02" repeatCount="indefinite" />
+            <feTurbulence type="turbulence" baseFrequency="0.008 0.018" numOctaves="4" result="noise">
+              <animate attributeName="baseFrequency" dur="6s" values="0.008 0.018;0.015 0.03;0.008 0.018" repeatCount="indefinite" />
             </feTurbulence>
-            <feDisplacementMap in="SourceGraphic" in2="noise" scale="12" xChannelSelector="R" yChannelSelector="G" />
+            <feDisplacementMap in="SourceGraphic" in2="noise" scale="14" xChannelSelector="R" yChannelSelector="G" />
           </filter>
         </defs>
       </svg>

@@ -1147,6 +1147,8 @@ body {
   animation: liquid-gradient 12s ease-in-out infinite;
   filter: url(#liquid-distortion-logo);
   will-change: background-position;
+  text-shadow: 0 0 20px rgba(121, 40, 202, 0.25), 
+               0 0 40px rgba(0, 180, 216, 0.15);
 }
 
 /* ─── Level-Ziffer: fette 3D-Typo mit Multi-Layer Text-Shadow ─── */
