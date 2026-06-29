@@ -30,6 +30,65 @@ function mapStatus(apiStatus) {
   }
 }
 
+async function fetchESPNFallback(dateStr, dbMatches) {
+  console.log(`🔄 API-Football blockiert/Fehler. Starte automatischen ESPN Fallback für ${dateStr}...`)
+  
+  const espnUrl = `http://site.api.espn.com/apis/site/v2/sports/soccer/all/scoreboard?dates=${dateStr.replace(/-/g, '')}`
+  try {
+    const res = await fetch(espnUrl)
+    if (!res.ok) throw new Error(`ESPN HTTP ${res.status}`)
+    const data = await res.json()
+    const events = data.events || []
+    
+    console.log(`📥 ${events.length} Fixtures bei ESPN gefunden.`)
+    
+    let updatedCount = 0
+    for (const dbMatch of dbMatches) {
+      const event = events.find(e => {
+        const competitors = e.competitions[0].competitors
+        const homeTeam = competitors.find(c => c.homeAway === 'home')?.team?.name || ''
+        const awayTeam = competitors.find(c => c.homeAway === 'away')?.team?.name || ''
+        return cleanName(homeTeam) === cleanName(dbMatch.heim_team) && cleanName(awayTeam) === cleanName(dbMatch.gast_team)
+      })
+      
+      if (!event) {
+        console.warn(`⚠️ Kein ESPN-Match für ${dbMatch.heim_team} vs ${dbMatch.gast_team}`)
+        continue
+      }
+      
+      const comp = event.competitions[0]
+      const homeScore = parseInt(comp.competitors.find(c => c.homeAway === 'home')?.score || '0', 10)
+      const awayScore = parseInt(comp.competitors.find(c => c.homeAway === 'away')?.score || '0', 10)
+      
+      const statusName = event.status.type.name
+      let newStatus = 'upcoming'
+      if (statusName.includes('FULL_TIME') || statusName.includes('FINAL')) newStatus = 'finished'
+      else if (statusName.includes('HALF') || statusName.includes('IN_PROGRESS')) newStatus = 'live'
+      else if (statusName.includes('POSTPONED') || statusName.includes('CANCELED')) newStatus = 'postponed'
+      
+      const scoreChanged = dbMatch.tore_heim !== homeScore || dbMatch.tore_gast !== awayScore
+      const statusChanged = dbMatch.status !== newStatus
+      
+      if (scoreChanged || statusChanged) {
+        const tourney = dbMatch.tournament || ''
+        console.log(`🆙 [ESPN][${tourney}] ${dbMatch.heim_team} ${homeScore}:${awayScore} ${dbMatch.gast_team} (${newStatus})`)
+        
+        const { error: updateError } = await supabase
+          .from('matches')
+          .update({ tore_heim: homeScore, tore_gast: awayScore, status: newStatus })
+          .eq('id', dbMatch.id)
+        
+        if (updateError) console.error(`❌ Update:`, updateError.message)
+        else updatedCount++
+      }
+    }
+    
+    console.log(`✅ ESPN Fallback Sync done. ${updatedCount} Spiele aktualisiert.`)
+  } catch(err) {
+    console.error('❌ ESPN Fallback Fehler:', err.message)
+  }
+}
+
 async function syncScores() {
   const force = process.argv.includes('--force')
   console.log(`🔄 Sync gestartet (Force: ${force})`)
@@ -95,6 +154,7 @@ async function syncScores() {
     const result = await response.json()
     if (result.errors && Object.keys(result.errors).length > 0) {
       console.error('❌ API-Fehler:', result.errors)
+      await fetchESPNFallback(dateStr, dbMatches)
       return
     }
 
@@ -102,6 +162,7 @@ async function syncScores() {
     console.log(`📥 ${fixtures.length} Fixtures von heute`)
 
     let updatedCount = 0
+    let unmatchedDbMatches = []
 
     for (const dbMatch of dbMatches) {
       const fixture = fixtures.find(f => {
@@ -112,6 +173,7 @@ async function syncScores() {
 
       if (!fixture) {
         console.warn(`⚠️ Kein API-Match für ${dbMatch.heim_team} vs ${dbMatch.gast_team}`)
+        unmatchedDbMatches.push(dbMatch)
         continue
       }
 
@@ -125,7 +187,7 @@ async function syncScores() {
 
       if (scoreChanged || statusChanged) {
         const tourney = dbMatch.tournament || ''
-        console.log(`🆙 [${tourney}] ${dbMatch.heim_team} ${goalsHome}:${goalsAway} ${dbMatch.gast_team} (${newStatus})`)
+        console.log(`🆙 [API][${tourney}] ${dbMatch.heim_team} ${goalsHome}:${goalsAway} ${dbMatch.gast_team} (${newStatus})`)
 
         const { error: updateError } = await supabase
           .from('matches')
@@ -137,7 +199,12 @@ async function syncScores() {
       }
     }
 
-    console.log(`✅ Sync done. ${updatedCount} Spiele aktualisiert.`)
+    if (unmatchedDbMatches.length > 0) {
+      console.log(`\n🔍 ${unmatchedDbMatches.length} Matches nicht in API-Football gefunden. Versuche ESPN Fallback...`)
+      await fetchESPNFallback(dateStr, unmatchedDbMatches)
+    }
+
+    console.log(`✅ Sync done. ${updatedCount} Spiele über API-Football aktualisiert.`)
   } catch (error) {
     console.error('❌ API-Fehler:', error.message)
   }
