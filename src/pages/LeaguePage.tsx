@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { RivalInspector } from '../components/RivalInspector'
 import { LeagueChat } from '../components/LeagueChat'
 import { useToastStore } from '../stores/toastStore'
-import { calculateLevel, getLevelBadgeStyle, getTournamentLogo } from '../lib/utils'
+import { calculateLevel, getLevelBadgeStyle, getTournamentLogo, berechnePunkte } from '../lib/utils'
 import { LevelBadge } from '../components/ui/LevelBadge'
 import { useTranslation } from '../utils/translations'
 
@@ -754,8 +754,11 @@ export function LeaguePage() {
                                 </td>
                                 {filteredMatches.map(match => {
                                   const tipp = m.tipps[match.id]
-                                  const hasResult = match.status === 'finished' && match.tore_heim !== null && match.tore_gast !== null
-                                  const punkteValue = hasResult && tipp ? tipp.punkte : null
+                                  const hasResult = (match.status === 'finished' || match.status === 'live') && match.tore_heim !== null && match.tore_gast !== null
+                                  const isLive = match.status === 'live'
+                                  const punkteValue = hasResult && tipp
+                                    ? (isLive ? berechnePunkte(tipp.heim, tipp.gast, match.tore_heim!, match.tore_gast!) : tipp.punkte)
+                                    : null
 
                                   if (!tipp) return (
                                     <td key={match.id} className="py-2.5 px-1 text-center">
@@ -770,13 +773,13 @@ export function LeaguePage() {
                                   const displayGast = showHidden ? '-' : tipp.gast
 
                                   return (
-                                    <td key={match.id} className={`py-2.5 px-1 text-center rounded ${punkteValue ? punkteKlasse(punkteValue) : ''}`}>
+                                    <td key={match.id} className={`py-2.5 px-1 text-center rounded ${punkteValue ? (isLive ? 'bg-amber-500/5' : punkteKlasse(punkteValue)) : ''}`}>
                                       <div className="flex items-center justify-center">
                                         <span className={`text-[11px] font-mono leading-tight ${hasResult ? 'text-on-surface font-bold' : showHidden ? 'text-on-surface-variant/40' : 'text-on-surface-variant/60'}`}>
                                           {displayHeim}:{displayGast}
                                         </span>
                                         {punkteValue != null && (
-                                          <sub className={`text-[7px] font-mono font-bold ml-[1px] -mb-1 ${punkteValue > 0 ? 'text-on-surface' : 'text-on-surface-variant/50'}`}>
+                                          <sub className={`text-[7px] font-mono font-bold ml-[1px] -mb-1 ${isLive ? 'text-amber-400 animate-pulse' : punkteValue > 0 ? 'text-on-surface' : 'text-on-surface-variant/50'}`}>
                                             {punkteValue}
                                           </sub>
                                         )}
