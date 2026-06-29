@@ -6,6 +6,7 @@ import { ChevronRight, Check, Minus, Plus, Lock, WifiOff } from 'lucide-react'
 import { useSettingsStore } from '../stores/settingsStore'
 import { useNetworkStore } from '../stores/networkStore'
 import { useToastStore } from '../stores/toastStore'
+import { useTranslation } from '../utils/translations'
 import type { Match } from '../stores/matchStore'
 import { motion, AnimatePresence } from 'framer-motion'
 
@@ -110,6 +111,7 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
   const tippSpeichern = useTipStore(s => s.tippSpeichern)
   const tippsFreigeschaltet = useSettingsStore(s => s.tippsFreigeschaltet)
   const isOnline = useNetworkStore(s => s.isOnline)
+  const { language } = useTranslation()
 
   const istVorbei  = match.status === 'finished'
   const istLive    = match.status === 'live'
@@ -149,15 +151,34 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
     const now = new Date()
     const kickoff = new Date(match.anpfiff)
     if (now >= kickoff) {
-      const jokes = [
-        '🏃‍♂️ Der Zug ist abgefahren!',
-        '⏰ Zu spät, das Spiel läuft!',
-        '🔮 Deine hellseherischen Fähigkeiten kommen zu spät.',
-        '😏 Netter Versuch, Zeitreisender.',
-        '🕰️ Tipp-Abgabe geschlossen — das Spiel hat begonnen!',
-        '⚽ Der Ball rollt bereits — keine Tipps mehr!',
-      ]
-      const joke = jokes[Math.floor(Math.random() * jokes.length)]
+      const jokes: Record<string, string[]> = {
+        de: [
+          '🏃‍♂️ Der Zug ist abgefahren!',
+          '⏰ Zu spät, das Spiel läuft!',
+          '🔮 Deine hellseherischen Fähigkeiten kommen zu spät.',
+          '😏 Netter Versuch, Zeitreisender.',
+          '🕰️ Tipp-Abgabe geschlossen — das Spiel hat begonnen!',
+          '⚽ Der Ball rollt bereits — keine Tipps mehr!',
+        ],
+        en: [
+          "🏃‍♂️ That ship has sailed!",
+          "⏰ Too late — the match is underway!",
+          "🔮 Your psychic powers arrived too late.",
+          "😏 Nice try, time traveler.",
+          "🕰️ Tip window closed — kickoff has passed!",
+          "⚽ The ball is rolling — no more tips!",
+        ],
+        tr: [
+          '🏃‍♂️ Tren kalktı!',
+          '⏰ Çok geç — maç başladı!',
+          '🔮 Kâhin yeteneklerin geç kaldı.',
+          '😏 İyi deneme, zaman yolcusu.',
+          '🕰️ Tahmin penceresi kapandı — maç başladı!',
+          '⚽ Top yuvarlanıyor — daha fazla tahmin yok!',
+        ],
+      }
+      const langJokes = jokes[language] || jokes.de
+      const joke = langJokes[Math.floor(Math.random() * langJokes.length)]
       useToastStore.getState().toast(joke, 'info')
       return
     }
@@ -201,16 +222,6 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
         {istLive && (
           <span className="flex items-center gap-1.5 text-red-400 text-xs font-medium">
             <span className="live-dot" /> LIVE
-            {livePunkte !== null && (
-              <span className={`ml-1.5 px-2 py-0.5 rounded-full text-[9px] font-mono font-black border uppercase tracking-wider ${
-                livePunkte === 4 ? 'bg-green-500/20 text-green-400 border-green-500/30' :
-                livePunkte === 3 ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' :
-                livePunkte === 2 ? 'bg-blue-500/20 text-blue-400 border-blue-500/30' :
-                'bg-slate-500/20 text-slate-400 border-slate-500/20'
-              }`}>
-                +{livePunkte}
-              </span>
-            )}
           </span>
         )}
         {istVorbei && punkte !== null && (
