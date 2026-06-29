@@ -6,7 +6,7 @@
  * Die echten animierten Icons werden über forwardRef + useAnimate aus motion/react angesteuert.
  */
 
-import { memo, useRef, useCallback } from "react";
+import { memo, useRef, useCallback, useEffect } from "react";
 import { type AnimatedIconHandle } from "./types";
 import TrophyIcon from "./trophy-icon";
 import GlobeIcon from "./globe-icon";
@@ -40,6 +40,7 @@ interface HoverIconProps {
   strokeWidth?: number;
   className?: string;
   color?: string;
+  trigger?: number;
 }
 
 /** Erstellt eine hover-animierte Icon-Wrapper-Komponente */
@@ -54,11 +55,19 @@ function makeAnimatedIcon(
     size = 24, 
     strokeWidth = 2, 
     className = "",
-    color = "currentColor"
+    color = "currentColor",
+    trigger = 0
   }: HoverIconProps) {
     const ref = useRef<AnimatedIconHandle>(null);
     const handleEnter = useCallback(() => ref.current?.startAnimation(), []);
     const handleLeave = useCallback(() => ref.current?.stopAnimation(), []);
+
+    // Trigger animation when external trigger key changes
+    useEffect(() => {
+      if (trigger > 0) {
+        ref.current?.startAnimation();
+      }
+    }, [trigger]);
 
     return (
       <span 

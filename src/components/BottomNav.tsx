@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { HoverTrophyIcon, HoverGlobeIcon, HoverUserIcon, HoverUsersIcon, HoverChartBarIcon } from './icons/HoverIcons'
@@ -6,6 +7,7 @@ import { useTranslation } from '../utils/translations'
 export function BottomNav() {
   const location = useLocation()
   const { t } = useTranslation()
+  const [clickTrigger, setClickTrigger] = useState<Record<string, number>>({})
 
   const tabs = [
     { to: '/dashboard', icon: HoverTrophyIcon,   label: t('games') },
@@ -17,6 +19,13 @@ export function BottomNav() {
 
   const activeIndex = tabs.findIndex(tab => location.pathname === tab.to)
 
+  const handleTabClick = (to: string) => {
+    setClickTrigger(prev => ({
+      ...prev,
+      [to]: (prev[to] || 0) + 1
+    }))
+  }
+
   return (
     <nav className="fixed bottom-4 left-4 right-4 max-w-md mx-auto z-50 bg-surface/85 backdrop-blur-3xl rounded-2xl shadow-[0_12px_40px_rgba(0,0,0,0.8)] md:hidden border border-white/10 overflow-hidden select-none">
       <div className="flex justify-around items-center h-[64px] px-2 relative">
@@ -27,13 +36,14 @@ export function BottomNav() {
             <NavLink
               key={to}
               to={to}
+              onClick={() => handleTabClick(to)}
               className="flex-1 flex flex-col items-center justify-center gap-1 py-1.5 relative active:scale-95 transition-transform duration-150 z-10 cursor-pointer h-full"
             >
               {/* Premium Animated Sliding Pill (Background) */}
               {isActive && (
                 <motion.div
                   layoutId="bottom-nav-indicator"
-                  className="absolute inset-0 m-auto w-14 h-[42px] bg-primary-container/15 border border-primary-container/30 rounded-xl shadow-[0_0_20px_rgba(var(--primary-rgb),0.15)] z-0"
+                  className="absolute inset-0 m-auto w-[82%] h-[82%] bg-primary-container/15 border border-primary-container/30 rounded-xl shadow-[0_0_20px_rgba(var(--primary-rgb),0.15)] z-0"
                   transition={{
                     type: "spring",
                     stiffness: 400,
@@ -59,6 +69,7 @@ export function BottomNav() {
                 <Icon
                   size={22}
                   strokeWidth={isActive ? 2.5 : 1.5}
+                  trigger={isActive ? (clickTrigger[to] || 0) + 1 : 0}
                 />
               </motion.span>
 
