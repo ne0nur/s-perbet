@@ -8,7 +8,6 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 
-// ESPN League Mapping (gleiche Struktur wie sync_scores.js)
 const ESPN_LEAGUE_MAP: Record<string, string> = {
   "Süper Lig": "tur.1",
   "Champions League": "uefa.champions",
@@ -34,6 +33,26 @@ interface UpdateResult {
   newStatus: string;
   score?: string;
   source: "espn" | "time";
+}
+
+const CORS_HEADERS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Authorization, Content-Type, apikey, x-client-info",
+};
+
+function ok(body: unknown): Response {
+  return new Response(JSON.stringify(body), {
+    status: 200,
+    headers: { "Content-Type": "application/json", ...CORS_HEADERS },
+  });
+}
+
+function err(body: unknown, status: number): Response {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { "Content-Type": "application/json", ...CORS_HEADERS },
+  });
 }
 
 function cleanName(name: string): string {
@@ -69,9 +88,7 @@ async function fetchEspnScores(
       const away = comp.competitors.find((c: { homeAway: string }) => c.homeAway === "away");
       if (!home || !away) continue;
 
-      const homeTeam = home.team?.name || "";
-      const awayTeam = away.team?.name || "";
-      const key = `${cleanName(homeTeam)}_vs_${cleanName(awayTeam)}`;
+      const key = `${cleanName(home.team?.name || "")}_vs_${cleanName(away.team?.name || "")}`;
 
       const statusName = event.status.type.name;
       let status = "upcoming";
@@ -85,7 +102,6 @@ async function fetchEspnScores(
         status,
       });
     }
-
     return scores;
   } catch {
     return new Map();
@@ -100,181 +116,110 @@ function getDateStr(date: Date): string {
 }
 
 serve(async (req: Request) => {
+  // CORS Preflight
+  if (req.method === "OPTIONS") {
+    return new Response(null, { status: 204, headers: CORS_HEADERS });
+  }
+
   const startTime = Date.now();
   const results: UpdateResult[] = [];
 
   try {
-    // --- Auth Check ---
+    // Auth Check
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
-      return new Response(JSON.stringify({ error: "No auth header" }), { status: 401 });
-    }
+    if (!authHeader) return err({ error: "No auth header" }, 401);
 
     const userClient = createClient(SUPABASE_URL, Deno.env.get("SUPABASE_ANON_KEY")!, {
       global: { headers: { Authorization: authHeader } },
     });
     const { data: { user }, error: authError } = await userClient.auth.getUser();
-    if (authError || !user) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
-    }
+    if (authError || !user) return err({ error: "Unauthorized" }, 401);
 
     const { data: profile } = await userClient
-      .from("profiles")
-      .select("is_admin")
-      .eq("id", user.id)
-      .single();
-    if (!profile?.is_admin) {
-      return new Response(JSON.stringify({ error: "Admin only" }), { status: 403 });
-    }
+      .from("profiles").select("is_admin").eq("id", user.id).single();
+    if (!profile?.is_admin) return err({ error: "Admin only" }, 403);
 
-    // --- Admin-Client ---
+    // Admin Client
     const adminClient = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
     const now = new Date();
 
-    // 1. Alle nicht-finalen Matches laden
+    // Alle nicht-finalen Matches
     const { data: matches, error: fetchError } = await adminClient
-      .from("matches")
-      .select("*")
+      .from("matches").select("*")
       .not("status", "in", '("finished","postponed")')
       .order("anpfiff", { ascending: true });
 
-    if (fetchError) {
-      return new Response(JSON.stringify({ error: fetchError.message }), { status: 500 });
-    }
-
+    if (fetchError) return err({ error: fetchError.message }, 500);
     if (!matches || matches.length === 0) {
-      return new Response(JSON.stringify({
-        success: true,
-        message: "Alle Spiele sind bereits abgeschlossen oder verschoben.",
-        updated: 0,
-        checked: 0,
-        details: [],
-        duration_ms: Date.now() - startTime,
-      }), { status: 200, headers: { "Content-Type": "application/json" } });
+      return ok({ success: true, message: "Alle Spiele bereits abgeschlossen.", updated: 0, checked: 0, details: [], duration_ms: Date.now() - startTime });
     }
 
     const matchList = matches as MatchRow[];
 
-    // 2. ESPN-Daten für alle relevanten Daten + Turniere abrufen
+    // ESPN-Daten vorab cachen
     const uniqueDates = [...new Set(matchList.map(m => getDateStr(new Date(m.anpfiff))))];
+    const uniqueTournaments = [...new Set(matchList.map(m => m.tournament || "Süper Lig"))];
     const espnCache = new Map<string, Map<string, { homeScore: number; awayScore: number; status: string }>>();
 
     for (const dateStr of uniqueDates) {
-      for (const tournament of [...new Set(matchList.map(m => m.tournament || "Süper Lig"))]) {
-        const cacheKey = `${tournament}_${dateStr}`;
-        if (!espnCache.has(cacheKey)) {
-          const scores = await fetchEspnScores(tournament, dateStr);
-          espnCache.set(cacheKey, scores);
-        }
+      for (const t of uniqueTournaments) {
+        const ck = `${t}_${dateStr}`;
+        if (!espnCache.has(ck)) espnCache.set(ck, await fetchEspnScores(t, dateStr));
       }
     }
 
-    // 3. Für jedes Match prüfen
+    // Matches verarbeiten
     let updatedCount = 0;
-    const tournamentStats: Record<string, { checked: number; updated: number; espn: number; time: number }> = {};
+    const stats: Record<string, { checked: number; updated: number; espn: number; time: number }> = {};
 
     for (const match of matchList) {
       const kickoff = new Date(match.anpfiff);
-      const hoursSinceKickoff = (now.getTime() - kickoff.getTime()) / (1000 * 60 * 60);
-      const dateStr = getDateStr(kickoff);
+      const hours = (now.getTime() - kickoff.getTime()) / (1000 * 60 * 60);
       const tourney = match.tournament || "Unbekannt";
+      stats[tourney] ??= { checked: 0, updated: 0, espn: 0, time: 0 };
+      stats[tourney].checked++;
 
-      if (!tournamentStats[tourney]) {
-        tournamentStats[tourney] = { checked: 0, updated: 0, espn: 0, time: 0 };
-      }
-      tournamentStats[tourney].checked++;
-
-      // --- Priority 1: ESPN API ---
-      const cacheKey = `${tourney}_${dateStr}`;
-      const espnScores = espnCache.get(cacheKey);
+      // Priority 1: ESPN
+      const espnScores = espnCache.get(`${tourney}_${getDateStr(kickoff)}`);
       const key = `${cleanName(match.heim_team)}_vs_${cleanName(match.gast_team)}`;
-      const espnMatch = espnScores?.get(key);
+      const e = espnScores?.get(key);
 
-      if (espnMatch && (match.status !== espnMatch.status ||
-          match.tore_heim !== espnMatch.homeScore ||
-          match.tore_gast !== espnMatch.awayScore)) {
-        const { error: updateError } = await adminClient
-          .from("matches")
-          .update({
-            tore_heim: espnMatch.homeScore,
-            tore_gast: espnMatch.awayScore,
-            status: espnMatch.status,
-          })
-          .eq("id", match.id);
+      if (e && (match.status !== e.status || match.tore_heim !== e.homeScore || match.tore_gast !== e.awayScore)) {
+        const { error: ue } = await adminClient.from("matches").update({
+          tore_heim: e.homeScore, tore_gast: e.awayScore, status: e.status,
+        }).eq("id", match.id);
 
-        if (!updateError) {
-          updatedCount++;
-          tournamentStats[tourney].updated++;
-          tournamentStats[tourney].espn++;
-          results.push({
-            match: `${match.heim_team} vs ${match.gast_team}`,
-            oldStatus: match.status,
-            newStatus: espnMatch.status,
-            score: `${espnMatch.homeScore}:${espnMatch.awayScore}`,
-            source: "espn",
-          });
-          continue; // Skip time-based logic
+        if (!ue) {
+          updatedCount++; stats[tourney].updated++; stats[tourney].espn++;
+          results.push({ match: `${match.heim_team} vs ${match.gast_team}`, oldStatus: match.status, newStatus: e.status, score: `${e.homeScore}:${e.awayScore}`, source: "espn" });
+          continue;
         }
       }
 
-      // --- Priority 2: Smart Time-based ---
-      let newStatus: string | null = null;
-      let timeReason = "";
+      // Priority 2: Time-based
+      let ns: string | null = null;
+      if (match.status === "upcoming" && hours >= -0.25) ns = "live";
+      if (match.status === "live" && hours > 2.5) ns = "finished";
+      if (match.status === "upcoming" && hours > 3) ns = "finished";
 
-      if (match.status === "upcoming" && hoursSinceKickoff >= -0.25) {
-        newStatus = "live";
-        timeReason = "Anpfiff erreicht";
-      }
-      if (match.status === "live" && hoursSinceKickoff > 2.5) {
-        newStatus = "finished";
-        timeReason = ">2.5h nach Anpfiff";
-      }
-      if (match.status === "upcoming" && hoursSinceKickoff > 3) {
-        newStatus = "finished";
-        timeReason = ">3h nach Anpfiff (übersprungen)";
-      }
-
-      if (newStatus && newStatus !== match.status) {
-        const { error: updateError } = await adminClient
-          .from("matches")
-          .update({ status: newStatus })
-          .eq("id", match.id);
-
-        if (!updateError) {
-          updatedCount++;
-          tournamentStats[tourney].updated++;
-          tournamentStats[tourney].time++;
-          results.push({
-            match: `${match.heim_team} vs ${match.gast_team}`,
-            oldStatus: match.status,
-            newStatus,
-            source: "time",
-          });
+      if (ns && ns !== match.status) {
+        const { error: ue } = await adminClient.from("matches").update({ status: ns }).eq("id", match.id);
+        if (!ue) {
+          updatedCount++; stats[tourney].updated++; stats[tourney].time++;
+          results.push({ match: `${match.heim_team} vs ${match.gast_team}`, oldStatus: match.status, newStatus: ns, source: "time" });
         }
       }
     }
 
-    // 4. Summary
-    const detailLines = results.map(r => {
+    const details = results.map(r => {
       const icon = r.source === "espn" ? "🌐" : "⏱️";
-      const score = r.score ? ` [${r.score}]` : "";
-      return `${icon} ${r.match}: ${r.oldStatus} → ${r.newStatus}${score}`;
+      const sc = r.score ? ` [${r.score}]` : "";
+      return `${icon} ${r.match}: ${r.oldStatus} → ${r.newStatus}${sc}`;
     });
 
-    return new Response(JSON.stringify({
-      success: true,
-      message: `${updatedCount} von ${matchList.length} Spielen aktualisiert`,
-      updated: updatedCount,
-      checked: matchList.length,
-      tournaments: tournamentStats,
-      details: detailLines,
-      duration_ms: Date.now() - startTime,
-    }), { status: 200, headers: { "Content-Type": "application/json" } });
+    return ok({ success: true, message: `${updatedCount} von ${matchList.length} Spielen aktualisiert`, updated: updatedCount, checked: matchList.length, tournaments: stats, details, duration_ms: Date.now() - startTime });
 
-  } catch (err) {
-    return new Response(JSON.stringify({
-      error: String(err),
-      duration_ms: Date.now() - startTime,
-    }), { status: 500 });
+  } catch (er) {
+    return err({ error: String(er), duration_ms: Date.now() - startTime }, 500);
   }
 });
