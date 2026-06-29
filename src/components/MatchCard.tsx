@@ -148,9 +148,8 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
     if (isSaving || !isOnline) return
 
     // ⏰ Anpfiff-Check — kein Tippen nach Spielbeginn!
-    const now = new Date()
-    const kickoff = new Date(match.anpfiff)
-    if (now >= kickoff) {
+    // Nutzt den Match-Status vom Server als Quelle der Wahrheit
+    if (!istUpcoming) {
       const jokes: Record<string, string[]> = {
         de: [
           '🏃‍♂️ Der Zug ist abgefahren!',
