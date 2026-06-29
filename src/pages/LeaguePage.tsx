@@ -85,6 +85,8 @@ export function LeaguePage() {
   const [seasonsList, setSeasonsList] = useState<{id: number, name: string}[]>([])
   const [viewTournament, setViewTournament] = useState<string>('Alle')
   const [neueLigaTurniere, setNeueLigaTurniere] = useState<string[]>(['Süper Lig'])
+  const [hasUnreadChat, setHasUnreadChat] = useState(false)
+  const chatNotifyChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null)
 
   const [allMatches, setAllMatches] = useState<MatchInfo[]>([])
   const tableScrollRef = useRef<HTMLDivElement>(null)
@@ -284,6 +286,49 @@ export function LeaguePage() {
 
     setMitglieder(rows)
   }, [allMatches, viewSpieltag, viewTournament, aktiveLiga])
+
+  useEffect(() => {
+    if (!aktiveLiga || !user) return
+
+    const checkUnread = async () => {
+      const { data } = await supabase.from('chat_nachrichten')
+        .select('created_at, user_id')
+        .eq('league_id', aktiveLiga.id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+
+      if (data && data.length > 0) {
+        const lastMsg = data[0]
+        const lastRead = localStorage.getItem(`lastReadChat_${aktiveLiga.id}`)
+        if (lastMsg.user_id !== user.id && (!lastRead || new Date(lastMsg.created_at) > new Date(lastRead))) {
+          setHasUnreadChat(true)
+        } else {
+          setHasUnreadChat(false)
+        }
+      } else {
+        setHasUnreadChat(false)
+      }
+    }
+    checkUnread()
+
+    if (chatNotifyChannelRef.current) supabase.removeChannel(chatNotifyChannelRef.current)
+    const channel = supabase.channel(`league-chat-notify-${aktiveLiga.id}`)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_nachrichten', filter: `league_id=eq.${aktiveLiga.id}` }, (payload) => {
+        if (payload.new.user_id !== user.id) setHasUnreadChat(true)
+      }).subscribe()
+    chatNotifyChannelRef.current = channel
+
+    return () => {
+      if (chatNotifyChannelRef.current) supabase.removeChannel(chatNotifyChannelRef.current)
+    }
+  }, [aktiveLiga, user])
+
+  useEffect(() => {
+    if (zeigeChatDrawer && aktiveLiga) {
+      setHasUnreadChat(false)
+      localStorage.setItem(`lastReadChat_${aktiveLiga.id}`, new Date().toISOString())
+    }
+  }, [zeigeChatDrawer, aktiveLiga])
 
   useEffect(() => { 
     fetchSeasons()
@@ -733,8 +778,14 @@ export function LeaguePage() {
                   onClick={() => setZeigeChatDrawer(true)}
                   className="w-full bg-primary-container/10 border border-primary-container/20 rounded-xl p-3 flex items-center justify-between text-on-surface hover:bg-primary-container/15 transition-all active:scale-[0.98] cursor-pointer shadow-sm animate-pulse-slow md:hidden"
                 >
-                  <div className="flex items-center gap-2.5">
+                  <div className="flex items-center gap-2.5 relative">
                     <MessageCircle className="text-primary-fixed-dim" size={18} />
+                    {hasUnreadChat && (
+                      <span className="absolute -top-1 -left-1 flex h-3 w-3">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-error opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-3 w-3 bg-error border border-surface-container"></span>
+                      </span>
+                    )}
                     <div className="text-left">
                       <p className="text-xs font-bold text-primary-fixed-dim">{t('openLeagueChat')}</p>
                       <p className="text-[9px] font-mono text-on-surface-variant/70 uppercase tracking-wider">{t('openLeagueChatDesc')}</p>

@@ -254,7 +254,7 @@ export function LeagueChat({ leagueId }: LeagueChatProps) {
                 )}
               </div>
 
-              <div className={`flex flex-col ${isSelf ? 'items-end' : 'items-start'} min-w-0`}>
+              <div className={`flex flex-col ${isSelf ? 'items-end' : 'items-start'} flex-1 min-w-0`}>
                 {/* Absender-Name + Zeit (nur erste Nachricht der Gruppe) */}
                 {!prevSame && (
                   <div className={`flex items-center gap-1.5 mb-0.5 ${isSelf ? 'flex-row-reverse mr-1' : 'ml-1'}`}>
@@ -268,7 +268,7 @@ export function LeagueChat({ leagueId }: LeagueChatProps) {
                 )}
 
                 {/* Sprechblase — lesbare Farben */}
-                <div className={`max-w-[75%] px-3 py-2 rounded-2xl ${
+                <div className={`w-fit max-w-[90%] px-3 py-2 rounded-2xl ${
                   isSelf
                     ? 'bg-primary/15 border border-primary/20 rounded-br-md'
                     : `${color.bg} ${color.border} rounded-bl-md`
