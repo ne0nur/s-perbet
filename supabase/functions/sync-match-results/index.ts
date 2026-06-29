@@ -344,6 +344,44 @@ serve(async (req: Request) => {
       return `${icon} ${r.match}: ${r.oldStatus} → ${r.newStatus}${sc}`;
     });
 
+    // ─── Phase 3: Smart Next-Sync Calculation ───
+    let nextSync = 1800; // default: 30 min (kein Spiel aktiv)
+
+    if (matches && matches.length > 0) {
+      const matchList = matches as MatchRow[];
+      const liveMatch = matchList.find(m => m.status === "live");
+
+      if (liveMatch) {
+        const kickoff = new Date(liveMatch.anpfiff);
+        const elapsedMin = (now.getTime() - kickoff.getTime()) / 60000;
+
+        if (elapsedMin >= 80 && elapsedMin <= 130) {
+          nextSync = 90;   // 🔥 Crunch-Time: alle 90 Sekunden
+        } else if (elapsedMin >= 45 && elapsedMin < 60) {
+          nextSync = 600;  // ☕ Halbzeit: 10 Minuten
+        } else {
+          nextSync = 450;  // ⚽ Spiel läuft: 7,5 Minuten
+        }
+      } else {
+        // Kein Live-Spiel → schaue wann nächstes Match anpfiff
+        const upcoming = matchList
+          .filter(m => m.status === "upcoming")
+          .sort((a, b) => new Date(a.anpfiff).getTime() - new Date(b.anpfiff).getTime());
+        
+        if (upcoming.length > 0) {
+          const nextKickoff = new Date(upcoming[0].anpfiff);
+          const minsUntil = (nextKickoff.getTime() - now.getTime()) / 60000;
+          if (minsUntil > 0 && minsUntil < 30) {
+            nextSync = Math.max(120, Math.floor(minsUntil * 60)); // in Seconds, min 2 Minuten
+          } else if (minsUntil <= 0) {
+            nextSync = 120; // imminent, alle 2 Minuten checken
+          } else {
+            nextSync = Math.min(1800, Math.floor(minsUntil * 30)); // bis 30 Min, max 30 Min
+          }
+        }
+      }
+    }
+
     return ok({
       success: true,
       message: `${scoreUpdates} Scores + ${bracketUpdates} Bracket aktualisiert`,
@@ -353,6 +391,7 @@ serve(async (req: Request) => {
       tournaments: stats,
       details,
       duration_ms: Date.now() - startTime,
+      nextSyncSeconds: nextSync,
     });
 
   } catch (er) {

@@ -431,13 +431,13 @@ export function DashboardPage() {
       {( !tippsFreigeschaltet || (tippsFreigeschaltet && offeneTipps > 0) ) && (
         <div className="px-4 md:px-6 lg:px-8 max-w-[1600px] mx-auto w-full mt-4 flex flex-col gap-3">
           {!tippsFreigeschaltet && (
-            <div className="px-4 py-3 bg-amber-500/5 border border-amber-500/20 rounded-xl flex items-center gap-3">
-              <div className="flex-shrink-0 w-8 h-8 rounded-full bg-amber-500/10 flex items-center justify-center">
-                <Lock size={14} className="text-amber-400" />
+            <div className="px-4 py-3 bg-surface-container-low border border-surface-container-high rounded-xl flex items-center gap-3">
+              <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary-container/10 flex items-center justify-center">
+                <Lock size={14} className="text-primary-fixed-dim" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-[11px] font-mono font-bold uppercase tracking-wider text-amber-400/80 mb-0.5 whitespace-normal break-words">{t('tippingLocked')}</p>
-                <p className="text-[11px] text-amber-400/50 font-mono whitespace-normal break-words leading-snug">
+                <p className="text-[11px] font-mono font-bold uppercase tracking-wider text-on-surface-variant mb-0.5 whitespace-normal break-words">{t('tippingLocked')}</p>
+                <p className="text-[11px] text-on-surface-variant/50 font-mono whitespace-normal break-words leading-snug">
                   {t('tippingLockedDesc')}
                 </p>
               </div>
@@ -445,9 +445,9 @@ export function DashboardPage() {
           )}
 
           {tippsFreigeschaltet && offeneTipps > 0 && (
-            <div className="px-3 py-2 bg-amber-500/10 border border-amber-500/30 rounded-lg flex items-center gap-2 animate-glow-pulse">
+            <div className="px-3 py-2 bg-primary-container/10 border border-primary-container/30 rounded-lg flex items-center gap-2 animate-glow-pulse">
               <span className="text-xs shrink-0">⏳</span>
-              <span className="text-[10px] font-mono font-bold text-amber-400 whitespace-nowrap">
+              <span className="text-[10px] font-mono font-bold text-primary-fixed-dim whitespace-nowrap">
                 {offeneTipps} {offeneTipps === 1 ? t('openTipSingular') : t('openTipsPlural', { count: offeneTipps })}
               </span>
             </div>

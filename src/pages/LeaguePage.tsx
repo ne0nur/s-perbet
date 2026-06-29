@@ -83,7 +83,7 @@ export function LeaguePage() {
   const [zeigeTurnierModal, setZeigeTurnierModal] = useState(false)
   const [editTurniere, setEditTurniere] = useState<string[]>([])
   const [zeigeChatDrawer, setZeigeChatDrawer] = useState(false)
-  const [saison, setSaison] = useState<number | null>(null)
+  const [saison, setSaison] = useState<number | null>(2026)
   const [seasonsList, setSeasonsList] = useState<{id: number, name: string}[]>([])
   const [viewTournament, setViewTournament] = useState<string>('Alle')
   const [neueLigaTurniere, setNeueLigaTurniere] = useState<string[]>(['Süper Lig'])
