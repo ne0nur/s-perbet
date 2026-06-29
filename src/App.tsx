@@ -33,6 +33,7 @@ import { useNetworkStore } from './stores/networkStore'
 import { useTranslation } from './utils/translations'
 
 import { useThemeStore } from './stores/themeStore'
+import { useTournamentStore } from './stores/tournamentStore'
 
 export default function App() {
   const { theme } = useThemeStore()
@@ -43,6 +44,7 @@ export default function App() {
   useEffect(() => {
     ladeUser()
     ladeSettings()
+    useTournamentStore.getState().ladeTournaments()
   }, [ladeUser, ladeSettings])
 
   useEffect(() => {

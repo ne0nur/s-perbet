@@ -30,6 +30,7 @@ interface MatchState {
   matches: Match[]
   aktuellerSpieltag: number
   aktuelleSaison: number | null
+  selectedTournament: string
   isLaden: boolean
   cacheMatches: Record<number, Match[]>
   cacheTimestamps: Record<number, number>
@@ -38,6 +39,8 @@ interface MatchState {
   ladeMatches: (spieltag: number) => Promise<void>
   setSpieltag: (spieltag: number) => void
   setSaison: (saison: number) => void
+  setSelectedTournament: (name: string) => Promise<void>
+  smartSelectSpieltag: (tournament: string) => Promise<number>
   getMatchesBySpieltag: (spieltag: number) => Match[]
   getLiveMatches: () => Match[]
   initialisiereSpieltag: () => Promise<number>
@@ -53,6 +56,7 @@ export const useMatchStore = create<MatchState>()(
       matches: [],
       aktuellerSpieltag: 1, // Default fallback
       aktuelleSaison: null,
+      selectedTournament: 'Süper Lig',
       isLaden: false,
       cacheMatches: {},
       cacheTimestamps: {},
@@ -87,13 +91,20 @@ export const useMatchStore = create<MatchState>()(
             .select('*')
             .order('anpfiff', { ascending: true })
 
-          // spieltag === 0 means load ALL matchdays
+          // spieltag === 0 means load ALL matchdays (all tournaments)
           if (spieltag > 0) {
             query = query.eq('spieltag', spieltag)
           }
             
           if (currentSeason) {
             query = query.eq('season', currentSeason)
+          }
+
+          // Tournament filter: when a specific tournament is selected (and not "ALLE"),
+          // only load matches for that tournament
+          const tourney = state.selectedTournament
+          if (tourney && spieltag > 0) {
+            query = query.eq('tournament', tourney)
           }
 
           const { data, error } = await query
@@ -134,6 +145,52 @@ export const useMatchStore = create<MatchState>()(
         set({ aktuelleSaison: saison, cacheMatches: {}, cacheTimestamps: {}, matches: [] })
         const currentSpieltag = get().aktuellerSpieltag
         get().ladeMatches(currentSpieltag)
+      },
+
+      smartSelectSpieltag: async (tournament: string) => {
+        const season = get().aktuelleSaison
+
+        // 1. Live-Spiel in diesem Turnier?
+        let liveQuery = supabase.from('matches').select('spieltag')
+          .eq('status', 'live').eq('tournament', tournament).limit(1)
+        if (season) liveQuery = liveQuery.eq('season', season)
+        const { data: liveData } = await liveQuery
+        if (liveData?.length) {
+          set({ aktuellerSpieltag: liveData[0].spieltag })
+          return liveData[0].spieltag
+        }
+
+        // 2. Nächstes upcoming-Spiel?
+        let upcomingQuery = supabase.from('matches').select('spieltag')
+          .eq('status', 'upcoming').eq('tournament', tournament)
+          .order('anpfiff', { ascending: true }).limit(1)
+        if (season) upcomingQuery = upcomingQuery.eq('season', season)
+        const { data: upcomingData } = await upcomingQuery
+        if (upcomingData?.length) {
+          set({ aktuellerSpieltag: upcomingData[0].spieltag })
+          return upcomingData[0].spieltag
+        }
+
+        // 3. Höchster existierender Spieltag im Turnier
+        let maxQuery = supabase.from('matches').select('spieltag')
+          .eq('tournament', tournament)
+          .order('spieltag', { ascending: false }).limit(1)
+        if (season) maxQuery = maxQuery.eq('season', season)
+        const { data: maxData } = await maxQuery
+        if (maxData?.length) {
+          set({ aktuellerSpieltag: maxData[0].spieltag })
+          return maxData[0].spieltag
+        }
+
+        // 4. Fallback
+        set({ aktuellerSpieltag: 1 })
+        return 1
+      },
+
+      setSelectedTournament: async (name: string) => {
+        set({ selectedTournament: name })
+        const st = await get().smartSelectSpieltag(name)
+        await get().ladeMatches(st)
       },
 
       getMatchesBySpieltag: (spieltag: number) => {
@@ -271,6 +328,7 @@ export const useMatchStore = create<MatchState>()(
       partialize: (state) => ({
         matches: state.matches,
         aktuellerSpieltag: state.aktuellerSpieltag,
+        selectedTournament: state.selectedTournament,
         cacheMatches: state.cacheMatches,
         cacheTimestamps: state.cacheTimestamps,
         letztesUpdate: state.letztesUpdate,

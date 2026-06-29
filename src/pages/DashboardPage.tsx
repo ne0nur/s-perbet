@@ -8,13 +8,14 @@ import { MatchDetailPanel } from '../components/MatchDetailPanel'
 import { Lock, Check } from 'lucide-react'
 import { useAuthStore } from '../stores/authStore'
 import { useSettingsStore } from '../stores/settingsStore'
+import { useTournamentStore } from '../stores/tournamentStore'
 import { useToastStore } from '../stores/toastStore'
 import { useTranslation } from '../utils/translations'
 import { getTournamentLogo } from '../lib/utils'
 
 export function DashboardPage() {
   const { t } = useTranslation()
-  const { matches, aktuellerSpieltag, aktuelleSaison, isLaden, setSpieltag, ladeMatches, initialisiereSpieltag, letztesUpdate, abonnierenRealtimeMatches } = useMatchStore()
+  const { matches, aktuellerSpieltag, aktuelleSaison, selectedTournament, isLaden, setSpieltag, ladeMatches, initialisiereSpieltag, letztesUpdate, abonnierenRealtimeMatches, setSelectedTournament } = useMatchStore()
   const ladeMeineTipps = useTipStore(s => s.ladeMeineTipps)
   const meineTipps = useTipStore(s => s.meineTipps)
   const getTippFuerMatch = useTipStore(s => s.getTippFuerMatch)
@@ -25,23 +26,20 @@ export function DashboardPage() {
   const [filter, setFilter] = useState<'alle' | 'live'>('alle')
   const [spieltagInfo, setSpieltagInfo] = useState<Record<number, { fullyTipped: boolean; isLive: boolean }>>({})
   const [selectedMatchId, setSelectedMatchId] = useState<string | null>(null)
-  const [selectedTournament, setSelectedTournament] = useState<string>('Süper Lig')
   const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 1024)
   const sliderRef = useRef<HTMLDivElement>(null)
   const initialized = useRef(false)
 
-  // Dynamische Ermittlung aller aktiven Turniere aus geladenen Spielen
+  // Turniere aus der zentralen Tournament-Registry (nie aus geladenen Matches)
+  // Turniere verschwinden NIE — die Liste kommt immer aus tournament_configs
+  const tournamentConfigs = useTournamentStore(s => s.tournaments)
   const availableTournaments = useMemo(() => {
-    const list = new Set<string>()
-    matches.forEach(m => {
-      if (m.tournament) list.add(m.tournament)
-    })
-    if (list.size === 0) {
-      list.add('Süper Lig')
-      list.add('Champions League')
+    if (tournamentConfigs.length > 0) {
+      return tournamentConfigs.map(t => t.name)
     }
-    return Array.from(list).sort()
-  }, [matches])
+    // Fallback während DB-Ladephase — NIE leer
+    return ['Süper Lig', 'Champions League']
+  }, [tournamentConfigs])
 
   // Responsive Check
   useEffect(() => {
@@ -218,25 +216,47 @@ export function DashboardPage() {
   const offeneTipps = matches.filter(m => m.status === 'upcoming' && !getTippFuerMatch(m.id)).length
 
   const getPhaseLabel = (st: number, tournament: string) => {
-    if (tournament === 'Champions League') {
-      if (st <= 8) return t('clRoundLeague', { st })
-      if (st === 9) return t('clRoundPlayoffs')
-      if (st === 10) return t('clRoundLast16')
-      if (st === 11) return t('clRoundQuarter')
-      if (st === 12) return t('clRoundSemi')
-      if (st === 13) return t('clRoundFinal')
+    const config = useTournamentStore.getState().getTournament(tournament)
+    
+    // K.o.-Turniere (CL, WM, etc.): zeige Phase statt "Spieltag X"
+    if (config?.has_knockout) {
+      const groupStages = config.group_stage_matchdays
+      if (st <= groupStages) {
+        return t('clRoundLeague', { st })
+      }
+      // K.o.-Runde aus Spieltag-Nummer berechnen
+      const koRound = st - groupStages
+      const koLabels: Record<number, string> = {
+        1: t('clRoundPlayoffs'),
+        2: t('clRoundLast16'),
+        3: t('clRoundQuarter'),
+        4: t('clRoundSemi'),
+        5: t('clRoundFinal'),
+      }
+      return koLabels[koRound] || `${t('clRoundLeague', { st: koRound })}`
     }
+    
+    // Liga-Turniere: "Spieltag X"
     return t('slRoundLabel', { st })
   }
 
   // Bestimme wie viele Tabs gezeigt werden dynamically
   const getTabsCount = () => {
+    const config = useTournamentStore.getState().getTournament(selectedTournament)
+    // K.o.-Turniere: benutze group_stage_matchdays + KO-Runden als Maximum-Fallback
+    if (config?.has_knockout) {
+      const tournamentMatches = matches.filter(m => (m.tournament || 'Süper Lig') === selectedTournament)
+      if (tournamentMatches.length > 0) {
+        const maxSt = Math.max(...tournamentMatches.map(m => m.spieltag))
+        return maxSt > 0 ? maxSt : config.group_stage_matchdays + 5
+      }
+      return config.group_stage_matchdays + 5  // Gruppenphase + KO-Runden
+    }
     const tournamentMatches = matches.filter(m => (m.tournament || 'Süper Lig') === selectedTournament)
     if (tournamentMatches.length > 0) {
       const maxSt = Math.max(...tournamentMatches.map(m => m.spieltag))
-      return maxSt > 0 ? maxSt : 38;
+      return maxSt > 0 ? maxSt : 38
     }
-    if (selectedTournament === 'Champions League') return 13
     return maxSpieltag || 38
   }
 
@@ -250,13 +270,27 @@ export function DashboardPage() {
               {availableTournaments.map(tName => (
                 <button
                   key={tName}
-                  onClick={() => { setSelectedTournament(tName); setSpieltag(1); }}
+                  onClick={() => { setSelectedTournament(tName) }}
                   className={`px-3 py-2 text-[9px] xs:text-[10px] md:text-xs font-mono font-black uppercase tracking-wider rounded-xl whitespace-nowrap transition-all duration-200 cursor-pointer flex items-center gap-2 ${selectedTournament === tName ? 'bg-primary-container text-on-primary-container shadow-[0_2px_8px_rgba(251,191,36,0.15)] border border-primary/20 scale-[1.01]' : 'text-on-surface-variant hover:text-on-surface hover:bg-white/5 border border-transparent'}`}
                 >
-                  <img src={getTournamentLogo(tName)} alt={tName} className="w-5 h-5 object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.6)] brightness-110 shrink-0" />
+                  <img src={getTournamentLogo(tName)} alt={tName} className="w-5 h-5 object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.6)] brightness-110 shrink-0" onError={(e) => { (e.target as HTMLImageElement).src = `${import.meta.env.BASE_URL}logos/soccer_ball.png` }} />
                   {tName}
                 </button>
               ))}
+            </div>
+
+            <div className="flex items-center gap-2">
+              {/* Kontext-Indikator: immer sichtbar, zeigt wo der User ist */}
+              <div className="flex items-center gap-1.5 px-2.5 py-1 bg-primary-container/10 border border-primary/10 rounded-full">
+                <img src={getTournamentLogo(selectedTournament)} alt="" className="w-3.5 h-3.5 object-contain brightness-110" onError={(e) => { (e.target as HTMLImageElement).src = `${import.meta.env.BASE_URL}logos/soccer_ball.png` }} />
+                <span className="text-[9px] font-mono font-black text-primary uppercase tracking-wider">{selectedTournament}</span>
+                {aktuellerSpieltag > 0 && (
+                  <>
+                    <span className="text-[8px] text-on-surface-variant/30">·</span>
+                    <span className="text-[9px] font-mono text-on-surface-variant/50">{getPhaseLabel(aktuellerSpieltag, selectedTournament)}</span>
+                  </>
+                )}
+              </div>
             </div>
 
             <select
@@ -414,24 +448,22 @@ export function DashboardPage() {
               <div className="space-y-8">
                 {Object.entries(matchesByTournament)
                   .filter(([tournamentName]) => {
+                    // "ALLE" (spieltag=0): zeige alle Turniere
+                    if (aktuellerSpieltag === 0) return true
                     return tournamentName === selectedTournament;
                   })
                   .map(([tournamentName, tourneyMatches]) => (
                   <div key={tournamentName} className="mb-6">
                     <h2 className="text-sm font-bold text-on-surface mb-4 border-b border-white/10 pb-2 uppercase tracking-wide">
-                      {tournamentName === 'Süper Lig' ? (
-                        <span className="flex items-center gap-2">
-                          <img src={`${import.meta.env.BASE_URL}logos/Süper_Lig.png`} alt="SL" className="w-5 h-5 object-contain brightness-110 drop-shadow-[0_0_8px_rgba(255,255,255,0.6)]" />
-                          {tournamentName}
-                        </span>
-                      ) : tournamentName === 'Champions League' ? (
-                        <span className="flex items-center gap-2">
-                          <img src={`${import.meta.env.BASE_URL}logos/UEFA_Champions_League_logo.png`} alt="CL" className="w-5 h-5 object-contain brightness-110 drop-shadow-[0_0_8px_rgba(255,255,255,0.6)]" />
-                          {tournamentName}
-                        </span>
-                      ) : (
-                        tournamentName
-                      )}
+                      <span className="flex items-center gap-2">
+                        <img 
+                          src={getTournamentLogo(tournamentName)} 
+                          alt={tournamentName} 
+                          className="w-5 h-5 object-contain brightness-110 drop-shadow-[0_0_8px_rgba(255,255,255,0.6)]" 
+                          onError={(e) => { (e.target as HTMLImageElement).src = `${import.meta.env.BASE_URL}logos/soccer_ball.png` }}
+                        />
+                        {tournamentName}
+                      </span>
                     </h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2 gap-4 xl:gap-6 w-full">
                       {tourneyMatches.map((match: Match) => {

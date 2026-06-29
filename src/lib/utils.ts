@@ -125,15 +125,39 @@ export function getLevelBadgeStyle(level: number): string {
 export function getTournamentLogo(tournamentName: string): string {
   const base = import.meta.env.BASE_URL || '/'
   const cleanName = tournamentName ? tournamentName.toLowerCase() : ''
-  if (cleanName.includes('champions league')) {
+
+  // Exakte Matches zuerst
+  if (cleanName === 'champions league' || cleanName.includes('champions league')) {
     return `${base}logos/UEFA_Champions_League_logo.png`
   }
-  if (cleanName.includes('süper lig')) {
+  if (cleanName === 'süper lig' || cleanName.includes('süper lig')) {
     return `${base}logos/Süper_Lig.png`
   }
   if (cleanName.includes('europa league')) {
     return `${base}logos/UEFA_Europa_League_logo.png`
   }
+
+  // World Cup / WM
+  if (cleanName.includes('world cup') || cleanName.includes('wm ')) {
+    return `${base}logos/FIFA_World_Cup_logo.png`
+  }
+
+  // Teil-Matches: suche nach bekannten Turnier-Logos
+  const knownLogos: Record<string, string> = {
+    'bundesliga': 'Bundesliga_logo.png',
+    'premier league': 'Premier_League_logo.png',
+    'la liga': 'La_Liga_logo.png',
+    'serie a': 'Serie_A_logo.png',
+    'ligue 1': 'Ligue_1_logo.png',
+    'europa': 'UEFA_Europa_League_logo.png',
+    'conference': 'UEFA_Conference_League_logo.png',
+    'nations league': 'UEFA_Nations_League_logo.png',
+  }
+
+  for (const [key, file] of Object.entries(knownLogos)) {
+    if (cleanName.includes(key)) return `${base}logos/${file}`
+  }
+
   return `${base}logos/soccer_ball.png`
 }
 
