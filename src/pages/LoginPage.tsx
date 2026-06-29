@@ -50,14 +50,51 @@ export function LoginPage() {
 
   // Beim Mount: ausstehende Liga aus localStorage wiederherstellen
   // (Falls die Seite während des Einladungs-Flows neu geladen wurde)
+  // Beim Mount: URL-Parameter (?join=CODE oder ?invite=CODE) parsen & ausstehende Ligen laden
   useEffect(() => {
-    const savedId = localStorage.getItem('superbet_pending_league_id')
-    if (savedId) {
-      setPendingLeagueId(savedId)
-      // Liga-Name aus DB nachladen für UI-Anzeige
-      supabase.from('leagues').select('id, name').eq('id', savedId).single().then(({ data }) => {
-        if (data) setInviteLeague(data)
-      })
+    const params = new URLSearchParams(window.location.search || window.location.hash.split('?')[1] || '')
+    const joinCode = params.get('join') || params.get('invite')
+    const savedCode = joinCode || localStorage.getItem('superbet_pending_invite_code')
+
+    if (savedCode) {
+      const cleanCode = savedCode.trim().toUpperCase()
+      if (cleanCode.length > 0) {
+        setInviteCode(cleanCode)
+        setValidatingCode(true)
+
+        ;(async () => {
+          try {
+            const { data: rpcData, error: rpcError } = await supabase.rpc('check_invite_code', { p_invite_code: cleanCode })
+            if (!rpcError && rpcData && rpcData.length > 0) {
+              setInviteLeague({ id: rpcData[0].league_id, name: rpcData[0].league_name })
+              setPendingLeagueId(rpcData[0].league_id)
+              localStorage.setItem('superbet_pending_league_id', rpcData[0].league_id)
+              localStorage.setItem('superbet_pending_invite_code', cleanCode)
+              setView('ask-account')
+            } else {
+              // Fallback: Prüfen ob es sich um eine UUID handelt
+              const { data: league } = await supabase
+                .from('leagues')
+                .select('id, name, invite_code')
+                .or(`invite_code.eq.${cleanCode},id.eq.${cleanCode}`)
+                .maybeSingle()
+              
+              if (league) {
+                setInviteLeague({ id: league.id, name: league.name })
+                setPendingLeagueId(league.id)
+                setInviteCode(league.invite_code || '')
+                localStorage.setItem('superbet_pending_league_id', league.id)
+                localStorage.setItem('superbet_pending_invite_code', league.invite_code || cleanCode)
+                setView('ask-account')
+              }
+            }
+          } catch (e) {
+            console.error('Validate invite code failed:', e)
+          } finally {
+            setValidatingCode(false)
+          }
+        })()
+      }
     }
   }, [])
 
@@ -81,24 +118,17 @@ export function LoginPage() {
       await login(username, passwort)
       
       // Falls eine ausstehende Liga vorhanden ist, treten wir ihr nach dem Login bei
-      if (pendingLeagueId) {
-        const { data: { user } } = await supabase.auth.getUser()
-        if (user) {
-          // Prüfen ob bereits Mitglied
-          const { data: member } = await supabase
-            .from('league_members')
-            .select('*')
-            .eq('league_id', pendingLeagueId)
-            .eq('user_id', user.id)
-            .single()
-
-          if (!member) {
-            await supabase.from('league_members').insert({
-              league_id: pendingLeagueId,
-              user_id: user.id
-            })
-            useToastStore.getState().toast(t('leagueJoinedSuccess'))
-          }
+      const pendingCode = localStorage.getItem('superbet_pending_invite_code') || inviteCode
+      if (pendingCode) {
+        const { error: joinError } = await supabase.rpc('join_league_by_code', {
+          p_invite_code: pendingCode.trim().toUpperCase()
+        })
+        if (joinError) {
+          console.error("Auto-join on login failed:", joinError)
+        } else {
+          useToastStore.getState().toast(t('leagueJoinedSuccess'))
+          localStorage.removeItem('superbet_pending_league_id')
+          localStorage.removeItem('superbet_pending_invite_code')
         }
       }
     } catch { /* Silently ignore invite check errors */ }
@@ -269,14 +299,21 @@ export function LoginPage() {
 
       // 4. Der Liga beitreten
       if (inviteLeague) {
-        const { error: joinError } = await supabase.rpc('join_league_by_code', {
-          p_invite_code: inviteCode.trim().toUpperCase()
-        })
-        if (joinError) {
-          console.error("Liga-Beitritt Fehler:", joinError)
-          useToastStore.getState().toast(t('registerSuccess')) // Fallback: Account ist trotzdem da
+        const pendingCode = localStorage.getItem('superbet_pending_invite_code') || inviteCode
+        if (pendingCode) {
+          const { error: joinError } = await supabase.rpc('join_league_by_code', {
+            p_invite_code: pendingCode.trim().toUpperCase()
+          })
+          if (joinError) {
+            console.error("Liga-Beitritt Fehler:", joinError)
+            useToastStore.getState().toast(t('registerSuccess')) // Fallback
+          } else {
+            useToastStore.getState().toast(t('registerAndJoinSuccess', { name: inviteLeague.name }))
+            localStorage.removeItem('superbet_pending_league_id')
+            localStorage.removeItem('superbet_pending_invite_code')
+          }
         } else {
-          useToastStore.getState().toast(t('registerAndJoinSuccess', { name: inviteLeague.name }))
+          useToastStore.getState().toast(t('registerSuccess'))
         }
       } else {
         useToastStore.getState().toast(t('registerSuccess'))

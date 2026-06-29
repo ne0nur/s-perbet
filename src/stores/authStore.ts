@@ -92,16 +92,34 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   passwortAendern: async (neuesPasswort: string) => {
     set({ fehler: null })
-    const { error } = await supabase.auth.updateUser({ password: neuesPasswort })
-    if (error) {
-      set({ fehler: error.message })
-      throw error
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      throw new Error('Kein angemeldeter Benutzer gefunden.')
     }
 
-    const { data: { user } } = await supabase.auth.getUser()
-    if (user) {
-      await supabase.from('profiles').update({ muss_passwort_aendern: false }).eq('id', user.id)
+    // 1. Update the profiles table FIRST to prevent race condition on auth update trigger
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .update({ muss_passwort_aendern: false })
+      .eq('id', user.id)
+
+    if (profileError) {
+      set({ fehler: profileError.message })
+      throw profileError
     }
+
+    // 2. Perform password update
+    const { error: authError } = await supabase.auth.updateUser({ password: neuesPasswort })
+    if (authError) {
+      // Revert profile state if auth update failed
+      await supabase
+        .from('profiles')
+        .update({ muss_passwort_aendern: true })
+        .eq('id', user.id)
+      set({ fehler: authError.message })
+      throw authError
+    }
+
     set({ mussPasswortAendern: false })
   },
 

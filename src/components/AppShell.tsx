@@ -139,44 +139,29 @@ export function AppShell() {
       }
 
       // Auto-join pending league if set in localStorage
-      const pendingLeagueId = localStorage.getItem('superbet_pending_league_id')
-      if (pendingLeagueId) {
-        localStorage.removeItem('superbet_pending_league_id')
+      const pendingCode = localStorage.getItem('superbet_pending_invite_code')
+      if (pendingCode) {
+        localStorage.removeItem('superbet_pending_invite_code')
+        localStorage.removeItem('superbet_pending_league_id') // clean up both
         
-        // Check if already a member first
-        supabase
-          .from('league_members')
-          .select('league_id')
-          .eq('league_id', pendingLeagueId)
-          .eq('user_id', user.id)
-          .maybeSingle()
-          .then(({ data: member }) => {
-            if (!member) {
+        supabase.rpc('join_league_by_code', { p_invite_code: pendingCode.trim().toUpperCase() })
+          .then(({ data: joinedId, error: joinError }) => {
+            if (joinError || !joinedId) {
+              console.error('Auto-join league failed:', joinError)
+            } else {
+              // Fetch league name for custom toast message
               supabase
-                .from('league_members')
-                .insert({
-                  league_id: pendingLeagueId,
-                  user_id: user.id
-                })
-                .then(({ error: joinError }) => {
-                  if (joinError) {
-                    console.error('Auto-join league failed:', joinError)
-                  } else {
-                    // Fetch league name for custom toast message
-                    supabase
-                      .from('leagues')
-                      .select('name')
-                      .eq('id', pendingLeagueId)
-                      .single()
-                      .then(({ data: lg }) => {
-                        window.dispatchEvent(new CustomEvent('show-toast', {
-                          detail: {
-                            message: t('leagueAutoJoinSuccess', { name: lg?.name || 'Tipprunde' }),
-                            type: 'success'
-                          }
-                        }))
-                      })
-                  }
+                .from('leagues')
+                .select('name')
+                .eq('id', joinedId)
+                .single()
+                .then(({ data: lg }) => {
+                  window.dispatchEvent(new CustomEvent('show-toast', {
+                    detail: {
+                      message: t('leagueAutoJoinSuccess', { name: lg?.name || 'Tipprunde' }),
+                      type: 'success'
+                    }
+                  }))
                 })
             }
           })
