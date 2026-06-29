@@ -5,6 +5,7 @@ import { berechnePunkte } from '../lib/utils'
 import { ChevronRight, Check, Minus, Plus, Lock, WifiOff } from 'lucide-react'
 import { useSettingsStore } from '../stores/settingsStore'
 import { useNetworkStore } from '../stores/networkStore'
+import { useToastStore } from '../stores/toastStore'
 import type { Match } from '../stores/matchStore'
 import { motion, AnimatePresence } from 'framer-motion'
 
@@ -143,6 +144,24 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
   async function handleSpeichern(e: React.MouseEvent) {
     e.stopPropagation()
     if (isSaving || !isOnline) return
+
+    // ⏰ Anpfiff-Check — kein Tippen nach Spielbeginn!
+    const now = new Date()
+    const kickoff = new Date(match.anpfiff)
+    if (now >= kickoff) {
+      const jokes = [
+        '🏃‍♂️ Der Zug ist abgefahren!',
+        '⏰ Zu spät, das Spiel läuft!',
+        '🔮 Deine hellseherischen Fähigkeiten kommen zu spät.',
+        '😏 Netter Versuch, Zeitreisender.',
+        '🕰️ Tipp-Abgabe geschlossen — das Spiel hat begonnen!',
+        '⚽ Der Ball rollt bereits — keine Tipps mehr!',
+      ]
+      const joke = jokes[Math.floor(Math.random() * jokes.length)]
+      useToastStore.getState().toast(joke, 'info')
+      return
+    }
+
     setIsSaving(true)
     try {
       await tippSpeichern(match.id, tippHeim, tippGast, match.spieltag)
@@ -150,6 +169,7 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
       setTimeout(() => setSaved(false), 2500)
     } catch (err) {
       console.error(err)
+      useToastStore.getState().toast('❌ Fehler beim Speichern', 'error')
     }
     setIsSaving(false)
   }
