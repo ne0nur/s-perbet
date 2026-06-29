@@ -7,6 +7,7 @@ import { TeamInspector } from '../components/TeamInspector'
 import { TournamentBracket } from '../components/TournamentBracket'
 import { useTranslation } from '../utils/translations'
 import { getTournamentLogo } from '../lib/utils'
+import { useTournamentStore } from '../stores/tournamentStore'
 
 interface LeagueRow {
   team: string
@@ -118,21 +119,22 @@ export function StandingsPage() {
   // Konfig-Map: tournamentName → TournamentConfig
   const [configMap, setConfigMap] = useState<Record<string, TournamentConfig>>({})
 
-  // Lade Tournament-Configs aus DB (einmalig)
+  // Lade Tournament-Configs aus der zentralen Registry
+  const tournamentConfigsFromStore = useTournamentStore(s => s.tournaments)
+  const getTournamentConfig = useTournamentStore(s => s.getTournament)
+
   useEffect(() => {
-    supabase.from('tournament_configs').select('*').order('id', { ascending: true }).then(({ data }) => {
-      if (data && data.length > 0) {
-        const map: Record<string, TournamentConfig> = {}
-        const tNames: string[] = []
-        data.forEach((cfg: TournamentConfig) => { 
-          map[cfg.name] = cfg 
-          tNames.push(cfg.name)
-        })
-        setConfigMap(map)
-        setAvailableTournaments(tNames)
-      }
-    })
-  }, [])
+    if (tournamentConfigsFromStore.length > 0) {
+      const map: Record<string, TournamentConfig> = {}
+      const tNames: string[] = []
+      tournamentConfigsFromStore.forEach(cfg => {
+        map[cfg.name] = cfg
+        tNames.push(cfg.name)
+      })
+      setConfigMap(map)
+      setAvailableTournaments(tNames)
+    }
+  }, [tournamentConfigsFromStore])
 
   // Lade verfügbare Saisons aus DB
   useEffect(() => {
@@ -336,7 +338,7 @@ export function StandingsPage() {
       </div>
 
       {/* K.o.-Phasen Tabs — nur wenn das Turnier K.o.-Phasen hat */}
-      {activeConfig?.has_knockout && availablePhases.length > 0 && (
+      {activeConfig?.has_knockout && (
         <div className="flex bg-surface-container/40 border border-white/5 p-1 rounded-2xl mb-4 overflow-x-auto hide-scrollbar gap-1.5 backdrop-blur-sm">
           <button
             onClick={() => setViewPhase('table')}
@@ -353,14 +355,27 @@ export function StandingsPage() {
         </div>
       )}
 
-      {viewPhase === 'baum' && availablePhases.length > 0 ? (
+      {/* Turnier-Kontext Header */}
+      {viewTournament && (
+        <div className="flex items-center gap-3 mb-4 px-2">
+          <img src={getTournamentLogo(viewTournament)} alt="" className="w-6 h-6 object-contain brightness-110 drop-shadow-[0_0_8px_rgba(255,255,255,0.6)]" />
+          <div>
+            <h2 className="text-sm font-black text-on-surface uppercase tracking-wider">{viewTournament}</h2>
+            <p className="text-[10px] font-mono text-on-surface-variant/50">
+              {viewPhase === 'baum' 
+                ? 'K.o.-Phase · Turnierbaum' 
+                : activeConfig?.has_knockout 
+                  ? `Gruppenphase · ${t('clRoundLeague', { st: activeConfig.group_stage_matchdays })}`
+                  : `Saison ${saison}`}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {viewPhase === 'baum' ? (
         // ─── Turnierbaum (K.o.) ───
         <div className="w-full">
-          {matchesForPhase.length === 0 ? (
-            <div className="col-span-full py-12 text-center text-on-surface-variant font-mono text-sm">{t('noMatchesFound')}</div>
-          ) : (
-            <TournamentBracket matches={matchesForPhase} />
-          )}
+          <TournamentBracket matches={matchesForPhase} config={activeConfig} />
         </div>
       ) : (
         // ─── Tabellen-Ansicht ───

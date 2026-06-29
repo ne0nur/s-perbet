@@ -409,16 +409,11 @@ export function DashboardPage() {
           )}
 
           {tippsFreigeschaltet && offeneTipps > 0 && (
-            <div className="px-4 py-3 bg-amber-500/10 border border-amber-500/35 rounded-xl flex items-center gap-3 animate-glow-pulse">
-              <div className="flex-shrink-0 w-8 h-8 rounded-full bg-amber-500/15 flex items-center justify-center">
-                <span className="text-sm">⏳</span>
-              </div>
-              <div className="flex-1 min-w-0 text-left">
-                <p className="text-[11px] font-mono font-black uppercase tracking-wider text-amber-400 mb-0.5">{t('tipReminder')}</p>
-                <p className="text-[11px] text-on-surface-variant font-mono">
-                  {t('tipReminderDesc', { count: offeneTipps })}
-                </p>
-              </div>
+            <div className="px-3 py-2 bg-amber-500/10 border border-amber-500/30 rounded-lg flex items-center gap-2 animate-glow-pulse">
+              <span className="text-xs shrink-0">⏳</span>
+              <span className="text-[10px] font-mono font-bold text-amber-400 whitespace-nowrap">
+                {offeneTipps} {offeneTipps === 1 ? t('openTipSingular') : t('openTipsPlural', { count: offeneTipps })}
+              </span>
             </div>
           )}
         </div>
