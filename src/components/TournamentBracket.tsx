@@ -21,20 +21,19 @@ interface PhaseDef {
 }
 
 function getPhaseDefs(config: TournamentConfig | null | undefined): PhaseDef[] {
-  const gs = config?.group_stage_matchdays ?? 8
-
-  // WM-style (few KO rounds): Round of 16 → QF → SF → Final
-  // CL-style (many rounds): Playoffs → R16 → QF → SF → Final
-  // Heuristik: Wenn group_stage <= 4 → WM-style, sonst CL-style
-  if (gs <= 4) {
+  const isWorldCup = config?.name?.toLowerCase().includes('world cup') || config?.name?.toLowerCase().includes('wm')
+  
+  if (isWorldCup) {
     return [
+      { name: 'Sechzehntelfinale', emoji: '🎟️', matchCount: 16 },
       { name: 'Achtelfinale', emoji: '🏟️', matchCount: 8 },
       { name: 'Viertelfinale', emoji: '⚔️', matchCount: 4 },
       { name: 'Halbfinale', emoji: '🔥', matchCount: 2 },
-      { name: 'Finale', emoji: '🏆', matchCount: 1 },
+      { name: 'Finale', emoji: '🏆', matchCount: 2 }, // Final + 3rd place
     ]
   }
 
+  // CL-style (many rounds): Playoffs → R16 → QF → SF → Final
   return [
     { name: 'Play-offs', emoji: '🎟️', matchCount: 8 },
     { name: 'Achtelfinale', emoji: '🏟️', matchCount: 8 },

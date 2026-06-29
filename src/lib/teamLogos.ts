@@ -113,24 +113,23 @@ export function getTeamLogo(teamName: string): string {
 
   // Country Flags Mapping (ISO 3166-1 alpha-2 for flagcdn)
   const COUNTRY_FLAGS: Record<string, string> = {
-    'algeria': 'dz', 'algerien': 'dz',
-    'austria': 'at', 'osterreich': 'at',
-    'jordan': 'jo', 'jordanien': 'jo',
-    'argentina': 'ar', 'argentinien': 'ar',
-    'southafrica': 'za', 'sudafrika': 'za',
-    'canada': 'ca', 'kanada': 'ca',
-    'brazil': 'br', 'brasilien': 'br',
-    'japan': 'jp',
-    'germany': 'de', 'deutschland': 'de',
-    'paraguay': 'py',
-    'turkey': 'tr', 'turkei': 'tr',
-    'france': 'fr', 'frankreich': 'fr',
-    'italy': 'it', 'italien': 'it',
-    'spain': 'es', 'spanien': 'es',
-    'england': 'gb-eng',
-    'netherlands': 'nl', 'niederlande': 'nl',
-    'portugal': 'pt',
-    'belgium': 'be', 'belgien': 'be',
+    'mexico': 'mx', 'southafrica': 'za', 'southkorea': 'kr', 'czechia': 'cz',
+    'canada': 'ca', 'bosniaherzegovina': 'ba', 'unitedstates': 'us', 'paraguay': 'py',
+    'qatar': 'qa', 'switzerland': 'ch', 'brazil': 'br', 'morocco': 'ma', 'haiti': 'ht',
+    'scotland': 'gb-sct', 'australia': 'au', 'turkiye': 'tr', 'turkey': 'tr',
+    'germany': 'de', 'curacao': 'cw', 'netherlands': 'nl', 'japan': 'jp',
+    'ivorycoast': 'ci', 'ecuador': 'ec', 'sweden': 'se', 'tunisia': 'tn',
+    'spain': 'es', 'capeverde': 'cv', 'belgium': 'be', 'egypt': 'eg',
+    'saudiarabia': 'sa', 'uruguay': 'uy', 'iran': 'ir', 'newzealand': 'nz',
+    'france': 'fr', 'senegal': 'sn', 'iraq': 'iq', 'norway': 'no',
+    'argentina': 'ar', 'algeria': 'dz', 'austria': 'at', 'jordan': 'jo',
+    'portugal': 'pt', 'congodr': 'cd', 'england': 'gb-eng', 'croatia': 'hr',
+    'ghana': 'gh', 'panama': 'pa', 'uzbekistan': 'uz', 'colombia': 'co',
+    // deutsche namen fallback
+    'deutschland': 'de', 'spanien': 'es', 'frankreich': 'fr', 'italien': 'it',
+    'niederlande': 'nl', 'belgien': 'be', 'osterreich': 'at', 'schweiz': 'ch',
+    'sudafrika': 'za', 'argentinien': 'ar', 'brasilien': 'br', 'algerien': 'dz',
+    'jordanien': 'jo', 'kanada': 'ca', 'turkei': 'tr'
   }
 
   if (COUNTRY_FLAGS[clean]) {
