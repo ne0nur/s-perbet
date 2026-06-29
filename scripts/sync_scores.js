@@ -128,8 +128,11 @@ async function syncScores() {
   const dd = String(now.getDate()).padStart(2, '0')
   const dateStr = `${yyyy}-${mm}-${dd}`
 
-  const apiUrl = `https://v3.football.api-sports.io/fixtures?date=${dateStr}`
-  console.log(`🌐 Rufe API-Football auf: ${apiUrl} (Alle Ligen)`)
+  const league = process.env.API_FOOTBALL_LEAGUE || '203'
+  const season = process.env.API_FOOTBALL_SEASON || '2026'
+
+  const apiUrl = `https://v3.football.api-sports.io/fixtures?date=${dateStr}&league=${league}&season=${season}`
+  console.log(`🌐 Rufe API-Football auf: ${apiUrl}`)
 
   try {
     const response = await fetch(apiUrl, {

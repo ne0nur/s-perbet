@@ -188,12 +188,14 @@ export function LeagueChat({ leagueId }: LeagueChatProps) {
       .from('chat_nachrichten')
       .insert({
         league_id: leagueId,
+        match_id: null,
         user_id: user.id,
         nachricht: inhalt,
       })
 
     if (error) {
       console.error('Chat-Fehler:', error)
+      useToastStore.getState().toast(`Fehler beim Senden: ${error.message || 'Unbekannt'}`, 'error')
       setText(inhalt)
     }
 

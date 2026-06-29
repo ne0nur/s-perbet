@@ -244,6 +244,9 @@ export function AchievementsSection({
                       </span>
                     )}
                   </div>
+                  <p className={`text-[9px] font-mono leading-tight ${unlocked ? 'text-on-surface-variant' : 'text-on-surface-variant/50'}`}>
+                    {ach.req}
+                  </p>
                 </div>
               </div>
               </div>

@@ -289,7 +289,7 @@ export function StandingsPage() {
     const currentTournament = viewTournament || 'Süper Lig'
     const isCurrentSeason = saison === (availableSeasons[0]?.id ?? 2026)
     const hasKnockout = activeConfig?.has_knockout ?? false
-    const hasHistoricalData = activeConfig?.has_historical_data ?? false
+    const hasHistoricalData = (activeConfig?.has_historical_data ?? false) || currentTournament === 'Süper Lig'
 
     if (isCurrentSeason || hasKnockout) {
       ladeMatchesTabelle(saison, currentTournament)

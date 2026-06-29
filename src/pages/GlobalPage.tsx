@@ -230,9 +230,10 @@ function LeaderboardSection({
                   src={e.avatar_url}
                   username={e.username || ''}
                   size="md"
-                  showLevel
+                  showLevel={true}
+                  className="!mr-1" // Etwas Abstand, aber nicht zu viel
                   levelBadge={
-                    <LevelBadge level={calculateLevel(e.gesamt_punkte, e.achievements_count || 0)} className="absolute -bottom-1 -right-1 z-10 text-[10px] h-5 w-5 rounded-full shadow select-none">
+                    <LevelBadge level={calculateLevel(e.gesamt_punkte, e.achievements_count || 0)} className="absolute -bottom-1 -right-1 z-10 text-[8px] h-4 w-4 rounded-full shadow shadow-black/80 select-none level-digit border border-surface-container-low">
                       {calculateLevel(e.gesamt_punkte, e.achievements_count || 0)}
                     </LevelBadge>
                   }

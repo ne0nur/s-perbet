@@ -1,6 +1,7 @@
 import { Camera, ShieldAlert } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { useTranslation } from '../../utils/translations'
+import { useThemeStore } from '../../stores/themeStore'
 import { LevelBadge } from '../ui/LevelBadge'
 
 interface UserInfoSettingsProps {
@@ -37,6 +38,7 @@ export function UserInfoSettings({
   level
 }: UserInfoSettingsProps) {
   const { t } = useTranslation()
+  const { theme, setTheme } = useThemeStore()
 
   return (
     <div className="bg-surface-container-low border border-surface-container-high rounded-xl p-5 shadow-sm">
@@ -113,6 +115,31 @@ export function UserInfoSettings({
               </span>
             )}
           </div>
+        </div>
+      </div>
+
+      {/* Theme Selector */}
+      <div className="mt-5 border-t border-surface-container-high/60 pt-4 flex items-center justify-between">
+        <span className="text-[10px] font-mono font-bold text-on-surface-variant uppercase tracking-wider">
+          App Farbe
+        </span>
+        <div className="flex gap-2">
+          {([
+            { id: 'default', color: '#fbbf24' },
+            { id: 'blue', color: '#3b82f6' },
+            { id: 'red', color: '#ef4444' },
+            { id: 'pink', color: '#ec4899' }
+          ] as const).map(t => {
+            const isActive = theme === t.id
+            return (
+              <button
+                key={t.id}
+                onClick={() => setTheme(t.id)}
+                className={`w-5 h-5 rounded-full transition-all duration-300 ${isActive ? 'scale-125 ring-2 ring-white/50 shadow-[0_0_8px_currentColor]' : 'hover:scale-110 opacity-70 hover:opacity-100'}`}
+                style={{ backgroundColor: t.color, color: t.color }}
+              />
+            )
+          })}
         </div>
       </div>
       <p className="text-[9px] text-on-surface-variant/40 font-mono mt-4 text-center border-t border-surface-container-high/60 pt-2">

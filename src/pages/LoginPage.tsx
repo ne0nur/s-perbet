@@ -269,11 +269,15 @@ export function LoginPage() {
 
       // 4. Der Liga beitreten
       if (inviteLeague) {
-        await supabase.from('league_members').insert({
-          league_id: inviteLeague.id,
-          user_id: authResult.user.id
+        const { error: joinError } = await supabase.rpc('join_league_by_code', {
+          p_invite_code: inviteCode.trim().toUpperCase()
         })
-        useToastStore.getState().toast(t('registerAndJoinSuccess', { name: inviteLeague.name }))
+        if (joinError) {
+          console.error("Liga-Beitritt Fehler:", joinError)
+          useToastStore.getState().toast(t('registerSuccess')) // Fallback: Account ist trotzdem da
+        } else {
+          useToastStore.getState().toast(t('registerAndJoinSuccess', { name: inviteLeague.name }))
+        }
       } else {
         useToastStore.getState().toast(t('registerSuccess'))
       }
