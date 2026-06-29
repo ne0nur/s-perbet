@@ -52,11 +52,6 @@ const WM_BRACKET: [number, number, number, number, "heim" | "gast"][] = [
   [6, 1, 7, 0, "gast"],
   [6, 2, 7, 1, "heim"],
   [6, 3, 7, 1, "gast"],
-  // ── S7 → S8 (Halbfinale → Finale + Platz 3) ──
-  [7, 0, 8, 0, "heim"],  // HF1 loser → Platz 3 heim (S8[0] = 3rd place)
-  [7, 1, 8, 0, "gast"],  // HF2 loser → Platz 3 gast
-  [7, 0, 8, 1, "heim"],  // HF1 winner → Final heim (S8[1] = Final)
-  [7, 1, 8, 1, "gast"],  // HF2 winner → Final gast
 ];
 
 interface MatchRow {
@@ -174,11 +169,20 @@ async function propagateKoWinners(
     bySpieltag.set(m.spieltag, arr);
   }
 
-  // Bracket-Map: key = "spieltag:index"
-  const bracketMap = new Map<string, { to_spieltag: number; to_slot: number; pos: "heim" | "gast" }>();
+  // Bracket-Map: key = "spieltag:index" (S4-S6) or "spieltag:index:winner|loser" (S7→S8)
+  const bracketMap = new Map<string, { to_spieltag: number; to_slot: number; pos: "heim" | "gast"; outcome?: "winner" | "loser" }>();
+  
+  // S4-S6 entries: single destination per match
   for (const [fs, fi, ts, ti, pos] of WM_BRACKET) {
-    bracketMap.set(`${fs}:${fi}`, { to_spieltag: ts, to_slot: ti, pos });
+    if (fs < 7) {
+      bracketMap.set(`${fs}:${fi}`, { to_spieltag: ts, to_slot: ti, pos });
+    }
   }
+  // S7 entries: TWO destinations (winner→Final, loser→3rd place)
+  bracketMap.set("7:0:loser",  { to_spieltag: 8, to_slot: 0, pos: "heim", outcome: "loser" });
+  bracketMap.set("7:0:winner", { to_spieltag: 8, to_slot: 1, pos: "heim", outcome: "winner" });
+  bracketMap.set("7:1:loser",  { to_spieltag: 8, to_slot: 0, pos: "gast", outcome: "loser" });
+  bracketMap.set("7:1:winner", { to_spieltag: 8, to_slot: 1, pos: "gast", outcome: "winner" });
 
   // Only iterate rounds that have a NEXT round with existing matches
   const spieltags = [...bySpieltag.keys()].sort((a, b) => a - b);
@@ -193,20 +197,20 @@ async function propagateKoWinners(
       const m = currentMatches[i];
       if (m.status !== "finished" || m.tore_heim == null || m.tore_gast == null) continue;
 
-      const bracketKey = `${st}:${i}`;
-      const slot = bracketMap.get(bracketKey);
-      if (!slot) continue;
+      // S7 has two destinations (winner+loser), others have one
+      const keysToCheck = st === 7
+        ? [`${st}:${i}:winner`, `${st}:${i}:loser`]
+        : [`${st}:${i}`];
 
-      const target = nextMatches[slot.to_slot];
-      if (!target) continue;
+      for (const bracketKey of keysToCheck) {
+        const slot = bracketMap.get(bracketKey);
+        if (!slot) continue;
 
-      // Für S7→S8: winner geht ins Finale, loser ins Spiel um Platz 3
-      if (st === 7) {
-        const winner = determineWinner(m);
-        const loser = determineLoser(m);
-        const isThirdPlace = slot.to_slot === 0; // S8[0] = Spiel um Platz 3
-        
-        const teamName = isThirdPlace ? loser : winner;
+        const target = nextMatches[slot.to_slot];
+        if (!target) continue;
+
+        // Determine team: winner or loser
+        const teamName = slot.outcome === "loser" ? determineLoser(m) : determineWinner(m);
         if (!teamName) continue;
 
         // Skip if already propagated
@@ -216,29 +220,12 @@ async function propagateKoWinners(
         const { error: ue } = await adminClient.from("matches").update(update).eq("id", target.id);
         if (!ue) {
           bracketUpdates++;
+          const label = slot.outcome === "loser" ? "3.Platz" : "Finale";
           results.push({
-            match: `${m.heim_team} vs ${m.gast_team} → ${teamName} → S8[${slot.to_slot}] ${slot.pos}`,
+            match: `${m.heim_team} vs ${m.gast_team} → ${teamName} → ${label} ${slot.pos}`,
             oldStatus: "propagate", newStatus: "bracket", source: "bracket",
           });
         }
-        continue;
-      }
-
-      // Standard case: winner advances
-      const winner = determineWinner(m);
-      if (!winner) continue;
-
-      // Skip already propagated
-      if (target[slot.pos + "_team" as keyof MatchRow] === winner) continue;
-
-      const update = slot.pos === "heim" ? { heim_team: winner } : { gast_team: winner };
-      const { error: ue } = await adminClient.from("matches").update(update).eq("id", target.id);
-      if (!ue) {
-        bracketUpdates++;
-        results.push({
-          match: `${m.heim_team} vs ${m.gast_team} → ${winner} → S${nextSt}[${slot.to_slot}] ${slot.pos}`,
-          oldStatus: "propagate", newStatus: "bracket", source: "bracket",
-        });
       }
     }
   }
