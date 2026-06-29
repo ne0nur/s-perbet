@@ -45,7 +45,7 @@ interface MatchInfo {
   tore_gast: number | null; status: string; spieltag: number; tournament: string
 }
 interface MitgliedRow {
-  id: string; username: string; avatar_url: string | null; gesamt_punkte: number
+  id: string; username: string; avatar_url: string | null; gesamt_punkte: number; global_punkte: number
   tipps: Record<string, { heim: number; gast: number; punkte: number }>
   spieltag_punkte: number; spieltag_tipps: number; spieltag_gesamt: number
   trend?: number
@@ -54,10 +54,10 @@ interface Liga { id: string; name: string; invite_code: string; creator_id: stri
 
 // ─── Punkte-Farbe ────────────────────────────────────
 function punkteKlasse(p: number): string {
-  if (p === 4) return 'bg-green-500/20 text-green-400'
-  if (p === 3) return 'bg-amber-500/20 text-amber-400'
-  if (p === 2) return 'bg-blue-500/20 text-blue-400'
-  return 'text-on-surface-variant/40'
+  if (p === 4) return 'text-green-400 drop-shadow-[0_0_6px_rgba(74,222,128,0.4)]'
+  if (p === 3) return 'text-amber-400 drop-shadow-[0_0_6px_rgba(251,191,36,0.4)]'
+  if (p === 2) return 'text-blue-400 drop-shadow-[0_0_6px_rgba(96,165,250,0.4)]'
+  return 'text-on-surface-variant/70'
 }
 function subscriptPunkte(p: number): string {
   const subs = ['₀','₁','₂','₃','₄']
@@ -293,6 +293,7 @@ export function LeaguePage() {
     const rows: MitgliedRow[] = profiles.map((p) => ({
       id: p.id, username: p.username, avatar_url: p.avatar_url || null, 
       gesamt_punkte: seasonPoints[p.id] || 0,
+      global_punkte: p.gesamt_punkte || 0,
       tipps: tippMap[p.id] || {},
       spieltag_punkte: spPunkte[p.id] || 0,
       spieltag_tipps: Object.keys(tippMap[p.id] || {}).length,
@@ -667,17 +668,6 @@ export function LeaguePage() {
 
                 {/* Mitglieder-Tabelle */}
                 <div className="overflow-y-auto max-h-[50vh] md:max-h-[60vh] shrink-0">
-                  {mitglieder.length === 0 ? (
-                    <div className="bg-surface-container-low border border-surface-container-high rounded-xl p-8 text-center">
-                      <div className="w-12 h-12 rounded-full bg-surface-container-high flex items-center justify-center mx-auto mb-3">
-                        <Trophy size={20} className="text-on-surface-variant/30" />
-                      </div>
-                      <p className="text-on-surface text-sm font-bold mb-1">{t('noTipsYet')}</p>
-                      <p className="text-on-surface-variant text-[11px] max-w-[200px] mx-auto">
-                        {t('tableCalculationNotice')}
-                      </p>
-                    </div>
-                  ) : (
                     <AnimatePresence mode="wait">
                       <motion.div
                         key={`${viewTournament}-${viewSpieltag}`}
@@ -742,8 +732,8 @@ export function LeaguePage() {
                                           </div>
                                         )}
                                       </div>
-                                      <LevelBadge level={calculateLevel(m.gesamt_punkte)} className="absolute -bottom-0.5 -right-0.5 z-10 text-[7px] h-3.5 w-3.5 rounded-full shadow shadow-black/80 select-none">
-                                        {calculateLevel(m.gesamt_punkte)}
+                                      <LevelBadge level={calculateLevel(m.global_punkte)} className="absolute -bottom-0.5 -right-0.5 z-10 text-[7px] h-3.5 w-3.5 rounded-full shadow shadow-black/80 select-none">
+                                        {calculateLevel(m.global_punkte)}
                                       </LevelBadge>
                                     </div>
                                     <span className={`text-[11px] font-medium truncate max-w-[80px] flex items-center gap-1 ${isMe ? 'text-primary-fixed-dim' : 'text-on-surface'}`}>
@@ -773,13 +763,23 @@ export function LeaguePage() {
                                   const displayGast = showHidden ? '-' : tipp.gast
 
                                   return (
-                                    <td key={match.id} className={`py-2.5 px-1 text-center rounded ${punkteValue ? (isLive ? 'bg-amber-500/5' : punkteKlasse(punkteValue)) : ''}`}>
+                                    <td key={match.id} className={`py-2.5 px-1 text-center ${isLive ? 'bg-amber-500/5 rounded' : ''}`}>
                                       <div className="flex items-center justify-center">
-                                        <span className={`text-[11px] font-mono leading-tight ${hasResult ? 'text-on-surface font-bold' : showHidden ? 'text-on-surface-variant/40' : 'text-on-surface-variant/60'}`}>
+                                        <span className={`text-[11px] font-mono leading-tight ${
+                                          hasResult && punkteValue !== null 
+                                            ? `${punkteKlasse(punkteValue)} font-bold` 
+                                            : showHidden 
+                                              ? 'text-on-surface-variant/40' 
+                                              : 'text-on-surface-variant/60'
+                                        }`}>
                                           {displayHeim}:{displayGast}
                                         </span>
                                         {punkteValue != null && (
-                                          <sub className={`text-[7px] font-mono font-bold ml-[1px] -mb-1 ${isLive ? 'text-amber-400 animate-pulse' : punkteValue > 0 ? 'text-on-surface' : 'text-on-surface-variant/50'}`}>
+                                          <sub className={`text-[7px] font-mono font-bold ml-[1px] -mb-1 ${
+                                            isLive 
+                                              ? 'text-amber-400 animate-pulse' 
+                                              : punkteKlasse(punkteValue)
+                                          }`}>
                                             {punkteValue}
                                           </sub>
                                         )}
@@ -801,7 +801,6 @@ export function LeaguePage() {
                         </div>
                       </motion.div>
                     </AnimatePresence>
-                  )}
                 </div>
 
                 {/* Einladungs-Code */}
