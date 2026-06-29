@@ -132,6 +132,8 @@ export function AdminSection({
   const [broadcastMessage, setBroadcastMessage] = useState('')
   const [sendingBroadcast, setSendingBroadcast] = useState(false)
   const [broadcastResult, setBroadcastResult] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+  const [syncingResults, setSyncingResults] = useState(false)
+  const [syncResult, setSyncResult] = useState<{ type: 'success' | 'error'; text: string; details?: string[] } | null>(null)
   const user = useAuthStore(s => s.user)
   
   // Funktion um offene Reset-Anfragen zu laden
@@ -258,6 +260,43 @@ export function AdminSection({
     }
   }
 
+  // Sync Match Results Handler
+  const handleSyncResults = async () => {
+    setSyncingResults(true)
+    setSyncResult(null)
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session?.access_token) throw new Error('Keine gültige Session')
+
+      const fnUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/sync-match-results`
+      const response = await fetch(fnUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json',
+        },
+      })
+
+      const result = await response.json()
+
+      if (!response.ok || result.error) {
+        setSyncResult({ type: 'error', text: result.error || `HTTP ${response.status}` })
+        return
+      }
+
+      const details = result.details as string[] | undefined
+      setSyncResult({
+        type: 'success',
+        text: result.message || `${result.updated} Spiele aktualisiert`,
+        details: details?.slice(0, 10),
+      })
+    } catch (err) {
+      setSyncResult({ type: 'error', text: (err as Error).message })
+    } finally {
+      setSyncingResults(false)
+    }
+  }
+
   return (
     <div className="bg-surface-container-low border border-primary-container/20 rounded-xl overflow-hidden shadow-sm stagger-in text-left">
       <div className="px-4 py-2.5 bg-surface-container border-b border-surface-container-high flex flex-col gap-2">
@@ -375,6 +414,38 @@ export function AdminSection({
                 <p className={`text-[10px] font-mono mt-2 ${broadcastResult.type === 'success' ? 'text-green-400' : 'text-red-400'}`}>
                   {broadcastResult.text}
                 </p>
+              )}
+            </div>
+
+            {/* Sync Match Results */}
+            <div className="border-t border-surface-container-high pt-3">
+              <p className="text-[10px] font-mono text-on-surface-variant uppercase tracking-wider mb-2">
+                🔄 {language === 'tr' ? 'Sonuçları Güncelle' : language === 'en' ? 'Update Results' : 'Ergebnisse aktualisieren'}
+              </p>
+              <button
+                onClick={handleSyncResults}
+                disabled={syncingResults}
+                className="w-full bg-green-500/10 hover:bg-green-500/20 border border-green-500/20 text-green-400 py-2.5 rounded-lg font-mono text-xs font-bold uppercase tracking-wider transition-all active:scale-[0.98] disabled:opacity-30 disabled:cursor-not-allowed"
+              >
+                {syncingResults
+                  ? (language === 'tr' ? '🔄 Güncelleniyor...' : language === 'en' ? '🔄 Updating...' : '🔄 Aktualisiere...')
+                  : (language === 'tr' ? '⚡ Tüm Sonuçları Getir' : language === 'en' ? '⚡ Fetch All Results' : '⚡ Alle Ergebnisse abrufen')}
+              </button>
+              {syncResult && (
+                <div className={`mt-2 p-2 rounded-lg border text-[10px] font-mono ${
+                  syncResult.type === 'success'
+                    ? 'bg-green-500/5 border-green-500/20 text-green-400'
+                    : 'bg-red-500/5 border-red-500/20 text-red-400'
+                }`}>
+                  <p className="font-bold mb-1">{syncResult.text}</p>
+                  {syncResult.details && syncResult.details.length > 0 && (
+                    <ul className="space-y-0.5 text-[9px] opacity-80">
+                      {syncResult.details.map((d, i) => (
+                        <li key={i}>{d}</li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
               )}
             </div>
           </div>
