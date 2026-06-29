@@ -1,81 +1,64 @@
 import { memo, useMemo, useEffect } from 'react'
-import { Award, Lock, Check, Star, Flame, Skull, MapPin } from 'lucide-react'
+import { Award, Lock, Check, Star, Flame } from 'lucide-react'
 import { useAuthStore } from '../../stores/authStore'
 import { useTranslation } from '../../utils/translations'
+
+type Rarity = 'gewoehnlich' | 'selten' | 'episch' | 'legendaer'
+
+const RARITY_CONFIG: Record<string, {
+  order: number
+  name: string
+  border: string; bg: string; text: string; glow: string
+  icon: typeof Star; iconColor: string
+  badge: string
+}> = {
+  legendaer: {
+    order: 0, name: 'Legendär',
+    border: 'border-yellow-500/40', bg: 'bg-yellow-500/5', text: 'text-yellow-400',
+    glow: 'shadow-[0_0_15px_rgba(234,179,8,0.3)]',
+    icon: Star, iconColor: 'text-yellow-400',
+    badge: 'bg-yellow-500/10 border-yellow-500/30 text-yellow-400',
+  },
+  episch: {
+    order: 1, name: 'Episch',
+    border: 'border-purple-500/30', bg: 'bg-purple-500/5', text: 'text-purple-400',
+    glow: 'shadow-[0_0_12px_rgba(168,85,247,0.2)]',
+    icon: Flame, iconColor: 'text-purple-400',
+    badge: 'bg-purple-500/10 border-purple-500/30 text-purple-400',
+  },
+  selten: {
+    order: 2, name: 'Selten',
+    border: 'border-blue-500/30', bg: 'bg-blue-500/5', text: 'text-blue-400',
+    glow: 'shadow-[0_0_10px_rgba(59,130,246,0.15)]',
+    icon: Star, iconColor: 'text-blue-400',
+    badge: 'bg-blue-500/10 border-blue-500/30 text-blue-400',
+  },
+  gewoehnlich: {
+    order: 3, name: 'Gewöhnlich',
+    border: 'border-slate-500/30', bg: 'bg-slate-500/3', text: 'text-slate-400',
+    glow: 'shadow-[0_0_8px_rgba(148,163,184,0.1)]',
+    icon: Star, iconColor: 'text-slate-400',
+    badge: 'bg-slate-500/10 border-slate-500/30 text-slate-400',
+  },
+}
+
+// Map old rarities to new Fortnite-style rarities
+function mapRarity(old: string): Rarity {
+  const m: Record<string, Rarity> = {
+    legendary: 'legendaer',
+    epic: 'episch',
+    rare: 'selten',
+    common: 'gewoehnlich',
+    local: 'episch',
+    toxic: 'gewoehnlich',
+  }
+  return m[old] || 'gewoehnlich'
+}
 
 interface AchievementBadgeProps {
   id: string
   unlocked: boolean
-  rarity: 'common' | 'rare' | 'epic' | 'legendary' | 'toxic' | 'local'
-}
-
-const RARITY_CONFIG = {
-  legendary: {
-    order: 0,
-    name: 'Legendär',
-    border: 'border-yellow-500/40',
-    bg: 'bg-yellow-500/5',
-    text: 'text-yellow-400',
-    glow: 'shadow-[0_0_15px_rgba(234,179,8,0.3)]',
-    icon: Star,
-    iconColor: 'text-yellow-400',
-    badge: 'bg-yellow-500/10 border-yellow-500/30 text-yellow-400',
-  },
-  epic: {
-    order: 1,
-    name: 'Episch',
-    border: 'border-purple-500/30',
-    bg: 'bg-purple-500/5',
-    text: 'text-purple-400',
-    glow: 'shadow-[0_0_12px_rgba(168,85,247,0.2)]',
-    icon: Flame,
-    iconColor: 'text-purple-400',
-    badge: 'bg-purple-500/10 border-purple-500/30 text-purple-400',
-  },
-  rare: {
-    order: 2,
-    name: 'Selten',
-    border: 'border-blue-500/30',
-    bg: 'bg-blue-500/5',
-    text: 'text-blue-400',
-    glow: 'shadow-[0_0_10px_rgba(59,130,246,0.15)]',
-    icon: Star,
-    iconColor: 'text-blue-400',
-    badge: 'bg-blue-500/10 border-blue-500/30 text-blue-400',
-  },
-  common: {
-    order: 3,
-    name: 'Normal',
-    border: 'border-slate-500/30',
-    bg: 'bg-slate-500/3',
-    text: 'text-slate-400',
-    glow: 'shadow-[0_0_8px_rgba(148,163,184,0.1)]',
-    icon: Star,
-    iconColor: 'text-slate-400',
-    badge: 'bg-slate-500/10 border-slate-500/30 text-slate-400',
-  },
-  local: {
-    order: 4,
-    name: 'Speyer',
-    border: 'border-emerald-500/40',
-    bg: 'bg-emerald-500/5',
-    text: 'text-emerald-400',
-    glow: 'shadow-[0_0_12px_rgba(16,185,129,0.25)]',
-    icon: MapPin,
-    iconColor: 'text-emerald-400',
-    badge: 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400',
-  },
-  toxic: {
-    order: 5,
-    name: 'Toxic',
-    border: 'border-red-500/30',
-    bg: 'bg-red-500/5',
-    text: 'text-red-400',
-    glow: 'shadow-[0_0_10px_rgba(239,68,68,0.15)]',
-    icon: Skull,
-    iconColor: 'text-red-400',
-    badge: 'bg-red-500/10 border-red-500/30 text-red-400',
-  },
+  rarity: Rarity
 }
 
 const AchievementBadge = memo(function AchievementBadge({ id, unlocked, rarity }: AchievementBadgeProps) {
@@ -250,8 +233,10 @@ export function AchievementsSection({ unlockedSet, newlyUnlocked }: Achievements
       if (aUnlocked && !bUnlocked) return -1
       if (!aUnlocked && bUnlocked) return 1
       // Then by rarity order
-      const aOrder = RARITY_CONFIG[a.rarity]?.order ?? 99
-      const bOrder = RARITY_CONFIG[b.rarity]?.order ?? 99
+      const aRarity = mapRarity(a.rarity)
+      const bRarity = mapRarity(b.rarity)
+      const aOrder = RARITY_CONFIG[aRarity]?.order ?? 99
+      const bOrder = RARITY_CONFIG[bRarity]?.order ?? 99
       return aOrder - bOrder
     })
   }, [achievementsList, unlockedSet])
@@ -278,7 +263,7 @@ export function AchievementsSection({ unlockedSet, newlyUnlocked }: Achievements
         {sortedAchievements.map(ach => {
           const unlocked = unlockedSet.has(ach.id)
           const isNew = newlyUnlocked.has(ach.id)
-          const cfg = RARITY_CONFIG[ach.rarity]
+          const cfg = RARITY_CONFIG[mapRarity(ach.rarity)]
           
           return (
             <div
@@ -290,7 +275,7 @@ export function AchievementsSection({ unlockedSet, newlyUnlocked }: Achievements
               }`}
             >
               <div className="relative">
-                <AchievementBadge id={ach.id} unlocked={unlocked} rarity={ach.rarity} />
+                <AchievementBadge id={ach.id} unlocked={unlocked} rarity={mapRarity(ach.rarity)} />
                 {isNew && (
                   <div className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-red-500 rounded-full border-2 border-[#1E1E1E] animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.8)] z-20" />
                 )}
@@ -302,7 +287,7 @@ export function AchievementsSection({ unlockedSet, newlyUnlocked }: Achievements
                       {ach.name}
                     </h4>
                     <div className="flex items-center gap-1 shrink-0">
-                      <RarityPill rarity={ach.rarity} />
+                      <RarityPill rarity={mapRarity(ach.rarity)} />
                       {unlocked ? (
                         <span className="flex items-center gap-1 text-[7px] font-mono uppercase tracking-wider text-green-400 bg-green-500/10 px-1.5 py-0.5 rounded border border-green-500/20 font-bold">
                           <Check size={8} strokeWidth={3} />
