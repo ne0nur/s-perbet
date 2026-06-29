@@ -7,6 +7,7 @@ import { TeamInspector } from '../components/TeamInspector'
 import { useTranslation } from '../utils/translations'
 import { getTournamentLogo } from '../lib/utils'
 import { useTournamentStore } from '../stores/tournamentStore'
+import { getWMGroup } from '../lib/wmGroups'
 
 interface LeagueRow {
   team: string
@@ -481,14 +482,18 @@ export function StandingsPage() {
 
                       const getTeamGroup = (team: string) => {
                         if (!isGrouped) return 'Tabelle'
-                        const numGroups = viewTournament === 'World Cup 2026' ? 12 : 8
                         
-                        // Perfekte Verteilung: Jede Gruppe bekommt exakt gleich viele Teams
-                        // Wir nutzen den alphabetischen Index des Teams
+                        // WM: echte Gruppen aus offiziellem Spielplan
+                        if (viewTournament === 'World Cup 2026') {
+                          const g = getWMGroup(team)
+                          return g ? `Gruppe ${g}` : 'Ohne Gruppe'
+                        }
+                        
+                        // CL: alphabetische Gruppen (wie bisher)
+                        const numGroups = 8
                         const teamIndex = allTeams.indexOf(team)
                         const teamsPerGroup = Math.ceil(allTeams.length / numGroups)
                         const groupIndex = Math.floor(teamIndex / teamsPerGroup) % numGroups
-                        
                         return `Group ${String.fromCharCode(65 + groupIndex)}`
                       }
 

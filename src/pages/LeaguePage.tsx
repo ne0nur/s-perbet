@@ -477,7 +477,7 @@ export function LeaguePage() {
 
       if (isWC) {
         const wmPhases: Record<number, string> = {
-          1: t('koPhase16'), 2: t('koPhase8'), 3: t('koPhase4'), 4: t('koPhase2')
+          1: t('koPhase32'), 2: t('koPhase16'), 3: t('koPhase8'), 4: t('koPhase4'), 5: t('koPhase2')
         }
         return wmPhases[koRound] || `Runde ${koRound}`
       }

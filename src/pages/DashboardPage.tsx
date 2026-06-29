@@ -246,6 +246,19 @@ export function DashboardPage() {
       }
       // K.o.-Runde aus Spieltag-Nummer berechnen
       const koRound = st - groupStages
+      const isWC = tournament.toLowerCase().includes('world cup') || tournament.toLowerCase().includes('wm')
+      
+      if (isWC) {
+        const wmLabels: Record<number, string> = {
+          1: t('koPhase32'),
+          2: t('koPhase16'),
+          3: t('koPhase8'),
+          4: t('koPhase4'),
+          5: t('koPhase2'),
+        }
+        return wmLabels[koRound] || `Runde ${koRound}`
+      }
+      
       const koLabels: Record<number, string> = {
         1: t('clRoundPlayoffs'),
         2: t('clRoundLast16'),
