@@ -1,6 +1,6 @@
 // supabase/functions/sync-match-results/index.ts
-// Edge Function: Aktualisiert Ergebnisse für alle Turniere (Admin-only)
-// Deploy: supabase functions deploy sync-match-results
+// Edge Function: Sync scores + propagate KO winners through bracket
+// Deploy: supabase functions deploy sync-match-results --no-verify-jwt
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -13,6 +13,51 @@ const ESPN_LEAGUE_MAP: Record<string, string> = {
   "Champions League": "uefa.champions",
   "World Cup 2026": "fifa.world",
 };
+
+// ─── WM 2026 Bracket Progression ──────────────────────────────
+// [fromSpieltag, fromIndex (by anpfiff), toSpieltag, toSlot (by anpfiff), position]
+// S4→S5: Sechzehntelfinale → Achtelfinale
+// S5→S6: Achtelfinale → Viertelfinale
+// S6→S7: Viertelfinale → Halbfinale
+// S7→S8: Halbfinale → Finale + Platz 3 (winner→Final, loser→Platz3)
+const WM_BRACKET: [number, number, number, number, "heim" | "gast"][] = [
+  // ── S4 → S5 (Sechzehntelfinale → Achtelfinale) ──
+  [4, 0,  5, 0, "heim"],  // Südafrika/Kanada → S5[0] heim
+  [4, 3,  5, 0, "gast"],  // Niederlande/Marokko → S5[0] gast
+  [4, 1,  5, 1, "heim"],  // Brasilien/Japan → S5[1] heim
+  [4, 2,  5, 1, "gast"],  // Deutschland/Paraguay → S5[1] gast
+  [4, 4,  5, 2, "heim"],  // Elfenbeinküste/Norwegen → S5[2] heim
+  [4, 5,  5, 2, "gast"],  // Frankreich/Schweden → S5[2] gast
+  [4, 6,  5, 3, "heim"],  // Mexiko/Ecuador → S5[3] heim
+  [4, 7,  5, 3, "gast"],  // England/DR Kongo → S5[3] gast
+  [4, 8,  5, 4, "heim"],  // Belgien/Senegal → S5[4] heim
+  [4, 9,  5, 4, "gast"],  // USA/Bosnien → S5[4] gast
+  [4, 11, 5, 5, "heim"],  // Portugal/Kroatien → S5[5] heim
+  [4, 10, 5, 5, "gast"],  // Spanien/Österreich → S5[5] gast
+  [4, 12, 5, 6, "heim"],  // Schweiz/Algerien → S5[6] heim
+  [4, 13, 5, 6, "gast"],  // Australien/Ägypten → S5[6] gast
+  [4, 14, 5, 7, "heim"],  // Argentinien/KapVerde → S5[7] heim
+  [4, 15, 5, 7, "gast"],  // Kolumbien/Ghana → S5[7] gast
+  // ── S5 → S6 (Achtelfinale → Viertelfinale) ──
+  [5, 0, 6, 0, "heim"],
+  [5, 1, 6, 0, "gast"],
+  [5, 2, 6, 1, "heim"],
+  [5, 3, 6, 1, "gast"],
+  [5, 4, 6, 2, "heim"],
+  [5, 5, 6, 2, "gast"],
+  [5, 6, 6, 3, "heim"],
+  [5, 7, 6, 3, "gast"],
+  // ── S6 → S7 (Viertelfinale → Halbfinale) ──
+  [6, 0, 7, 0, "heim"],
+  [6, 1, 7, 0, "gast"],
+  [6, 2, 7, 1, "heim"],
+  [6, 3, 7, 1, "gast"],
+  // ── S7 → S8 (Halbfinale → Finale + Platz 3) ──
+  [7, 0, 8, 0, "heim"],  // HF1 loser → Platz 3 heim (S8[0] = 3rd place)
+  [7, 1, 8, 0, "gast"],  // HF2 loser → Platz 3 gast
+  [7, 0, 8, 1, "heim"],  // HF1 winner → Final heim (S8[1] = Final)
+  [7, 1, 8, 1, "gast"],  // HF2 winner → Final gast
+];
 
 interface MatchRow {
   id: string;
@@ -32,7 +77,7 @@ interface UpdateResult {
   oldStatus: string;
   newStatus: string;
   score?: string;
-  source: "espn" | "time";
+  source: "espn" | "time" | "bracket";
 }
 
 const CORS_HEADERS = {
@@ -47,8 +92,7 @@ function ok(body: unknown): Response {
     headers: { "Content-Type": "application/json", ...CORS_HEADERS },
   });
 }
-
-function err(body: unknown, status: number): Response {
+function eresp(body: unknown, status: number): Response {
   return new Response(JSON.stringify(body), {
     status,
     headers: { "Content-Type": "application/json", ...CORS_HEADERS },
@@ -57,66 +101,153 @@ function err(body: unknown, status: number): Response {
 
 function cleanName(name: string): string {
   if (!name) return "";
-  return name
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/ı/g, "i")
-    .replace(/[^a-z0-9]/g, "");
-}
-
-async function fetchEspnScores(
-  tournament: string,
-  dateStr: string,
-): Promise<Map<string, { homeScore: number; awayScore: number; status: string }>> {
-  const espnCode = ESPN_LEAGUE_MAP[tournament];
-  if (!espnCode) return new Map();
-
-  const apiUrl = `http://site.api.espn.com/apis/site/v2/sports/soccer/${espnCode}/scoreboard?dates=${dateStr}`;
-
-  try {
-    const response = await fetch(apiUrl);
-    if (!response.ok) return new Map();
-
-    const data = await response.json();
-    const events = data.events || [];
-    const scores = new Map<string, { homeScore: number; awayScore: number; status: string }>();
-
-    for (const event of events) {
-      const comp = event.competitions[0];
-      const home = comp.competitors.find((c: { homeAway: string }) => c.homeAway === "home");
-      const away = comp.competitors.find((c: { homeAway: string }) => c.homeAway === "away");
-      if (!home || !away) continue;
-
-      const key = `${cleanName(home.team?.name || "")}_vs_${cleanName(away.team?.name || "")}`;
-
-      const statusName = event.status.type.name;
-      let status = "upcoming";
-      if (statusName.includes("FULL_TIME") || statusName.includes("FINAL")) status = "finished";
-      else if (statusName.includes("HALF") || statusName.includes("IN_PROGRESS")) status = "live";
-      else if (statusName.includes("POSTPONED") || statusName.includes("CANCELED")) status = "postponed";
-
-      scores.set(key, {
-        homeScore: parseInt(home.score || "0", 10),
-        awayScore: parseInt(away.score || "0", 10),
-        status,
-      });
-    }
-    return scores;
-  } catch {
-    return new Map();
-  }
+  return name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/ı/g, "i").replace(/[^a-z0-9]/g, "");
 }
 
 function getDateStr(date: Date): string {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, "0");
-  const d = String(date.getDate()).padStart(2, "0");
-  return `${y}${m}${d}`;
+  return `${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, "0")}${String(date.getDate()).padStart(2, "0")}`;
 }
 
+function determineWinner(m: MatchRow): string | null {
+  if (m.tore_heim == null || m.tore_gast == null) return null;
+  if (m.tore_heim > m.tore_gast) return m.heim_team;
+  if (m.tore_gast > m.tore_heim) return m.gast_team;
+  return null; // Unentschieden in KO — Verlängerung/Elfmeterschießen nicht abgebildet
+}
+
+function determineLoser(m: MatchRow): string | null {
+  if (m.tore_heim == null || m.tore_gast == null) return null;
+  if (m.tore_heim > m.tore_gast) return m.gast_team;
+  if (m.tore_gast > m.tore_heim) return m.heim_team;
+  return null;
+}
+
+async function fetchEspnScores(tournament: string, dateStr: string) {
+  const code = ESPN_LEAGUE_MAP[tournament];
+  if (!code) return new Map<string, { homeScore: number; awayScore: number; status: string }>();
+  try {
+    const res = await fetch(`http://site.api.espn.com/apis/site/v2/sports/soccer/${code}/scoreboard?dates=${dateStr}`);
+    if (!res.ok) return new Map();
+    const data = await res.json();
+    const scores = new Map<string, { homeScore: number; awayScore: number; status: string }>();
+    for (const ev of data.events || []) {
+      const comp = ev.competitions[0];
+      const home = comp.competitors.find((c: { homeAway: string }) => c.homeAway === "home");
+      const away = comp.competitors.find((c: { homeAway: string }) => c.homeAway === "away");
+      if (!home || !away) continue;
+      const key = `${cleanName(home.team?.name || "")}_vs_${cleanName(away.team?.name || "")}`;
+      let s = "upcoming";
+      const sn = ev.status.type.name;
+      if (sn.includes("FULL_TIME") || sn.includes("FINAL")) s = "finished";
+      else if (sn.includes("HALF") || sn.includes("IN_PROGRESS")) s = "live";
+      else if (sn.includes("POSTPONED") || sn.includes("CANCELED")) s = "postponed";
+      scores.set(key, { homeScore: parseInt(home.score || "0", 10), awayScore: parseInt(away.score || "0", 10), status: s });
+    }
+    return scores;
+  } catch { return new Map(); }
+}
+
+// ─── KO Winner Propagation ─────────────────────────────────────
+async function propagateKoWinners(
+  adminClient: ReturnType<typeof createClient>,
+  results: UpdateResult[],
+): Promise<number> {
+  let bracketUpdates = 0;
+  const tournament = "World Cup 2026";
+
+  // Alle KO-Matches ab Spieltag 4
+  const { data: koMatches } = await adminClient
+    .from("matches")
+    .select("*")
+    .eq("tournament", tournament)
+    .gte("spieltag", 4)
+    .order("spieltag", { ascending: true })
+    .order("anpfiff", { ascending: true });
+
+  if (!koMatches?.length) return 0;
+
+  // Nach Spieltag gruppieren, Indizes pro Spieltag
+  const bySpieltag = new Map<number, MatchRow[]>();
+  for (const m of koMatches as MatchRow[]) {
+    const arr = bySpieltag.get(m.spieltag) || [];
+    arr.push(m);
+    bySpieltag.set(m.spieltag, arr);
+  }
+
+  // Bracket-Map: key = "spieltag:index"
+  const bracketMap = new Map<string, { to_spieltag: number; to_slot: number; pos: "heim" | "gast" }>();
+  for (const [fs, fi, ts, ti, pos] of WM_BRACKET) {
+    bracketMap.set(`${fs}:${fi}`, { to_spieltag: ts, to_slot: ti, pos });
+  }
+
+  // Only iterate rounds that have a NEXT round with existing matches
+  const spieltags = [...bySpieltag.keys()].sort((a, b) => a - b);
+
+  for (const st of spieltags) {
+    const nextSt = st + 1;
+    const nextMatches = bySpieltag.get(nextSt);
+    if (!nextMatches?.length) continue;
+
+    const currentMatches = bySpieltag.get(st)!;
+    for (let i = 0; i < currentMatches.length; i++) {
+      const m = currentMatches[i];
+      if (m.status !== "finished" || m.tore_heim == null || m.tore_gast == null) continue;
+
+      const bracketKey = `${st}:${i}`;
+      const slot = bracketMap.get(bracketKey);
+      if (!slot) continue;
+
+      const target = nextMatches[slot.to_slot];
+      if (!target) continue;
+
+      // Für S7→S8: winner geht ins Finale, loser ins Spiel um Platz 3
+      if (st === 7) {
+        const winner = determineWinner(m);
+        const loser = determineLoser(m);
+        const isThirdPlace = slot.to_slot === 0; // S8[0] = Spiel um Platz 3
+        
+        const teamName = isThirdPlace ? loser : winner;
+        if (!teamName) continue;
+
+        // Skip if already propagated
+        if (target[slot.pos + "_team" as keyof MatchRow] === teamName) continue;
+
+        const update = slot.pos === "heim" ? { heim_team: teamName } : { gast_team: teamName };
+        const { error: ue } = await adminClient.from("matches").update(update).eq("id", target.id);
+        if (!ue) {
+          bracketUpdates++;
+          results.push({
+            match: `${m.heim_team} vs ${m.gast_team} → ${teamName} → S8[${slot.to_slot}] ${slot.pos}`,
+            oldStatus: "propagate", newStatus: "bracket", source: "bracket",
+          });
+        }
+        continue;
+      }
+
+      // Standard case: winner advances
+      const winner = determineWinner(m);
+      if (!winner) continue;
+
+      // Skip already propagated
+      if (target[slot.pos + "_team" as keyof MatchRow] === winner) continue;
+
+      const update = slot.pos === "heim" ? { heim_team: winner } : { gast_team: winner };
+      const { error: ue } = await adminClient.from("matches").update(update).eq("id", target.id);
+      if (!ue) {
+        bracketUpdates++;
+        results.push({
+          match: `${m.heim_team} vs ${m.gast_team} → ${winner} → S${nextSt}[${slot.to_slot}] ${slot.pos}`,
+          oldStatus: "propagate", newStatus: "bracket", source: "bracket",
+        });
+      }
+    }
+  }
+
+  return bracketUpdates;
+}
+
+// ─── Main Handler ──────────────────────────────────────────────
 serve(async (req: Request) => {
-  // CORS Preflight
   if (req.method === "OPTIONS") {
     return new Response(null, { status: 204, headers: CORS_HEADERS });
   }
@@ -125,101 +256,104 @@ serve(async (req: Request) => {
   const results: UpdateResult[] = [];
 
   try {
-    // Auth Check
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) return err({ error: "No auth header" }, 401);
+    if (!authHeader) return eresp({ error: "No auth header" }, 401);
 
     const userClient = createClient(SUPABASE_URL, Deno.env.get("SUPABASE_ANON_KEY")!, {
       global: { headers: { Authorization: authHeader } },
     });
     const { data: { user }, error: authError } = await userClient.auth.getUser();
-    if (authError || !user) return err({ error: "Unauthorized" }, 401);
+    if (authError || !user) return eresp({ error: "Unauthorized" }, 401);
 
     const { data: profile } = await userClient
       .from("profiles").select("is_admin").eq("id", user.id).single();
-    if (!profile?.is_admin) return err({ error: "Admin only" }, 403);
+    if (!profile?.is_admin) return eresp({ error: "Admin only" }, 403);
 
-    // Admin Client
     const adminClient = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
     const now = new Date();
 
-    // Alle nicht-finalen Matches
+    // ─── Phase 1: Score Sync ───
     const { data: matches, error: fetchError } = await adminClient
       .from("matches").select("*")
       .not("status", "in", '("finished","postponed")')
       .order("anpfiff", { ascending: true });
 
-    if (fetchError) return err({ error: fetchError.message }, 500);
-    if (!matches || matches.length === 0) {
-      return ok({ success: true, message: "Alle Spiele bereits abgeschlossen.", updated: 0, checked: 0, details: [], duration_ms: Date.now() - startTime });
-    }
+    if (fetchError) return eresp({ error: fetchError.message }, 500);
 
-    const matchList = matches as MatchRow[];
-
-    // ESPN-Daten vorab cachen
-    const uniqueDates = [...new Set(matchList.map(m => getDateStr(new Date(m.anpfiff))))];
-    const uniqueTournaments = [...new Set(matchList.map(m => m.tournament || "Süper Lig"))];
-    const espnCache = new Map<string, Map<string, { homeScore: number; awayScore: number; status: string }>>();
-
-    for (const dateStr of uniqueDates) {
-      for (const t of uniqueTournaments) {
-        const ck = `${t}_${dateStr}`;
-        if (!espnCache.has(ck)) espnCache.set(ck, await fetchEspnScores(t, dateStr));
-      }
-    }
-
-    // Matches verarbeiten
-    let updatedCount = 0;
+    let scoreUpdates = 0;
     const stats: Record<string, { checked: number; updated: number; espn: number; time: number }> = {};
 
-    for (const match of matchList) {
-      const kickoff = new Date(match.anpfiff);
-      const hours = (now.getTime() - kickoff.getTime()) / (1000 * 60 * 60);
-      const tourney = match.tournament || "Unbekannt";
-      stats[tourney] ??= { checked: 0, updated: 0, espn: 0, time: 0 };
-      stats[tourney].checked++;
+    if (matches && matches.length > 0) {
+      const matchList = matches as MatchRow[];
+      const uniqueDates = [...new Set(matchList.map(m => getDateStr(new Date(m.anpfiff))))];
+      const uniqueTournaments = [...new Set(matchList.map(m => m.tournament || "Süper Lig"))];
+      const espnCache = new Map<string, Map<string, { homeScore: number; awayScore: number; status: string }>>();
 
-      // Priority 1: ESPN
-      const espnScores = espnCache.get(`${tourney}_${getDateStr(kickoff)}`);
-      const key = `${cleanName(match.heim_team)}_vs_${cleanName(match.gast_team)}`;
-      const e = espnScores?.get(key);
-
-      if (e && (match.status !== e.status || match.tore_heim !== e.homeScore || match.tore_gast !== e.awayScore)) {
-        const { error: ue } = await adminClient.from("matches").update({
-          tore_heim: e.homeScore, tore_gast: e.awayScore, status: e.status,
-        }).eq("id", match.id);
-
-        if (!ue) {
-          updatedCount++; stats[tourney].updated++; stats[tourney].espn++;
-          results.push({ match: `${match.heim_team} vs ${match.gast_team}`, oldStatus: match.status, newStatus: e.status, score: `${e.homeScore}:${e.awayScore}`, source: "espn" });
-          continue;
+      for (const ds of uniqueDates) {
+        for (const t of uniqueTournaments) {
+          const ck = `${t}_${ds}`;
+          if (!espnCache.has(ck)) espnCache.set(ck, await fetchEspnScores(t, ds));
         }
       }
 
-      // Priority 2: Time-based
-      let ns: string | null = null;
-      if (match.status === "upcoming" && hours >= -0.25) ns = "live";
-      if (match.status === "live" && hours > 2.5) ns = "finished";
-      if (match.status === "upcoming" && hours > 3) ns = "finished";
+      for (const match of matchList) {
+        const kickoff = new Date(match.anpfiff);
+        const hours = (now.getTime() - kickoff.getTime()) / (1000 * 60 * 60);
+        const tourney = match.tournament || "Unbekannt";
+        stats[tourney] ??= { checked: 0, updated: 0, espn: 0, time: 0 };
+        stats[tourney].checked++;
 
-      if (ns && ns !== match.status) {
-        const { error: ue } = await adminClient.from("matches").update({ status: ns }).eq("id", match.id);
-        if (!ue) {
-          updatedCount++; stats[tourney].updated++; stats[tourney].time++;
-          results.push({ match: `${match.heim_team} vs ${match.gast_team}`, oldStatus: match.status, newStatus: ns, source: "time" });
+        const sesp = espnCache.get(`${tourney}_${getDateStr(kickoff)}`);
+        const key = `${cleanName(match.heim_team)}_vs_${cleanName(match.gast_team)}`;
+        const e = sesp?.get(key);
+
+        if (e && (match.status !== e.status || match.tore_heim !== e.homeScore || match.tore_gast !== e.awayScore)) {
+          const { error: ue } = await adminClient.from("matches").update({
+            tore_heim: e.homeScore, tore_gast: e.awayScore, status: e.status,
+          }).eq("id", match.id);
+          if (!ue) {
+            scoreUpdates++; stats[tourney].updated++; stats[tourney].espn++;
+            results.push({ match: `${match.heim_team} vs ${match.gast_team}`, oldStatus: match.status, newStatus: e.status, score: `${e.homeScore}:${e.awayScore}`, source: "espn" });
+            continue;
+          }
+        }
+
+        let ns: string | null = null;
+        if (match.status === "upcoming" && hours >= -0.25) ns = "live";
+        if (match.status === "live" && hours > 2.5) ns = "finished";
+        if (match.status === "upcoming" && hours > 3) ns = "finished";
+
+        if (ns && ns !== match.status) {
+          const { error: ue } = await adminClient.from("matches").update({ status: ns }).eq("id", match.id);
+          if (!ue) {
+            scoreUpdates++; stats[tourney].updated++; stats[tourney].time++;
+            results.push({ match: `${match.heim_team} vs ${match.gast_team}`, oldStatus: match.status, newStatus: ns, source: "time" });
+          }
         }
       }
     }
 
+    // ─── Phase 2: KO Winner Propagation ───
+    const bracketUpdates = await propagateKoWinners(adminClient, results);
+
     const details = results.map(r => {
-      const icon = r.source === "espn" ? "🌐" : "⏱️";
-      const sc = r.score ? ` [${r.score}]` : "";
+      let icon = r.source === "espn" ? "🌐" : r.source === "time" ? "⏱️" : "🏆";
+      let sc = r.score ? ` [${r.score}]` : "";
       return `${icon} ${r.match}: ${r.oldStatus} → ${r.newStatus}${sc}`;
     });
 
-    return ok({ success: true, message: `${updatedCount} von ${matchList.length} Spielen aktualisiert`, updated: updatedCount, checked: matchList.length, tournaments: stats, details, duration_ms: Date.now() - startTime });
+    return ok({
+      success: true,
+      message: `${scoreUpdates} Scores + ${bracketUpdates} Bracket aktualisiert`,
+      scoreUpdates,
+      bracketUpdates,
+      checked: matches?.length || 0,
+      tournaments: stats,
+      details,
+      duration_ms: Date.now() - startTime,
+    });
 
   } catch (er) {
-    return err({ error: String(er), duration_ms: Date.now() - startTime }, 500);
+    return eresp({ error: String(er), duration_ms: Date.now() - startTime }, 500);
   }
 });
