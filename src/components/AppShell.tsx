@@ -341,7 +341,7 @@ export function AppShell() {
                   onClick={() => navigate(to)}
                   className={`w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-xs font-mono font-bold uppercase tracking-wider transition-all duration-200 border ${
                     isActive
-                      ? 'bg-primary-container/15 text-primary-fixed-dim border-primary-container/20 shadow-[0_0_15px_rgba(251,191,36,0.05)]'
+                      ? 'bg-primary-container/15 text-primary-fixed-dim border-primary-container/20 shadow-[0_0_15px_rgba(var(--primary-rgb),0.05)]'
                       : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container/40 border-transparent'
                   }`}
                 >
@@ -501,7 +501,7 @@ export function AppShell() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="fixed inset-0 bg-black/90 backdrop-blur-md animate-fade-in" />
           
-          <div className="relative glass-panel border border-primary-container/30 rounded-2xl p-6 text-center max-w-sm w-full shadow-[0_0_50px_rgba(251,191,36,0.15)] flex flex-col min-h-[440px] justify-between animate-scale-in">
+          <div className="relative glass-panel border border-primary-container/30 rounded-2xl p-6 text-center max-w-sm w-full shadow-[0_0_50px_rgba(var(--primary-rgb),0.15)] flex flex-col min-h-[440px] justify-between animate-scale-in">
             {/* Backdrop glowing gradient */}
             <div className="absolute inset-0 rounded-2xl bg-gradient-to-b from-primary-container/5 to-transparent pointer-events-none" />
 
@@ -719,7 +719,7 @@ export function AppShell() {
                 {onboardingSlide < 11 ? (
                   <button
                     onClick={() => setOnboardingSlide(onboardingSlide + 1)}
-                    className="flex-1 bg-primary-container text-on-primary-container py-3 rounded-lg font-mono text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 hover:opacity-90 active:scale-95 transition-all shadow-[0_0_15px_rgba(251,191,36,0.1)]"
+                    className="flex-1 bg-primary-container text-on-primary-container py-3 rounded-lg font-mono text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 hover:opacity-90 active:scale-95 transition-all shadow-[0_0_15px_rgba(var(--primary-rgb),0.1)]"
                   >
                     {t('onboardingNext')} <ChevronRight size={14} />
                   </button>
@@ -733,7 +733,7 @@ export function AppShell() {
                     </button>
                     <button
                       onClick={() => finishOnboarding(false)}
-                      className="w-full bg-primary-container text-on-primary text-xs font-black py-3 rounded-lg uppercase tracking-wider flex items-center justify-center gap-1.5 hover:opacity-90 active:scale-[0.97] transition-all shadow-[0_0_20px_rgba(251,191,36,0.25)]"
+                      className="w-full bg-primary-container text-on-primary text-xs font-black py-3 rounded-lg uppercase tracking-wider flex items-center justify-center gap-1.5 hover:opacity-90 active:scale-[0.97] transition-all shadow-[0_0_20px_rgba(var(--primary-rgb),0.25)]"
                     >
                       {t('onboardingStartBtn')}
                     </button>

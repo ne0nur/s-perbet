@@ -121,7 +121,7 @@ export function BonusTippsCard({
               }}
               className={`flex-1 min-w-[70px] py-1.5 rounded-lg text-[9px] xs:text-[10px] md:text-xs font-mono font-black uppercase tracking-wider transition-all duration-200 cursor-pointer text-center whitespace-nowrap ${
                 safeIndex === idx
-                  ? 'bg-primary-container text-on-primary-container shadow-[0_1.5px_6px_rgba(251,191,36,0.1)] border border-primary/25 scale-[1.01]'
+                  ? 'bg-primary-container text-on-primary-container shadow-[0_1.5px_6px_rgba(var(--primary-rgb),0.1)] border border-primary/25 scale-[1.01]'
                   : 'text-on-surface-variant hover:text-on-surface hover:bg-white/5 border border-transparent'
               }`}
             >
@@ -198,7 +198,7 @@ export function BonusTippsCard({
         {tippsFreigeschaltet && !currentGesperrt && (
           <button
             onClick={handleSpeichernBonus}
-            className="bg-primary-container text-on-primary-container w-full mt-2 py-2.5 rounded-lg font-mono text-xs font-bold uppercase tracking-wider hover:opacity-90 active:scale-95 transition-all shadow-[0_0_15px_rgba(251,191,36,0.1)]"
+            className="bg-primary-container text-on-primary-container w-full mt-2 py-2.5 rounded-lg font-mono text-xs font-bold uppercase tracking-wider hover:opacity-90 active:scale-95 transition-all shadow-[0_0_15px_rgba(var(--primary-rgb),0.1)]"
           >
             {gespeichert ? <span className="flex items-center justify-center gap-2"><Check size={14} /> {t('saved')}</span> : t('submitUpdateBonusTips')}
           </button>

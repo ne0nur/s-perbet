@@ -900,7 +900,7 @@ export function ProfilePage() {
           onClick={() => setActiveTab('overview')}
           className={`shrink-0 snap-start px-3 py-2 rounded-xl text-[10px] md:text-xs font-mono uppercase tracking-wider transition-all duration-200 cursor-pointer text-center whitespace-nowrap ${
             activeTab === 'overview'
-              ? 'bg-primary-container text-on-primary-container font-black shadow-[0_2px_10px_rgba(251,191,36,0.15)] border border-primary/20 scale-[1.01]'
+              ? 'bg-primary-container text-on-primary-container font-black shadow-[0_2px_10px_rgba(var(--primary-rgb),0.15)] border border-primary/20 scale-[1.01]'
               : 'text-on-surface-variant hover:text-on-surface hover:bg-white/5 border border-transparent'
           }`}
         >
@@ -910,7 +910,7 @@ export function ProfilePage() {
           onClick={() => setActiveTab('achievements')}
           className={`shrink-0 snap-start relative px-3 py-2 rounded-xl text-[10px] md:text-xs font-mono uppercase tracking-wider transition-all duration-200 cursor-pointer text-center whitespace-nowrap ${
             activeTab === 'achievements'
-              ? 'bg-primary-container text-on-primary-container font-black shadow-[0_2px_10px_rgba(251,191,36,0.15)] border border-primary/20 scale-[1.01]'
+              ? 'bg-primary-container text-on-primary-container font-black shadow-[0_2px_10px_rgba(var(--primary-rgb),0.15)] border border-primary/20 scale-[1.01]'
               : 'text-on-surface-variant hover:text-on-surface hover:bg-white/5 border border-transparent'
           }`}
         >
@@ -923,7 +923,7 @@ export function ProfilePage() {
           onClick={() => setActiveTab('bonus')}
           className={`shrink-0 snap-start px-3 py-2 rounded-xl text-[10px] md:text-xs font-mono uppercase tracking-wider transition-all duration-200 cursor-pointer text-center whitespace-nowrap ${
             activeTab === 'bonus'
-              ? 'bg-primary-container text-on-primary-container font-black shadow-[0_2px_10px_rgba(251,191,36,0.15)] border border-primary/20 scale-[1.01]'
+              ? 'bg-primary-container text-on-primary-container font-black shadow-[0_2px_10px_rgba(var(--primary-rgb),0.15)] border border-primary/20 scale-[1.01]'
               : 'text-on-surface-variant hover:text-on-surface hover:bg-white/5 border border-transparent'
           }`}
         >
@@ -933,7 +933,7 @@ export function ProfilePage() {
           onClick={() => setActiveTab('settings')}
           className={`shrink-0 snap-start px-3 py-2 rounded-xl text-[10px] md:text-xs font-mono uppercase tracking-wider transition-all duration-200 cursor-pointer text-center whitespace-nowrap ${
             activeTab === 'settings'
-              ? 'bg-primary-container text-on-primary-container font-black shadow-[0_2px_10px_rgba(251,191,36,0.15)] border border-primary/20 scale-[1.01]'
+              ? 'bg-primary-container text-on-primary-container font-black shadow-[0_2px_10px_rgba(var(--primary-rgb),0.15)] border border-primary/20 scale-[1.01]'
               : 'text-on-surface-variant hover:text-on-surface hover:bg-white/5 border border-transparent'
           }`}
         >
@@ -1010,7 +1010,7 @@ export function ProfilePage() {
                   value={language}
                   onChange={(e) => setLanguage(e.target.value as 'de' | 'en' | 'tr')}
                   className="w-full bg-black/30 border border-outline-variant rounded-md px-3 py-2.5 text-on-surface
-                             font-mono text-xs focus:border-primary-container focus:outline-none focus:shadow-[0_0_10px_rgba(251,191,36,0.2)]
+                             font-mono text-xs focus:border-primary-container focus:outline-none focus:shadow-[0_0_10px_rgba(var(--primary-rgb),0.2)]
                              transition-all duration-200 cursor-pointer"
                 >
                   <option value="de" className="bg-surface-container text-on-surface">Deutsch (Standard)</option>

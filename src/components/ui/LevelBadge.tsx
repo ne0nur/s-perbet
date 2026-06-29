@@ -21,8 +21,8 @@ function getParticleGlow(level: number): string {
   if (level >= 30) return 'rgba(255,255,255,0.7)';    // pure platinum
   if (level >= 24) return 'rgba(226,232,240,0.65)';    // cool platinum
   if (level >= 20) return 'rgba(254,215,170,0.65)';    // warm platinum
-  if (level >= 10) return 'rgba(251,191,36,0.55)';     // soft gold
-  return 'rgba(251,191,36,0.4)';                        // subtle gold
+  if (level >= 10) return 'rgba(var(--primary-rgb),0.55)';     // soft gold
+  return 'rgba(var(--primary-rgb),0.4)';                        // subtle gold
 }
 
 export function LevelBadge({ level, className = '', children, ...props }: LevelBadgeProps) {

@@ -275,8 +275,8 @@ input, textarea, [contenteditable], .selectable-text {
   background: rgba(30, 41, 59, 0.4);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(251, 191, 36, 0.3);
-  box-shadow: 0 0 15px rgba(251, 191, 36, 0.1);
+  border: 1px solid rgba(var(--primary-rgb),0.3);
+  box-shadow: 0 0 15px rgba(var(--primary-rgb),0.1);
 }
 
 .glass-card {
@@ -449,7 +449,7 @@ body {
 @media (hover: hover) {
   .card-lift:hover {
     transform: translateY(-1px);
-    border-color: rgba(251, 191, 36, 0.15);
+    border-color: rgba(var(--primary-rgb),0.15);
   }
 }
 
@@ -511,7 +511,7 @@ body {
    Focus Ring (sichtbarer für Accessibility)
    ============================================ */
 .focus-ring:focus-visible {
-  outline: 2px solid rgba(251, 191, 36, 0.6);
+  outline: 2px solid rgba(var(--primary-rgb),0.6);
   outline-offset: 2px;
 }
 
@@ -909,7 +909,7 @@ body {
 .animate-football-kick {
   position: absolute;
   font-size: 2.5rem;
-  filter: drop-shadow(0 0 10px rgba(251, 191, 36, 0.4));
+  filter: drop-shadow(0 0 10px rgba(var(--primary-rgb),0.4));
   animation: footballKick 1.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
   z-index: 50;
   pointer-events: none;
@@ -947,12 +947,12 @@ body {
    ============================================ */
 @keyframes glowPulse {
   0%, 100% {
-    border-color: rgba(251, 191, 36, 0.4);
-    box-shadow: 0 0 8px rgba(251, 191, 36, 0.15);
+    border-color: rgba(var(--primary-rgb),0.4);
+    box-shadow: 0 0 8px rgba(var(--primary-rgb),0.15);
   }
   50% {
-    border-color: rgba(251, 191, 36, 0.95);
-    box-shadow: 0 0 20px rgba(251, 191, 36, 0.5);
+    border-color: rgba(var(--primary-rgb),0.95);
+    box-shadow: 0 0 20px rgba(var(--primary-rgb),0.5);
   }
 }
 .animate-glow-pulse {
@@ -1176,7 +1176,7 @@ body {
     0 0 10px currentColor,
     0 0 24px currentColor,
     0 0 44px currentColor,
-    0 0 70px rgba(251,191,36,0.6),
+    0 0 70px rgba(var(--primary-rgb),0.6),
     0 2px 6px rgba(0,0,0,0.9);
 }
 
@@ -1326,4 +1326,17 @@ html {
   --on-primary-fixed: #31111d;
   --on-primary-fixed-variant: #4e1f32;
   --primary-rgb: 236, 72, 153;
+}
+
+[data-theme="teal"] {
+  --primary: #80d5d4;
+  --on-primary: #003736;
+  --primary-container: #14b8a6;
+  --on-primary-container: #00201f;
+  --inverse-primary: #006a68;
+  --primary-fixed: #9cf1f0;
+  --primary-fixed-dim: #2dd4bf;
+  --on-primary-fixed: #00201f;
+  --on-primary-fixed-variant: #00504f;
+  --primary-rgb: 20, 184, 166;
 }

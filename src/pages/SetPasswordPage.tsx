@@ -57,7 +57,7 @@ export function SetPasswordPage() {
               type={zeigePasswort ? 'text' : 'password'}
               value={passwort} onChange={(e) => setPasswort(e.target.value)}
               className="w-full bg-black/30 border border-outline-variant rounded-md px-4 py-2.5 text-on-surface
-                         font-mono text-sm focus:border-primary-container focus:outline-none focus:shadow-[0_0_10px_rgba(251,191,36,0.2)]"
+                         font-mono text-sm focus:border-primary-container focus:outline-none focus:shadow-[0_0_10px_rgba(var(--primary-rgb),0.2)]"
               placeholder="••••••" required minLength={6} autoFocus
             />
             <button type="button" onClick={() => setZeigePasswort(!zeigePasswort)}
@@ -81,7 +81,7 @@ export function SetPasswordPage() {
         {fehler && <p className="text-error text-[11px] font-mono bg-error-container/20 rounded-md px-3 py-2">{fehler}</p>}
         <button type="submit" disabled={passwort.length < 6 || passwort !== bestaetigung}
           className="w-full bg-primary-container text-on-primary font-bold text-sm py-3 rounded-md
-                     shadow-[0_0_15px_rgba(251,191,36,0.15)] active:scale-95 transition-transform
+                     shadow-[0_0_15px_rgba(var(--primary-rgb),0.15)] active:scale-95 transition-transform
                      disabled:opacity-50 disabled:cursor-not-allowed">
           {t('savePassword')}
         </button>

@@ -93,7 +93,7 @@ function CompareBar({ label, myVal, rivalVal }: { label: string, myVal: number, 
 
   if (myVal > rivalVal) {
     myColor = 'text-primary font-bold'
-    barMyColor = 'bg-primary shadow-[0_0_8px_rgba(251,191,36,0.6)] z-10'
+    barMyColor = 'bg-primary shadow-[0_0_8px_rgba(var(--primary-rgb),0.6)] z-10'
     barRivalColor = 'bg-red-500/50'
   } else if (rivalVal > myVal) {
     rivalColor = 'text-red-400 font-bold'

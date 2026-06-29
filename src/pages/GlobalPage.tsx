@@ -23,6 +23,7 @@ interface RanglisteEintrag {
   achievements_count?: number
   is_admin?: boolean
   trend?: number
+  displayRank?: string
 }
 
 interface BonusStat {
@@ -98,7 +99,7 @@ function LeaderboardSection({
             >
               <div className={`flex items-center justify-center rounded-full mb-1 ${
                 tie1_2
-                  ? 'w-12 h-12 bg-gradient-to-br from-yellow-300 via-amber-400 to-yellow-600 shadow-[0_0_15px_rgba(251,191,36,0.6)]'
+                  ? 'w-12 h-12 bg-gradient-to-br from-yellow-300 via-amber-400 to-yellow-600 shadow-[0_0_15px_rgba(var(--primary-rgb),0.6)]'
                   : 'w-8 h-8 bg-gradient-to-br from-slate-200 to-slate-400 shadow-[0_0_10px_rgba(148,163,184,0.5)]'
               }`}>
                 {tie1_2 ? <Crown size={24} className="text-yellow-900" /> : <Medal size={16} className="text-slate-700" />}
@@ -133,7 +134,7 @@ function LeaderboardSection({
                 : 'border-transparent hover:bg-white/5'
             }`}
           >
-            <div className="w-12 h-12 flex items-center justify-center bg-gradient-to-br from-yellow-300 via-amber-400 to-yellow-600 rounded-full shadow-[0_0_15px_rgba(251,191,36,0.6)] mb-1">
+            <div className="w-12 h-12 flex items-center justify-center bg-gradient-to-br from-yellow-300 via-amber-400 to-yellow-600 rounded-full shadow-[0_0_15px_rgba(var(--primary-rgb),0.6)] mb-1">
               <Crown size={24} className="text-yellow-900" />
             </div>
             <AvatarLightbox src={top3[0]?.avatar_url} username={top3[0]?.username || ''} size="md" showLevel levelBadge={
@@ -350,7 +351,7 @@ function StatsSection({
                 onClick={() => setActiveStatTournament(tName)}
                 className={`flex-1 min-w-[80px] py-1.5 rounded-lg text-[9px] xs:text-[10px] font-mono font-black uppercase tracking-wider transition-all duration-200 cursor-pointer text-center whitespace-nowrap ${
                   activeStatTournament === tName
-                    ? 'bg-primary-container text-on-primary-container shadow-[0_1.5px_6px_rgba(251,191,36,0.1)] border border-primary/25 scale-[1.01]'
+                    ? 'bg-primary-container text-on-primary-container shadow-[0_1.5px_6px_rgba(var(--primary-rgb),0.1)] border border-primary/25 scale-[1.01]'
                     : 'text-on-surface-variant hover:text-on-surface hover:bg-white/5 border border-transparent'
                 }`}
               >
@@ -399,7 +400,7 @@ function StatsSection({
                             <div className="h-2 w-full bg-surface-container-highest rounded-full overflow-hidden p-[1px] border border-surface-container-high">
                               <div
                                 className={`h-full rounded-full transition-all duration-1000 ${
-                                  isFirst ? `${barColor} shadow-[0_0_8px_rgba(251,191,36,0.25)]` : 'bg-blue-500/50'
+                                  isFirst ? `${barColor} shadow-[0_0_8px_rgba(var(--primary-rgb),0.25)]` : 'bg-blue-500/50'
                                 }`}
                                 style={{ width: `${item.percentage}%` }}
                               />
@@ -517,7 +518,12 @@ export function GlobalPage() {
           // Fetch all tips for these top users to evaluate achievements
           const { data: allUsersTips } = await supabase
             .from('tips')
-            .select('*, matches(id, spieltag, status, tournament, heim_team, gast_team, tore_heim, tore_gast, anpfiff)')
+            .select(`
+                *,
+                matches (
+                  id, spieltag, status, heim_team, gast_team, anpfiff, tore_heim, tore_gast, tournament
+                )
+              `)
             .in('user_id', userIds)
 
           const tipsByUser: Record<string, TipWithMatch[]> = {}
@@ -528,6 +534,17 @@ export function GlobalPage() {
               }
               tipsByUser[t.user_id].push(t as unknown as TipWithMatch)
             })
+          }
+
+          // Calculate standard competition ranking
+          let currentRank = 1
+          for (let i = 0; i < rawRangData.length; i++) {
+            if (i > 0 && rawRangData[i].gesamt_punkte < rawRangData[i-1].gesamt_punkte) {
+              currentRank = i + 1
+            }
+            const isTie = i > 0 && rawRangData[i].gesamt_punkte === rawRangData[i-1].gesamt_punkte
+            rawRangData[i]._rank = currentRank
+            rawRangData[i]._displayRank = isTie ? '–' : `#${currentRank}`
           }
 
           rangData = rawRangData.map((userEntry, index) => {
@@ -558,7 +575,7 @@ export function GlobalPage() {
                 gesamt_punkte: userEntry.gesamt_punkte || 0,
                 exakte_treffer: userEntry.exakte_treffer || 0,
                 is_admin: userEntry.is_admin || false,
-                rang: index + 1,
+                rang: userEntry._rank,
                 league_count: 0
               },
               userEntry.avatar_url,
@@ -573,7 +590,8 @@ export function GlobalPage() {
               exakte_treffer: userEntry.exakte_treffer,
               is_admin: userEntry.is_admin,
               achievements_count: unlockedSet.size,
-              trend: userEntry.trend || 0
+              trend: userEntry.trend || 0,
+              displayRank: userEntry._displayRank
             } as RanglisteEintrag
           })
 
@@ -702,18 +720,8 @@ export function GlobalPage() {
   const rest = (() => {
     const raw = rangliste.slice(3)
     if (raw.length === 0) return []
-    const withRanks: Array<RanglisteEintrag & { displayRank: string }> = []
-    let currentRank = 4
-    let lastPoints: number | null = top3[2]?.gesamt_punkte ?? null
-    for (let i = 0; i < raw.length; i++) {
-      if (lastPoints !== null && raw[i].gesamt_punkte !== lastPoints) {
-        currentRank = i + 4
-        lastPoints = raw[i].gesamt_punkte
-      }
-      const isTie = i > 0 && raw[i].gesamt_punkte === raw[i-1].gesamt_punkte
-      withRanks.push({ ...raw[i], displayRank: isTie ? '–' : `#${currentRank}` })
-    }
-    return withRanks
+    // displayRank was already computed during initial mapping!
+    return raw as Array<RanglisteEintrag & { displayRank: string }>
   })()
 
   if (isLaden) {

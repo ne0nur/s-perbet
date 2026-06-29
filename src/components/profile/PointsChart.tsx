@@ -113,7 +113,7 @@ export function PointsChart({ tips }: PointsChartProps) {
               axisLine={false}
               tickLine={false}
             />
-            <Tooltip content={<CustomTooltip />} cursor={{ stroke: 'rgba(251,191,36,0.2)', strokeWidth: 2 }} />
+            <Tooltip content={<CustomTooltip />} cursor={{ stroke: 'rgba(var(--primary-rgb),0.2)', strokeWidth: 2 }} />
             <Line 
               type="monotone" 
               dataKey="punkte" 

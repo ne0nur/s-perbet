@@ -356,7 +356,7 @@ export function LoginPage() {
             onClick={() => setLanguage(lang)}
             className={`px-2.5 py-1 rounded-full text-[10px] font-mono font-bold uppercase transition-all cursor-pointer ${
               language === lang
-                ? 'bg-primary-container text-on-primary-container shadow-[0_0_8px_rgba(251,191,36,0.25)]'
+                ? 'bg-primary-container text-on-primary-container shadow-[0_0_8px_rgba(var(--primary-rgb),0.25)]'
                 : 'text-on-surface-variant hover:text-on-surface'
             }`}
           >
@@ -404,7 +404,7 @@ export function LoginPage() {
                   onChange={(e) => setUsername(e.target.value)}
                   placeholder="dein_username"
                   className="w-full bg-black/40 border border-white/10 hover:border-white/20 rounded-lg px-10 py-2.5 text-on-surface
-                             font-mono text-sm focus:border-primary focus:outline-none focus:shadow-[0_0_15px_rgba(251,191,36,0.25)]
+                             font-mono text-sm focus:border-primary focus:outline-none focus:shadow-[0_0_15px_rgba(var(--primary-rgb),0.25)]
                              transition-all duration-300"
                   required autoFocus autoComplete="username"
                 />
@@ -423,7 +423,7 @@ export function LoginPage() {
                   onChange={(e) => setPasswort(e.target.value)}
                   placeholder="••••••"
                   className="w-full bg-black/40 border border-white/10 hover:border-white/20 rounded-lg px-10 py-2.5 text-on-surface
-                             font-mono text-sm focus:border-primary focus:outline-none focus:shadow-[0_0_15px_rgba(251,191,36,0.25)]
+                             font-mono text-sm focus:border-primary focus:outline-none focus:shadow-[0_0_15px_rgba(var(--primary-rgb),0.25)]
                              transition-all duration-300"
                   required autoComplete="current-password"
                 />
@@ -443,7 +443,7 @@ export function LoginPage() {
 
             <button type="submit" disabled={!username || !passwort || isLaden}
               className="w-full bg-primary-container text-on-primary font-bold text-xs py-3 rounded-md uppercase tracking-wider
-                         shadow-[0_0_15px_rgba(251,191,36,0.15)] active:scale-95 transition-all duration-150
+                         shadow-[0_0_15px_rgba(var(--primary-rgb),0.15)] active:scale-95 transition-all duration-150
                          disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
               {isLaden ? (
                 <div className="w-4 h-4 border-2 border-on-primary border-t-transparent rounded-full animate-spin" />
@@ -530,7 +530,7 @@ export function LoginPage() {
                       onChange={(e) => setForgotUsername(e.target.value)}
                       placeholder="dein_username"
                       className="w-full bg-black/30 border border-outline-variant rounded-md px-10 py-2.5 text-on-surface
-                                 font-mono text-sm focus:border-primary-container focus:outline-none focus:shadow-[0_0_10px_rgba(251,191,36,0.2)]
+                                 font-mono text-sm focus:border-primary-container focus:outline-none focus:shadow-[0_0_10px_rgba(var(--primary-rgb),0.2)]
                                  transition-all duration-200"
                       required
                     />
@@ -547,7 +547,7 @@ export function LoginPage() {
                     onChange={(e) => setForgotEmailHint(e.target.value)}
                     placeholder="z.B. WhatsApp +49..."
                     className="w-full bg-black/30 border border-outline-variant rounded-md px-4 py-2.5 text-on-surface
-                               font-mono text-xs focus:border-primary-container focus:outline-none focus:shadow-[0_0_10px_rgba(251,191,36,0.2)]
+                               font-mono text-xs focus:border-primary-container focus:outline-none focus:shadow-[0_0_10px_rgba(var(--primary-rgb),0.2)]
                                transition-all duration-200"
                   />
                 </div>
@@ -556,7 +556,7 @@ export function LoginPage() {
                   type="submit"
                   disabled={submittingRequest || !forgotUsername.trim()}
                   className="w-full bg-primary-container text-on-primary font-bold text-xs py-3 rounded-md uppercase tracking-wider
-                             shadow-[0_0_15px_rgba(251,191,36,0.15)] active:scale-95 transition-all duration-150
+                             shadow-[0_0_15px_rgba(var(--primary-rgb),0.15)] active:scale-95 transition-all duration-150
                              disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
                 >
                   {submittingRequest ? (
@@ -580,7 +580,7 @@ export function LoginPage() {
                       onChange={(e) => setStatusCheckUsername(e.target.value)}
                       placeholder="dein_username"
                       className="w-full bg-black/30 border border-outline-variant rounded-md px-10 py-2.5 text-on-surface
-                                 font-mono text-sm focus:border-primary-container focus:outline-none focus:shadow-[0_0_10px_rgba(251,191,36,0.2)]
+                                 font-mono text-sm focus:border-primary-container focus:outline-none focus:shadow-[0_0_10px_rgba(var(--primary-rgb),0.2)]
                                  transition-all duration-200"
                       required
                     />
@@ -592,7 +592,7 @@ export function LoginPage() {
                   onClick={handleCheckStatus}
                   disabled={loadingStatus || !statusCheckUsername.trim()}
                   className="w-full bg-primary-container text-on-primary font-bold text-xs py-3 rounded-md uppercase tracking-wider
-                             shadow-[0_0_15px_rgba(251,191,36,0.15)] active:scale-95 transition-all duration-150
+                             shadow-[0_0_15px_rgba(var(--primary-rgb),0.15)] active:scale-95 transition-all duration-150
                              disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
                 >
                   {loadingStatus ? (
@@ -665,7 +665,7 @@ export function LoginPage() {
                 onChange={(e) => setInviteCode(e.target.value)}
                 placeholder="LIG-XXXXXX"
                 className="w-full bg-black/30 border border-outline-variant rounded-md px-4 py-2.5 text-on-surface
-                           font-mono text-sm uppercase text-center focus:border-primary-container focus:outline-none focus:shadow-[0_0_10px_rgba(251,191,36,0.2)]
+                           font-mono text-sm uppercase text-center focus:border-primary-container focus:outline-none focus:shadow-[0_0_10px_rgba(var(--primary-rgb),0.2)]
                            transition-all duration-200"
                 required autoFocus
               />
@@ -680,7 +680,7 @@ export function LoginPage() {
 
             <button type="submit" disabled={!inviteCode.trim() || validatingCode}
               className="w-full bg-primary-container text-on-primary font-bold text-xs py-3 rounded-md uppercase tracking-wider
-                         shadow-[0_0_15px_rgba(251,191,36,0.15)] active:scale-95 transition-all duration-150
+                         shadow-[0_0_15px_rgba(var(--primary-rgb),0.15)] active:scale-95 transition-all duration-150
                          disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
               {validatingCode ? (
                 <div className="w-4 h-4 border-2 border-on-primary border-t-transparent rounded-full animate-spin" />
@@ -736,7 +736,7 @@ export function LoginPage() {
               <button
                 type="button"
                 onClick={() => setView('onboarding')}
-                className="w-full bg-primary-container text-on-primary font-bold text-xs py-3 rounded-md uppercase tracking-wider shadow-[0_0_15px_rgba(251,191,36,0.1)] active:scale-95 transition-all flex items-center justify-center gap-2"
+                className="w-full bg-primary-container text-on-primary font-bold text-xs py-3 rounded-md uppercase tracking-wider shadow-[0_0_15px_rgba(var(--primary-rgb),0.1)] active:scale-95 transition-all flex items-center justify-center gap-2"
               >
                 {t('noAccount')} <Sparkles size={14} />
               </button>
@@ -777,7 +777,7 @@ export function LoginPage() {
                   onChange={(e) => setRegUsername(e.target.value)}
                   placeholder="ali_tippt"
                   className="w-full bg-black/30 border border-outline-variant rounded-md px-10 py-2.5 text-on-surface
-                             font-mono text-sm focus:border-primary-container focus:outline-none focus:shadow-[0_0_10px_rgba(251,191,36,0.2)]
+                             font-mono text-sm focus:border-primary-container focus:outline-none focus:shadow-[0_0_10px_rgba(var(--primary-rgb),0.2)]
                              transition-all duration-200"
                   required autoFocus
                 />
@@ -796,7 +796,7 @@ export function LoginPage() {
                   onChange={(e) => setRegPassword(e.target.value)}
                   placeholder="••••••"
                   className="w-full bg-black/30 border border-outline-variant rounded-md px-10 py-2.5 text-on-surface
-                             font-mono text-sm focus:border-primary-container focus:outline-none focus:shadow-[0_0_10px_rgba(251,191,36,0.2)]
+                             font-mono text-sm focus:border-primary-container focus:outline-none focus:shadow-[0_0_10px_rgba(var(--primary-rgb),0.2)]
                              transition-all duration-200"
                   required
                 />
@@ -819,7 +819,7 @@ export function LoginPage() {
                   onChange={(e) => setRegPasswordConfirm(e.target.value)}
                   placeholder="••••••"
                   className="w-full bg-black/30 border border-outline-variant rounded-md px-10 py-2.5 text-on-surface
-                             font-mono text-sm focus:border-primary-container focus:outline-none focus:shadow-[0_0_10px_rgba(251,191,36,0.2)]
+                             font-mono text-sm focus:border-primary-container focus:outline-none focus:shadow-[0_0_10px_rgba(var(--primary-rgb),0.2)]
                              transition-all duration-200"
                   required
                 />
@@ -835,7 +835,7 @@ export function LoginPage() {
 
             <button type="submit" disabled={isLaden}
               className="w-full bg-primary-container text-on-primary font-bold text-xs py-3 rounded-md uppercase tracking-wider
-                         shadow-[0_0_15px_rgba(251,191,36,0.15)] active:scale-95 transition-all duration-150
+                         shadow-[0_0_15px_rgba(var(--primary-rgb),0.15)] active:scale-95 transition-all duration-150
                          disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
               {isLaden ? (
                 <div className="w-4 h-4 border-2 border-on-primary border-t-transparent rounded-full animate-spin" />

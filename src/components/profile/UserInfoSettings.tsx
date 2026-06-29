@@ -129,7 +129,8 @@ export function UserInfoSettings({
             { id: 'default', color: '#fbbf24' },
             { id: 'blue', color: '#3b82f6' },
             { id: 'red', color: '#ef4444' },
-            { id: 'pink', color: '#ec4899' }
+            { id: 'pink', color: '#ec4899' },
+            { id: 'teal', color: '#14b8a6' }
           ] as const).map(t => {
             const isActive = theme === t.id
             return (

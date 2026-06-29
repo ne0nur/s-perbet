@@ -194,7 +194,27 @@ export function DashboardPage() {
     }
   }, [isDesktop, anzeigeMatches, selectedMatchId])
 
-
+  useEffect(() => {
+    if (anzeigeMatches.length === 0 || filter !== 'alle') return
+    
+    // Auto-Scroll zur relevantesten Begegnung
+    let targetMatch = anzeigeMatches.find(m => m.status === 'live' || m.status === 'upcoming')
+    
+    // Falls keine ausstehend/live sind, nimm das letzte beendete Spiel
+    if (!targetMatch) {
+      targetMatch = [...anzeigeMatches].reverse().find(m => m.status === 'finished')
+    }
+    
+    if (targetMatch) {
+      // Timeout stellt sicher, dass das Element im DOM gerendert ist
+      setTimeout(() => {
+        const el = document.getElementById(`match-card-${targetMatch?.id}`)
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        }
+      }, 100)
+    }
+  }, [anzeigeMatches, filter])
 
   // Lokales Update der Spieltag-Info, wenn sich meineTipps (für den aktuellen Spieltag) ändern
   useEffect(() => {
@@ -265,7 +285,7 @@ export function DashboardPage() {
                     setSelectedTournament(tName)
                     useMatchStore.getState().setSelectedTournament(tName)
                   }}
-                  className={`px-3 py-2 text-[9px] xs:text-[10px] md:text-xs font-mono font-black uppercase tracking-wider rounded-xl whitespace-nowrap transition-all duration-200 cursor-pointer flex items-center gap-2 ${selectedTournament === tName ? 'bg-primary-container text-on-primary-container shadow-[0_2px_8px_rgba(251,191,36,0.15)] border border-primary/20 scale-[1.01]' : 'text-on-surface-variant hover:text-on-surface hover:bg-white/5 border border-transparent'}`}
+                  className={`px-3 py-2 text-[9px] xs:text-[10px] md:text-xs font-mono font-black uppercase tracking-wider rounded-xl whitespace-nowrap transition-all duration-200 cursor-pointer flex items-center gap-2 ${selectedTournament === tName ? 'bg-primary-container text-on-primary-container shadow-[0_2px_8px_rgba(var(--primary-rgb),0.15)] border border-primary/20 scale-[1.01]' : 'text-on-surface-variant hover:text-on-surface hover:bg-white/5 border border-transparent'}`}
                 >
                   <img src={getTournamentLogo(tName)} alt={tName} className="w-5 h-5 object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.6)] brightness-110 shrink-0" onError={(e) => { (e.target as HTMLImageElement).src = `${import.meta.env.BASE_URL}logos/soccer_ball.png` }} />
                   {tName}
@@ -315,7 +335,7 @@ export function DashboardPage() {
                 onClick={() => { setSpieltag(0); ladeMatches(0); }}
                 className={`flex-shrink-0 px-3.5 py-2 rounded-xl text-[9px] xs:text-[10px] md:text-xs font-mono font-black uppercase tracking-wider transition-all duration-200 cursor-pointer ${
                   aktuellerSpieltag === 0
-                    ? 'bg-primary-container text-on-primary-container shadow-[0_2px_8px_rgba(251,191,36,0.15)] border border-primary/20 scale-[1.01]'
+                    ? 'bg-primary-container text-on-primary-container shadow-[0_2px_8px_rgba(var(--primary-rgb),0.15)] border border-primary/20 scale-[1.01]'
                     : 'text-on-surface-variant hover:text-on-surface hover:bg-white/5 border border-transparent'
                 }`}
               >
@@ -335,12 +355,12 @@ export function DashboardPage() {
 
                     let btnStyle = 'text-on-surface-variant hover:text-on-surface hover:bg-white/5 border border-transparent'
                     if (isActive) {
-                      btnStyle = 'bg-primary-container text-on-primary-container font-black shadow-[0_2px_8px_rgba(251,191,36,0.15)] border border-primary/20 scale-[1.01]'
+                      btnStyle = 'bg-primary-container text-on-primary-container font-black shadow-[0_2px_8px_rgba(var(--primary-rgb),0.15)] border border-primary/20 scale-[1.01]'
                     } else if (st < aktuellerSpieltag) {
                       if (fullyTipped) {
                         btnStyle = 'border border-green-500/20 text-green-400 bg-green-500/5 hover:bg-green-500/10'
                       } else {
-                        btnStyle = 'border border-amber-500/10 text-amber-500/70 bg-amber-500/5 hover:bg-amber-500/10 opacity-70'
+                        btnStyle = 'border border-primary/10 text-primary/70 bg-primary/5 hover:bg-primary/10 opacity-70'
                       }
                     }
 
@@ -375,7 +395,7 @@ export function DashboardPage() {
                   onClick={() => setFilter(f)}
                   className={`text-[9px] font-mono font-black uppercase tracking-wider px-3 py-1.5 rounded-lg transition-all duration-200 cursor-pointer ${
                     filter === f
-                      ? 'bg-primary-container text-on-primary-container shadow-[0_1.5px_6px_rgba(251,191,36,0.1)] border border-primary/25 scale-[1.01]'
+                      ? 'bg-primary-container text-on-primary-container shadow-[0_1.5px_6px_rgba(var(--primary-rgb),0.1)] border border-primary/25 scale-[1.01]'
                       : 'text-on-surface-variant hover:text-on-surface hover:bg-white/5 border border-transparent'
                   }`}
                 >
@@ -467,7 +487,7 @@ export function DashboardPage() {
                       {tourneyMatches.map((match: Match) => {
                         const isSelected = selectedMatchId === match.id
                         return (
-                          <div key={match.id} className="stagger-in">
+                          <div key={match.id} id={`match-card-${match.id}`} className="stagger-in">
                             <MatchCard
                               match={match}
                               trendStats={trendStatsMap[match.id]}
@@ -478,7 +498,7 @@ export function DashboardPage() {
                                   navigate(`/match/${match.id}`)
                                 }
                               }}
-                              className={isSelected && isDesktop ? 'border-primary/50 shadow-[0_0_15px_rgba(251,191,36,0.15)] bg-surface-container-high/60 scale-[1.01]' : ''}
+                              className={isSelected && isDesktop ? 'border-primary/50 shadow-[0_0_15px_rgba(var(--primary-rgb),0.15)] bg-surface-container-high/60 scale-[1.01]' : ''}
                             />
                           </div>
                         )

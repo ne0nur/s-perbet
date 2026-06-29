@@ -150,10 +150,6 @@ export function LeaguePage() {
         meta[liga.id] = { mitglieder: count || 0, rang: 0 }
       }
       setLigaMeta(meta)
-      
-      if (ligenData.length === 1) {
-        setAktiveLiga(ligenData[0])
-      }
     }
     setIsLaden(false)
   }, [user])
@@ -569,7 +565,7 @@ export function LeaguePage() {
               <div className="flex bg-surface-container/50 border border-white/5 p-1 rounded-2xl mb-3 mx-4 md:mx-0 overflow-x-auto hide-scrollbar backdrop-blur-md gap-1">
                 <button
                   onClick={() => setViewTournament('Alle')}
-                  className={`px-3 py-2 text-[9px] xs:text-[10px] md:text-xs font-mono font-black uppercase tracking-wider rounded-xl whitespace-nowrap transition-all duration-200 cursor-pointer ${viewTournament === 'Alle' ? 'bg-primary-container text-on-primary-container shadow-[0_2px_8px_rgba(251,191,36,0.15)] border border-primary/20 scale-[1.01]' : 'text-on-surface-variant hover:text-on-surface hover:bg-white/5 border border-transparent'}`}
+                  className={`px-3 py-2 text-[9px] xs:text-[10px] md:text-xs font-mono font-black uppercase tracking-wider rounded-xl whitespace-nowrap transition-all duration-200 cursor-pointer ${viewTournament === 'Alle' ? 'bg-primary-container text-on-primary-container shadow-[0_2px_8px_rgba(var(--primary-rgb),0.15)] border border-primary/20 scale-[1.01]' : 'text-on-surface-variant hover:text-on-surface hover:bg-white/5 border border-transparent'}`}
                 >
                   {t('filterAll')}
                 </button>
@@ -577,7 +573,7 @@ export function LeaguePage() {
                   <button
                     key={t}
                     onClick={() => setViewTournament(t)}
-                    className={`px-3 py-2 text-[9px] xs:text-[10px] md:text-xs font-mono font-black uppercase tracking-wider rounded-xl whitespace-nowrap transition-all duration-200 cursor-pointer flex items-center gap-2 ${viewTournament === t ? 'bg-primary-container text-on-primary-container shadow-[0_2px_8px_rgba(251,191,36,0.15)] border border-primary/20 scale-[1.01]' : 'text-on-surface-variant hover:text-on-surface hover:bg-white/5 border border-transparent'}`}
+                    className={`px-3 py-2 text-[9px] xs:text-[10px] md:text-xs font-mono font-black uppercase tracking-wider rounded-xl whitespace-nowrap transition-all duration-200 cursor-pointer flex items-center gap-2 ${viewTournament === t ? 'bg-primary-container text-on-primary-container shadow-[0_2px_8px_rgba(var(--primary-rgb),0.15)] border border-primary/20 scale-[1.01]' : 'text-on-surface-variant hover:text-on-surface hover:bg-white/5 border border-transparent'}`}
                   >
                     <img src={getTournamentLogo(t)} alt={t} className="w-5 h-5 object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.6)] brightness-110 shrink-0" />
                     {t}
@@ -617,7 +613,7 @@ export function LeaguePage() {
                     onClick={() => setViewSpieltag('gesamt')}
                     className={`shrink-0 px-3.5 py-2 rounded-xl text-[9px] xs:text-[10px] md:text-xs font-mono font-black uppercase tracking-wider whitespace-nowrap transition-all duration-200 cursor-pointer ${
                       viewSpieltag === 'gesamt'
-                        ? 'bg-primary-container text-on-primary-container shadow-[0_2px_8px_rgba(251,191,36,0.15)] border border-primary/20 scale-[1.01]'
+                        ? 'bg-primary-container text-on-primary-container shadow-[0_2px_8px_rgba(var(--primary-rgb),0.15)] border border-primary/20 scale-[1.01]'
                         : 'text-on-surface-variant hover:text-on-surface hover:bg-white/5 border border-transparent'
                     }`}
                   >
@@ -633,7 +629,7 @@ export function LeaguePage() {
                         <button key={t.key} data-st={t.key} onClick={() => setViewSpieltag(t.key)}
                           className={`px-3 py-2 rounded-xl text-[9px] xs:text-[10px] md:text-xs font-mono font-black uppercase tracking-wider whitespace-nowrap transition-all duration-200 cursor-pointer ${
                             viewSpieltag === t.key
-                              ? 'bg-primary-container text-on-primary-container shadow-[0_2px_8px_rgba(251,191,36,0.15)] border border-primary/20 scale-[1.01]'
+                              ? 'bg-primary-container text-on-primary-container shadow-[0_2px_8px_rgba(var(--primary-rgb),0.15)] border border-primary/20 scale-[1.01]'
                               : 'text-on-surface-variant hover:text-on-surface hover:bg-white/5 border border-transparent'
                           }`}>
                           {t.label}
@@ -734,11 +730,18 @@ export function LeaguePage() {
                                       <span className="text-[10px] text-on-surface-variant/25"></span>
                                     </td>
                                   )
+
+                                  // Versteckte Tipps: Bei bevorstehenden Spielen fremde Tipps verbergen
+                                  const isUpcoming = match.status === 'upcoming'
+                                  const showHidden = isUpcoming && !isMe
+                                  const displayHeim = showHidden ? '-' : tipp.heim
+                                  const displayGast = showHidden ? '-' : tipp.gast
+
                                   return (
                                     <td key={match.id} className={`py-2.5 px-1 text-center rounded ${punkteValue ? punkteKlasse(punkteValue) : ''}`}>
                                       <div className="flex flex-col items-center">
-                                        <span className={`text-[10px] font-mono leading-tight ${hasResult ? 'text-on-surface font-bold' : 'text-on-surface-variant/60'}`}>
-                                          {tipp.heim}:{tipp.gast}
+                                        <span className={`text-[10px] font-mono leading-tight ${hasResult ? 'text-on-surface font-bold' : showHidden ? 'text-on-surface-variant/40' : 'text-on-surface-variant/60'}`}>
+                                          {displayHeim}:{displayGast}
                                         </span>
                                         {punkteValue != null && punkteValue > 0 && (
                                           <span className="text-[8px] font-mono leading-tight">{punkteValue}{subscriptPunkte(punkteValue)}</span>
@@ -917,7 +920,11 @@ export function LeaguePage() {
             {meineLigen.map(liga => {
               const meta = ligaMeta[liga.id]
               return (
-                <button key={liga.id} onClick={() => setAktiveLiga(liga)}
+                <button key={liga.id} onClick={() => {
+                  setAktiveLiga(liga)
+                  setViewTournament('Alle')
+                  setViewSpieltag('gesamt')
+                }}
                   className="w-full card-lift bg-surface-container-low border border-surface-container-high rounded-lg p-4 text-left group">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-bold text-on-surface">{liga.name}</span>

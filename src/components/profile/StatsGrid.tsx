@@ -60,7 +60,7 @@ export function StatsGrid({ stats, remainingPoints = { sl: 0, cl: 0, total: 0 },
           </div>
           <div className="flex w-full h-1.5 rounded-full overflow-hidden border border-surface-container-high bg-surface-container-highest">
             <div
-              className="bg-primary h-full shadow-[0_0_8px_rgba(251,191,36,0.3)] transition-all duration-1000"
+              className="bg-primary h-full shadow-[0_0_8px_rgba(var(--primary-rgb),0.3)] transition-all duration-1000"
               style={{ width: `${Math.max(5, (gesamtPunkte / (gesamtPunkte + remainingPoints.total || 1)) * 100)}%` }}
             />
             <div

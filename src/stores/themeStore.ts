@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
-export type AppTheme = 'default' | 'blue' | 'red' | 'pink'
+export type AppTheme = 'default' | 'blue' | 'red' | 'pink' | 'teal'
 
 interface ThemeState {
   theme: AppTheme

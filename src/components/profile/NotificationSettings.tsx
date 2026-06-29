@@ -41,7 +41,7 @@ export function NotificationSettings({
           onClick={handleToggleAnpfiff}
           className={`relative w-11 h-6 rounded-full transition-all duration-300 focus-ring border ${
             notifyAnpfiff
-              ? 'bg-primary-container border-primary-container/30 shadow-[0_0_10px_rgba(251,191,36,0.25)]'
+              ? 'bg-primary-container border-primary-container/30 shadow-[0_0_10px_rgba(var(--primary-rgb),0.25)]'
               : 'bg-black/30 border-white/10'
           }`}
         >
@@ -70,7 +70,7 @@ export function NotificationSettings({
           onClick={handleToggleChat}
           className={`relative w-11 h-6 rounded-full transition-all duration-300 focus-ring border ${
             notifyChat
-              ? 'bg-primary-container border-primary-container/30 shadow-[0_0_10px_rgba(251,191,36,0.25)]'
+              ? 'bg-primary-container border-primary-container/30 shadow-[0_0_10px_rgba(var(--primary-rgb),0.25)]'
               : 'bg-black/30 border-white/10'
           }`}
         >

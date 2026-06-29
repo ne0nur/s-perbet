@@ -146,7 +146,7 @@ export function MatchDetailPanel({ matchId, onClose }: MatchDetailPanelProps) {
             onClick={() => setActiveTab('tips')}
             className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-[10px] font-mono font-bold uppercase tracking-wider transition-all border ${
               activeTab === 'tips'
-                ? 'bg-primary-container/15 text-primary border-primary-container/20 shadow-[0_0_10px_rgba(251,191,36,0.03)]'
+                ? 'bg-primary-container/15 text-primary border-primary-container/20 shadow-[0_0_10px_rgba(var(--primary-rgb),0.03)]'
                 : 'border-transparent text-on-surface-variant hover:text-on-surface'
             }`}
           >
@@ -156,7 +156,7 @@ export function MatchDetailPanel({ matchId, onClose }: MatchDetailPanelProps) {
             onClick={() => setActiveTab('chat')}
             className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-[10px] font-mono font-bold uppercase tracking-wider transition-all border ${
               activeTab === 'chat'
-                ? 'bg-primary-container/15 text-primary border-primary-container/20 shadow-[0_0_10px_rgba(251,191,36,0.03)]'
+                ? 'bg-primary-container/15 text-primary border-primary-container/20 shadow-[0_0_10px_rgba(var(--primary-rgb),0.03)]'
                 : 'border-transparent text-on-surface-variant hover:text-on-surface'
             }`}
           >
