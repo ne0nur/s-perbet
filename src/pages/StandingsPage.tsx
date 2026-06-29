@@ -4,7 +4,6 @@ import { supabase } from '../lib/supabase'
 import type { Match } from '../stores/matchStore'
 import { getTeamLogo } from '../lib/teamLogos'
 import { TeamInspector } from '../components/TeamInspector'
-import { TournamentBracket } from '../components/TournamentBracket'
 import { useTranslation } from '../utils/translations'
 import { getTournamentLogo } from '../lib/utils'
 import { useTournamentStore } from '../stores/tournamentStore'
@@ -113,7 +112,7 @@ export function StandingsPage() {
   const [selectedTeam, setSelectedTeam] = useState<string | null>(null)
   const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 1024)
   const [viewTournament, setViewTournament] = useState<string>('')
-  const [viewPhase, setViewPhase] = useState<'table' | 'baum'>('table')
+  const [viewPhase, setViewPhase] = useState<number | 'table'>('table')
   const [availablePhases, setAvailablePhases] = useState<number[]>([])
   const [availableTournaments, setAvailableTournaments] = useState<string[]>([])
   // Konfig-Map: tournamentName → TournamentConfig
@@ -342,16 +341,37 @@ export function StandingsPage() {
         <div className="flex bg-surface-container/40 border border-white/5 p-1 rounded-2xl mb-4 overflow-x-auto hide-scrollbar gap-1.5 backdrop-blur-sm">
           <button
             onClick={() => setViewPhase('table')}
-            className={`flex-1 px-4 py-2.5 text-[9px] xs:text-[10px] md:text-xs font-mono font-black uppercase tracking-wider rounded-xl whitespace-nowrap transition-all duration-200 cursor-pointer text-center ${viewPhase === 'table' ? 'bg-primary-container text-on-primary-container shadow-[0_2px_8px_rgba(251,191,36,0.15)] border border-primary/20 scale-[1.01]' : 'text-on-surface-variant hover:text-on-surface hover:bg-white/5 border border-transparent'}`}
+            className={`px-4 py-2.5 text-[9px] xs:text-[10px] md:text-xs font-mono font-black uppercase tracking-wider rounded-xl whitespace-nowrap transition-all duration-200 cursor-pointer text-center ${viewPhase === 'table' ? 'bg-primary-container text-on-primary-container shadow-[0_2px_8px_rgba(251,191,36,0.15)] border border-primary/20 scale-[1.01]' : 'text-on-surface-variant hover:text-on-surface hover:bg-white/5 border border-transparent'}`}
           >
             {viewTournament.toLowerCase().includes('world cup') || viewTournament.toLowerCase().includes('wm') ? 'Gruppenphase' : t('clLeaguePhaseTable')}
           </button>
-          <button
-            onClick={() => setViewPhase('baum')}
-            className={`flex-1 px-4 py-2.5 text-[9px] xs:text-[10px] md:text-xs font-mono font-black uppercase tracking-wider rounded-xl whitespace-nowrap transition-all duration-200 cursor-pointer text-center ${viewPhase === 'baum' ? 'bg-primary-container text-on-primary-container shadow-[0_2px_8px_rgba(251,191,36,0.15)] border border-primary/20 scale-[1.01]' : 'text-on-surface-variant hover:text-on-surface hover:bg-white/5 border border-transparent'}`}
-          >
-            {t('clKnockoutPhase')}
-          </button>
+          
+          {availablePhases.map(phase => {
+            let label = `Phase ${phase}`
+            if (viewTournament === 'World Cup 2026' || viewTournament.includes('WM')) {
+              if (phase === 4) label = t('koPhase32')
+              else if (phase === 5) label = t('koPhase16')
+              else if (phase === 6) label = t('koPhase8')
+              else if (phase === 7) label = t('koPhase4')
+              else if (phase === 8) label = t('koPhase2')
+            } else if (viewTournament === 'Champions League') {
+              if (phase === 9) label = t('clRoundPlayoffs')
+              else if (phase === 10) label = t('clRoundLast16')
+              else if (phase === 11) label = t('clRoundQuarter')
+              else if (phase === 12) label = t('clRoundSemi')
+              else if (phase === 13) label = t('clRoundFinal')
+            }
+
+            return (
+              <button
+                key={phase}
+                onClick={() => setViewPhase(phase)}
+                className={`px-4 py-2.5 text-[9px] xs:text-[10px] md:text-xs font-mono font-black uppercase tracking-wider rounded-xl whitespace-nowrap transition-all duration-200 cursor-pointer text-center ${viewPhase === phase ? 'bg-primary-container text-on-primary-container shadow-[0_2px_8px_rgba(251,191,36,0.15)] border border-primary/20 scale-[1.01]' : 'text-on-surface-variant hover:text-on-surface hover:bg-white/5 border border-transparent'}`}
+              >
+                {label}
+              </button>
+            )
+          })}
         </div>
       )}
 
@@ -362,8 +382,8 @@ export function StandingsPage() {
           <div>
             <h2 className="text-sm font-black text-on-surface uppercase tracking-wider">{viewTournament}</h2>
             <p className="text-[10px] font-mono text-on-surface-variant/50">
-              {viewPhase === 'baum' 
-                ? 'K.o.-Phase · Turnierbaum' 
+              {viewPhase !== 'table' 
+                ? `K.o.-Phase · Phase ${viewPhase}` 
                 : activeConfig?.has_knockout 
                   ? `Gruppenphase · ${t('clRoundLeague', { st: activeConfig.group_stage_matchdays })}`
                   : `Saison ${saison}`}
@@ -372,10 +392,59 @@ export function StandingsPage() {
         </div>
       )}
 
-      {viewPhase === 'baum' ? (
-        // ─── Turnierbaum (K.o.) ───
-        <div className="w-full">
-          <TournamentBracket matches={matchesForPhase} config={activeConfig} />
+      {viewPhase !== 'table' ? (
+        // ─── K.o.-Phase Matches ───
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 w-full">
+          {matchesForPhase.filter(m => m.spieltag === viewPhase).map(m => {
+            const formatTeamName = (name: string) => {
+              const lower = name.toLowerCase()
+              if (lower.includes('winner') || lower.includes('loser') || lower.includes('round of') || lower.includes('tbd')) {
+                return 'TBD'
+              }
+              return name
+            }
+
+            const h = formatTeamName(m.heim_team)
+            const a = formatTeamName(m.gast_team)
+            const ht = m.tore_heim
+            const at = m.tore_gast
+            const isFinished = m.status === 'finished'
+            const isLive = m.status === 'live'
+            const winner = isFinished && ht !== null && at !== null ? (ht > at ? h : at > ht ? a : null) : null
+
+            return (
+              <div key={m.id} className={`bg-white/5 backdrop-blur-md border rounded-xl p-4 text-sm relative transition-colors flex flex-col gap-3 shadow-sm ${
+                isLive ? 'border-red-500/50 shadow-[0_0_12px_rgba(239,68,68,0.15)]' :
+                isFinished ? 'border-white/10' : 'border-white/10'
+              }`}>
+                <div className={`flex justify-between items-center ${winner === h ? 'font-bold text-green-400' : 'text-on-surface'}`}>
+                  <div className="flex items-center gap-2 truncate">
+                    <img src={getTeamLogo(h)} alt="" className="w-5 h-5 object-contain opacity-90" />
+                    <span className="truncate">{h}</span>
+                  </div>
+                  <span className="text-right font-mono text-lg">{isFinished || isLive ? ht : '-'}</span>
+                </div>
+                <div className={`flex justify-between items-center ${winner === a ? 'font-bold text-green-400' : 'text-on-surface'}`}>
+                  <div className="flex items-center gap-2 truncate">
+                    <img src={getTeamLogo(a)} alt="" className="w-5 h-5 object-contain opacity-90" />
+                    <span className="truncate">{a}</span>
+                  </div>
+                  <span className="text-right font-mono text-lg">{isFinished || isLive ? at : '-'}</span>
+                </div>
+                {isLive && (
+                  <div className="absolute top-2 right-2 text-[9px] text-red-400 font-mono flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse" />
+                    LIVE
+                  </div>
+                )}
+              </div>
+            )
+          })}
+          {matchesForPhase.filter(m => m.spieltag === viewPhase).length === 0 && (
+            <div className="col-span-full bg-surface-container-low border border-surface-container-high rounded-xl p-8 text-center">
+              <p className="text-on-surface-variant font-mono text-sm">Keine Spiele für diese Phase gefunden.</p>
+            </div>
+          )}
         </div>
       ) : (
         // ─── Tabellen-Ansicht ───
