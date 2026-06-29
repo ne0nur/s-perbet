@@ -199,7 +199,7 @@ export function LeaguePage() {
     // Nur Matches für aktuellen viewSpieltag und viewTournament
     let activeMatches = allMatches
     if (viewTournament !== 'Alle') {
-      activeMatches = activeMatches.filter(m => (m.tournament || 'Süper Lik') === viewTournament)
+      activeMatches = activeMatches.filter(m => (m.tournament || 'Süper Lig') === viewTournament)
     }
     if (viewSpieltag !== 'gesamt') {
       activeMatches = activeMatches.filter(m => m.spieltag === viewSpieltag)
@@ -596,12 +596,12 @@ export function LeaguePage() {
                         className="w-full"
                       >
                         <div ref={tableScrollRef} className="overflow-x-auto no-scrollbar border border-surface-container-high rounded-xl bg-surface-container-low/40">
-                          <table className="w-full text-left border-collapse min-w-[600px]">
+                          <table className={`w-full text-left border-collapse ${viewSpieltag === 'gesamt' ? 'min-w-0' : 'min-w-[600px]'}`}>
                         <thead>
                           <tr className="border-b border-surface-container-high bg-surface-container-low">
                             <th className="py-2.5 pl-3 pr-2 text-[10px] font-mono font-medium text-on-surface-variant/60 uppercase tracking-wider w-8" title={t('rank')}>#</th>
-                            <th className="py-2.5 pr-2 text-[10px] font-mono font-medium text-on-surface-variant/60 uppercase tracking-wider" title={t('player')}>{t('player')}</th>
-                            {filteredMatches.map(m => (
+                            <th className="py-2.5 pr-2 text-[10px] font-mono font-medium text-on-surface-variant/60 uppercase tracking-wider text-left" title={t('player')}>{t('player')}</th>
+                            {viewSpieltag !== 'gesamt' && filteredMatches.map(m => (
                               <th key={m.id} className="py-2.5 px-1 text-[10px] font-mono font-medium text-on-surface-variant/60 uppercase tracking-wider text-center w-10 relative" title={`${m.heim_team} vs ${m.gast_team}`}>
                                 {(m.tournament === 'Champions League') && (
                                   <div className="absolute top-0 right-1/2 translate-x-1/2 -mt-1 text-[8px] opacity-70">⭐</div>
@@ -611,7 +611,7 @@ export function LeaguePage() {
                                 <span className="block">{teamKuerzel(m.gast_team)}</span>
                               </th>
                             ))}
-                            <th className="py-2.5 pr-2 text-[10px] font-mono font-medium text-on-surface-variant/60 uppercase tracking-wider w-14 text-right" title={t('spieltag')}>Sp</th>
+                            <th className="py-2.5 pr-2 text-[10px] font-mono font-medium text-on-surface-variant/60 uppercase tracking-wider w-14 text-right" title="Tipps">Tipps</th>
                             <th className="py-2.5 pr-3 text-[10px] font-mono font-medium text-on-surface-variant/60 uppercase tracking-wider w-14 text-right" title={t('pointsLong')}>{t('pointsShort')}</th>
                           </tr>
                         </thead>
@@ -622,15 +622,7 @@ export function LeaguePage() {
                               <tr key={m.id} className={`border-b border-surface-container-high/50 last:border-0 hover:bg-white/[0.02] transition-colors duration-200 group/row border-l-2 ${isMe ? 'bg-primary-container/8 border-l-primary-container shadow-[inset_3px_0_0_#fbbf24]' : 'border-l-transparent hover:border-l-white/20'}`}>
                                 <td className="py-2.5 pr-2 pl-3">
                                   <div className="flex flex-col items-center justify-center">
-                                    {idx === 0 ? (
-                                      <span className="text-base select-none drop-shadow-[0_0_6px_rgba(251,191,36,0.6)]" title="1. Platz">🥇</span>
-                                    ) : idx === 1 ? (
-                                      <span className="text-base select-none drop-shadow-[0_0_6px_rgba(226,232,240,0.5)]" title="2. Platz">🥈</span>
-                                    ) : idx === 2 ? (
-                                      <span className="text-base select-none drop-shadow-[0_0_6px_rgba(254,215,170,0.5)]" title="3. Platz">🥉</span>
-                                    ) : (
-                                      <span className="text-[11px] font-mono font-bold text-on-surface-variant/80">{idx + 1}</span>
-                                    )}
+                                    <span className="text-[11px] font-mono font-bold text-on-surface-variant/80">{idx + 1}</span>
                                     {m.trend !== undefined && m.trend !== 0 && (
                                       <span className={`text-[8px] font-bold ${m.trend > 0 ? 'text-emerald-400' : 'text-red-400'} animate-bounce`}>
                                         {m.trend > 0 ? '▲' : '▼'} {Math.abs(m.trend)}
@@ -663,7 +655,7 @@ export function LeaguePage() {
                                     </span>
                                   </div>
                                 </td>
-                                {filteredMatches.map(match => {
+                                {viewSpieltag !== 'gesamt' && filteredMatches.map(match => {
                                   const tipp = m.tipps[match.id]
                                   const hasResult = match.status === 'finished' && match.tore_heim !== null && match.tore_gast !== null
                                   const punkteValue = hasResult && tipp ? tipp.punkte : null
@@ -688,11 +680,13 @@ export function LeaguePage() {
                                 })}
                                 <td className="py-2.5 pr-2 text-right">
                                   <span className="text-[11px] font-mono font-bold text-on-surface">
-                                    {viewSpieltag === 'gesamt' ? m.gesamt_punkte : m.spieltag_punkte}
+                                    {m.spieltag_tipps} / {m.spieltag_gesamt}
                                   </span>
                                 </td>
                                 <td className="py-2.5 pr-3 text-right">
-                                  <span className="text-[11px] font-mono font-bold text-primary-fixed-dim">{m.gesamt_punkte}</span>
+                                  <span className="text-[11px] font-mono font-bold text-primary-fixed-dim">
+                                    {viewSpieltag === 'gesamt' ? m.gesamt_punkte : m.spieltag_punkte}
+                                  </span>
                                 </td>
                               </tr>
                             )
