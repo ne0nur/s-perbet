@@ -246,20 +246,36 @@ serve(async (req: Request) => {
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) return eresp({ error: "No auth header" }, 401);
 
-    const userClient = createClient(SUPABASE_URL, Deno.env.get("SUPABASE_ANON_KEY")!, {
-      global: { headers: { Authorization: authHeader } },
-    });
-    const { data: { user }, error: authError } = await userClient.auth.getUser();
-    if (authError || !user) return eresp({ error: "Unauthorized" }, 401);
+    const token = authHeader.replace("Bearer ", "");
+    let isServiceRole = false;
 
-    const { data: profile } = await userClient
-      .from("profiles").select("is_admin").eq("id", user.id).single();
-    if (!profile?.is_admin) return eresp({ error: "Admin only" }, 403);
+    // Service-Role-Key: direkter Admin-Zugang (für Cronjobs)
+    if (token === SERVICE_ROLE_KEY) {
+      isServiceRole = true;
+    }
 
-    const adminClient = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
-    const now = new Date();
+    let adminClient: ReturnType<typeof createClient>;
+
+    if (isServiceRole) {
+      // Cronjob / automatisierter Aufruf — kein User-Auth nötig
+      adminClient = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
+    } else {
+      // User-getriggerter Aufruf — Admin-Check
+      const userClient = createClient(SUPABASE_URL, Deno.env.get("SUPABASE_ANON_KEY")!, {
+        global: { headers: { Authorization: authHeader } },
+      });
+      const { data: { user }, error: authError } = await userClient.auth.getUser();
+      if (authError || !user) return eresp({ error: "Unauthorized" }, 401);
+
+      const { data: profile } = await userClient
+        .from("profiles").select("is_admin").eq("id", user.id).single();
+      if (!profile?.is_admin) return eresp({ error: "Admin only" }, 403);
+
+      adminClient = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
+    }
 
     // ─── Phase 1: Score Sync ───
+    const now = new Date();
     const { data: matches, error: fetchError } = await adminClient
       .from("matches").select("*")
       .not("status", "in", '("finished","postponed")')

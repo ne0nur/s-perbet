@@ -1,25 +1,24 @@
-name: Live-Scores Sync
+name: Live-Scores Sync (via Edge Function)
 
-# Läuft täglich alle 5 Minuten von 12:00-22:00 UTC
 on:
   schedule:
-    - cron: '*/5 12-22 * * *'  # Täglich, alle 5 Min, 12-22 UTC
-  workflow_dispatch:  # Manuell triggerbar
+    - cron: '*/5 12-22 * * *'
+  workflow_dispatch:
 
 jobs:
   sync:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-node@v5
-        with:
-          node-version: '22'
-      - run: npm ci
-      - name: Live-Scores syncen
+      - name: Sync Scores + Bracket Propagation
         env:
-          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-          API_FOOTBALL_KEY: ${{ secrets.API_FOOTBALL_KEY }}
-          API_FOOTBALL_LEAGUE: '203'
-          API_FOOTBALL_SEASON: '2026'
-        run: node scripts/sync_scores.js
+          SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          HTTP_CODE=$(curl -s -o /tmp/sync-result.json -w "%{http_code}" \
+            -X POST "${SUPABASE_URL}/functions/v1/sync-match-results" \
+            -H "Authorization: Bearer ${SERVICE_ROLE_KEY}" \
+            -H "Content-Type: application/json")
+          echo "HTTP ${HTTP_CODE}"
+          cat /tmp/sync-result.json | head -c 800
+          echo
+          [ "${HTTP_CODE}" = "200" ] || echo "::warning::Sync returned ${HTTP_CODE}"
