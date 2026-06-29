@@ -187,7 +187,7 @@ export function LeaguePage() {
     const fetchedMatches = (matchesData || []) as MatchInfo[]
     setAllMatches(fetchedMatches)
 
-    if (!initialized.current) {
+    if (!initialized.current || aktiveLiga) {
       initialized.current = true
       let currentST = 1
       const liveMatch = fetchedMatches.find(m => m.status === 'live')
@@ -984,7 +984,6 @@ export function LeaguePage() {
                 <button key={liga.id} onClick={() => {
                   setAktiveLiga(liga)
                   setViewTournament('Alle')
-                  setViewSpieltag('gesamt')
                 }}
                   className="w-full card-lift bg-surface-container-low border border-surface-container-high rounded-lg p-4 text-left group">
                   <div className="flex items-center justify-between mb-2">
