@@ -219,7 +219,7 @@ export function AchievementsSection({
                 className={`flex items-center gap-3 border rounded-xl p-2.5 transition-all duration-300 ${
                   unlocked
                     ? `bg-surface-container-lowest border-surface-container-high shadow-sm`
-                    : 'bg-black/15 border-surface-container-high/40 opacity-45 text-on-surface-variant'
+                    : 'bg-black/15 border-surface-container-high/60 text-on-surface-variant'
                 }`}
               >
                 <div className="relative">
@@ -231,7 +231,7 @@ export function AchievementsSection({
                 <div className="flex-1 min-w-0 flex flex-col justify-between h-full py-0.5">
                 <div>
                   <div className="flex items-center justify-between gap-1 mb-0.5">
-                    <h4 className={`text-[12px] font-bold truncate leading-tight ${unlocked ? 'text-on-surface' : 'text-on-surface-variant'}`}>
+                    <h4 className={`text-[12px] font-bold truncate leading-tight ${unlocked ? 'text-on-surface' : 'text-on-surface/80'}`}>
                       {ach.name}
                     </h4>
                     {unlocked ? (
@@ -244,7 +244,7 @@ export function AchievementsSection({
                       </span>
                     )}
                   </div>
-                  <p className={`text-[9px] font-mono leading-tight ${unlocked ? 'text-on-surface-variant' : 'text-on-surface-variant/50'}`}>
+                  <p className={`text-[9px] font-mono leading-tight ${unlocked ? 'text-on-surface-variant' : 'text-on-surface-variant/80'}`}>
                     {ach.req}
                   </p>
                 </div>
