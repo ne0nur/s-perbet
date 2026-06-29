@@ -247,20 +247,19 @@ serve(async (req: Request) => {
     if (!authHeader) return eresp({ error: "No auth header" }, 401);
 
     const token = authHeader.replace("Bearer ", "");
-    let isServiceRole = false;
-
-    // Service-Role-Key: direkter Admin-Zugang (für Cronjobs)
-    if (token === SERVICE_ROLE_KEY) {
-      isServiceRole = true;
-    }
 
     let adminClient: ReturnType<typeof createClient>;
 
-    if (isServiceRole) {
-      // Cronjob / automatisierter Aufruf — kein User-Auth nötig
-      adminClient = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
+    // Versuche Token direkt als Service-Role-Key (für Cronjobs)
+    const testClient = createClient(SUPABASE_URL, token);
+    const { data: testData, error: testError } = await testClient
+      .from("matches").select("id").limit(1);
+
+    if (!testError && testData) {
+      // Gültiger Service-Role-Key → automatisierter Aufruf
+      adminClient = testClient;
     } else {
-      // User-getriggerter Aufruf — Admin-Check
+      // User-JWT → Admin-Check
       const userClient = createClient(SUPABASE_URL, Deno.env.get("SUPABASE_ANON_KEY")!, {
         global: { headers: { Authorization: authHeader } },
       });
