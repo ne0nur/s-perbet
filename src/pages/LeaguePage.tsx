@@ -155,12 +155,6 @@ export function LeaguePage() {
     if (!profiles) { setIsLaden(false); return }
     allProfilesRef.current = profiles as Profile[]
 
-    // 3. Max Spieltag + aktuellen Spieltag ermitteln
-    const maxSt = allMatches.length > 0
-      ? Math.max(...allMatches.map(m => m.spieltag))
-      : 0
-    if (maxSt > 0) setMaxSpieltag(maxSt)
-
     if (!initialized.current) {
       initialized.current = true
       const { data: stData } = await supabase.from('matches').select('spieltag').eq('status', 'upcoming').order('anpfiff', { ascending: true }).limit(1)
@@ -168,7 +162,7 @@ export function LeaguePage() {
       setViewSpieltag(currentST)
     }
 
-    // 4. Matches für die gewählte Saison laden
+    // 3. Matches für die gewählte Saison laden
     let query = supabase.from('matches')
       .select('id,heim_team,gast_team,tore_heim,tore_gast,status,spieltag,tournament')
       .order('anpfiff')
@@ -187,7 +181,7 @@ export function LeaguePage() {
 
     const matchIds = fetchedMatches.map(m => m.id)
 
-    // 5. ALLE Tipps laden (für alle Matches)
+    // 4. ALLE Tipps laden (für alle Matches)
     const { data: tips } = await supabase.from('tips')
       .select('user_id,match_id,tipp_heim,tipp_gast,punkte')
       .in('user_id', userIds).in('match_id', matchIds)
@@ -195,7 +189,7 @@ export function LeaguePage() {
 
     datenGeladen.current = true
     setIsLaden(false)
-  }, [aktiveLiga, saison, allMatches])
+  }, [aktiveLiga, saison])
 
   const computeRows = useCallback(() => {
     const profiles = allProfilesRef.current
