@@ -1,8 +1,11 @@
-name: Live-Scores Sync (via Edge Function)
+name: Live-Scores Sync — WM 2026 Optimized
 
 on:
   schedule:
-    - cron: '*/5 12-22 * * *'
+    - cron: '*/20 15-16 * * *'   # Vorlauf (6 calls)
+    - cron: '*/8 17-22 * * *'    # LIVE Hauptspiele (45 calls)
+    - cron: '*/20 23 * * *'      # Pause zwischen Fenstern (3 calls)
+    - cron: '*/8 0-2 * * *'      # LIVE Nachtspiele (23 calls)
   workflow_dispatch:
 
 jobs:
@@ -19,6 +22,6 @@ jobs:
             -H "Authorization: Bearer ${SERVICE_ROLE_KEY}" \
             -H "Content-Type: application/json")
           echo "HTTP ${HTTP_CODE}"
-          cat /tmp/sync-result.json | head -c 800
+          python3 -c "import json; d=json.load(open('/tmp/sync-result.json')); print(d.get('message','')); print('Score:', d.get('scoreUpdates',0), 'Bracket:', d.get('bracketUpdates',0))" 2>/dev/null || cat /tmp/sync-result.json | head -c 500
           echo
           [ "${HTTP_CODE}" = "200" ] || echo "::warning::Sync returned ${HTTP_CODE}"
