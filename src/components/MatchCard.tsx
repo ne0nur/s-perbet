@@ -207,7 +207,7 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
       >
         {/* Heim */}
         <div className="flex-1 flex items-center justify-end gap-2">
-          <span className="text-sm font-medium text-white truncate">{match.heim_team}</span>
+          <span className="text-xs md:text-sm font-medium text-white line-clamp-2 break-words leading-tight text-right">{match.heim_team}</span>
           <img src={getTeamLogo(match.heim_team)} alt={match.heim_team}
             className="w-11 h-11 object-contain opacity-90 transition-transform duration-300 group-hover/score:scale-110"
             onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
@@ -238,7 +238,7 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
           <img src={getTeamLogo(match.gast_team)} alt={match.gast_team}
             className="w-11 h-11 object-contain opacity-90 transition-transform duration-300 group-hover/score:scale-110"
             onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
-          <span className="text-sm font-medium text-white truncate">{match.gast_team}</span>
+          <span className="text-xs md:text-sm font-medium text-white line-clamp-2 break-words leading-tight text-left">{match.gast_team}</span>
         </div>
       </div>
 
@@ -313,7 +313,7 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
                     transition={{ type: 'spring', stiffness: 500, damping: 15 }}
                     className="flex items-center gap-1.5"
                   >
-                    <Check size={12} className="stroke-[3]" /> Gespeichert
+                    <Check size={16} className="stroke-[3]" />
                   </motion.span>
                 ) : (
                   <motion.span key="idle" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
