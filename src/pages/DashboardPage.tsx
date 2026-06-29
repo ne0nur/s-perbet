@@ -243,20 +243,11 @@ export function DashboardPage() {
   // Bestimme wie viele Tabs gezeigt werden dynamically
   const getTabsCount = () => {
     const config = useTournamentStore.getState().getTournament(selectedTournament)
-    // K.o.-Turniere: benutze group_stage_matchdays + KO-Runden als Maximum-Fallback
+    // K.o.-Turniere: benutze group_stage_matchdays + KO-Runden als Konstante
     if (config?.has_knockout) {
-      const tournamentMatches = matches.filter(m => (m.tournament || 'Süper Lig') === selectedTournament)
-      if (tournamentMatches.length > 0) {
-        const maxSt = Math.max(...tournamentMatches.map(m => m.spieltag))
-        return maxSt > 0 ? maxSt : config.group_stage_matchdays + 5
-      }
       return config.group_stage_matchdays + 5  // Gruppenphase + KO-Runden
     }
-    const tournamentMatches = matches.filter(m => (m.tournament || 'Süper Lig') === selectedTournament)
-    if (tournamentMatches.length > 0) {
-      const maxSt = Math.max(...tournamentMatches.map(m => m.spieltag))
-      return maxSt > 0 ? maxSt : 38
-    }
+    // Liga-Turniere
     return maxSpieltag || 38
   }
 
@@ -265,12 +256,15 @@ export function DashboardPage() {
       <header className="sticky top-0 z-30 bg-background/95 backdrop-blur-xl shrink-0 border-b border-white/5 px-4 md:px-6 lg:px-8 pt-4 pb-1">
         <div className="max-w-[1600px] mx-auto w-full">
           {/* Turnier-Filter & Saison-Selector */}
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-3">
-            <div className="flex bg-surface-container/50 border border-white/5 p-1 rounded-2xl gap-1.5 backdrop-blur-md">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-3 max-w-full">
+            <div className="flex overflow-x-auto no-scrollbar bg-surface-container/50 border border-white/5 p-1 rounded-2xl gap-1.5 backdrop-blur-md max-w-full">
               {availableTournaments.map(tName => (
                 <button
                   key={tName}
-                  onClick={() => { setSelectedTournament(tName) }}
+                  onClick={() => { 
+                    setSelectedTournament(tName)
+                    useMatchStore.getState().setSelectedTournament(tName)
+                  }}
                   className={`px-3 py-2 text-[9px] xs:text-[10px] md:text-xs font-mono font-black uppercase tracking-wider rounded-xl whitespace-nowrap transition-all duration-200 cursor-pointer flex items-center gap-2 ${selectedTournament === tName ? 'bg-primary-container text-on-primary-container shadow-[0_2px_8px_rgba(251,191,36,0.15)] border border-primary/20 scale-[1.01]' : 'text-on-surface-variant hover:text-on-surface hover:bg-white/5 border border-transparent'}`}
                 >
                   <img src={getTournamentLogo(tName)} alt={tName} className="w-5 h-5 object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.6)] brightness-110 shrink-0" onError={(e) => { (e.target as HTMLImageElement).src = `${import.meta.env.BASE_URL}logos/soccer_ball.png` }} />
@@ -298,9 +292,18 @@ export function DashboardPage() {
               onChange={(e) => useMatchStore.getState().setSaison(parseInt(e.target.value))}
               className="bg-surface-container border border-surface-container-high rounded-lg px-3 py-1.5 text-xs text-on-surface focus:outline-none focus:border-primary-container font-mono"
             >
-              <option value={2026}>{t('seasonLabel', { year: '2026/27' })}</option>
-              <option value={2025}>{t('seasonLabel', { year: '2025/26' })}</option>
-              <option value={2024}>{t('seasonLabel', { year: '2024/25' })}</option>
+              {(() => {
+                const config = useTournamentStore.getState().getTournament(selectedTournament)
+                let seasons = [2026, 2025, 2024]
+                if (config && !config.has_historical_data) {
+                  seasons = [config.season]
+                }
+                return seasons.map(s => (
+                  <option key={s} value={s}>
+                    {t('seasonLabel', { year: `${s}/${(s + 1).toString().slice(2)}` })}
+                  </option>
+                ))
+              })()}
             </select>
           </div>
 

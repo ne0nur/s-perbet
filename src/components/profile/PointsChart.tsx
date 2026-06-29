@@ -117,10 +117,10 @@ export function PointsChart({ tips }: PointsChartProps) {
             <Line 
               type="monotone" 
               dataKey="punkte" 
-              stroke="#fbbf24" 
+              stroke="var(--primary)" 
               strokeWidth={3}
-              dot={{ fill: '#1E1E1E', stroke: '#fbbf24', strokeWidth: 2, r: 4 }}
-              activeDot={{ r: 6, fill: '#fbbf24', stroke: '#fff', strokeWidth: 2 }}
+              dot={{ fill: '#1E1E1E', stroke: 'var(--primary)', strokeWidth: 2, r: 4 }}
+              activeDot={{ r: 6, fill: 'var(--primary)', stroke: '#fff', strokeWidth: 2 }}
               animationDuration={2000}
               animationEasing="ease-out"
             />

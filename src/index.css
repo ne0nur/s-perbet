@@ -300,14 +300,14 @@ input, textarea, [contenteditable], .selectable-text {
 .tip-input {
   background: rgba(0, 0, 0, 0.3);
   border: 1px solid #334155;
-  color: #fbbf24;
+  color: var(--primary-fixed-dim);
   font-family: 'JetBrains Mono', monospace;
   text-align: center;
 }
 .tip-input:focus {
   outline: none;
-  border-color: #fbbf24;
-  box-shadow: 0 0 10px rgba(251, 191, 36, 0.2);
+  border-color: var(--primary-fixed-dim);
+  box-shadow: 0 0 10px rgba(var(--primary-rgb), 0.2);
 }
 
 .tip-btn {
@@ -317,9 +317,9 @@ input, textarea, [contenteditable], .selectable-text {
   transition: all 0.15s;
 }
 .tip-btn:active {
-  background: rgba(251, 191, 36, 0.2);
-  border-color: #fbbf24;
-  color: #fbbf24;
+  background: rgba(var(--primary-rgb), 0.2);
+  border-color: var(--primary-fixed-dim);
+  color: var(--primary-fixed-dim);
 }
 
 /* ============================================
@@ -338,7 +338,7 @@ input, textarea, [contenteditable], .selectable-text {
   0% {
     opacity: 0;
     transform: scale(0.85);
-    filter: drop-shadow(0 0 0px rgba(251,191,36,0));
+    filter: drop-shadow(0 0 0px rgba(var(--primary-rgb),0));
   }
   60% {
     opacity: 1;
@@ -347,7 +347,7 @@ input, textarea, [contenteditable], .selectable-text {
   100% {
     opacity: 1;
     transform: scale(1);
-    filter: drop-shadow(0 0 30px rgba(251,191,36,0.2));
+    filter: drop-shadow(0 0 30px rgba(var(--primary-rgb),0.2));
   }
 }
 .animate-logo-enter {
@@ -809,58 +809,58 @@ body {
 
 @keyframes betDischargeSmooth {
   0% {
-    color: #fbbf24;
+    color: var(--primary);
     text-shadow:
-      0 0 4px rgba(251, 191, 36, 0.8),
-      0 0 12px rgba(251, 191, 36, 0.4);
-    border-color: rgba(251, 191, 36, 0.5);
+      0 0 4px rgba(var(--primary-rgb), 0.8),
+      0 0 12px rgba(var(--primary-rgb), 0.4);
+    border-color: rgba(var(--primary-rgb), 0.5);
     box-shadow:
-      inset 0 0 4px rgba(251, 191, 36, 0.2),
-      0 0 8px rgba(251, 191, 36, 0.12);
+      inset 0 0 4px rgba(var(--primary-rgb), 0.2),
+      0 0 8px rgba(var(--primary-rgb), 0.12);
     transform: scale(1) rotate(0deg);
   }
   25% {
     color: #ffffff;
     text-shadow:
-      0 0 15px rgba(251, 191, 36, 1),
-      0 0 35px rgba(251, 191, 36, 0.8);
-    border-color: rgba(251, 191, 36, 0.95);
+      0 0 15px rgba(var(--primary-rgb), 1),
+      0 0 35px rgba(var(--primary-rgb), 0.8);
+    border-color: rgba(var(--primary-rgb), 0.95);
     box-shadow:
-      inset 0 0 10px rgba(251, 191, 36, 0.6),
-      0 0 20px rgba(251, 191, 36, 0.4);
+      inset 0 0 10px rgba(var(--primary-rgb), 0.6),
+      0 0 20px rgba(var(--primary-rgb), 0.4);
     transform: scale(1.1) rotate(2deg);
   }
   50% {
-    color: rgba(251, 191, 36, 0.85);
+    color: rgba(var(--primary-rgb), 0.85);
     text-shadow:
-      0 0 6px rgba(251, 191, 36, 0.7),
-      0 0 18px rgba(251, 191, 36, 0.3);
-    border-color: rgba(251, 191, 36, 0.4);
+      0 0 6px rgba(var(--primary-rgb), 0.7),
+      0 0 18px rgba(var(--primary-rgb), 0.3);
+    border-color: rgba(var(--primary-rgb), 0.4);
     box-shadow:
-      inset 0 0 4px rgba(251, 191, 36, 0.2),
-      0 0 8px rgba(251, 191, 36, 0.1);
+      inset 0 0 4px rgba(var(--primary-rgb), 0.2),
+      0 0 8px rgba(var(--primary-rgb), 0.1);
     transform: scale(0.97) rotate(-1deg);
   }
   75% {
-    color: #fbbf24;
+    color: var(--primary);
     text-shadow:
-      0 0 8px rgba(251, 191, 36, 0.9),
-      0 0 20px rgba(251, 191, 36, 0.5);
-    border-color: rgba(251, 191, 36, 0.7);
+      0 0 8px rgba(var(--primary-rgb), 0.9),
+      0 0 20px rgba(var(--primary-rgb), 0.5);
+    border-color: rgba(var(--primary-rgb), 0.7);
     box-shadow:
-      inset 0 0 6px rgba(251, 191, 36, 0.3),
-      0 0 12px rgba(251, 191, 36, 0.2);
+      inset 0 0 6px rgba(var(--primary-rgb), 0.3),
+      0 0 12px rgba(var(--primary-rgb), 0.2);
     transform: scale(1.02) rotate(0.5deg);
   }
   100% {
-    color: #fbbf24;
+    color: var(--primary);
     text-shadow:
-      0 0 4px rgba(251, 191, 36, 0.8),
-      0 0 12px rgba(251, 191, 36, 0.4);
-    border-color: rgba(251, 191, 36, 0.5);
+      0 0 4px rgba(var(--primary-rgb), 0.8),
+      0 0 12px rgba(var(--primary-rgb), 0.4);
+    border-color: rgba(var(--primary-rgb), 0.5);
     box-shadow:
-      inset 0 0 4px rgba(251, 191, 36, 0.2),
-      0 0 8px rgba(251, 191, 36, 0.12);
+      inset 0 0 4px rgba(var(--primary-rgb), 0.2),
+      0 0 8px rgba(var(--primary-rgb), 0.12);
     transform: scale(1) rotate(0deg);
   }
 }

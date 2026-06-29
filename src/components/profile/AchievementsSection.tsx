@@ -231,7 +231,7 @@ export function AchievementsSection({
                 <div className="flex-1 min-w-0 flex flex-col justify-between h-full py-0.5">
                 <div>
                   <div className="flex items-center justify-between gap-1 mb-0.5">
-                    <h4 className={`text-[12px] font-bold truncate leading-tight ${unlocked ? 'text-on-surface' : 'text-on-surface/80'}`}>
+                    <h4 className="text-[12px] font-bold truncate leading-tight text-on-surface">
                       {ach.name}
                     </h4>
                     {unlocked ? (
@@ -244,8 +244,8 @@ export function AchievementsSection({
                       </span>
                     )}
                   </div>
-                  <p className={`text-[9px] font-mono leading-tight ${unlocked ? 'text-on-surface-variant' : 'text-on-surface-variant/80'}`}>
-                    {ach.req}
+                  <p className="text-[9px] font-mono leading-tight text-on-surface-variant">
+                    {ach.desc}
                   </p>
                 </div>
               </div>

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuthStore } from '../stores/authStore'
+import { useTournamentStore } from '../stores/tournamentStore'
 import { Users, Copy, Check, Plus, LogIn, X, Trophy, LogOut, Trash2, MoreHorizontal, MessageCircle, Target, Share2 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { LeagueChat } from '../components/LeagueChat'
@@ -87,6 +88,8 @@ export function LeaguePage() {
   const [neueLigaTurniere, setNeueLigaTurniere] = useState<string[]>(['Süper Lig'])
   const [hasUnreadChat, setHasUnreadChat] = useState(false)
   const chatNotifyChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null)
+  
+  const tournamentConfigs = useTournamentStore(s => s.tournaments)
 
   const [allMatches, setAllMatches] = useState<MatchInfo[]>([])
   const tableScrollRef = useRef<HTMLDivElement>(null)
@@ -198,8 +201,11 @@ export function LeaguePage() {
     const tips = allTipsRef.current
     if (!profiles.length) return
 
-    // Nur Matches für aktuellen viewSpieltag und viewTournament
-    let activeMatches = allMatches
+    const leagueTournaments = new Set(aktiveLiga?.active_tournaments || ['Süper Lig'])
+    
+    // Nur Matches für aktuellen viewSpieltag und ausgewählte Turniere der Liga
+    let activeMatches = allMatches.filter(m => leagueTournaments.has(m.tournament || 'Süper Lig'))
+    
     if (viewTournament !== 'Alle') {
       activeMatches = activeMatches.filter(m => (m.tournament || 'Süper Lig') === viewTournament)
     }
@@ -210,7 +216,6 @@ export function LeaguePage() {
     
     // For season points, we ALWAYS want to sum across ALL tournaments the league has active,
     // regardless of the current viewTournament filter. The global ranking should always represent total points.
-    const leagueTournaments = new Set(aktiveLiga?.active_tournaments || ['Süper Lig'])
     const validMatchesForPoints = allMatches.filter(m => {
       return leagueTournaments.has(m.tournament || 'Süper Lig')
     })
@@ -584,7 +589,7 @@ export function LeaguePage() {
                   </div>
                 )}
                 {/* Spieltag-Tabs Segmented Control */}
-                <div className="bg-surface-container/40 border border-white/5 p-1 rounded-2xl flex items-center gap-1.5 overflow-hidden backdrop-blur-sm -mx-4 md:mx-0">
+                <div className="bg-surface-container/40 border border-white/5 p-1 rounded-2xl flex items-center gap-1.5 overflow-x-auto no-scrollbar backdrop-blur-sm -mx-4 md:mx-0 max-w-full">
                   {/* Sticky "Gesamt" Button */}
                   <button
                     data-st="gesamt"
@@ -655,7 +660,6 @@ export function LeaguePage() {
                                 <span className="block">{teamKuerzel(m.gast_team)}</span>
                               </th>
                             ))}
-                            <th className="py-2.5 pr-2 text-[10px] font-mono font-medium text-on-surface-variant/60 uppercase tracking-wider w-14 text-right" title="Tipps">Tipps</th>
                             <th className="py-2.5 pr-3 text-[10px] font-mono font-medium text-on-surface-variant/60 uppercase tracking-wider w-14 text-right" title={t('pointsLong')}>{t('pointsShort')}</th>
                           </tr>
                         </thead>
@@ -663,7 +667,7 @@ export function LeaguePage() {
                           {mitglieder.map((m, idx) => {
                             const isMe = m.id === user?.id
                             return (
-                              <tr key={m.id} className={`border-b border-surface-container-high/50 last:border-0 hover:bg-white/[0.02] transition-colors duration-200 group/row border-l-2 ${isMe ? 'bg-primary-container/8 border-l-primary-container shadow-[inset_3px_0_0_#fbbf24]' : 'border-l-transparent hover:border-l-white/20'}`}>
+                              <tr key={m.id} className={`border-b border-surface-container-high/50 last:border-0 hover:bg-white/[0.02] transition-colors duration-200 group/row border-l-2 ${isMe ? 'bg-primary-container/8 border-l-primary-container shadow-[inset_3px_0_0_var(--primary)]' : 'border-l-transparent hover:border-l-white/20'}`}>
                                 <td className="py-2.5 pr-2 pl-3">
                                   <div className="flex flex-col items-center justify-center">
                                     <span className="text-[11px] font-mono font-bold text-on-surface-variant/80">{idx + 1}</span>
@@ -706,7 +710,7 @@ export function LeaguePage() {
 
                                   if (!tipp) return (
                                     <td key={match.id} className="py-2.5 px-1 text-center">
-                                      <span className="text-[10px] text-on-surface-variant/25">–</span>
+                                      <span className="text-[10px] text-on-surface-variant/25"></span>
                                     </td>
                                   )
                                   return (
@@ -722,11 +726,7 @@ export function LeaguePage() {
                                     </td>
                                   )
                                 })}
-                                <td className="py-2.5 pr-2 text-right">
-                                  <span className="text-[11px] font-mono font-bold text-on-surface">
-                                    {m.spieltag_tipps} / {m.spieltag_gesamt}
-                                  </span>
-                                </td>
+
                                 <td className="py-2.5 pr-3 text-right">
                                   <span className="text-[11px] font-mono font-bold text-primary-fixed-dim">
                                     {viewSpieltag === 'gesamt' ? m.gesamt_punkte : m.spieltag_punkte}
@@ -861,33 +861,22 @@ export function LeaguePage() {
               <p className="text-xs text-on-surface-variant mb-6">{t('activeTournamentsInfo')}</p>
               
               <div className="grid grid-cols-2 gap-3 mb-6">
-                <motion.div
-                  whileHover={{ scale: 1.03 }}
-                  whileTap={{ scale: 0.97 }}
-                  onClick={() => {
-                    if (editTurniere.includes('Süper Lig')) setEditTurniere(editTurniere.filter(t => t !== 'Süper Lig'))
-                    else setEditTurniere([...editTurniere, 'Süper Lig'])
-                  }}
-                  className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 cursor-pointer transition-colors relative overflow-hidden ${editTurniere.includes('Süper Lig') ? 'border-primary bg-primary/10' : 'border-surface-container-high bg-surface-container-lowest hover:border-surface-variant'}`}
-                >
-                  {editTurniere.includes('Süper Lig') && <div className="absolute top-2 right-2 w-4 h-4 bg-primary rounded-full flex items-center justify-center text-on-primary"><Check size={10} strokeWidth={4} /></div>}
-                  <img src={`${import.meta.env.BASE_URL}logos/Süper_Lig.png`} alt="SL" className="w-10 h-10 object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.6)] brightness-110 mb-3" />
-                  <span className={`text-xs font-bold ${editTurniere.includes('Süper Lig') ? 'text-primary' : 'text-on-surface'}`}>Süper Lig</span>
-                </motion.div>
-                
-                <motion.div
-                  whileHover={{ scale: 1.03 }}
-                  whileTap={{ scale: 0.97 }}
-                  onClick={() => {
-                    if (editTurniere.includes('Champions League')) setEditTurniere(editTurniere.filter(t => t !== 'Champions League'))
-                    else setEditTurniere([...editTurniere, 'Champions League'])
-                  }}
-                  className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 cursor-pointer transition-colors relative overflow-hidden ${editTurniere.includes('Champions League') ? 'border-primary bg-primary/10' : 'border-surface-container-high bg-surface-container-lowest hover:border-surface-variant'}`}
-                >
-                  {editTurniere.includes('Champions League') && <div className="absolute top-2 right-2 w-4 h-4 bg-primary rounded-full flex items-center justify-center text-on-primary"><Check size={10} strokeWidth={4} /></div>}
-                  <img src={`${import.meta.env.BASE_URL}logos/UEFA_Champions_League_logo.png`} alt="CL" className="w-10 h-10 object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.6)] brightness-110 mb-3" />
-                  <span className={`text-xs font-bold text-center ${editTurniere.includes('Champions League') ? 'text-primary' : 'text-on-surface'}`}>Champions League</span>
-                </motion.div>
+                {tournamentConfigs.map(tc => (
+                  <motion.div
+                    key={tc.id}
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.97 }}
+                    onClick={() => {
+                      if (editTurniere.includes(tc.name)) setEditTurniere(editTurniere.filter(t => t !== tc.name))
+                      else setEditTurniere([...editTurniere, tc.name])
+                    }}
+                    className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 cursor-pointer transition-colors relative overflow-hidden ${editTurniere.includes(tc.name) ? 'border-primary bg-primary/10' : 'border-surface-container-high bg-surface-container-lowest hover:border-surface-variant'}`}
+                  >
+                    {editTurniere.includes(tc.name) && <div className="absolute top-2 right-2 w-4 h-4 bg-primary rounded-full flex items-center justify-center text-on-primary"><Check size={10} strokeWidth={4} /></div>}
+                    <span className="text-2xl mb-3 filter drop-shadow-md">{tc.emoji}</span>
+                    <span className={`text-xs font-bold text-center ${editTurniere.includes(tc.name) ? 'text-primary' : 'text-on-surface'}`}>{tc.name}</span>
+                  </motion.div>
+                ))}
               </div>
               
               <div className="flex gap-2">
@@ -971,33 +960,22 @@ export function LeaguePage() {
                   <div>
                     <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2 block">{t('includedTournaments')}</label>
                     <div className="grid grid-cols-2 gap-3">
-                      <motion.div
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        onClick={() => {
-                          if (neueLigaTurniere.includes('Süper Lig')) setNeueLigaTurniere(neueLigaTurniere.filter(t => t !== 'Süper Lig'))
-                          else setNeueLigaTurniere([...neueLigaTurniere, 'Süper Lig'])
-                        }}
-                        className={`flex flex-col items-center justify-center p-3 rounded-xl border-2 cursor-pointer transition-colors relative overflow-hidden ${neueLigaTurniere.includes('Süper Lig') ? 'border-primary bg-primary/10' : 'border-surface-container-high bg-surface-container-lowest hover:border-surface-variant'}`}
-                      >
-                        {neueLigaTurniere.includes('Süper Lig') && <div className="absolute top-2 right-2 w-4 h-4 bg-primary rounded-full flex items-center justify-center text-on-primary"><Check size={10} strokeWidth={4} /></div>}
-                        <img src={`${import.meta.env.BASE_URL}logos/Süper_Lig.png`} alt="SL" className="w-8 h-8 object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.6)] brightness-110 mb-2" />
-                        <span className={`text-xs font-bold ${neueLigaTurniere.includes('Süper Lig') ? 'text-primary' : 'text-on-surface'}`}>Süper Lig</span>
-                      </motion.div>
-                      
-                      <motion.div
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        onClick={() => {
-                          if (neueLigaTurniere.includes('Champions League')) setNeueLigaTurniere(neueLigaTurniere.filter(t => t !== 'Champions League'))
-                          else setNeueLigaTurniere([...neueLigaTurniere, 'Champions League'])
-                        }}
-                        className={`flex flex-col items-center justify-center p-3 rounded-xl border-2 cursor-pointer transition-colors relative overflow-hidden ${neueLigaTurniere.includes('Champions League') ? 'border-primary bg-primary/10' : 'border-surface-container-high bg-surface-container-lowest hover:border-surface-variant'}`}
-                      >
-                        {neueLigaTurniere.includes('Champions League') && <div className="absolute top-2 right-2 w-4 h-4 bg-primary rounded-full flex items-center justify-center text-on-primary"><Check size={10} strokeWidth={4} /></div>}
-                        <img src={`${import.meta.env.BASE_URL}logos/UEFA_Champions_League_logo.png`} alt="CL" className="w-8 h-8 object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.6)] brightness-110 mb-2" />
-                        <span className={`text-xs font-bold text-center ${neueLigaTurniere.includes('Champions League') ? 'text-primary' : 'text-on-surface'}`}>Champions League</span>
-                      </motion.div>
+                      {tournamentConfigs.map(tc => (
+                        <motion.div
+                          key={tc.id}
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={() => {
+                            if (neueLigaTurniere.includes(tc.name)) setNeueLigaTurniere(neueLigaTurniere.filter(t => t !== tc.name))
+                            else setNeueLigaTurniere([...neueLigaTurniere, tc.name])
+                          }}
+                          className={`flex flex-col items-center justify-center p-3 rounded-xl border-2 cursor-pointer transition-colors relative overflow-hidden ${neueLigaTurniere.includes(tc.name) ? 'border-primary bg-primary/10' : 'border-surface-container-high bg-surface-container-lowest hover:border-surface-variant'}`}
+                        >
+                          {neueLigaTurniere.includes(tc.name) && <div className="absolute top-2 right-2 w-4 h-4 bg-primary rounded-full flex items-center justify-center text-on-primary"><Check size={10} strokeWidth={4} /></div>}
+                          <span className="text-2xl mb-2 filter drop-shadow-md">{tc.emoji}</span>
+                          <span className={`text-xs font-bold text-center ${neueLigaTurniere.includes(tc.name) ? 'text-primary' : 'text-on-surface'}`}>{tc.name}</span>
+                        </motion.div>
+                      ))}
                     </div>
                   </div>
                   

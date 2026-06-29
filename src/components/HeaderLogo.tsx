@@ -16,7 +16,18 @@ export function HeaderLogo({ size = 'md' }: HeaderLogoProps) {
   const [isHovered, setIsHovered] = useState(false)
   const [showUsername, setShowUsername] = useState(true)
 
-  // Start-Animation: Zeige Username für 3 Sekunden, dann wechsle smooth zum SüperBET Logo
+  const greeting = language === 'tr' ? 'MERHABA' : language === 'en' ? 'HELLO' : 'HALLO'
+  const nameLen = username.length
+  let nameSize = isSm ? 'text-xl' : 'text-3xl'
+  if (!isSm) {
+    if (nameLen > 14) nameSize = 'text-lg md:text-xl'
+    else if (nameLen > 10) nameSize = 'text-xl md:text-2xl'
+  } else {
+    if (nameLen > 14) nameSize = 'text-sm'
+    else if (nameLen > 10) nameSize = 'text-base'
+  }
+
+  // Start-Animation: Zeige Username für 3.5 Sekunden, dann wechsle smooth zum SüperBET Logo
   useEffect(() => {
     const timer = setTimeout(() => {
       setShowUsername(false)
@@ -43,9 +54,18 @@ export function HeaderLogo({ size = 'md' }: HeaderLogoProps) {
             <motion.span
               animate={{ y: [0, -2, 0] }}
               transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
-              className={`inline-flex px-4 py-4 -mx-4 -my-4 ${isSm ? 'text-xl' : 'text-3xl'} tracking-widest drop-shadow-[0_0_15px_rgba(var(--primary-rgb),0.3)]`}
-              style={{ fontFamily: 'Montserrat', fontWeight: 900 }}
+              className={`inline-flex flex-col items-center px-4 py-4 -mx-4 -my-4 tracking-widest drop-shadow-[0_0_15px_rgba(var(--primary-rgb),0.3)]`}
+              style={{ fontFamily: 'Montserrat' }}
             >
+              <motion.span
+                initial={{ opacity: 0, y: -5 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.6, delay: 0.1 }}
+                className="text-[9px] md:text-[10px] text-on-surface-variant/80 font-bold tracking-[0.2em] mb-0.5 uppercase"
+              >
+                {greeting}
+              </motion.span>
               <motion.span
                 initial={{ opacity: 0, scale: 0.95, filter: "blur(8px)", y: 6 }}
                 animate={{ opacity: 1, scale: 1, filter: "blur(0px)", y: 0 }}
@@ -57,9 +77,8 @@ export function HeaderLogo({ size = 'md' }: HeaderLogoProps) {
                   transition: { duration: 0.3, ease: "easeIn" } 
                 }}
                 transition={{ duration: 0.8, ease: "easeOut" }}
-                className={`liquid-gradient-text ${isSm ? 'text-xl' : 'text-3xl'} tracking-widest`}
+                className={`liquid-gradient-text ${nameSize} tracking-widest truncate max-w-[220px] md:max-w-[320px]`}
                 style={{ 
-                  fontFamily: 'Montserrat', 
                   fontWeight: 900, 
                   display: 'inline-block'
                 }}

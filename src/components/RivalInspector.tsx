@@ -33,6 +33,11 @@ const TEAM_ABBREV: Record<string, string> = {
   'Club Brugge': 'Brugge', 'Sparta Praha': 'Sparta', 'Dinamo Zagreb': 'Dinamo',
   'Slovan Bratislava': 'Slovan', 'FK Crvena Zvezda': 'Crvena Z.',
   'BSC Young Boys': 'Young Boys', 'Stade Brestois': 'Brest',
+  // World Cup 2026
+  'Algeria': 'Algerien', 'Austria': 'Österreich', 'Jordan': 'Jordanien',
+  'Argentina': 'Argentinien', 'South Africa': 'Südafrika', 'Canada': 'Kanada',
+  'Brazil': 'Brasilien', 'Japan': 'Japan', 'Germany': 'Deutschland',
+  'Paraguay': 'Paraguay',
 }
 
 function abbrevTeam(name: string): string {
@@ -401,8 +406,8 @@ export function RivalInspector({ userId, onClose }: RivalInspectorProps) {
                   <XAxis dataKey="name" stroke="rgba(255,255,255,0.2)" fontSize={9} tickFormatter={(val) => val === 'Start' ? '' : val.replace('. ST', '')} axisLine={false} tickLine={false} />
                   <YAxis stroke="rgba(255,255,255,0.2)" fontSize={9} allowDecimals={false} axisLine={false} tickLine={false} />
                   <Tooltip content={<H2HTooltip />} cursor={{ stroke: 'rgba(255,255,255,0.1)', strokeWidth: 2 }} />
-                  <Line type="monotone" dataKey="myTotal" stroke="#fbbf24" strokeWidth={2.5} dot={false} activeDot={{ r: 4, fill: '#fbbf24' }} animationDuration={1500} />
-                  <Line type="monotone" dataKey="rivalTotal" stroke="#f87171" strokeWidth={2.5} dot={false} activeDot={{ r: 4, fill: '#f87171' }} animationDuration={1500} />
+                  <Line type="monotone" dataKey="myTotal" stroke="var(--primary)" strokeWidth={2.5} dot={false} activeDot={{ r: 4, fill: 'var(--primary)' }} animationDuration={1500} />
+                  <Line type="monotone" dataKey="rivalTotal" stroke="#ef4444" strokeWidth={2.5} dot={false} activeDot={{ r: 4, fill: '#ef4444' }} animationDuration={1500} />
                 </LineChart>
               </ResponsiveContainer>
             </div>

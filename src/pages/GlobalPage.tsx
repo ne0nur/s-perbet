@@ -212,7 +212,7 @@ function LeaderboardSection({
                 key={e.id}
                 onClick={() => handleUserClick(e.id)}
                 className={`flex items-center gap-3 px-3.5 py-3 cursor-pointer transition-all duration-200 hover:bg-white/[0.03] border-b border-surface-container-high last:border-0 border-l-2 ${
-                  isSelected ? 'bg-primary-container/12 border-l-primary-container font-bold shadow-[inset_3px_0_0_#fbbf24]' : i % 2 === 0 ? 'border-l-transparent' : 'bg-surface-container-lowest border-l-transparent'
+                  isSelected ? 'bg-primary-container/12 border-l-primary-container font-bold shadow-[inset_3px_0_0_var(--primary)]' : i % 2 === 0 ? 'border-l-transparent' : 'bg-surface-container-lowest border-l-transparent'
                 } hover:border-l-white/20`}
               >
                 <span className="w-6 flex flex-col items-center justify-center gap-0.5 font-mono text-on-surface-variant">

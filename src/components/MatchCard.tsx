@@ -289,12 +289,12 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
             {/* Speichern-Button */}
             <motion.button
               onClick={handleSpeichern}
-              disabled={isSaving || !isOnline}
+              disabled={isSaving || !isOnline || (eigenerTipp && tippHeim === eigenerTipp.tipp_heim && tippGast === eigenerTipp.tipp_gast)}
               whileTap={{ scale: 0.95 }}
               className={`flex-shrink-0 flex items-center justify-center gap-1.5 px-4 py-2 rounded-full text-[11px] font-mono font-bold uppercase tracking-wider transition-all duration-200 cursor-pointer ${
                 !isOnline
                   ? 'bg-red-500/10 border border-red-500/20 text-red-400'
-                  : saved
+                  : (saved || (eigenerTipp && tippHeim === eigenerTipp.tipp_heim && tippGast === eigenerTipp.tipp_gast))
                     ? 'bg-green-500/20 border border-green-500/40 text-green-400 shadow-[0_0_12px_rgba(34,197,94,0.2)]'
                     : 'bg-primary-container/15 border border-primary-container/30 text-primary-fixed-dim hover:bg-primary-container/25'
               } disabled:opacity-50`}
@@ -304,7 +304,7 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
                   <motion.span key="offline" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-1.5"><WifiOff size={12} /> Offline</motion.span>
                 ) : isSaving ? (
                   <motion.div key="saving" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="w-3.5 h-3.5 border-2 border-primary-fixed-dim border-t-transparent rounded-full animate-spin" />
-                ) : saved ? (
+                ) : (saved || (eigenerTipp && tippHeim === eigenerTipp.tipp_heim && tippGast === eigenerTipp.tipp_gast)) ? (
                   <motion.span 
                     key="saved" 
                     initial={{ scale: 0.8, opacity: 0 }} 
@@ -317,7 +317,7 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
                   </motion.span>
                 ) : (
                   <motion.span key="idle" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                    {eigenerTipp ? 'Ändern' : 'Tippen'}
+                    {eigenerTipp ? 'Ändern ?' : 'Tippen'}
                   </motion.span>
                 )}
               </AnimatePresence>

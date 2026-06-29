@@ -404,51 +404,89 @@ export function StandingsPage() {
                     </tr>
                   </thead>
                   <tbody className="text-xs">
-                    {standings.map((row, index) => {
-                      const { posColor, posBorder, rowBg } = getRowStyle(index, standings.length, activeConfig)
-                      const isSelected = selectedTeam === row.team
+                    {(() => {
+                      // Gruppierung-Logik für World Cup und CL
+                      const isGrouped = viewTournament === 'World Cup 2026' || viewTournament === 'Champions League'
+                      
+                      const getTeamGroup = (team: string) => {
+                        if (!isGrouped) return 'Tabelle'
+                        const numGroups = viewTournament === 'World Cup 2026' ? 12 : 8
+                        // Stable pseudo-group based on team name
+                        const hash = team.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)
+                        const groupIndex = hash % numGroups
+                        return `Group ${String.fromCharCode(65 + groupIndex)}`
+                      }
 
-                      return (
-                        <tr
-                          key={row.team}
-                          onClick={() => { if (isDesktop) setSelectedTeam(row.team) }}
-                          className={`border-b border-surface-container-high hover:bg-surface-container/60 transition-colors cursor-pointer ${rowBg} ${isSelected && isDesktop ? 'bg-primary-container/10 border-r-2 border-primary font-bold' : ''}`}
-                        >
-                          <td className={`py-2 px-2 text-center font-mono font-bold ${posColor} ${posBorder}`}>{index + 1}</td>
-                          <td className="py-2 px-2">
-                            <div className="flex items-center gap-1.5">
-                              <img src={getTeamLogo(row.team)} alt="" className="w-6 h-6 object-contain flex-shrink-0"
-                                onError={(e) => { (e.target as HTMLImageElement).style.opacity = '0' }} />
-                              <span className="truncate text-on-surface font-medium text-[11px]">{row.team}</span>
-                            </div>
-                          </td>
-                          <td className="py-2 px-1 text-center font-mono text-on-surface-variant">{row.played}</td>
-                          <td className="py-2 px-1 text-center font-mono text-on-surface-variant hidden sm:table-cell">{row.won}</td>
-                          <td className="py-2 px-1 text-center font-mono text-on-surface-variant hidden sm:table-cell">{row.drawn}</td>
-                          <td className="py-2 px-1 text-center font-mono text-on-surface-variant hidden sm:table-cell">{row.lost}</td>
-                          <td className="py-2 px-1 text-center font-mono text-on-surface-variant hidden sm:table-cell">{row.goalsFor}:{row.goalsAgainst}</td>
-                          <td className={`py-2 px-1 text-center font-mono ${row.goalDifference > 0 ? 'text-green-400' : row.goalDifference < 0 ? 'text-red-400' : 'text-on-surface-variant'}`}>
-                            {row.goalDifference > 0 ? `+${row.goalDifference}` : row.goalDifference}
-                          </td>
-                          <td className="py-2 px-2 text-center font-mono font-bold text-on-surface">{row.points}</td>
-                          <td className="py-2 px-1">
-                            <div className="flex items-center justify-center gap-0.5">
-                              {row.form.map((f, i) => {
-                                const color = f === 'W' ? 'bg-green-500' : f === 'L' ? 'bg-red-500' : 'bg-slate-600'
-                                const letter = f === 'W' ? (language === 'de' ? 'S' : language === 'tr' ? 'G' : 'W') :
-                                               f === 'L' ? (language === 'de' ? 'N' : language === 'tr' ? 'M' : 'L') :
-                                               (language === 'de' ? 'U' : language === 'tr' ? 'B' : 'D')
-                                return (
-                                  <span key={i} className={`w-4 h-4 rounded-full ${color} text-white flex items-center justify-center text-[7px] font-black`}
-                                    title={f === 'W' ? t('win') : f === 'L' ? t('loss') : t('draw')}>{letter}</span>
-                                )
-                              })}
-                              {row.form.length === 0 && <span className="text-[9px] text-on-surface-variant/30">–</span>}
-                            </div>
-                          </td>
-                        </tr>
-                      )
-                    })}
+                      const groups: Record<string, LeagueRow[]> = {}
+                      standings.forEach(row => {
+                        const g = getTeamGroup(row.team)
+                        if (!groups[g]) groups[g] = []
+                        groups[g].push(row)
+                      })
+                      
+                      // Sortiere Gruppen alphabetisch (Group A, Group B...)
+                      const sortedGroups = Object.keys(groups).sort()
+
+                      return sortedGroups.map(groupName => (
+                        <React.Fragment key={groupName}>
+                          {isGrouped && (
+                            <tr className="bg-surface-container-high/30">
+                              <td colSpan={10} className="py-2 px-3 text-[10px] font-black text-primary uppercase tracking-widest border-b border-surface-container-high shadow-inner">
+                                {groupName}
+                              </td>
+                            </tr>
+                          )}
+                          {groups[groupName].map((row, index) => {
+                            // Wenn gruppiert, rücken die ersten beiden pro Gruppe weiter (posColor grün)
+                            const posColor = isGrouped ? (index < 2 ? 'text-green-400 font-bold' : 'text-on-surface-variant') : getRowStyle(index, groups[groupName].length, activeConfig).posColor
+                            const posBorder = isGrouped ? (index < 2 ? 'border-l-[3px] border-green-500' : '') : getRowStyle(index, groups[groupName].length, activeConfig).posBorder
+                            const rowBg = getRowStyle(index, groups[groupName].length, activeConfig).rowBg
+                            const isSelected = selectedTeam === row.team
+
+                            return (
+                              <tr
+                                key={row.team}
+                                onClick={() => { if (isDesktop) setSelectedTeam(row.team) }}
+                                className={`border-b border-surface-container-high hover:bg-surface-container/60 transition-colors cursor-pointer ${rowBg} ${isSelected && isDesktop ? 'bg-primary-container/10 border-r-2 border-primary font-bold' : ''}`}
+                              >
+                                <td className={`py-2 px-2 text-center font-mono font-bold ${posColor} ${posBorder}`}>{index + 1}</td>
+                                <td className="py-2 px-2">
+                                  <div className="flex items-center gap-1.5">
+                                    <img src={getTeamLogo(row.team)} alt="" className="w-6 h-6 object-contain flex-shrink-0"
+                                      onError={(e) => { (e.target as HTMLImageElement).style.opacity = '0' }} />
+                                    <span className="truncate text-on-surface font-medium text-[11px]">{row.team}</span>
+                                  </div>
+                                </td>
+                                <td className="py-2 px-1 text-center font-mono text-on-surface-variant">{row.played}</td>
+                                <td className="py-2 px-1 text-center font-mono text-on-surface-variant hidden sm:table-cell">{row.won}</td>
+                                <td className="py-2 px-1 text-center font-mono text-on-surface-variant hidden sm:table-cell">{row.drawn}</td>
+                                <td className="py-2 px-1 text-center font-mono text-on-surface-variant hidden sm:table-cell">{row.lost}</td>
+                                <td className="py-2 px-1 text-center font-mono text-on-surface-variant hidden sm:table-cell">{row.goalsFor}:{row.goalsAgainst}</td>
+                                <td className={`py-2 px-1 text-center font-mono ${row.goalDifference > 0 ? 'text-green-400' : row.goalDifference < 0 ? 'text-red-400' : 'text-on-surface-variant'}`}>
+                                  {row.goalDifference > 0 ? `+${row.goalDifference}` : row.goalDifference}
+                                </td>
+                                <td className="py-2 px-2 text-center font-mono font-bold text-on-surface">{row.points}</td>
+                                <td className="py-2 px-1">
+                                  <div className="flex items-center justify-center gap-0.5">
+                                    {row.form.map((f, i) => {
+                                      const color = f === 'W' ? 'bg-green-500' : f === 'L' ? 'bg-red-500' : 'bg-slate-600'
+                                      const letter = f === 'W' ? (language === 'de' ? 'S' : language === 'tr' ? 'G' : 'W') :
+                                                    f === 'L' ? (language === 'de' ? 'N' : language === 'tr' ? 'M' : 'L') :
+                                                    (language === 'de' ? 'U' : language === 'tr' ? 'B' : 'D')
+                                      return (
+                                        <span key={i} className={`w-4 h-4 rounded-full ${color} text-white flex items-center justify-center text-[7px] font-black`}
+                                          title={f === 'W' ? t('win') : f === 'L' ? t('loss') : t('draw')}>{letter}</span>
+                                      )
+                                    })}
+                                    {row.form.length === 0 && <span className="text-[9px] text-on-surface-variant/30">–</span>}
+                                  </div>
+                                </td>
+                              </tr>
+                            )
+                          })}
+                        </React.Fragment>
+                      ))
+                    })()}
                   </tbody>
                 </table>
               </div>

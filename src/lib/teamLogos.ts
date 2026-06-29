@@ -68,7 +68,10 @@ const KNOWN_LOGOS = new Set([
   'atalanta',
   'arsenal',
   'atleticomadrid',
-  'rbleipzig'
+  'rbleipzig',
+  // World Cup 2026
+  'algeria', 'austria', 'jordan', 'argentina', 'southafrica', 'canada',
+  'brazil', 'japan', 'germany', 'paraguay',
 ])
 
 function normalizeName(name: string): string {
@@ -106,6 +109,32 @@ export function getTeamLogo(teamName: string): string {
     clean = 'bayernmunchen'
   } else if (clean === 'dortmund' || clean === 'bvb') {
     clean = 'borussiadortmund'
+  }
+
+  // Country Flags Mapping (ISO 3166-1 alpha-2 for flagcdn)
+  const COUNTRY_FLAGS: Record<string, string> = {
+    'algeria': 'dz', 'algerien': 'dz',
+    'austria': 'at', 'osterreich': 'at',
+    'jordan': 'jo', 'jordanien': 'jo',
+    'argentina': 'ar', 'argentinien': 'ar',
+    'southafrica': 'za', 'sudafrika': 'za',
+    'canada': 'ca', 'kanada': 'ca',
+    'brazil': 'br', 'brasilien': 'br',
+    'japan': 'jp',
+    'germany': 'de', 'deutschland': 'de',
+    'paraguay': 'py',
+    'turkey': 'tr', 'turkei': 'tr',
+    'france': 'fr', 'frankreich': 'fr',
+    'italy': 'it', 'italien': 'it',
+    'spain': 'es', 'spanien': 'es',
+    'england': 'gb-eng',
+    'netherlands': 'nl', 'niederlande': 'nl',
+    'portugal': 'pt',
+    'belgium': 'be', 'belgien': 'be',
+  }
+
+  if (COUNTRY_FLAGS[clean]) {
+    return `https://flagcdn.com/${COUNTRY_FLAGS[clean]}.svg`
   }
 
   if (KNOWN_LOGOS.has(clean)) {
