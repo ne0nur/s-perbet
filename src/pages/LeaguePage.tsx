@@ -71,7 +71,6 @@ export function LeaguePage() {
   const [meineLigen, setMeineLigen] = useState<Liga[]>([])
   const [ligaMeta, setLigaMeta] = useState<Record<string, { mitglieder: number; rang: number }>>({})
   const [aktiveLiga, setAktiveLiga] = useState<Liga | null>(null)
-  const [mitglieder, setMitglieder] = useState<MitgliedRow[]>([])
   const [isLaden, setIsLaden] = useState(true)
   const [viewSpieltag, setViewSpieltag] = useState<'gesamt' | number>('gesamt')
   const [maxSpieltag, setMaxSpieltag] = useState(38)
@@ -103,8 +102,8 @@ export function LeaguePage() {
   const [allMatches, setAllMatches] = useState<MatchInfo[]>([])
   const tableScrollRef = useRef<HTMLDivElement>(null)
   const initialized = useRef(false)
-  const datenGeladen = useRef(false)
-  const allTipsRef = useRef<TipSummary[]>([])
+  const [profiles, setProfiles] = useState<Profile[]>([])
+  const [tips, setTips] = useState<TipSummary[]>([])
   const scrollContainerRef = useRef<HTMLDivElement>(null)
 
   // Auto-Scroll zur aktiven Tab-Schaltfläche
@@ -116,8 +115,6 @@ export function LeaguePage() {
       }
     }
   }, [viewSpieltag, maxSpieltag])
-  const allProfilesRef = useRef<Profile[]>([])
-
   const tabRef = useRef<HTMLDivElement>(null)
   const fetchSeasons = useCallback(async () => {
     const { data } = await supabase.from('seasons').select('*').order('id', { ascending: false })
@@ -168,13 +165,13 @@ export function LeaguePage() {
 
     // 1. Mitglieder
     const { data: members } = await supabase.from('league_members').select('user_id').eq('league_id', aktiveLiga.id)
-    if (!members?.length) { setMitglieder([]); setIsLaden(false); return }
+    if (!members?.length) { setProfiles([]); setTips([]); setIsLaden(false); return }
     const userIds = members.map(m => m.user_id)
 
     // 2. Profile
-    const { data: profiles } = await supabase.from('profiles').select('id,username,avatar_url,gesamt_punkte').in('id', userIds)
-    if (!profiles) { setIsLaden(false); return }
-    allProfilesRef.current = profiles as Profile[]
+    const { data: fetchedProfiles } = await supabase.from('profiles').select('id,username,avatar_url,gesamt_punkte').in('id', userIds)
+    if (!fetchedProfiles) { setIsLaden(false); return }
+    setProfiles(fetchedProfiles as Profile[])
 
     // 3. Matches für die gewählte Saison laden
     let query = supabase.from('matches')
@@ -213,19 +210,16 @@ export function LeaguePage() {
     const matchIds = fetchedMatches.map(m => m.id)
 
     // 4. ALLE Tipps laden (für alle Matches)
-    const { data: tips } = await supabase.from('tips')
+    const { data: fetchedTips } = await supabase.from('tips')
       .select('user_id,match_id,tipp_heim,tipp_gast,punkte')
       .in('user_id', userIds).in('match_id', matchIds)
-    allTipsRef.current = (tips || []) as TipSummary[]
+    setTips((fetchedTips || []) as TipSummary[])
 
-    datenGeladen.current = true
     setIsLaden(false)
   }, [aktiveLiga, saison])
 
-  const computeRows = useCallback(() => {
-    const profiles = allProfilesRef.current
-    const tips = allTipsRef.current
-    if (!profiles.length) return
+  const mitglieder = useMemo(() => {
+    if (!profiles.length) return []
 
     const leagueTournaments = new Set(aktiveLiga?.active_tournaments || ['Süper Lig'])
     
@@ -316,8 +310,8 @@ export function LeaguePage() {
       }
     })
 
-    setMitglieder(rows)
-  }, [allMatches, viewSpieltag, viewTournament, aktiveLiga])
+    return rows
+  }, [profiles, tips, allMatches, viewSpieltag, viewTournament, aktiveLiga])
 
   useEffect(() => {
     if (!aktiveLiga || !user) return
@@ -369,17 +363,10 @@ export function LeaguePage() {
 
   useEffect(() => {
     if (aktiveLiga && saison) {
-      datenGeladen.current = false
       setIsLaden(true)
       ladeDaten()
     }
   }, [aktiveLiga, saison, ladeDaten])
-
-  useEffect(() => {
-    if (aktiveLiga && datenGeladen.current) {
-      computeRows()
-    }
-  }, [viewSpieltag, viewTournament, allMatches, computeRows, aktiveLiga])
 
   const filteredMatches = useMemo(() => {
     let matches = allMatches
