@@ -523,60 +523,66 @@ export function LeaguePage() {
         <div className="flex flex-col flex-1 min-h-0 md:px-6 lg:px-8 md:pt-4 max-w-[1600px] mx-auto w-full animate-page-enter">
           {/* Header mit Back-Button */}
           <div className="px-4 pt-4 mb-3 md:px-0">
-            <div className="flex items-center gap-4 mb-5 flex-wrap">
-              <button onClick={() => { setAktiveLiga(null); setZeigeChatDrawer(false); }} className="p-2 bg-surface-container-low border border-surface-container-high shadow-sm text-on-surface-variant hover:text-on-surface hover:bg-surface-container rounded-full transition-all">
-                <X size={20} />
-              </button>
-              <div className="flex-1 min-w-[200px]">
-                <div className="flex items-center gap-1.5 text-primary-fixed-dim mb-1">
-                  <Trophy size={14} />
-                  <span className="text-[10px] font-mono font-bold uppercase tracking-wider">{t('currentLeague')}</span>
+            <div className="flex items-start justify-between gap-4 mb-5">
+              {/* Links: Zurück-Button + Titel */}
+              <div className="flex items-center gap-3 md:gap-4 flex-1 min-w-0">
+                <button onClick={() => { setAktiveLiga(null); setZeigeChatDrawer(false); }} className="shrink-0 p-2 bg-surface-container-low border border-surface-container-high shadow-sm text-on-surface-variant hover:text-on-surface hover:bg-surface-container rounded-full transition-all">
+                  <X size={20} />
+                </button>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5 text-primary-fixed-dim mb-1 relative z-10">
+                    <Trophy size={14} />
+                    <span className="text-[10px] font-mono font-bold uppercase tracking-wider">{t('currentLeague')}</span>
+                  </div>
+                  <h1 className="text-4xl md:text-5xl text-on-surface leading-none mt-1 truncate" style={{ fontFamily: "'Urban Thunder', sans-serif" }}>{aktiveLiga.name}</h1>
                 </div>
-                <h1 className="text-4xl md:text-5xl text-on-surface leading-none mt-1" style={{ fontFamily: "'Urban Thunder', sans-serif" }}>{aktiveLiga.name}</h1>
               </div>
 
-              {/* Saison-Selector */}
-              {seasonsList.length > 0 && (
-                <select
-                  value={saison || ''}
-                  onChange={(e) => setSaison(parseInt(e.target.value))}
-                  className="bg-surface-container border border-surface-container-high rounded-lg px-2 py-1.5 text-xs text-on-surface focus:outline-none focus:border-primary-container font-mono ml-auto"
-                >
-                  {seasonsList.map(s => (
-                    <option key={s.id} value={s.id}>{s.name}</option>
-                  ))}
-                </select>
-              )}
-
-              {/* Liga-Menü */}
-              <div className="relative">
-                <button onClick={() => setZeigeMenu(!zeigeMenu)}
-                  className="p-1 text-on-surface-variant hover:text-on-surface rounded">
-                  <MoreHorizontal size={18} />
-                </button>
-                {zeigeMenu && (
-                  <>
-                    <div className="fixed inset-0 z-40" onClick={() => setZeigeMenu(false)} />
-                    <div className="absolute right-0 top-8 z-50 bg-surface-container-high border border-surface-container-highest rounded-lg py-1 min-w-[160px] shadow-lg">
-                      <button onClick={handleLigaVerlassen}
-                        className="w-full flex items-center gap-2 px-3 py-2 text-[11px] font-medium text-on-surface hover:bg-surface-container-highest transition-colors">
-                        <LogOut size={13} className="text-on-surface-variant" /> {t('leaveLeague')}
-                      </button>
-                      {aktiveLiga.creator_id === user?.id && (
-                        <>
-                          <button onClick={() => { setEditTurniere(aktiveLiga.active_tournaments || ['Süper Lig']); setZeigeTurnierModal(true); setZeigeMenu(false); }}
-                            className="w-full flex items-center gap-2 px-3 py-2 text-[11px] font-medium text-on-surface hover:bg-surface-container-highest transition-colors border-t border-surface-container-high">
-                            <Target size={13} className="text-on-surface-variant" /> {t('manageTournaments')}
-                          </button>
-                          <button onClick={handleLigaLoeschen}
-                            className="w-full flex items-center gap-2 px-3 py-2 text-[11px] font-medium text-red-400 hover:bg-surface-container-highest transition-colors border-t border-surface-container-high">
-                            <Trash2 size={13} /> {t('deleteLeague')}
-                          </button>
-                        </>
-                      )}
-                    </div>
-                  </>
+              {/* Rechts: Saison-Selector + Menü */}
+              <div className="flex items-center gap-2 shrink-0">
+                {/* Saison-Selector */}
+                {seasonsList.length > 0 && (
+                  <select
+                    value={saison || ''}
+                    onChange={(e) => setSaison(parseInt(e.target.value))}
+                    className="bg-surface-container border border-surface-container-high rounded-lg px-2 py-1.5 text-xs text-on-surface focus:outline-none focus:border-primary-container font-mono"
+                  >
+                    {seasonsList.map(s => (
+                      <option key={s.id} value={s.id}>{s.name}</option>
+                    ))}
+                  </select>
                 )}
+
+                {/* Liga-Menü */}
+                <div className="relative">
+                  <button onClick={() => setZeigeMenu(!zeigeMenu)}
+                    className="p-1 text-on-surface-variant hover:text-on-surface rounded">
+                    <MoreHorizontal size={18} />
+                  </button>
+                  {zeigeMenu && (
+                    <>
+                      <div className="fixed inset-0 z-40" onClick={() => setZeigeMenu(false)} />
+                      <div className="absolute right-0 top-8 z-50 bg-surface-container-high border border-surface-container-highest rounded-lg py-1 min-w-[160px] shadow-lg">
+                        <button onClick={handleLigaVerlassen}
+                          className="w-full flex items-center gap-2 px-3 py-2 text-[11px] font-medium text-on-surface hover:bg-surface-container-highest transition-colors">
+                          <LogOut size={13} className="text-on-surface-variant" /> {t('leaveLeague')}
+                        </button>
+                        {aktiveLiga.creator_id === user?.id && (
+                          <>
+                            <button onClick={() => { setEditTurniere(aktiveLiga.active_tournaments || ['Süper Lig']); setZeigeTurnierModal(true); setZeigeMenu(false); }}
+                              className="w-full flex items-center gap-2 px-3 py-2 text-[11px] font-medium text-on-surface hover:bg-surface-container-highest transition-colors border-t border-surface-container-high">
+                              <Target size={13} className="text-on-surface-variant" /> {t('manageTournaments')}
+                            </button>
+                            <button onClick={handleLigaLoeschen}
+                              className="w-full flex items-center gap-2 px-3 py-2 text-[11px] font-medium text-red-400 hover:bg-surface-container-highest transition-colors border-t border-surface-container-high">
+                              <Trash2 size={13} /> {t('deleteLeague')}
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    </>
+                  )}
+                </div>
               </div>
             </div>
 
