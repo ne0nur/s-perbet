@@ -57,6 +57,8 @@ function punkteKlasse(p: number): string {
   if (p === 4) return 'text-green-400 drop-shadow-[0_0_6px_rgba(74,222,128,0.4)]'
   if (p === 3) return 'text-amber-400 drop-shadow-[0_0_6px_rgba(251,191,36,0.4)]'
   if (p === 2) return 'text-blue-400 drop-shadow-[0_0_6px_rgba(96,165,250,0.4)]'
+  if (p === 1) return 'text-orange-400 drop-shadow-[0_0_6px_rgba(251,146,60,0.4)]'
+  if (p < 0) return 'text-red-500 drop-shadow-[0_0_6px_rgba(239,68,68,0.4)]'
   return 'text-on-surface-variant/70'
 }
 function subscriptPunkte(p: number): string {
@@ -668,8 +670,9 @@ export function LeaguePage() {
                           <table className="w-full text-left border-collapse min-w-max">
                         <thead>
                           <tr className="border-b border-surface-container-high bg-surface-container-low">
-                            <th className="py-2.5 pl-3 pr-2 text-[10px] font-mono font-medium text-on-surface-variant/60 uppercase tracking-wider w-8" title={t('rank')}>#</th>
-                            <th className="py-2.5 pr-2 text-[10px] font-mono font-medium text-on-surface-variant/60 uppercase tracking-wider text-left" title={t('player')}>{t('player')}</th>
+                            <th className="py-2.5 pl-3 pr-2 text-[10px] font-mono font-medium text-on-surface-variant/60 uppercase tracking-wider sticky left-0 z-20 bg-surface-container-low w-8 min-w-[32px]" title={t('rank')}>#</th>
+                            <th className="py-2.5 pr-2 text-[10px] font-mono font-medium text-on-surface-variant/60 uppercase tracking-wider text-left sticky left-8 z-20 bg-surface-container-low w-28 min-w-[112px]" title={t('player')}>{t('player')}</th>
+                            <th className="py-2.5 pr-3 text-[10px] font-mono font-medium text-on-surface-variant/60 uppercase tracking-wider text-center sticky left-[144px] z-20 bg-surface-container-low w-12 min-w-[48px]" title={t('pointsLong')}>{t('pointsShort')}</th>
                             {filteredMatches.map(m => (
                               <th key={m.id} className="py-2.5 px-1 text-[10px] font-mono font-medium text-on-surface-variant/60 uppercase tracking-wider text-center w-12 relative" title={`${m.heim_team} vs ${m.gast_team}`}>
                                 {(m.tournament === 'Champions League') && (
@@ -686,17 +689,20 @@ export function LeaguePage() {
                                 </div>
                               </th>
                             ))}
-                            <th className="py-2.5 pr-3 text-[10px] font-mono font-medium text-on-surface-variant/60 uppercase tracking-wider w-14 text-right" title={t('pointsLong')}>{t('pointsShort')}</th>
                           </tr>
                         </thead>
                         <tbody>
                           {mitglieder.map((m, idx) => {
                             const isMe = m.id === user?.id
+                            const stickyTdClass = `relative bg-surface-container-low z-10 after:absolute after:inset-0 after:pointer-events-none after:transition-colors ${isMe ? 'after:bg-primary-container/8 group-hover:after:bg-white/[0.04]' : 'group-hover:after:bg-white/[0.04]'}`
+                            
                             return (
-                              <tr key={m.id} onClick={() => setSelectedUserId(m.id)} className={`border-b border-surface-container-high/50 last:border-0 hover:bg-white/[0.04] transition-colors duration-200 group/row border-l-2 cursor-pointer ${isMe ? 'bg-primary-container/8 border-l-primary-container shadow-[inset_3px_0_0_var(--primary)]' : 'border-l-transparent hover:border-l-white/20'}`}>
-                                <td className="py-2.5 pr-2 pl-3">
-                                  <div className="flex flex-col items-center justify-center">
-                                    <span className="text-[11px] font-mono font-bold text-on-surface-variant/80">{idx + 1}</span>
+                              <tr key={m.id} onClick={() => setSelectedUserId(m.id)} className={`group border-b border-surface-container-high/50 last:border-0 hover:bg-white/[0.04] transition-colors duration-200 border-l-2 cursor-pointer ${isMe ? 'bg-primary-container/8 border-l-primary-container shadow-[inset_3px_0_0_var(--primary)]' : 'border-l-transparent hover:border-l-white/20'}`}>
+                                <td className={`py-2.5 pl-3 pr-2 text-center sticky left-0 w-8 min-w-[32px] ${stickyTdClass}`}>
+                                  <div className="flex flex-col items-center relative z-10">
+                                    <span className={`text-[11px] font-mono font-bold ${idx < 3 ? 'text-primary-fixed-dim' : 'text-on-surface-variant/50'}`}>
+                                      {idx + 1}.
+                                    </span>
                                     {m.trend !== undefined && m.trend !== 0 && (
                                       <span className={`text-[8px] font-bold ${m.trend > 0 ? 'text-emerald-400' : 'text-red-400'} animate-bounce`}>
                                         {m.trend > 0 ? '▲' : '▼'} {Math.abs(m.trend)}
@@ -707,8 +713,8 @@ export function LeaguePage() {
                                     )}
                                   </div>
                                 </td>
-                                <td className="py-2.5 pr-2">
-                                  <div className="flex items-center gap-1.5 min-w-[90px]">
+                                <td className={`py-2.5 pr-2 sticky left-8 w-28 min-w-[112px] ${stickyTdClass}`}>
+                                  <div className="flex items-center gap-1.5 min-w-[90px] relative z-10">
                                     <div className="relative w-6.5 h-6.5 flex-shrink-0">
                                       <div className="w-full h-full rounded-full bg-surface-container-high overflow-hidden border border-white/5">
                                         {m.avatar_url ? (
@@ -728,6 +734,11 @@ export function LeaguePage() {
                                       {m.id === aktiveLiga.creator_id && <span title={t('leagueCreator')}>👑</span>}
                                     </span>
                                   </div>
+                                </td>
+                                <td className={`py-2.5 pr-3 text-center sticky left-[144px] w-12 min-w-[48px] ${stickyTdClass}`}>
+                                  <span className="text-[11px] font-mono font-bold text-primary-fixed-dim relative z-10">
+                                    {viewSpieltag === 'gesamt' ? m.gesamt_punkte : m.spieltag_punkte}
+                                  </span>
                                 </td>
                                 {filteredMatches.map(match => {
                                   const tipp = m.tipps[match.id]
@@ -774,12 +785,7 @@ export function LeaguePage() {
                                     </td>
                                   )
                                 })}
-
-                                <td className="py-2.5 pr-3 text-right">
-                                  <span className="text-[11px] font-mono font-bold text-primary-fixed-dim">
-                                    {viewSpieltag === 'gesamt' ? m.gesamt_punkte : m.spieltag_punkte}
-                                  </span>
-                                </td>
+                                
                               </tr>
                             )
                           })}

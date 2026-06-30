@@ -130,13 +130,22 @@ async function fetchEspnScores(tournament: string, dateStr: string) {
       const home = comp.competitors.find((c: { homeAway: string }) => c.homeAway === "home");
       const away = comp.competitors.find((c: { homeAway: string }) => c.homeAway === "away");
       if (!home || !away) continue;
+      
+      let hScore = parseInt(home.score || "0", 10);
+      let aScore = parseInt(away.score || "0", 10);
+      
+      // Elfmeterschießen dazuaddieren (Userwunsch: summiert wird mit allen Toren inkl. Elfmeterschießen)
+      if (home.shootoutScore) hScore += home.shootoutScore;
+      if (away.shootoutScore) aScore += away.shootoutScore;
+
       const key = `${cleanName(home.team?.name || "")}_vs_${cleanName(away.team?.name || "")}`;
       let s = "upcoming";
       const sn = ev.status.type.name;
       if (sn.includes("FULL_TIME") || sn.includes("FINAL")) s = "finished";
       else if (sn.includes("HALF") || sn.includes("IN_PROGRESS")) s = "live";
       else if (sn.includes("POSTPONED") || sn.includes("CANCELED")) s = "postponed";
-      scores.set(key, { homeScore: parseInt(home.score || "0", 10), awayScore: parseInt(away.score || "0", 10), status: s });
+      
+      scores.set(key, { homeScore: hScore, awayScore: aScore, status: s });
     }
     return scores;
   } catch { return new Map(); }

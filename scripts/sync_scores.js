@@ -118,8 +118,16 @@ async function syncScores() {
         }
 
         const comp = event.competitions[0]
-        const homeScore = parseInt(comp.competitors.find(c => c.homeAway === 'home')?.score || '0', 10)
-        const awayScore = parseInt(comp.competitors.find(c => c.homeAway === 'away')?.score || '0', 10)
+        const homeComp = comp.competitors.find(c => c.homeAway === 'home')
+        const awayComp = comp.competitors.find(c => c.homeAway === 'away')
+        
+        let homeScore = parseInt(homeComp?.score || '0', 10)
+        let awayScore = parseInt(awayComp?.score || '0', 10)
+        
+        // Elfmeterschießen dazurechnen (auf Userwunsch: "summiert wird mit allen toren auch elfmeterschießen")
+        if (homeComp?.shootoutScore) homeScore += homeComp.shootoutScore
+        if (awayComp?.shootoutScore) awayScore += awayComp.shootoutScore
+
 
         const statusName = event.status.type.name
         let newStatus = 'upcoming'

@@ -73,6 +73,8 @@ function PunkteFarbe(p: number): string {
   if (p === 4) return 'text-green-400'
   if (p === 3) return 'text-amber-400'
   if (p === 2) return 'text-blue-400'
+  if (p === 1) return 'text-orange-400'
+  if (p < 0) return 'text-red-500'
   return 'text-slate-500'
 }
 

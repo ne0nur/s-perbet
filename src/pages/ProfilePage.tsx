@@ -132,7 +132,7 @@ export function ProfilePage() {
   
   const { onlineUsers } = usePresenceStore()
 
-  const [remainingPoints, setRemainingPoints] = useState({ sl: 0, cl: 0, total: 0 })
+  const [remainingPoints, setRemainingPoints] = useState<Record<string, number>>({})
 
   // Profile Tabs
   const [activeTab, setActiveTab] = useState<'overview' | 'achievements' | 'bonus' | 'settings' | 'admin'>('overview')
@@ -316,21 +316,18 @@ export function ProfilePage() {
       .select('tournament')
       .neq('status', 'finished')
     
-    let slUnplayed = 0;
-    let clUnplayed = 0;
-    
+    const unplayedPoints: Record<string, number> = {}
+    let totalUnplayed = 0
+
     if (unplayedMatchesData) {
       unplayedMatchesData.forEach(m => {
-        if (m.tournament === 'Champions League') clUnplayed++;
-        else slUnplayed++;
+        const t = m.tournament || 'Süper Lig'
+        unplayedPoints[t] = (unplayedPoints[t] || 0) + 4
+        totalUnplayed += 4
       })
     }
-    
-    setRemainingPoints({
-      sl: slUnplayed * 4,
-      cl: clUnplayed * 4,
-      total: (slUnplayed + clUnplayed) * 4
-    })
+    unplayedPoints.total = totalUnplayed
+    setRemainingPoints(unplayedPoints)
 
     const lastSeenStr = localStorage.getItem('superbet_last_seen_points')
     const lastSeen = lastSeenStr ? Number(lastSeenStr) : 0

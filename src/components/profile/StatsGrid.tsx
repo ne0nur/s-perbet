@@ -12,12 +12,13 @@ interface Stats {
 
 interface StatsGridProps {
   stats: Stats
-  remainingPoints?: { sl: number; cl: number; total: number }
+  remainingPoints?: Record<string, number>
   gesamtPunkte?: number
 }
 
-export function StatsGrid({ stats, remainingPoints = { sl: 0, cl: 0, total: 0 }, gesamtPunkte = 0 }: StatsGridProps) {
+export function StatsGrid({ stats, remainingPoints = {}, gesamtPunkte = 0 }: StatsGridProps) {
   const { t } = useTranslation()
+  const totalRemaining = remainingPoints.total || 0
   const totalTips = stats.total
   const correctPct = totalTips > 0 ? (stats.correct / totalTips) * 100 : 0
   const wrongPct = totalTips > 0 ? (stats.wrong / totalTips) * 100 : 0
@@ -49,11 +50,14 @@ export function StatsGrid({ stats, remainingPoints = { sl: 0, cl: 0, total: 0 },
             <span>{t('pointsEarnedSoFar')}</span>
             <div className="text-right">
               <span className="text-primary-fixed-dim block">
-                {t('ptsStillPossible', { count: remainingPoints.total })}
+                {t('ptsStillPossible', { count: totalRemaining })}
               </span>
-              {remainingPoints.total > 0 && (
+              {totalRemaining > 0 && (
                 <div className="text-[8px] opacity-60 font-sans tracking-normal mt-0.5">
-                  Süper Lig: {remainingPoints.sl} · CL: {remainingPoints.cl}
+                  {Object.entries(remainingPoints)
+                    .filter(([k, v]) => k !== 'total' && v > 0)
+                    .map(([k, v]) => `${k.replace('League', 'L.')}: ${v}`)
+                    .join(' · ')}
                 </div>
               )}
             </div>
@@ -61,11 +65,11 @@ export function StatsGrid({ stats, remainingPoints = { sl: 0, cl: 0, total: 0 },
           <div className="flex w-full h-1.5 rounded-full overflow-hidden border border-surface-container-high bg-surface-container-highest">
             <div
               className="bg-primary h-full shadow-[0_0_8px_rgba(var(--primary-rgb),0.3)] transition-all duration-1000"
-              style={{ width: `${Math.max(5, (gesamtPunkte / (gesamtPunkte + remainingPoints.total || 1)) * 100)}%` }}
+              style={{ width: `${Math.max(5, (gesamtPunkte / (gesamtPunkte + totalRemaining || 1)) * 100)}%` }}
             />
             <div
               className="bg-primary/20 h-full transition-all duration-1000"
-              style={{ width: `${(remainingPoints.total / (gesamtPunkte + remainingPoints.total || 1)) * 100}%` }}
+              style={{ width: `${(totalRemaining / (gesamtPunkte + totalRemaining || 1)) * 100}%` }}
             />
           </div>
         </div>
