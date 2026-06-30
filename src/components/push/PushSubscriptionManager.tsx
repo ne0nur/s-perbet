@@ -58,7 +58,12 @@ export function PushSubscriptionManager() {
 
       const registration = await navigator.serviceWorker.ready
       
-      const vapidPublicKey = import.meta.env.VITE_VAPID_PUBLIC_KEY
+      const vapidPublicKey = import.meta.env.VITE_VAPID_PUBLIC_KEY || 'BFDKSoI6jUFRaAiASJPe-K6EiWGzcjlXuLYvGDMwmjDNL9RILYT59bPsQnsQZY1QOXRAxXQDpBHo7I7-I4a8Qms'
+      
+      if (!vapidPublicKey) {
+        throw new Error("VAPID public key is missing")
+      }
+      
       const convertedVapidKey = urlBase64ToUint8Array(vapidPublicKey)
 
       const subscription = await registration.pushManager.subscribe({
