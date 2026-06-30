@@ -82,6 +82,7 @@ export function UserInfoSettings({
           <div className="flex items-center gap-1 mb-1">
             <input
               type="text" value={username}
+              maxLength={15}
               onChange={e => setUsername(e.target.value)}
               onBlur={handleUsernameUpdate}
               className="text-lg font-bold text-on-surface bg-transparent outline-none w-full border-b border-transparent hover:border-surface-container-high focus:border-primary transition-colors pb-0.5"

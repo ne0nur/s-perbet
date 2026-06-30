@@ -534,7 +534,12 @@ export function LeaguePage() {
                     <Trophy size={14} />
                     <span className="text-[10px] font-mono font-bold uppercase tracking-wider">{t('currentLeague')}</span>
                   </div>
-                  <h1 className="text-4xl md:text-5xl text-on-surface leading-none mt-1 truncate" style={{ fontFamily: "'Urban Thunder', sans-serif" }}>{aktiveLiga.name}</h1>
+                  <h1 
+                    className={`${aktiveLiga.name.length > 15 ? 'text-2xl md:text-3xl' : aktiveLiga.name.length > 10 ? 'text-3xl md:text-4xl' : 'text-4xl md:text-5xl'} text-on-surface leading-none mt-1 truncate`} 
+                    style={{ fontFamily: "'Urban Thunder', sans-serif" }}
+                  >
+                    {aktiveLiga.name}
+                  </h1>
                 </div>
               </div>
 
@@ -1043,7 +1048,7 @@ export function LeaguePage() {
                   
                   <div>
                     <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2 block">{t('leagueName')}</label>
-                    <input value={neueLigaName} onChange={e => setNeueLigaName(e.target.value)} placeholder={t('leagueNamePlaceholder')}
+                    <input value={neueLigaName} onChange={e => setNeueLigaName(e.target.value)} placeholder={t('leagueNamePlaceholder')} maxLength={20}
                       className="w-full bg-surface-container-lowest border-2 border-surface-container-high rounded-xl px-4 py-3 text-sm text-on-surface focus:border-primary focus:outline-none transition-colors" autoFocus />
                   </div>
                   
@@ -1130,8 +1135,10 @@ export function LeaguePage() {
                   </button>
                 </div>
                 <input
+                  type="text"
+                  maxLength={20}
                   value={neueLigaName}
-                  onChange={e => setNeueLigaName(e.target.value)}
+                  onChange={(e) => setNeueLigaName(e.target.value)}
                   placeholder={t('leagueName')}
                   className="w-full bg-surface-container-lowest border border-surface-container-high rounded-lg px-3 py-2 text-sm text-on-surface focus:border-primary focus:outline-none"
                   autoFocus
