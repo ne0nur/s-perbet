@@ -88,7 +88,18 @@ export function ProfilePage() {
   const { user, logout } = useAuthStore()
   const [username, setUsername] = useState('')
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
-  const [profil, setProfil] = useState<{ gesamt_punkte: number; exakte_treffer: number; is_admin: boolean; rang: number | null; league_count: number } | null>(null)
+  const [profil, setProfil] = useState<{ 
+    gesamt_punkte: number; 
+    exakte_treffer: number; 
+    is_admin: boolean; 
+    rang: number | null; 
+    league_count: number;
+    achievements_count?: number;
+    level?: number;
+    xp_current?: number;
+    xp_required?: number;
+    total_exp?: number;
+  } | null>(null)
   const [isLaden, setIsLaden] = useState(true)
   const [uploading, setUploading] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
@@ -212,7 +223,7 @@ export function ProfilePage() {
 
   const lade = useCallback(async () => {
     const { data } = await supabase.from('profiles')
-      .select('username,avatar_url,gesamt_punkte,exakte_treffer,is_admin')
+      .select('username,avatar_url,gesamt_punkte,exakte_treffer,is_admin,achievements_count,level,xp_current,xp_required,total_exp')
       .eq('id', user!.id).single()
     
     let dbPoints = 0
@@ -238,7 +249,12 @@ export function ProfilePage() {
         exakte_treffer: dbExacts,
         is_admin: dbIsAdmin,
         rang: calculatedRank,
-        league_count: leagueCount || 0
+        league_count: leagueCount || 0,
+        achievements_count: data.achievements_count || 0,
+        level: data.level || 1,
+        xp_current: data.xp_current || 0,
+        xp_required: data.xp_required || 88,
+        total_exp: data.total_exp || 0
       })
 
       if (dbIsAdmin) {
@@ -321,7 +337,7 @@ export function ProfilePage() {
 
     if (unplayedMatchesData) {
       unplayedMatchesData.forEach(m => {
-        const t = m.tournament || 'Süper Lig'
+        const t = m.tournament || 'Unbekannt'
         unplayedPoints[t] = (unplayedPoints[t] || 0) + 4
         totalUnplayed += 4
       })
@@ -395,9 +411,19 @@ export function ProfilePage() {
       })
     }
 
+    // If no past tips exist, we still want to show bonus cards for active tournaments!
     if (tournamentMap.size === 0) {
-      tournamentMap.set('Süper Lig', { teams: new Set(FALLBACK_SL_TEAMS), st3Kickoffs: [], allKickoffs: [] })
-      tournamentMap.set('Champions League', { teams: new Set(FALLBACK_CL_TEAMS), st3Kickoffs: [], allKickoffs: [] })
+      // Fetch distinct active tournaments
+      const { data: activeTournaments } = await supabase
+        .from('matches')
+        .select('tournament')
+        .limit(100)
+      
+      const found = new Set(activeTournaments?.map(m => m.tournament).filter(Boolean) || ['Süper Lig'])
+      found.forEach(t => {
+        const fallbackTeams = t.toLowerCase().includes('lig') ? FALLBACK_SL_TEAMS : FALLBACK_CL_TEAMS
+        tournamentMap.set(t, { teams: new Set(fallbackTeams), st3Kickoffs: [], allKickoffs: [] })
+      })
     }
 
     const sortedNames = Array.from(tournamentMap.keys()).sort((a, b) => {
@@ -855,8 +881,13 @@ export function ProfilePage() {
       <div className="mb-6">
         {(() => {
           const levelDetails = profil 
-            ? calculateLevelDetails(profil.gesamt_punkte, unlockedSet.size)
-            : { level: 1, xpCurrent: 0, xpRequired: 100, xpPct: 0 }
+            ? { 
+                level: profil.level || 1, 
+                xpCurrent: profil.xp_current || 0, 
+                xpRequired: profil.xp_required || 88, 
+                xpPct: Math.min(100, Math.max(0, ((profil.xp_current || 0) / (profil.xp_required || 88)) * 100))
+              }
+            : { level: 1, xpCurrent: 0, xpRequired: 88, xpPct: 0 }
             
           let levelTitle = undefined
           if (profil) {

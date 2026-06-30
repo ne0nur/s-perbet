@@ -16,6 +16,7 @@ interface Profile {
   username: string
   avatar_url: string | null
   gesamt_punkte: number
+  achievements_count?: number
 }
 
 interface TipSummary {
@@ -45,7 +46,7 @@ interface MatchInfo {
   tore_gast: number | null; status: string; spieltag: number; tournament: string
 }
 interface MitgliedRow {
-  id: string; username: string; avatar_url: string | null; gesamt_punkte: number; global_punkte: number
+  id: string; username: string; avatar_url: string | null; gesamt_punkte: number; global_punkte: number; achievements_count: number
   tipps: Record<string, { heim: number; gast: number; punkte: number }>
   spieltag_punkte: number; spieltag_tipps: number; spieltag_gesamt: number
   trend?: number
@@ -54,11 +55,11 @@ interface Liga { id: string; name: string; invite_code: string; creator_id: stri
 
 // ─── Punkte-Farbe ────────────────────────────────────
 function punkteKlasse(p: number): string {
-  if (p === 4) return 'text-green-400 drop-shadow-[0_0_6px_rgba(74,222,128,0.4)]'
+  if (p >= 4) return 'text-green-400 drop-shadow-[0_0_6px_rgba(74,222,128,0.4)]'
   if (p === 3) return 'text-amber-400 drop-shadow-[0_0_6px_rgba(251,191,36,0.4)]'
   if (p === 2) return 'text-blue-400 drop-shadow-[0_0_6px_rgba(96,165,250,0.4)]'
-  if (p === 1) return 'text-orange-400 drop-shadow-[0_0_6px_rgba(251,146,60,0.4)]'
-  if (p < 0) return 'text-red-500 drop-shadow-[0_0_6px_rgba(239,68,68,0.4)]'
+  if (p === 1) return 'text-purple-400 drop-shadow-[0_0_6px_rgba(192,132,252,0.4)]'
+  if (p < 0) return 'text-red-400 drop-shadow-[0_0_6px_rgba(248,113,113,0.4)]'
   return 'text-on-surface-variant/70'
 }
 function subscriptPunkte(p: number): string {
@@ -171,7 +172,7 @@ export function LeaguePage() {
     const userIds = members.map(m => m.user_id)
 
     // 2. Profile
-    const { data: fetchedProfiles } = await supabase.from('profiles').select('id,username,avatar_url,gesamt_punkte').in('id', userIds)
+    const { data: fetchedProfiles } = await supabase.from('profiles').select('id,username,avatar_url,gesamt_punkte,achievements_count').in('id', userIds)
     if (!fetchedProfiles) { setIsLaden(false); return }
     setProfiles(fetchedProfiles as Profile[])
 
@@ -286,15 +287,18 @@ export function LeaguePage() {
       prevRankMap[uid] = index + 1
     })
 
-    const rows: MitgliedRow[] = profiles.map((p) => ({
-      id: p.id, username: p.username, avatar_url: p.avatar_url || null, 
-      gesamt_punkte: seasonPoints[p.id] || 0,
-      global_punkte: p.gesamt_punkte || 0,
-      tipps: tippMap[p.id] || {},
-      spieltag_punkte: spPunkte[p.id] || 0,
-      spieltag_tipps: Object.keys(tippMap[p.id] || {}).length,
-      spieltag_gesamt: spieltagGesamt,
-    }))
+    const rows: MitgliedRow[] = profiles.map((p) => {
+      return {
+        id: p.id, username: p.username, avatar_url: p.avatar_url || null, 
+        gesamt_punkte: seasonPoints[p.id] || 0,
+        global_punkte: p.gesamt_punkte || 0,
+        achievements_count: p.achievements_count || 0,
+        tipps: tippMap[p.id] || {},
+        spieltag_punkte: spPunkte[p.id] || 0,
+        spieltag_tipps: Object.keys(tippMap[p.id] || {}).length,
+        spieltag_gesamt: spieltagGesamt,
+      }
+    })
 
     if (viewSpieltag === 'gesamt') {
       rows.sort((a, b) => b.gesamt_punkte - a.gesamt_punkte)
@@ -725,8 +729,8 @@ export function LeaguePage() {
                                           </div>
                                         )}
                                       </div>
-                                      <LevelBadge level={calculateLevel(m.global_punkte)} className="absolute -bottom-0.5 -right-0.5 z-10 text-[7px] h-3.5 w-3.5 rounded-full shadow shadow-black/80 select-none">
-                                        {calculateLevel(m.global_punkte)}
+                                      <LevelBadge level={calculateLevel(m.global_punkte, m.achievements_count)} className="absolute -bottom-0.5 -right-0.5 z-10 text-[7px] h-3.5 w-3.5 rounded-full shadow shadow-black/80 select-none">
+                                        {calculateLevel(m.global_punkte, m.achievements_count)}
                                       </LevelBadge>
                                     </div>
                                     <span className={`text-[11px] font-medium truncate max-w-[80px] flex items-center gap-1 ${isMe ? 'text-primary-fixed-dim' : 'text-on-surface'}`}>

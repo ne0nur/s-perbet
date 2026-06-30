@@ -8,6 +8,7 @@ import { useNetworkStore } from '../stores/networkStore'
 import { useToastStore } from '../stores/toastStore'
 import { useTranslation } from '../utils/translations'
 import type { Match } from '../stores/matchStore'
+import { useTournamentStore } from '../stores/tournamentStore'
 import { motion, AnimatePresence } from 'framer-motion'
 
 function punkteFarbe(punkte: number): string {
@@ -179,6 +180,20 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
       const langJokes = jokes[language] || jokes.de
       const joke = langJokes[Math.floor(Math.random() * langJokes.length)]
       useToastStore.getState().toast(joke, 'info')
+      return
+    }
+
+    // 🛑 KO-Phasen Check — kein Unentschieden erlaubt!
+    const config = useTournamentStore.getState().getTournament(match.tournament || 'Süper Lig')
+    const isKoMatch = config?.has_knockout && match.spieltag > (config.group_stage_matchdays || 38)
+    
+    if (isKoMatch && tippHeim === tippGast) {
+      const koMessages: Record<string, string> = {
+        de: 'KO-Spiele können nicht Unentschieden enden! (Bitte inkl. Elfmeterschießen tippen)',
+        en: 'Knockout matches cannot end in a draw! (Please include penalty shootout)',
+        tr: 'Eleme maçları berabere bitemez! (Lütfen penaltı atışları dahil tahmin edin)'
+      }
+      useToastStore.getState().toast(koMessages[language] || koMessages.de, 'error')
       return
     }
 

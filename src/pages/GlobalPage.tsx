@@ -502,7 +502,7 @@ export function GlobalPage() {
         if (!rawRangData) {
           const { data: fallbackData } = await supabase
             .from('profiles')
-            .select('id,username,avatar_url,gesamt_punkte,exakte_treffer,is_admin')
+            .select('id,username,avatar_url,gesamt_punkte,exakte_treffer,is_admin,achievements_count')
             .order('gesamt_punkte', { ascending: false })
             .order('exakte_treffer', { ascending: false })
             .limit(50)
@@ -513,29 +513,6 @@ export function GlobalPage() {
         }
 
         if (rawRangData && rawRangData.length > 0) {
-          const userIds = rawRangData.map((r: any) => r.id)
-          
-          // Fetch all tips for these top users to evaluate achievements
-          const { data: allUsersTips } = await supabase
-            .from('tips')
-            .select(`
-                *,
-                matches (
-                  id, spieltag, status, heim_team, gast_team, anpfiff, tore_heim, tore_gast, tournament
-                )
-              `)
-            .in('user_id', userIds)
-
-          const tipsByUser: Record<string, TipWithMatch[]> = {}
-          if (allUsersTips) {
-            allUsersTips.forEach(t => {
-              if (!tipsByUser[t.user_id]) {
-                tipsByUser[t.user_id] = []
-              }
-              tipsByUser[t.user_id].push(t as unknown as TipWithMatch)
-            })
-          }
-
           // Calculate standard competition ranking
           let currentRank = 1
           for (let i = 0; i < rawRangData.length; i++) {
@@ -547,41 +524,7 @@ export function GlobalPage() {
             rawRangData[i]._displayRank = isTie ? '–' : `#${currentRank}`
           }
 
-          rangData = rawRangData.map((userEntry, index) => {
-            const userTips = tipsByUser[userEntry.id] || []
-            const formattedTips = userTips.map(t => ({
-              id: t.id,
-              tipp_heim: t.tipp_heim,
-              tipp_gast: t.tipp_gast,
-              punkte: t.punkte,
-              created_at: t.created_at,
-              updated_at: t.updated_at,
-              match: {
-                id: t.matches?.id || '',
-                spieltag: t.matches?.spieltag || 1,
-                status: t.matches?.status || 'scheduled',
-                heim_team: t.matches?.heim_team || '',
-                gast_team: t.matches?.gast_team || '',
-                anpfiff: t.matches?.anpfiff || '',
-                tore_heim: t.matches?.tore_heim ?? null,
-                tore_gast: t.matches?.tore_gast ?? null,
-                tournament: t.matches?.tournament || ''
-              }
-            }))
-
-            const unlockedSet = evaluateAchievements(
-              formattedTips as unknown as TipDetails[],
-              {
-                gesamt_punkte: userEntry.gesamt_punkte || 0,
-                exakte_treffer: userEntry.exakte_treffer || 0,
-                is_admin: userEntry.is_admin || false,
-                rang: userEntry._rank,
-                league_count: 0
-              },
-              userEntry.avatar_url,
-              userEntry.username || ''
-            )
-
+          rangData = rawRangData.map((userEntry: any) => {
             return {
               id: userEntry.id,
               username: userEntry.username,
@@ -589,12 +532,11 @@ export function GlobalPage() {
               gesamt_punkte: userEntry.gesamt_punkte,
               exakte_treffer: userEntry.exakte_treffer,
               is_admin: userEntry.is_admin,
-              achievements_count: unlockedSet.size,
+              achievements_count: userEntry.achievements_count || 0,
               trend: userEntry.trend || 0,
               displayRank: userEntry._displayRank
             } as RanglisteEintrag
           })
-
           setRangliste(rangData)
           setCache(CACHE_KEYS.leaderboard(seasonKey), rangData)
         } else {

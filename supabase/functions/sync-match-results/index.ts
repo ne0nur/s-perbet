@@ -2,8 +2,7 @@
 // Edge Function: Sync scores + propagate KO winners through bracket
 // Deploy: supabase functions deploy sync-match-results --no-verify-jwt
 
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
@@ -243,7 +242,7 @@ async function propagateKoWinners(
 }
 
 // ─── Main Handler ──────────────────────────────────────────────
-serve(async (req: Request) => {
+Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { status: 204, headers: CORS_HEADERS });
   }
@@ -323,9 +322,11 @@ serve(async (req: Request) => {
             tore_heim: e.homeScore, tore_gast: e.awayScore, status: e.status,
           }).eq("id", match.id);
           if (!ue) {
+            match.status = e.status;
+            match.tore_heim = e.homeScore;
+            match.tore_gast = e.awayScore;
             scoreUpdates++; stats[tourney].updated++; stats[tourney].espn++;
             results.push({ match: `${match.heim_team} vs ${match.gast_team}`, oldStatus: match.status, newStatus: e.status, score: `${e.homeScore}:${e.awayScore}`, source: "espn" });
-            continue;
           }
         }
 
@@ -337,6 +338,7 @@ serve(async (req: Request) => {
         if (ns && ns !== match.status) {
           const { error: ue } = await adminClient.from("matches").update({ status: ns }).eq("id", match.id);
           if (!ue) {
+            match.status = ns;
             scoreUpdates++; stats[tourney].updated++; stats[tourney].time++;
             results.push({ match: `${match.heim_team} vs ${match.gast_team}`, oldStatus: match.status, newStatus: ns, source: "time" });
           }
@@ -388,6 +390,22 @@ serve(async (req: Request) => {
             nextSync = Math.min(1800, Math.floor(minsUntil * 30)); // bis 30 Min, max 30 Min
           }
         }
+      }
+    }
+
+    // ─── Phase 4: Trigger Level Update ───
+    if (scoreUpdates > 0 || bracketUpdates > 0) {
+      try {
+        // Trigger the update-user-levels edge function to recalculate XP and Levels
+        await fetch(`${SUPABASE_URL}/functions/v1/update-user-levels`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${SERVICE_ROLE_KEY}`,
+            'Content-Type': 'application/json'
+          }
+        });
+      } catch (e) {
+        console.error("Failed to trigger update-user-levels", e);
       }
     }
 

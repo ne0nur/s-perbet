@@ -5,6 +5,9 @@ import { useTipStore } from '../stores/tipStore'
 import { getTeamLogo } from '../lib/teamLogos'
 import { Trophy, Calendar, Minus, Plus, Lock } from 'lucide-react'
 import { useSettingsStore } from '../stores/settingsStore'
+import { useTournamentStore } from '../stores/tournamentStore'
+import { useToastStore } from '../stores/toastStore'
+import { useTranslation } from '../utils/translations'
 
 // Custom club branding gradients
 const CLUB_GRADIENTS: Record<string, string> = {
@@ -125,8 +128,25 @@ export function TeamInspector({ teamName, onClose }: TeamInspectorProps) {
     }
   }, [nextMatch, matchTip])
 
+  const { t, language } = useTranslation()
+
   async function handleTippSpeichern() {
     if (!nextMatch || isSaving) return
+
+    // 🛑 KO-Phasen Check — kein Unentschieden erlaubt!
+    const config = useTournamentStore.getState().getTournament(nextMatch.tournament || 'Süper Lig')
+    const isKoMatch = config?.has_knockout && nextMatch.spieltag > (config.group_stage_matchdays || 38)
+    
+    if (isKoMatch && tippHeim === tippGast) {
+      const koMessages: Record<string, string> = {
+        de: 'KO-Spiele können nicht Unentschieden enden! (Bitte inkl. Elfmeterschießen tippen)',
+        en: 'Knockout matches cannot end in a draw! (Please include penalty shootout)',
+        tr: 'Eleme maçları berabere bitemez! (Lütfen penaltı atışları dahil tahmin edin)'
+      }
+      useToastStore.getState().toast(koMessages[language] || koMessages.de, 'error')
+      return
+    }
+
     setIsSaving(true)
     try {
       await tippSpeichern(nextMatch.id, tippHeim, tippGast, nextMatch.spieltag)
