@@ -13,6 +13,14 @@
 }
 
 @font-face {
+  font-family: 'Urban Thunder';
+  src: url('/fonts/urban-thunder.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
   font-family: 'Montserrat';
   src: url('/fonts/Montserrat-Regular.otf') format('opentype');
   font-weight: 400;

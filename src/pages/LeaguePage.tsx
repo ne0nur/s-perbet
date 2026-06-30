@@ -532,7 +532,7 @@ export function LeaguePage() {
                   <Trophy size={14} />
                   <span className="text-[10px] font-mono font-bold uppercase tracking-wider">{t('currentLeague')}</span>
                 </div>
-                <h1 className="text-3xl md:text-4xl font-black text-on-surface tracking-tight leading-none">{aktiveLiga.name}</h1>
+                <h1 className="text-4xl md:text-5xl text-on-surface leading-none mt-1" style={{ fontFamily: "'Urban Thunder', sans-serif" }}>{aktiveLiga.name}</h1>
               </div>
 
               {/* Saison-Selector */}
