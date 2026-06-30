@@ -1,6 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts"
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import webpush from "npm:web-push@3.6.7"
+import webpush from "https://esm.sh/web-push@3.6.7"
 import { createClient } from 'jsr:@supabase/supabase-js@2'
 
 // Setup Web Push with VAPID keys
@@ -27,20 +27,22 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    const { userIds, title, body, url } = await req.json()
+    const { userIds, title, body, url, broadcast } = await req.json()
 
-    if (!userIds || !Array.isArray(userIds) || userIds.length === 0) {
-      return new Response(JSON.stringify({ error: 'userIds array is required' }), {
+    if (!broadcast && (!userIds || !Array.isArray(userIds) || userIds.length === 0)) {
+      return new Response(JSON.stringify({ error: 'userIds array is required unless broadcast is true' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })
     }
 
-    // Fetch subscriptions for all specified users
-    const { data: subscriptions, error } = await supabaseClient
-      .from('push_subscriptions')
-      .select('*')
-      .in('user_id', userIds)
+    // Fetch subscriptions for all specified users or broadcast to all
+    let query = supabaseClient.from('push_subscriptions').select('*')
+    if (!broadcast) {
+      query = query.in('user_id', userIds)
+    }
+
+    const { data: subscriptions, error } = await query
 
     if (error) {
       throw error

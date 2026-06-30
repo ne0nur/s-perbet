@@ -30,8 +30,8 @@ interface AdminSectionProps {
   adminMsg: { type: 'success' | 'error'; text: string } | null
   setAdminMsg: (msg: { type: 'success' | 'error'; text: string } | null) => void
   createdUsersList: { username: string; password: string }[]
-  adminTab: 'overview' | 'create' | 'manage_users' | 'manage_leagues' | 'manage_matches'
-  setAdminTab: (tab: 'overview' | 'create' | 'manage_users' | 'manage_leagues' | 'manage_matches') => void
+  adminTab: 'overview' | 'create' | 'manage_users' | 'manage_leagues' | 'manage_matches' | 'push_test'
+  setAdminTab: (tab: 'overview' | 'create' | 'manage_users' | 'manage_leagues' | 'manage_matches' | 'push_test') => void
   adminCreateSubTab: 'manual' | 'auto'
   setAdminCreateSubTab: (tab: 'manual' | 'auto') => void
   copiedIndex: number | null
@@ -134,6 +134,13 @@ export function AdminSection({
   const [broadcastResult, setBroadcastResult] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
   const [syncingResults, setSyncingResults] = useState(false)
   const [syncResult, setSyncResult] = useState<{ type: 'success' | 'error'; text: string; details?: string[] } | null>(null)
+  
+  // Push Notification Test State
+  const [pushTitle, setPushTitle] = useState('⚽ SuperBET Test')
+  const [pushBody, setPushBody] = useState('Das ist ein manueller Test-Push vom Admin!')
+  const [pushSending, setPushSending] = useState(false)
+  const [pushResult, setPushResult] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+  
   const user = useAuthStore(s => s.user)
   
   // Funktion um offene Reset-Anfragen zu laden
@@ -344,6 +351,14 @@ export function AdminSection({
             }`}
           >
             {t('adminManageMatches')}
+          </button>
+          <button
+            onClick={() => { setAdminTab('push_test'); setAdminMsg(null); }}
+            className={`px-2 py-1 text-[9px] font-mono uppercase tracking-wider rounded-md transition-all whitespace-nowrap ${
+              adminTab === 'push_test' ? 'bg-primary-container/20 text-primary border border-primary-container/30 font-bold' : 'text-on-surface-variant/60 hover:text-on-surface'
+            }`}
+          >
+            Push Test
           </button>
         </div>
       </div>
@@ -635,6 +650,78 @@ export function AdminSection({
                 ))}
               </div>
             )}
+          </div>
+        )}
+
+        {adminTab === 'push_test' && (
+          <div className="space-y-4">
+            <h3 className="text-sm font-bold text-on-surface mb-2">Globale Push-Nachricht senden</h3>
+            <div className="space-y-3">
+              <div>
+                <label className="text-[10px] uppercase font-mono text-on-surface-variant mb-1 block">Titel</label>
+                <input
+                  type="text"
+                  value={pushTitle}
+                  onChange={(e) => setPushTitle(e.target.value)}
+                  className="w-full bg-surface-container border border-surface-container-high rounded-lg px-3 py-2 text-sm text-on-surface focus:border-primary outline-none"
+                  placeholder="Push Titel"
+                />
+              </div>
+              <div>
+                <label className="text-[10px] uppercase font-mono text-on-surface-variant mb-1 block">Nachricht</label>
+                <textarea
+                  value={pushBody}
+                  onChange={(e) => setPushBody(e.target.value)}
+                  className="w-full bg-surface-container border border-surface-container-high rounded-lg px-3 py-2 text-sm text-on-surface focus:border-primary outline-none"
+                  placeholder="Push Nachricht..."
+                  rows={3}
+                />
+              </div>
+              <button
+                onClick={async () => {
+                  if (!pushTitle.trim() || !pushBody.trim()) return
+                  setPushSending(true)
+                  setPushResult(null)
+                  try {
+                    const { data: { session } } = await supabase.auth.getSession()
+                    const token = session?.access_token
+                    if (!token) throw new Error('No auth token')
+                    
+                    const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-push`, {
+                      method: 'POST',
+                      headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                      },
+                      body: JSON.stringify({
+                        broadcast: true,
+                        title: pushTitle,
+                        body: pushBody,
+                        url: '/'
+                      })
+                    })
+                    const result = await res.json()
+                    if (!res.ok) throw new Error(result.error || 'Fehler beim Senden')
+                    
+                    setPushResult({ type: 'success', text: `Push erfolgreich versendet (${result.results?.length || 0} Empfänger)!` })
+                  } catch (err: any) {
+                    setPushResult({ type: 'error', text: err.message })
+                  } finally {
+                    setPushSending(false)
+                  }
+                }}
+                disabled={pushSending || !pushTitle.trim() || !pushBody.trim()}
+                className="w-full bg-primary text-on-primary py-2.5 rounded-lg font-bold text-sm uppercase tracking-wider hover:opacity-90 transition-opacity disabled:opacity-50"
+              >
+                {pushSending ? 'Sende...' : 'Jetzt pushen'}
+              </button>
+              
+              {pushResult && (
+                <div className={`p-3 rounded-lg text-xs mt-4 ${pushResult.type === 'success' ? 'bg-green-500/10 text-green-400 border border-green-500/20' : 'bg-error/10 text-error border border-error/20'}`}>
+                  {pushResult.text}
+                </div>
+              )}
+            </div>
           </div>
         )}
 
