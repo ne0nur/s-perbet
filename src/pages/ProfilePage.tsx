@@ -15,6 +15,7 @@ import { useMatchStore } from '../stores/matchStore'
 
 // Import profile subcomponents
 import { UserInfoSettings } from '../components/profile/UserInfoSettings'
+import { PushSubscriptionManager } from '../components/push/PushSubscriptionManager'
 import { AdminSection } from '../components/profile/AdminSection'
 import { NotificationSettings } from '../components/profile/NotificationSettings'
 import { StatsGrid } from '../components/profile/StatsGrid'
@@ -902,22 +903,27 @@ export function ProfilePage() {
           }
 
           return (
-            <UserInfoSettings
-              username={username}
-              setUsername={setUsername}
-              avatarUrl={avatarUrl}
-              uploading={uploading}
-              fileRef={fileRef}
-              handleBildUpload={handleBildUpload}
-              handleUsernameUpdate={handleUsernameUpdate}
-              isAdmin={!!profil?.is_admin}
-              userRank={profil?.rang ?? null}
-              levelTitle={levelTitle}
-              xpCurrent={levelDetails.xpCurrent}
-              xpRequired={levelDetails.xpRequired}
-              xpPct={levelDetails.xpPct}
-              level={levelDetails.level}
-            />
+            <>
+              <div className="mb-4">
+                <PushSubscriptionManager />
+              </div>
+              <UserInfoSettings
+                username={username}
+                setUsername={setUsername}
+                avatarUrl={avatarUrl}
+                uploading={uploading}
+                fileRef={fileRef}
+                handleBildUpload={handleBildUpload}
+                handleUsernameUpdate={handleUsernameUpdate}
+                isAdmin={!!profil?.is_admin}
+                userRank={profil?.rang ?? null}
+                levelTitle={levelTitle}
+                xpCurrent={levelDetails.xpCurrent}
+                xpRequired={levelDetails.xpRequired}
+                xpPct={levelDetails.xpPct}
+                level={levelDetails.level}
+              />
+            </>
           )
         })()}
       </div>

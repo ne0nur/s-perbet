@@ -380,7 +380,8 @@ Deno.serve(async (req: Request) => {
           .sort((a, b) => new Date(a.anpfiff).getTime() - new Date(b.anpfiff).getTime());
         
         if (upcoming.length > 0) {
-          const nextKickoff = new Date(upcoming[0].anpfiff);
+          const nextMatch = upcoming[0];
+          const nextKickoff = new Date(nextMatch.anpfiff);
           const minsUntil = (nextKickoff.getTime() - now.getTime()) / 60000;
           if (minsUntil > 0 && minsUntil < 30) {
             nextSync = Math.max(120, Math.floor(minsUntil * 60)); // in Seconds, min 2 Minuten
@@ -388,6 +389,53 @@ Deno.serve(async (req: Request) => {
             nextSync = 120; // imminent, alle 2 Minuten checken
           } else {
             nextSync = Math.min(1800, Math.floor(minsUntil * 30)); // bis 30 Min, max 30 Min
+          }
+          
+          // ─── Phase 5: Push Notifications (Max once every 48 hours) ───
+          if (minsUntil > 0 && minsUntil <= 60) {
+            try {
+              const { data: pushSettings } = await adminClient
+                .from('app_settings')
+                .select('value')
+                .eq('key', 'last_push_time')
+                .single();
+              
+              const lastPushTime = pushSettings?.value ? parseInt(pushSettings.value) : 0;
+              const hoursSinceLastPush = (now.getTime() - lastPushTime) / (1000 * 60 * 60);
+              
+              if (hoursSinceLastPush >= 48) {
+                // Get all users who have subscriptions
+                const { data: subs } = await adminClient.from('push_subscriptions').select('user_id');
+                if (subs && subs.length > 0) {
+                  const uniqueUserIds = [...new Set(subs.map(s => s.user_id))];
+                  
+                  // Fire and forget push notification
+                  fetch(`${SUPABASE_URL}/functions/v1/send-push`, {
+                    method: 'POST',
+                    headers: {
+                      'Authorization': `Bearer ${SERVICE_ROLE_KEY}`,
+                      'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                      userIds: uniqueUserIds,
+                      title: '⚽ Spieltag startet gleich!',
+                      body: `${nextMatch.heim_team} vs ${nextMatch.gast_team} startet bald. Hast du schon getippt?`,
+                      url: '/'
+                    })
+                  }).catch(e => console.error('Error triggering send-push:', e));
+                  
+                  // Update last_push_time
+                  await adminClient.from('app_settings').upsert({
+                    key: 'last_push_time',
+                    value: now.getTime().toString()
+                  });
+                  
+                  console.log(`Push triggered for ${uniqueUserIds.length} users. Match: ${nextMatch.heim_team} vs ${nextMatch.gast_team}`);
+                }
+              }
+            } catch (err) {
+              console.error('Push Notification Trigger Error:', err);
+            }
           }
         }
       }
