@@ -540,24 +540,26 @@ export function LeaguePage() {
                   >
                     {aktiveLiga.name}
                   </h1>
+
+                  {/* Saison-Selector */}
+                  {seasonsList.length > 0 && (
+                    <div className="mt-2.5">
+                      <select
+                        value={saison || ''}
+                        onChange={(e) => setSaison(parseInt(e.target.value))}
+                        className="bg-surface-container border border-surface-container-high hover:border-surface-container-highest rounded-lg px-2 py-1 text-[11px] text-on-surface-variant hover:text-on-surface focus:outline-none focus:border-primary-container font-mono transition-colors cursor-pointer"
+                      >
+                        {seasonsList.map(s => (
+                          <option key={s.id} value={s.id}>{s.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
                 </div>
               </div>
 
-              {/* Rechts: Saison-Selector + Menü */}
+              {/* Rechts: Menü */}
               <div className="flex items-center gap-2 shrink-0">
-                {/* Saison-Selector */}
-                {seasonsList.length > 0 && (
-                  <select
-                    value={saison || ''}
-                    onChange={(e) => setSaison(parseInt(e.target.value))}
-                    className="bg-surface-container border border-surface-container-high rounded-lg px-2 py-1.5 text-xs text-on-surface focus:outline-none focus:border-primary-container font-mono"
-                  >
-                    {seasonsList.map(s => (
-                      <option key={s.id} value={s.id}>{s.name}</option>
-                    ))}
-                  </select>
-                )}
-
                 {/* Liga-Menü */}
                 <div className="relative">
                   <button onClick={() => setZeigeMenu(!zeigeMenu)}
