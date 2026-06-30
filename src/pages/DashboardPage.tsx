@@ -38,7 +38,7 @@ export function DashboardPage() {
       return tournamentConfigs.map(t => t.name)
     }
     // Fallback während DB-Ladephase — NIE leer
-    return ['Süper Lig', 'Champions League']
+    return ['Süper Lig', 'Champions League', 'WM 2026']
   }, [tournamentConfigs])
 
   // Responsive Check
