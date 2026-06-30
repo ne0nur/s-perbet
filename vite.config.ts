@@ -32,7 +32,10 @@ export default defineConfig({
           }
         ]
       },
-      workbox: {
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'custom-sw.js',
+      injectManifest: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,otf,ttf,woff,woff2}']
       },
       devOptions: {
