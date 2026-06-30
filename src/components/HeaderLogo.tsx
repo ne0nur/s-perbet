@@ -93,8 +93,14 @@ export function HeaderLogo({ size = 'md' }: HeaderLogoProps) {
             initial={{ opacity: 0, scale: 0.9, filter: "blur(5px)" }}
             animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
             transition={{ duration: 0.8, ease: "easeOut" }}
-            className="inline-flex items-center justify-center gap-1.5"
+            className="inline-flex items-center justify-center gap-2 md:gap-3"
           >
+            {/* App Icon */}
+            <motion.img
+              src="/logo.png"
+              alt="Logo"
+              className={`rounded-xl shadow-[0_0_15px_rgba(var(--primary-rgb),0.3)] transition-all duration-500 ${isSm ? 'w-8 h-8' : 'w-10 h-10'} ${isHovered ? 'shadow-[0_0_20px_rgba(var(--primary-rgb),0.6)] scale-105' : ''}`}
+            />
             {/* SÜPER */}
             <motion.span
               animate={{ y: [0, -2, 0] }}

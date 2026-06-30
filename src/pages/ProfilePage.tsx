@@ -17,7 +17,7 @@ import { useMatchStore } from '../stores/matchStore'
 import { UserInfoSettings } from '../components/profile/UserInfoSettings'
 import { PushSubscriptionManager } from '../components/push/PushSubscriptionManager'
 import { AdminSection } from '../components/profile/AdminSection'
-import { NotificationSettings } from '../components/profile/NotificationSettings'
+
 import { StatsGrid } from '../components/profile/StatsGrid'
 import { AchievementsSection } from '../components/profile/AchievementsSection'
 import { evaluateAchievements, type TipDetails } from '../utils/achievementEvaluator'
@@ -104,8 +104,6 @@ export function ProfilePage() {
   const [isLaden, setIsLaden] = useState(true)
   const [uploading, setUploading] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
-  const [notifyAnpfiff, setNotifyAnpfiff] = useState(true)
-  const [notifyChat, setNotifyChat] = useState(false)
   const [bonusTipps, setBonusTipps] = useState<BonusTipp[]>([])
   const [antworten, setAntworten] = useState<Record<number, string>>({})
   const [gespeichert, setGespeichert] = useState(false)
@@ -360,8 +358,6 @@ export function ProfilePage() {
 
     const { data: { user: authUser } } = await supabase.auth.getUser()
     if (authUser) {
-      setNotifyAnpfiff(authUser.user_metadata?.notify_anpfiff !== false)
-      setNotifyChat(!!authUser.user_metadata?.notify_chat)
     }
 
     const { data: bonusData } = await supabase.from('bonus_tipps')
@@ -534,24 +530,6 @@ export function ProfilePage() {
     return () => cancelAnimationFrame(animationFrameId)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAnimating, initialLevelRef])
-
-  async function handleToggleAnpfiff() {
-    const nextVal = !notifyAnpfiff
-    setNotifyAnpfiff(nextVal)
-    await supabase.auth.updateUser({
-      data: { ...user?.user_metadata, notify_anpfiff: nextVal }
-    })
-    useToastStore.getState().toast(language === 'tr' ? 'Bildirim ayarları güncellendi' : language === 'en' ? 'Notification settings updated' : 'Benachrichtigungseinstellungen aktualisiert')
-  }
-
-  async function handleToggleChat() {
-    const nextVal = !notifyChat
-    setNotifyChat(nextVal)
-    await supabase.auth.updateUser({
-      data: { ...user?.user_metadata, notify_chat: nextVal }
-    })
-    useToastStore.getState().toast(language === 'tr' ? 'Bildirim ayarları güncellendi' : language === 'en' ? 'Notification settings updated' : 'Benachrichtigungseinstellungen aktualisiert')
-  }
 
   async function handleUsernameUpdate() {
     if (!username.trim() || username.trim() === user?.user_metadata?.username) return
@@ -904,9 +882,6 @@ export function ProfilePage() {
 
           return (
             <>
-              <div className="mb-4">
-                <PushSubscriptionManager />
-              </div>
               <UserInfoSettings
                 username={username}
                 setUsername={setUsername}
@@ -1027,12 +1002,7 @@ export function ProfilePage() {
         {/* SETTINGS TAB */}
         {activeTab === 'settings' && (
           <div className="space-y-6 animate-fade-in max-w-2xl mx-auto">
-            <NotificationSettings
-              notifyAnpfiff={notifyAnpfiff}
-              handleToggleAnpfiff={handleToggleAnpfiff}
-              notifyChat={notifyChat}
-              handleToggleChat={handleToggleChat}
-            />
+            <PushSubscriptionManager />
 
             {/* Language Selector Dropdown */}
             <div className="bg-surface-container-low border border-surface-container-high rounded-xl p-4 shadow-sm text-left">
