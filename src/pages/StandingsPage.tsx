@@ -458,7 +458,7 @@ export function StandingsPage() {
               </div>
             ) : (
               <div className="bg-surface-container-low border border-surface-container-high rounded-lg overflow-hidden shadow-sm">
-                <table className="w-full text-left table-fixed font-mono">
+                <table className="w-full text-left table-auto font-mono">
                   <thead>
                     <tr className="bg-surface-container border-b border-surface-container-high">
                       <th className="py-2.5 px-2 text-center font-mono text-[9px] text-on-surface-variant uppercase font-normal w-[28px]">#</th>
@@ -468,9 +468,9 @@ export function StandingsPage() {
                       <th className="py-2.5 px-1 text-center font-mono text-[9px] text-on-surface-variant uppercase font-normal w-[22px] hidden sm:table-cell" title={t('tableHeaderDrawnTitle')}>{t('tableHeaderDrawn')}</th>
                       <th className="py-2.5 px-1 text-center font-mono text-[9px] text-on-surface-variant uppercase font-normal w-[22px] hidden sm:table-cell" title={t('tableHeaderLostTitle')}>{t('tableHeaderLost')}</th>
                       <th className="py-2.5 px-1 text-center font-mono text-[9px] text-on-surface-variant uppercase font-normal w-[45px] hidden sm:table-cell" title={t('tableHeaderGoalsTitle')}>{t('tableHeaderGoals')}</th>
-                      <th className="py-2.5 px-1 text-center font-mono text-[9px] text-on-surface-variant uppercase font-normal w-[30px]" title={t('tableHeaderDiffTitle')}>{t('tableHeaderDiff')}</th>
-                      <th className="py-2.5 px-2 text-center font-mono text-[9px] text-primary-fixed-dim uppercase font-bold w-[30px]" title={t('tableHeaderPointsTitle')}>{t('tableHeaderPoints')}</th>
-                      <th className="py-2.5 px-1 text-center font-mono text-[9px] text-on-surface-variant uppercase font-normal w-[80px]">{t('tableHeaderForm')}</th>
+                      <th className="py-2.5 px-1 text-center font-mono text-[9px] text-on-surface-variant uppercase font-normal w-[28px] sm:w-[30px]" title={t('tableHeaderDiffTitle')}>{t('tableHeaderDiff')}</th>
+                      <th className="py-2.5 px-2 text-center font-mono text-[9px] text-primary-fixed-dim uppercase font-bold w-[28px] sm:w-[30px]" title={t('tableHeaderPointsTitle')}>{t('tableHeaderPoints')}</th>
+                      <th className="py-2.5 px-1 text-center font-mono text-[9px] text-on-surface-variant uppercase font-normal w-[60px] sm:w-[80px]">{t('tableHeaderForm')}</th>
                     </tr>
                   </thead>
                   <tbody className="text-xs">
@@ -531,10 +531,10 @@ export function StandingsPage() {
                               >
                                 <td className={`py-2 px-2 text-center font-mono font-bold ${posColor} ${posBorder}`}>{index + 1}</td>
                                 <td className="py-2 px-2">
-                                  <div className="flex items-center gap-1.5">
-                                    <img src={getTeamLogo(row.team)} alt="" className="w-6 h-6 object-contain flex-shrink-0"
+                                  <div className="flex items-center gap-1.5 min-w-0">
+                                    <img src={getTeamLogo(row.team)} alt="" className="w-5 h-5 sm:w-6 sm:h-6 object-contain flex-shrink-0"
                                       onError={(e) => { (e.target as HTMLImageElement).style.opacity = '0' }} />
-                                    <span className="truncate text-on-surface font-medium text-[11px]">{row.team}</span>
+                                    <span className="truncate text-on-surface font-medium text-[11px] sm:text-xs">{row.team}</span>
                                   </div>
                                 </td>
                                 <td className="py-2 px-1 text-center font-mono text-on-surface-variant">{row.played}</td>
