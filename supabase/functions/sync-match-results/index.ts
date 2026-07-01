@@ -113,9 +113,10 @@ async function fetchEspnScores(tournament: string, dateStr: string): Promise<Esp
       let s = "upcoming";
       let halftime = false;
       const sn = ev.status.type.name;
-      if (sn.includes("FULL_TIME") || sn.includes("FINAL")) s = "finished";
-      else if (sn.includes("HALFTIME")) { s = "live"; halftime = true; }
-      else if (sn.includes("HALF") || sn.includes("IN_PROGRESS")) s = "live";
+      if (sn.includes("FULL_TIME") || sn.includes("FINAL") || sn.includes("END_OF")) s = "finished";
+      else if (sn.includes("PENALTY")) s = "live";
+      else if (sn.includes("HALFTIME") || sn.includes("HALF_TIME")) { s = "live"; halftime = true; }
+      else if (sn.includes("EXTRA_TIME") || sn.includes("IN_PROGRESS") || sn.includes("HALF")) s = "live";
       else if (sn.includes("POSTPONED") || sn.includes("CANCELED")) s = "postponed";
       
       matches.push({
@@ -269,8 +270,12 @@ Deno.serve(async (req: Request) => {
         }
 
         let ns: string | null = null;
+        // Time-based fallback NUR wenn kein ESPN-Match gefunden wurde ODER ESPN "upcoming" sagt
+        const hasEspnData = !!e;
         if (match.status === "upcoming" && hours >= -0.25) ns = "live";
-        if (match.status === "live" && hours > 2.5) ns = "finished";
+        // LIVE → FINISHED nur wenn: (a) kein ESPN-Daten, ODER (b) ESPN selbst finished meldet
+        // NIEMALS live-Spiele in der Verlängerung zwangsbeenden!
+        if (match.status === "live" && hours > 2.5 && !hasEspnData) ns = "finished";
         if (match.status === "upcoming" && hours > 3) ns = "finished";
 
         if (ns && ns !== match.status) {
