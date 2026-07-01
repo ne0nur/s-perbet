@@ -434,13 +434,15 @@ export function evaluateAchievements(
     }
   }
 
-  // Kardeşim Benim: Tipped the exact same score for 3 matches on a single matchday (copy-paste style)
+  // Kardeşim Benim: Tipped the exact same score for 3 FINISHED matches on a single matchday (copy-paste style)
   for (const matchdayTips of Object.values(tipsByMatchday)) {
     const scoreCounts: Record<string, number> = {}
-    matchdayTips.forEach(t => {
-      const key = `${t.tipp_heim}:${t.tipp_gast}`
-      scoreCounts[key] = (scoreCounts[key] || 0) + 1
-    })
+    matchdayTips
+      .filter(t => t.match.status === 'finished' && t.match.tore_heim !== null && t.match.tore_gast !== null)
+      .forEach(t => {
+        const key = `${t.tipp_heim}:${t.tipp_gast}`
+        scoreCounts[key] = (scoreCounts[key] || 0) + 1
+      })
     const hasCopy = Object.values(scoreCounts).some(count => count >= 3)
     if (hasCopy) {
       unlocked.add('kardesim_benim')
