@@ -51,6 +51,7 @@ interface MitgliedRow {
   tipps: Record<string, { heim: number; gast: number; punkte: number }>
   spieltag_punkte: number; spieltag_tipps: number; spieltag_gesamt: number
   trend?: number
+  displayRank: string
 }
 interface Liga { id: string; name: string; invite_code: string; creator_id: string; active_tournaments: string[] }
 
@@ -313,6 +314,7 @@ export function LeaguePage() {
         spieltag_punkte: spPunkte[p.id] || 0,
         spieltag_tipps: Object.keys(tippMap[p.id] || {}).length,
         spieltag_gesamt: spieltagGesamt,
+        displayRank: '',
       }
     })
 
@@ -322,11 +324,23 @@ export function LeaguePage() {
       rows.sort((a, b) => b.spieltag_punkte - a.spieltag_punkte || b.gesamt_punkte - a.gesamt_punkte)
     }
 
+    // Tie-detection: gleiche Punkte → gleicher Rang (wie GlobalPage)
+    const getPunkte = (r: MitgliedRow) => viewSpieltag === 'gesamt' ? r.gesamt_punkte : r.spieltag_punkte
+    let currentRank = 1
     rows.forEach((row, index) => {
-      const currentRank = index + 1
-      const prevRank = prevRankMap[row.id] || currentRank
+      const punkte = getPunkte(row)
+      const isTie = index > 0 && punkte === getPunkte(rows[index - 1])
+      if (isTie) {
+        row.displayRank = '–'
+      } else {
+        currentRank = index + 1
+        row.displayRank = `#${currentRank}`
+      }
+
+      const actualRank = currentRank
+      const prevRank = prevRankMap[row.id] || actualRank
       if (maxFinishedSpieltag > 1 && viewSpieltag === 'gesamt') {
-        row.trend = prevRank - currentRank
+        row.trend = prevRank - actualRank
       } else {
         row.trend = 0
       }
@@ -795,8 +809,8 @@ export function LeaguePage() {
                               <tr key={m.id} onClick={() => setSelectedUserId(m.id)} className={`group border-b border-surface-container-high/50 last:border-0 hover:bg-white/[0.04] transition-colors duration-200 border-l-2 cursor-pointer ${isMe ? 'bg-primary-container/8 border-l-primary-container shadow-[inset_3px_0_0_var(--primary)]' : 'border-l-transparent hover:border-l-white/20'}`}>
                                 <td className={`py-2.5 pl-3 pr-2 text-center sticky left-0 w-8 min-w-[32px] ${stickyTdClass}`}>
                                   <div className="flex flex-col items-center relative z-10">
-                                    <span className={`text-[11px] font-mono font-bold ${idx < 3 ? 'text-primary-fixed-dim' : 'text-on-surface-variant/50'}`}>
-                                      {idx + 1}.
+                                    <span className={`text-[11px] font-mono font-bold ${m.displayRank !== '–' ? 'text-primary-fixed-dim' : 'text-on-surface-variant/40'}`}>
+                                      {m.displayRank.replace('#', '')}.
                                     </span>
                                     {m.trend !== undefined && m.trend !== 0 && (
                                       <span className={`text-[8px] font-bold ${m.trend > 0 ? 'text-emerald-400' : 'text-red-400'} animate-bounce`}>
