@@ -1,4 +1,4 @@
-import{f as e,i as t,s as n,t as r}from"./translations-B8J_wltR.js";import{o as i}from"./utils-DPFL3Swn.js";import{n as a,r as o,t as s}from"./RivalInspector-yaJ7oDk_.js";import{t as c}from"./target-DMCORRw_.js";import{t as l}from"./trophy-DHbGbt4H.js";import{t as u}from"./users-Dc-fvhe4.js";import{S as d,T as f,l as p,o as m,v as h,x as g}from"./index-DZ2MVyOk.js";import{t as _}from"./matchStore-BZt78S0L.js";import{t as v}from"./teamLogos-UZHNH8y8.js";import{i as y,n as b,t as x}from"./cache-aaPT7O7d.js";var S=e(n(),1),C=t(),w=`
+import{f as e,i as t,s as n,t as r}from"./translations-B8J_wltR.js";import{o as i}from"./utils-DPFL3Swn.js";import{n as a,r as o,t as s}from"./RivalInspector-kI8YRz7a.js";import{t as c}from"./target-DMCORRw_.js";import{t as l}from"./trophy-DHbGbt4H.js";import{t as u}from"./users-Dc-fvhe4.js";import{S as d,T as f,l as p,o as m,v as h,x as g}from"./index-BsMkEOtF.js";import{t as _}from"./matchStore-g_0QBK6n.js";import{t as v}from"./teamLogos-UZHNH8y8.js";import{i as y,n as b,t as x}from"./cache-aaPT7O7d.js";var S=e(n(),1),C=t(),w=`
   attribute vec2 aPosition;
   void main() {
     gl_Position = vec4(aPosition, 0.0, 1.0);
