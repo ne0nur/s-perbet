@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Outlet, useLocation, useNavigate } from 'react-router-dom'
-import { BottomNav } from './BottomNav'
+import GooeyNav, { type GooeyNavItem } from './ui/GooeyNav'
+import Plasma from './ui/Plasma'
 import { ToastContainer } from './ToastContainer'
 import { useAuthStore } from '../stores/authStore'
 import { usePresenceStore } from '../stores/presenceStore'
@@ -19,7 +20,7 @@ import {
   HoverGlobeIcon, HoverDownloadIcon
 } from './icons/HoverIcons'
 
-/** Nur der Page-Content animiert — AppShell & BottomNav bleiben stabil */
+/** Nur der Page-Content animiert — AppShell & Nav bleiben stabil */
 function AnimatedOutlet() {
   const location = useLocation()
   return (
@@ -320,8 +321,17 @@ export function AppShell() {
     { to: '/profile',   icon: HoverUserIcon,    label: t('profile') },
   ]
 
+  const gooeyNavItems: GooeyNavItem[] = [
+    { to: '/dashboard', label: t('games') },
+    { to: '/tabelle',   label: t('table') },
+    { to: '/global',    label: t('global') },
+    { to: '/league',    label: t('league') },
+    { to: '/profile',   label: t('profile') },
+  ]
+
   return (
     <div className="h-[100dvh] w-full bg-background flex flex-col md:flex-row overflow-hidden select-none">
+      <Plasma color="#f9bd22" speed={0.5} opacity={0.10} scale={1.3} />
       <NetworkIndicator />
       {/* Desktop Sidebar Navigation */}
       <aside className="hidden md:flex md:flex-col w-64 border-r border-white/5 bg-surface/30 backdrop-blur-xl shrink-0 p-5 justify-between sticky top-0 h-screen">
@@ -490,7 +500,18 @@ export function AppShell() {
         </main>
       </div>
 
-      <BottomNav />
+      {/* Gooey Nav — mobile bottom navigation */}
+      <div className="md:hidden fixed bottom-4 left-4 right-4 max-w-md mx-auto z-50 bg-surface/85 backdrop-blur-3xl rounded-2xl shadow-[0_12px_40px_rgba(0,0,0,0.8)] border border-white/10 overflow-hidden select-none">
+        <div className="flex justify-around items-center h-[64px] px-2 relative">
+          <GooeyNav
+            items={gooeyNavItems}
+            animationTime={600}
+            particleCount={12}
+            particleDistances={[80, 8]}
+            colors={[1, 2, 3, 1, 2, 3, 1, 4]}
+          />
+        </div>
+      </div>
       <ToastContainer />
 
       {/* Fullscreen Onboarding Carousel Overlay */}
