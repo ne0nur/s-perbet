@@ -37,6 +37,7 @@ interface MatchState {
   cacheMatches: Record<number, Match[]>
   cacheTimestamps: Record<number, number>
   letztesUpdate: string | null
+  syncLabel: string | null
   subscription: RealtimeChannel | null
   heartbeatSub: RealtimeChannel | null
   ladeMatches: (spieltag: number) => Promise<void>
@@ -67,6 +68,7 @@ export const useMatchStore = create<MatchState>()(
       cacheMatches: {},
       cacheTimestamps: {},
       letztesUpdate: null,
+      syncLabel: null,
       subscription: null,
       heartbeatSub: null,
 
@@ -343,11 +345,15 @@ export const useMatchStore = create<MatchState>()(
 
         // Initialen Wert sofort laden (falls Realtime verpasst oder alt)
         try {
-          const { data, error } = await supabase.from('app_settings').select('value').eq('key', 'last_sync').single()
-          if (!error && data?.value) {
-            const d = new Date(data.value)
-            const timeString = d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
-            set({ letztesUpdate: timeString })
+          const { data } = await supabase.from('app_settings').select('key,value').in('key', ['last_sync', 'sync_label'])
+          if (data) {
+            const lastSync = data.find((r: any) => r.key === 'last_sync')
+            const syncLabel = data.find((r: any) => r.key === 'sync_label')
+            if (lastSync?.value) {
+              const d = new Date(lastSync.value)
+              const timeString = d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+              set({ letztesUpdate: timeString, syncLabel: syncLabel?.value || null })
+            }
           }
         } catch (e) {
           console.error('[Heartbeat] initial fetch error:', e)
@@ -359,13 +365,15 @@ export const useMatchStore = create<MatchState>()(
             'postgres_changes',
             { event: '*', schema: 'public', table: 'app_settings' },
             (payload) => {
-              console.log('[Heartbeat] realtime event:', payload)
               const row = payload.new as { key: string; value: string } | null
-              if (row?.key === 'last_sync' && row?.value) {
+              if (!row) return
+              if (row.key === 'last_sync' && row.value) {
                 const d = new Date(row.value)
                 const timeString = d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
-                console.log('[Heartbeat] updating letztesUpdate ->', timeString)
                 set({ letztesUpdate: timeString })
+              }
+              if (row.key === 'sync_label') {
+                set({ syncLabel: row.value })
               }
             }
           )

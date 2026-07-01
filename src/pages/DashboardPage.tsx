@@ -15,7 +15,7 @@ import { getTournamentLogo } from '../lib/utils'
 
 export function DashboardPage() {
   const { t, language } = useTranslation()
-  const { matches, aktuellerSpieltag, aktuelleSaison, selectedTournament, isLaden, setSpieltag, ladeMatches, initialisiereSpieltag, letztesUpdate, abonnierenRealtimeMatches, abonnierenHeartbeat, setSelectedTournament } = useMatchStore()
+  const { matches, aktuellerSpieltag, aktuelleSaison, selectedTournament, isLaden, setSpieltag, ladeMatches, initialisiereSpieltag, letztesUpdate, syncLabel, abonnierenRealtimeMatches, abonnierenHeartbeat, setSelectedTournament } = useMatchStore()
   const ladeMeineTipps = useTipStore(s => s.ladeMeineTipps)
   const meineTipps = useTipStore(s => s.meineTipps)
   const getTippFuerMatch = useTipStore(s => s.getTippFuerMatch)
@@ -51,14 +51,7 @@ export function DashboardPage() {
     return () => window.removeEventListener('resize', handleResize)
   }, [])
 
-  // Beim ersten Mount den richtigen Spieltag ermitteln & Realtime-Abo starten
-  useEffect(() => {
-    if (initialized.current) return
-    initialized.current = true
-    initialisiereSpieltag()
-    abonnierenRealtimeMatches()
-    abonnierenHeartbeat()
-  }, [initialisiereSpieltag, abonnierenRealtimeMatches, abonnierenHeartbeat])
+  // Beim ersten Mount den richtigen Spieltag ermitteln & Realtime-Abo starten\n  useEffect(() => {\n    if (initialized.current) return\n    initialized.current = true\n    initialisiereSpieltag()\n    abonnierenRealtimeMatches()\n    abonnierenHeartbeat()\n  }, [initialisiereSpieltag, abonnierenRealtimeMatches, abonnierenHeartbeat])\n\n  // Reconnect Realtime wenn App aus Hintergrund zurückkommt\n  useEffect(() => {\n    const handleVisibility = () => {\n      if (document.visibilityState === 'visible') {\n        abonnierenRealtimeMatches()\n        abonnierenHeartbeat()\n      }\n    }\n    document.addEventListener('visibilitychange', handleVisibility)\n    return () => document.removeEventListener('visibilitychange', handleVisibility)\n  }, [abonnierenRealtimeMatches, abonnierenHeartbeat])\n\n  // Cleanup beim Unmount\n  useEffect(() => {\n    return () => {\n      const store = useMatchStore.getState()\n      store.cleanup()\n    }\n  }, [])
 
   useEffect(() => {
     ladeMatches(aktuellerSpieltag)
@@ -420,9 +413,25 @@ export function DashboardPage() {
             </div>
             
             {letztesUpdate && (
-              <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-white/5 border border-white/5 text-[9px] font-mono text-on-surface-variant/60 animate-pulse-slow">
-                <span className="w-1.5 h-1.5 rounded-full bg-green-500 shrink-0" />
-                <span>{t('matchLive')} ({letztesUpdate})</span>
+              <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-white/5 border border-white/5 text-[9px] font-mono animate-pulse-slow ${
+                syncLabel?.includes('Live') || syncLabel?.includes('Crunch') 
+                  ? 'text-green-400' 
+                  : syncLabel?.includes('Halbzeit') 
+                    ? 'text-amber-400' 
+                    : syncLabel?.includes('Kickoff') 
+                      ? 'text-blue-400' 
+                      : 'text-on-surface-variant/60'
+              }`}>
+                <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                  syncLabel?.includes('Live') || syncLabel?.includes('Crunch') 
+                    ? 'bg-green-500' 
+                    : syncLabel?.includes('Halbzeit') 
+                      ? 'bg-amber-500' 
+                      : syncLabel?.includes('Kickoff') 
+                        ? 'bg-blue-500' 
+                        : 'bg-slate-500'
+                }`} />
+                <span>{syncLabel || t('matchLive')} ({letztesUpdate})</span>
               </div>
             )}
           </div>

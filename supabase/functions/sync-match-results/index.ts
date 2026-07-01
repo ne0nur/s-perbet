@@ -286,6 +286,7 @@ Deno.serve(async (req: Request) => {
 
     // ─── Phase 3: Smart Next-Sync Calculation ───
     let nextSync = 1800; // default: 30 min (kein Spiel aktiv)
+    let nextSyncLabel = "💤 Kein Spiel aktiv";
 
     if (matches && matches.length > 0) {
       const matchList = matches as MatchRow[];
@@ -295,12 +296,16 @@ Deno.serve(async (req: Request) => {
         const kickoff = new Date(liveMatch.anpfiff);
         const elapsedMin = (now.getTime() - kickoff.getTime()) / 60000;
 
-        if (elapsedMin >= 80 && elapsedMin <= 130) {
-          nextSync = 90;   // 🔥 Crunch-Time: alle 90 Sekunden
-        } else if (elapsedMin >= 45 && elapsedMin < 60) {
-          nextSync = 600;  // ☕ Halbzeit: 10 Minuten
+        // Live-Spiel: IMMER 90s — außer Halbzeit
+        if (elapsedMin >= 45 && elapsedMin < 60) {
+          nextSync = 600;
+          nextSyncLabel = "☕ Halbzeit";
+        } else if (elapsedMin >= 80 && elapsedMin <= 130) {
+          nextSync = 90;
+          nextSyncLabel = "🔥 Crunch-Time";
         } else {
-          nextSync = 450;  // ⚽ Spiel läuft: 7,5 Minuten
+          nextSync = 90;
+          nextSyncLabel = "⚽ Live";
         }
       } else {
         // Kein Live-Spiel → schaue wann nächstes Match anpfiff
@@ -313,11 +318,14 @@ Deno.serve(async (req: Request) => {
           const nextKickoff = new Date(nextMatch.anpfiff);
           const minsUntil = (nextKickoff.getTime() - now.getTime()) / 60000;
           if (minsUntil > 0 && minsUntil < 30) {
-            nextSync = Math.max(120, Math.floor(minsUntil * 60)); // in Seconds, min 2 Minuten
+            nextSync = Math.max(90, Math.floor(minsUntil * 60)); // mindestens 90s
+            nextSyncLabel = `⏰ Kickoff in ${Math.round(minsUntil)} Min`;
           } else if (minsUntil <= 0) {
-            nextSync = 120; // imminent, alle 2 Minuten checken
+            nextSync = 90;
+            nextSyncLabel = "⏰ Kickoff imminent — wechsle auf Live";
           } else {
-            nextSync = Math.min(1800, Math.floor(minsUntil * 30)); // bis 30 Min, max 30 Min
+            nextSync = Math.min(1800, Math.floor(minsUntil * 30));
+            nextSyncLabel = `⏳ Nächster Kickoff in ${Math.round(minsUntil)} Min`;
           }
           
           // ─── Phase 5: Push Notifications (Max once every 48 hours) ───
@@ -386,14 +394,12 @@ Deno.serve(async (req: Request) => {
       }
     }
 
-    // ─── Heartbeat: Always write last_sync timestamp so clients know the sync is alive ───
+    // ─── Heartbeat: Always write last_sync + sync_label so clients know the sync is alive ───
     // Nutze immer Service-Role-Client — unabhängig vom Aufrufer — damit der Heartbeat nie ausfällt
     try {
       const serviceClient = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
-      await serviceClient.from('app_settings').upsert({
-        key: 'last_sync',
-        value: new Date().toISOString()
-      })
+      await serviceClient.from('app_settings').upsert({ key: 'last_sync', value: new Date().toISOString() })
+      await serviceClient.from('app_settings').upsert({ key: 'sync_label', value: nextSyncLabel })
     } catch (e) {
       console.error("Heartbeat write failed:", e)
     }
@@ -408,6 +414,7 @@ Deno.serve(async (req: Request) => {
       details,
       duration_ms: Date.now() - startTime,
       nextSyncSeconds: nextSync,
+      nextSyncLabel,
     });
 
   } catch (er) {
