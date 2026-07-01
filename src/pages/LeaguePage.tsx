@@ -265,11 +265,22 @@ export function LeaguePage() {
       previousPoints[uid] = 0
     })
 
+    // Build match lookup for live-point calculation
+    const matchById = new Map<string, MatchInfo>()
+    allMatches.forEach(m => matchById.set(m.id, m))
+
     if (tips) {
       tips.forEach((t) => {
+        const match = matchById.get(t.match_id)
+        // Live-Punkte: wenn Match live ist, berechne provisional points client-side
+        // Sonst: DB-Punkte (nur bei finished gesetzt)
+        const livePunkte = (match?.status === 'live' && match.tore_heim != null && match.tore_gast != null)
+          ? berechnePunkte(t.tipp_heim, t.tipp_gast, match.tore_heim, match.tore_gast)
+          : (t.punkte || 0)
+
         // Saison-Punkte berechnen (abhängig vom aktiven Turnier-Filter)
         if (validMatchesForPointsIds.has(t.match_id)) {
-          seasonPoints[t.user_id] = (seasonPoints[t.user_id] || 0) + (t.punkte || 0)
+          seasonPoints[t.user_id] = (seasonPoints[t.user_id] || 0) + livePunkte
           const matchInfo = validMatchesForPoints.find(m => m.id === t.match_id)
           if (matchInfo && matchInfo.spieltag < maxFinishedSpieltag) {
             previousPoints[t.user_id] = (previousPoints[t.user_id] || 0) + (t.punkte || 0)
@@ -278,8 +289,8 @@ export function LeaguePage() {
 
         if (!activeMatchIds.has(t.match_id)) return
         if (!tippMap[t.user_id]) tippMap[t.user_id] = {}
-        tippMap[t.user_id][t.match_id] = { heim: t.tipp_heim, gast: t.tipp_gast, punkte: t.punkte || 0 }
-        spPunkte[t.user_id] = (spPunkte[t.user_id] || 0) + (t.punkte || 0)
+        tippMap[t.user_id][t.match_id] = { heim: t.tipp_heim, gast: t.tipp_gast, punkte: livePunkte }
+        spPunkte[t.user_id] = (spPunkte[t.user_id] || 0) + livePunkte
       })
     }
 
@@ -378,6 +389,20 @@ export function LeaguePage() {
       ladeDaten()
     }
   }, [aktiveLiga, saison, ladeDaten])
+
+  // Realtime-Subscription: Live-Scores → aktualisiere allMatches für Live-Punkte
+  useEffect(() => {
+    if (!aktiveLiga) return
+    const channel = supabase
+      .channel('league-matches-live')
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'matches' }, (payload) => {
+        const updated = payload.new as MatchInfo
+        if (!updated?.id) return
+        setAllMatches((prev) => prev.map(m => m.id === updated.id ? { ...m, ...updated } : m))
+      })
+      .subscribe()
+    return () => { supabase.removeChannel(channel) }
+  }, [aktiveLiga])
 
   const filteredMatches = useMemo(() => {
     let matches = allMatches
