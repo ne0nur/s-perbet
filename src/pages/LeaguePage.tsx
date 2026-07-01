@@ -392,6 +392,32 @@ export function LeaguePage() {
     if (tabBtn) tabBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' })
   }, [viewSpieltag])
 
+  // Auto-scroll the table scroll container to the first active/upcoming match column
+  useEffect(() => {
+    if (isLaden || filteredMatches.length === 0 || !tableScrollRef.current) return
+
+    // Find the first match that is live or upcoming
+    const activeMatch = filteredMatches.find(m => m.status === 'live' || m.status === 'upcoming')
+    if (!activeMatch) return
+
+    const timer = setTimeout(() => {
+      const container = tableScrollRef.current
+      if (!container) return
+
+      const headerEl = container.querySelector(`[data-match-id="${activeMatch.id}"]`) as HTMLElement | null
+      if (headerEl) {
+        // 192px corresponds to the approximate combined width of the sticky columns (rank + name + total points)
+        const scrollTarget = headerEl.offsetLeft - 192
+        container.scrollTo({
+          left: Math.max(0, scrollTarget),
+          behavior: 'smooth'
+        })
+      }
+    }, 400) // Small delay to let the table render completely
+
+    return () => clearTimeout(timer)
+  }, [isLaden, filteredMatches])
+
   // ─── Liga Aktionen ─────────────────────────────────
   async function handleLigaErstellen() {
     if (!user || !neueLigaName.trim()) return
@@ -716,7 +742,7 @@ export function LeaguePage() {
                             <th className="py-2.5 pr-2 text-[10px] font-mono font-medium text-on-surface-variant/60 uppercase tracking-wider text-left sticky left-8 z-20 bg-surface-container-low w-28 min-w-[112px]" title={t('player')}>{t('player')}</th>
                             <th className="py-2.5 pr-3 text-[10px] font-mono font-medium text-on-surface-variant/60 uppercase tracking-wider text-center sticky left-[144px] z-20 bg-surface-container-low w-12 min-w-[48px]" title={t('pointsLong')}>{t('pointsShort')}</th>
                             {filteredMatches.map(m => (
-                              <th key={m.id} className="py-2.5 px-1 text-[10px] font-mono font-medium text-on-surface-variant/60 uppercase tracking-wider text-center w-12 relative" title={`${m.heim_team} vs ${m.gast_team}`}>
+                              <th key={m.id} data-match-id={m.id} className="py-2.5 px-1 text-[10px] font-mono font-medium text-on-surface-variant/60 uppercase tracking-wider text-center w-12 relative" title={`${m.heim_team} vs ${m.gast_team}`}>
                                 {(m.tournament === 'Champions League') && (
                                   <div className="absolute top-0 right-1/2 translate-x-1/2 -mt-1 text-[8px] opacity-70">⭐</div>
                                 )}
