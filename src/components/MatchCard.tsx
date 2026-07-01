@@ -112,7 +112,7 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
   const tippSpeichern = useTipStore(s => s.tippSpeichern)
   const tippsFreigeschaltet = useSettingsStore(s => s.tippsFreigeschaltet)
   const isOnline = useNetworkStore(s => s.isOnline)
-  const { language } = useTranslation()
+  const { language, t } = useTranslation()
   const aktivePhase = useMatchStore(s => s.aktivePhase)
 
   const istVorbei  = match.status === 'finished'
@@ -210,7 +210,7 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
       setTimeout(() => setSaved(false), 2500)
     } catch (err) {
       console.error(err)
-      useToastStore.getState().toast('❌ Fehler beim Speichern', 'error')
+      useToastStore.getState().toast('❌ ' + t('errorSavingTip'), 'error')
     }
     setIsSaving(false)
   }

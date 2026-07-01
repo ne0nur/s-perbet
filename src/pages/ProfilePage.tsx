@@ -590,7 +590,7 @@ export function ProfilePage() {
       if (isSigError) {
         // Warnung ausgeben wenn Liga-ID durch Fallback verloren geht
         if (leagueId) {
-          useToastStore.getState().toast('⚠️ Liga konnte nicht zugewiesen werden (alte RPC-Version — bitte Migration 032 ausführen)', 'error')
+          useToastStore.getState().toast(t('errorAssigningLeague'))
         }
         const { data: fallbackData, error: fallbackError } = await supabase.rpc('admin_create_user', {
           new_username: usr,
@@ -612,7 +612,7 @@ export function ProfilePage() {
     try {
       await invokeAdminCreateUser(newUsername.trim(), newPassword, selectedLeagueId)
       setAdminMsg({ type: 'success', text: `Benutzer "${newUsername.trim()}" erstellt!` })
-      useToastStore.getState().toast(`Benutzer "${newUsername.trim()}" erstellt`)
+      useToastStore.getState().toast(t('userCreated', { username: newUsername.trim() }))
       setCreatedUsersList([{ username: newUsername.trim(), password: newPassword }])
       setNewUsername('')
       setNewPassword('')
@@ -641,7 +641,7 @@ export function ProfilePage() {
     try {
       await invokeAdminCreateUser(creds.username, creds.password, selectedLeagueId)
       setAdminMsg({ type: 'success', text: `Benutzer "${creds.username}" erstellt!` })
-      useToastStore.getState().toast(`Benutzer "${creds.username}" erstellt`)
+      useToastStore.getState().toast(t('userCreated', { username: creds.username }))
       setCreatedUsersList([creds])
     } catch (err) {
       const errorObj = err as Error
@@ -653,7 +653,7 @@ export function ProfilePage() {
 
   async function handleBatchCreate() {
     if (batchCount < 1 || batchCount > 20) {
-      useToastStore.getState().toast('Bitte wähle eine Anzahl zwischen 1 und 20', 'error')
+      useToastStore.getState().toast(t('batchCountError'), 'error')
       return
     }
     setCreatingUser(true)
@@ -678,7 +678,7 @@ export function ProfilePage() {
     setCreatedUsersList(results)
     if (successCount > 0) {
       setAdminMsg({ type: 'success', text: `${successCount} Benutzer erfolgreich erstellt!` })
-      useToastStore.getState().toast(`${successCount} Benutzer erstellt`)
+      useToastStore.getState().toast(t('usersCreatedCount', { count: String(successCount) }))
     }
     if (lastError && successCount < batchCount) {
       setAdminMsg({ type: 'error', text: lastError?.message || `Einige Benutzer konnten nicht erstellt werden (${successCount}/${batchCount} erfolgreich)` })
@@ -756,7 +756,7 @@ export function ProfilePage() {
     const text = `Username: ${username}\nPasswort: ${pass}\nLink: ${window.location.origin}`
     navigator.clipboard.writeText(text)
     setCopiedIndex(index)
-    useToastStore.getState().toast('Zugangsdaten kopiert!')
+    useToastStore.getState().toast(t('copyCredentials'))
     setTimeout(() => setCopiedIndex(null), 2000)
   }
 
@@ -799,7 +799,7 @@ export function ProfilePage() {
 
     const allLocked = tournaments.every(tc => lockMap.get(tc.name) ?? tc.isLocked)
     if (allLocked) {
-      useToastStore.getState().toast('Alle Bonus-Tipps sind bereits gesperrt.', 'error')
+      useToastStore.getState().toast(t('allBonusLocked'), 'error')
       return
     }
 
@@ -831,7 +831,7 @@ export function ProfilePage() {
       }
 
       setGespeichert(true)
-      useToastStore.getState().toast('Bonus-Tipps erfolgreich abgegeben!')
+      useToastStore.getState().toast(t('bonusSubmittedToast'))
 
       const { data: bonusData } = await supabase.from('bonus_tipps')
         .select('*')

@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuthStore } from '../stores/authStore'
 import { useToastStore } from '../stores/toastStore'
+import { useTranslation } from '../utils/translations'
 import { Send, MessageCircle } from 'lucide-react'
 
 // ─── Typen ───────────────────────────────────────────
@@ -63,6 +64,7 @@ interface LeagueChatProps {
 
 export function LeagueChat({ leagueId }: LeagueChatProps) {
   const { user } = useAuthStore()
+  const { t } = useTranslation()
   const [nachrichten, setNachrichten] = useState<ChatMessage[]>([])
   const [text, setText] = useState('')
   const [isLaden, setIsLaden] = useState(true)
@@ -111,7 +113,7 @@ export function LeagueChat({ leagueId }: LeagueChatProps) {
       setNachrichten(enriched)
     } catch (err) {
       console.error('Fehler beim Laden der Nachrichten:', err)
-      useToastStore.getState().toast('Chat-Nachrichten konnten nicht geladen werden', 'error')
+      useToastStore.getState().toast(t('errorLoadingChat'), 'error')
     } finally {
       setIsLaden(false)
     }
@@ -195,7 +197,7 @@ export function LeagueChat({ leagueId }: LeagueChatProps) {
 
     if (error) {
       console.error('Chat-Fehler:', error)
-      useToastStore.getState().toast(`Fehler beim Senden: ${error.message || 'Unbekannt'}`, 'error')
+      useToastStore.getState().toast(t('errorSendingChat', { error: error.message || 'Unbekannt' }), 'error')
       setText(inhalt)
     }
 

@@ -637,7 +637,7 @@ export function GlobalPage() {
 
     } catch (e) {
       console.error('Fehler beim Laden der globalen Daten:', e)
-      useToastStore.getState().toast('Fehler beim Laden der Rangliste', 'error')
+      useToastStore.getState().toast(t('errorLoadingRankings'), 'error')
     } finally {
       setIsLaden(false)
     }

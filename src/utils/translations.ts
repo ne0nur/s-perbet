@@ -449,6 +449,27 @@ export const translations = {
     adminCreatedUsersList: 'Erstellte Benutzer ({count}):',
     broadcastSent: 'Broadcast gesendet!',
     adminNoLeagues: 'Es gibt noch keine Ligen.',
+
+    // Hardcoded UI strings → translations
+    errorSavingTip: 'Fehler beim Speichern',
+    errorLoadingChat: 'Chat-Nachrichten konnten nicht geladen werden',
+    errorSendingChat: 'Fehler beim Senden: {error}',
+    errorLoadingRankings: 'Fehler beim Laden der Rangliste',
+    errorLoadingMatchInfo: 'Fehler beim Laden der Spieltag-Infos',
+    pushPermissionDenied: 'Berechtigung verweigert',
+    pushEnabled: 'Benachrichtigungen aktiviert!',
+    pushErrorActivating: 'Fehler beim Aktivieren der Benachrichtigungen',
+    pushDisabled: 'Benachrichtigungen deaktiviert',
+    pushErrorDeactivating: 'Fehler beim Deaktivieren',
+    loadingEllipsis: 'Laden…',
+    noMatchesForPhase: 'Keine Spiele für diese Phase gefunden.',
+    errorAssigningLeague: '⚠️ Liga konnte nicht zugewiesen werden (alte RPC-Version — bitte Migration 032 ausführen)',
+    userCreated: 'Benutzer "{username}" erstellt',
+    usersCreatedCount: '{count} Benutzer erstellt',
+    copyCredentials: 'Zugangsdaten kopiert!',
+    allBonusLocked: 'Alle Bonus-Tipps sind bereits gesperrt.',
+    bonusSubmittedToast: 'Bonus-Tipps erfolgreich abgegeben!',
+    batchCountError: 'Bitte wähle eine Anzahl zwischen 1 und 20',
   },
   en: {
     // Nav / General
@@ -898,6 +919,27 @@ export const translations = {
     adminCreatedUsersList: 'Created Users ({count}):',
     broadcastSent: 'Broadcast sent!',
     adminNoLeagues: 'There are no leagues yet.',
+
+    // Hardcoded UI strings → translations
+    errorSavingTip: 'Error saving tip',
+    errorLoadingChat: 'Could not load chat messages',
+    errorSendingChat: 'Error sending: {error}',
+    errorLoadingRankings: 'Error loading rankings',
+    errorLoadingMatchInfo: 'Error loading matchday info',
+    pushPermissionDenied: 'Permission denied',
+    pushEnabled: 'Notifications enabled!',
+    pushErrorActivating: 'Error enabling notifications',
+    pushDisabled: 'Notifications disabled',
+    pushErrorDeactivating: 'Error disabling notifications',
+    loadingEllipsis: 'Loading…',
+    noMatchesForPhase: 'No matches found for this phase.',
+    errorAssigningLeague: '⚠️ Could not assign league (old RPC version — run migration 032)',
+    userCreated: 'User "{username}" created',
+    usersCreatedCount: '{count} users created',
+    copyCredentials: 'Credentials copied!',
+    allBonusLocked: 'All bonus tips are already locked.',
+    bonusSubmittedToast: 'Bonus tips submitted successfully!',
+    batchCountError: 'Please choose a number between 1 and 20',
   },
   tr: {
     // Nav / General
@@ -1347,6 +1389,27 @@ export const translations = {
     adminCreatedUsersList: 'Oluşturulan Kullanıcılar ({count}):',
     broadcastSent: 'Duyuru gönderildi!',
     adminNoLeagues: 'Henüz lig bulunmuyor.',
+
+    // Hardcoded UI strings → translations
+    errorSavingTip: 'Tahmin kaydedilirken hata oluştu',
+    errorLoadingChat: 'Sohbet mesajları yüklenemedi',
+    errorSendingChat: 'Gönderim hatası: {error}',
+    errorLoadingRankings: 'Sıralama yüklenirken hata oluştu',
+    errorLoadingMatchInfo: 'Hafta bilgisi yüklenirken hata oluştu',
+    pushPermissionDenied: 'İzin reddedildi',
+    pushEnabled: 'Bildirimler etkinleştirildi!',
+    pushErrorActivating: 'Bildirimler etkinleştirilirken hata oluştu',
+    pushDisabled: 'Bildirimler devre dışı bırakıldı',
+    pushErrorDeactivating: 'Bildirimler devre dışı bırakılırken hata oluştu',
+    loadingEllipsis: 'Yükleniyor…',
+    noMatchesForPhase: 'Bu aşama için maç bulunamadı.',
+    errorAssigningLeague: '⚠️ Lig atanamadı (eski RPC sürümü — migration 032 çalıştırın)',
+    userCreated: '"{username}" kullanıcısı oluşturuldu',
+    usersCreatedCount: '{count} kullanıcı oluşturuldu',
+    copyCredentials: 'Giriş bilgileri kopyalandı!',
+    allBonusLocked: 'Tüm bonus tahminleri zaten kilitli.',
+    bonusSubmittedToast: 'Bonus tahminleri başarıyla gönderildi!',
+    batchCountError: 'Lütfen 1 ile 20 arasında bir sayı seçin',
   }
 }
 

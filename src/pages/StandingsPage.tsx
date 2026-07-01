@@ -443,7 +443,7 @@ export function StandingsPage() {
           })}
           {matchesForPhase.filter(m => m.spieltag === viewPhase).length === 0 && (
             <div className="col-span-full bg-surface-container-low border border-surface-container-high rounded-xl p-8 text-center">
-              <p className="text-on-surface-variant font-mono text-sm">Keine Spiele für diese Phase gefunden.</p>
+              <p className="text-on-surface-variant font-mono text-sm">{t('noMatchesForPhase')}</p>
             </div>
           )}
         </div>

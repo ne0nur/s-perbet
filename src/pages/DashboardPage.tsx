@@ -121,7 +121,7 @@ export function DashboardPage() {
       setSpieltagInfo(infoMap)
     } catch (e) {
       console.error('Fehler beim Laden der Spieltag-Infos:', e)
-      useToastStore.getState().toast('Fehler beim Laden der Spieltag-Infos', 'error')
+      useToastStore.getState().toast(t('errorLoadingMatchInfo'), 'error')
     }
   }, [user])
 

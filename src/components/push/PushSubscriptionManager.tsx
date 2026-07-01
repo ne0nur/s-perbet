@@ -3,10 +3,12 @@ import { Bell, BellOff, BellRing } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { useAuthStore } from '../../stores/authStore'
 import { useToastStore } from '../../stores/toastStore'
+import { useTranslation } from '../../utils/translations'
 
 export function PushSubscriptionManager() {
   const { user } = useAuthStore()
   const { toast } = useToastStore()
+  const { t } = useTranslation()
   const [isSubscribed, setIsSubscribed] = useState(false)
   const [isSupported, setIsSupported] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -51,7 +53,7 @@ export function PushSubscriptionManager() {
       // Check permission
       const permission = await Notification.requestPermission()
       if (permission !== 'granted') {
-        toast('Berechtigung verweigert', 'error')
+        toast(t('pushPermissionDenied'), 'error')
         setLoading(false)
         return
       }
@@ -84,7 +86,7 @@ export function PushSubscriptionManager() {
       if (error) throw error
 
       setIsSubscribed(true)
-      toast('Benachrichtigungen aktiviert!', 'success')
+      toast(t('pushEnabled'), 'success')
       
       // Test push
       await supabase.functions.invoke('send-push', {
@@ -97,7 +99,7 @@ export function PushSubscriptionManager() {
 
     } catch (err: any) {
       console.error('Subscription error:', err)
-      toast('Fehler beim Aktivieren der Benachrichtigungen', 'error')
+      toast(t('pushErrorActivating'), 'error')
     } finally {
       setLoading(false)
     }
@@ -119,10 +121,10 @@ export function PushSubscriptionManager() {
           .eq('user_id', user.id)
       }
       setIsSubscribed(false)
-      toast('Benachrichtigungen deaktiviert', 'success')
+      toast(t('pushDisabled'), 'success')
     } catch (err) {
       console.error('Unsubscribe error:', err)
-      toast('Fehler beim Deaktivieren', 'error')
+      toast(t('pushErrorDeactivating'), 'error')
     } finally {
       setLoading(false)
     }
