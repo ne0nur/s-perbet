@@ -99,7 +99,20 @@ function cleanName(name: string): string {
 }
 
 function getDateStr(date: Date): string {
-  return `${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, "0")}${String(date.getDate()).padStart(2, "0")}`;
+  const start = new Date(date);
+  start.setDate(start.getDate() - 2);
+  const end = new Date(date);
+  end.setDate(end.getDate() + 1);
+  
+  const y1 = start.getFullYear();
+  const m1 = String(start.getMonth() + 1).padStart(2, "0");
+  const d1 = String(start.getDate()).padStart(2, "0");
+  
+  const y2 = end.getFullYear();
+  const m2 = String(end.getMonth() + 1).padStart(2, "0");
+  const d2 = String(end.getDate()).padStart(2, "0");
+  
+  return `${y1}${m1}${d1}-${y2}${m2}${d2}`;
 }
 
 function determineWinner(m: MatchRow): string | null {
@@ -285,7 +298,7 @@ Deno.serve(async (req: Request) => {
     const now = new Date();
     const { data: matches, error: fetchError } = await adminClient
       .from("matches").select("*")
-      .not("status", "in", '("finished","postponed")')
+      .or('status.in.(upcoming,live),and(status.eq.finished,tore_heim.is.null)')
       .order("anpfiff", { ascending: true });
 
     if (fetchError) return eresp({ error: fetchError.message }, 500);

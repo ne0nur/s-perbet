@@ -51,7 +51,7 @@ async function syncScores() {
     return
   }
 
-  const allFinished = dbMatches.length > 0 && dbMatches.every(m => m.status === 'finished')
+  const allFinished = dbMatches.length > 0 && dbMatches.every(m => m.status === 'finished' && m.tore_heim !== null)
   const hasLive = dbMatches.some(m => m.status === 'live')
 
   if (!force && allFinished) {
@@ -72,12 +72,20 @@ async function syncScores() {
     }
   }
 
-  // Datum formatieren für ESPN (YYYYMMDD)
-  const yyyy = now.getFullYear()
-  const mm = String(now.getMonth() + 1).padStart(2, '0')
-  const dd = String(now.getDate()).padStart(2, '0')
-  const dateStr = `${yyyy}${mm}${dd}`
-
+  // Datumsbereich formatieren für ESPN (Gestern bis Morgen, YYYYMMDD-YYYYMMDD)
+  const startDate = new Date(now)
+  startDate.setDate(startDate.getDate() - 2)
+  const yyyy1 = startDate.getFullYear()
+  const mm1 = String(startDate.getMonth() + 1).padStart(2, '0')
+  const dd1 = String(startDate.getDate()).padStart(2, '0')
+  
+  const endDate = new Date(now)
+  endDate.setDate(endDate.getDate() + 1)
+  const yyyy2 = endDate.getFullYear()
+  const mm2 = String(endDate.getMonth() + 1).padStart(2, '0')
+  const dd2 = String(endDate.getDate()).padStart(2, '0')
+  
+  const dateStr = `${yyyy1}${mm1}${dd1}-${yyyy2}${mm2}${dd2}`
   // Turniere aus den heutigen Matches extrahieren
   const tournamentsToday = [...new Set(dbMatches.map(m => m.tournament || 'Süper Lig'))]
   
