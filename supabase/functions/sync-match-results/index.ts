@@ -143,9 +143,16 @@ Deno.serve(async (req: Request) => {
 
     let adminClient: ReturnType<typeof createClient>;
 
-    // Service-Role-Key direkt vergleichen (sicherer als RLS-Test auf matches)
-    if (token === SERVICE_ROLE_KEY) {
-      adminClient = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
+    // Prüfe, ob der Token ein Service-Role-Key ist, indem wir eine Tabelle testen,
+    // die NUR für authentifizierte User (oder Service Role) lesbar ist.
+    // profiles hat RLS: nur authentifizierte Nutzer — Anon-Key fliegt raus.
+    const testClient = createClient(SUPABASE_URL, token);
+    const { data: testData, error: testError } = await testClient
+      .from("profiles").select("id").limit(1);
+
+    if (!testError && testData && testData.length > 0) {
+      // Service-Role-Key (oder Admin-User) → automatisierter Aufruf
+      adminClient = testClient;
     } else {
       // User-JWT → Admin-Check
       const userClient = createClient(SUPABASE_URL, Deno.env.get("SUPABASE_ANON_KEY")!, {
