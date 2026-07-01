@@ -46,6 +46,7 @@ interface MatchState {
   getLiveMatches: () => Match[]
   initialisiereSpieltag: () => Promise<number>
   abonnierenRealtimeMatches: () => void
+  recalculateAktivePhase: () => Promise<void>
   cleanup: () => void
 }
 
@@ -77,6 +78,9 @@ export const useMatchStore = create<MatchState>()(
           // Keine Daten vorhanden: Ladespinner anzeigen
           set({ isLaden: true })
         }
+
+        // Führe active phase check aus
+        get().recalculateAktivePhase()
 
         try {
           let currentSeason = state.aktuelleSaison
@@ -159,6 +163,7 @@ export const useMatchStore = create<MatchState>()(
         const { data: liveData } = await liveQuery
         if (liveData?.length) {
           set({ aktuellerSpieltag: liveData[0].spieltag, aktivePhase: liveData[0].spieltag })
+          await get().recalculateAktivePhase()
           return liveData[0].spieltag
         }
 
@@ -170,6 +175,7 @@ export const useMatchStore = create<MatchState>()(
         const { data: upcomingData } = await upcomingQuery
         if (upcomingData?.length) {
           set({ aktuellerSpieltag: upcomingData[0].spieltag, aktivePhase: upcomingData[0].spieltag })
+          await get().recalculateAktivePhase()
           return upcomingData[0].spieltag
         }
 
@@ -223,6 +229,7 @@ export const useMatchStore = create<MatchState>()(
           if (liveData && liveData.length > 0) {
             const st = liveData[0].spieltag
             set({ aktuellerSpieltag: st, selectedTournament: liveData[0].tournament, aktivePhase: st })
+            await get().recalculateAktivePhase()
             return st
           }
 
@@ -234,6 +241,7 @@ export const useMatchStore = create<MatchState>()(
           if (upcomingData && upcomingData.length > 0) {
             const st = upcomingData[0].spieltag
             set({ aktuellerSpieltag: st, selectedTournament: upcomingData[0].tournament, aktivePhase: st })
+            await get().recalculateAktivePhase()
             return st
           }
 
@@ -245,6 +253,7 @@ export const useMatchStore = create<MatchState>()(
           if (futureData && futureData.length > 0) {
             const st = futureData[0].spieltag
             set({ aktuellerSpieltag: st, selectedTournament: futureData[0].tournament, aktivePhase: st })
+            await get().recalculateAktivePhase()
             return st
           }
 
@@ -279,6 +288,9 @@ export const useMatchStore = create<MatchState>()(
             (payload) => {
               const updated = payload.new as Match
               if (!updated || !updated.id) return
+
+              // Recalculate active phase reactively when match details change
+              get().recalculateAktivePhase()
 
               set((state) => {
                 let currentMatches = [...state.matches]
@@ -315,6 +327,31 @@ export const useMatchStore = create<MatchState>()(
           .subscribe()
 
         set({ subscription: sub })
+      },
+
+      recalculateAktivePhase: async () => {
+        const tourney = get().selectedTournament
+        const currentSeason = get().aktuelleSaison
+        if (!tourney) return
+
+        try {
+          let activeQuery = supabase.from('matches')
+            .select('spieltag')
+            .eq('tournament', tourney)
+            .in('status', ['live', 'upcoming'])
+            .order('spieltag', { ascending: true })
+            .limit(1)
+          if (currentSeason) activeQuery = activeQuery.eq('season', currentSeason)
+
+          const { data: activeData } = await activeQuery
+          if (activeData && activeData.length > 0) {
+            set({ aktivePhase: activeData[0].spieltag })
+          } else {
+            set({ aktivePhase: null })
+          }
+        } catch (e) {
+          console.error("Error recalculating active phase:", e)
+        }
       },
       
       cleanup: () => {
