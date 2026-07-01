@@ -114,24 +114,11 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
   const isOnline = useNetworkStore(s => s.isOnline)
   const { language } = useTranslation()
   const aktivePhase = useMatchStore(s => s.aktivePhase)
-  // const letztesUpdate = useMatchStore(s => s.letztesUpdate) // jetzt lokale Live-Uhr
+  const letztesUpdate = useMatchStore(s => s.letztesUpdate)
 
   const istVorbei  = match.status === 'finished'
   const istLive    = match.status === 'live'
   const istUpcoming = match.status === 'upcoming'
-
-  // Lokale Live-Uhr: tickt jede Sekunde, auch wenn keine neuen Spieldaten ankommen
-  const [liveTime, setLiveTime] = useState(() =>
-    new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
-  )
-  useEffect(() => {
-    if (!istLive) return
-    setLiveTime(new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', second: '2-digit' }))
-    const interval = setInterval(() => {
-      setLiveTime(new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', second: '2-digit' }))
-    }, 1000)
-    return () => clearInterval(interval)
-  }, [istLive])
 
   // Tipp-Input State
   const [tippHeim, setTippHeim] = useState(eigenerTipp?.tipp_heim ?? 0)
@@ -256,7 +243,9 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
         {istLive && (
           <span className="flex items-center gap-1.5 text-red-400 text-xs font-medium">
             <span className="live-dot" /> LIVE
-            <span className="text-[10px] text-red-400/50 font-mono">{liveTime}</span>
+            {letztesUpdate && (
+              <span className="text-[10px] text-red-400/50 font-mono">{letztesUpdate}</span>
+            )}
           </span>
         )}
         {istVorbei && punkte !== null && (

@@ -332,24 +332,45 @@ export const useMatchStore = create<MatchState>()(
         set({ subscription: sub })
       },
 
-      abonnierenHeartbeat: () => {
-        if (get().heartbeatSub) return // Bereits abonniert
+      abonnierenHeartbeat: async () => {
+        const existing = get().heartbeatSub
+        if (existing) {
+          const state = (existing as any).state
+          if (state === 'joined' || state === 'subscribed') return
+          try { supabase.removeChannel(existing) } catch (e) {}
+        }
+
+        // Initialen Wert sofort laden (falls Realtime verpasst oder alt)
+        try {
+          const { data, error } = await supabase.from('app_settings').select('value').eq('key', 'last_sync').single()
+          if (!error && data?.value) {
+            const d = new Date(data.value)
+            const timeString = d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+            set({ letztesUpdate: timeString })
+          }
+        } catch (e) {
+          console.error('[Heartbeat] initial fetch error:', e)
+        }
 
         const sub = supabase
           .channel('heartbeat-sync')
           .on(
             'postgres_changes',
-            { event: '*', schema: 'public', table: 'app_settings', filter: 'key=eq.last_sync' },
+            { event: '*', schema: 'public', table: 'app_settings' },
             (payload) => {
+              console.log('[Heartbeat] realtime event:', payload)
               const row = payload.new as { key: string; value: string } | null
-              if (row?.value) {
+              if (row?.key === 'last_sync' && row?.value) {
                 const d = new Date(row.value)
                 const timeString = d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+                console.log('[Heartbeat] updating letztesUpdate ->', timeString)
                 set({ letztesUpdate: timeString })
               }
             }
           )
-          .subscribe()
+          .subscribe((status) => {
+            console.log('[Heartbeat] subscription status:', status)
+          })
 
         set({ heartbeatSub: sub })
       },
@@ -400,7 +421,7 @@ export const useMatchStore = create<MatchState>()(
         selectedTournament: state.selectedTournament,
         cacheMatches: state.cacheMatches,
         cacheTimestamps: state.cacheTimestamps,
-        letztesUpdate: state.letztesUpdate,
+        // letztesUpdate NICHT persistieren — soll immer vom Server-Heartbeat kommen
       }),
     }
   )

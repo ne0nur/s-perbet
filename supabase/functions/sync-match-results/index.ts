@@ -143,14 +143,9 @@ Deno.serve(async (req: Request) => {
 
     let adminClient: ReturnType<typeof createClient>;
 
-    // Versuche Token direkt als Service-Role-Key (für Cronjobs)
-    const testClient = createClient(SUPABASE_URL, token);
-    const { data: testData, error: testError } = await testClient
-      .from("matches").select("id").limit(1);
-
-    if (!testError && testData) {
-      // Gültiger Service-Role-Key → automatisierter Aufruf
-      adminClient = testClient;
+    // Service-Role-Key direkt vergleichen (sicherer als RLS-Test auf matches)
+    if (token === SERVICE_ROLE_KEY) {
+      adminClient = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
     } else {
       // User-JWT → Admin-Check
       const userClient = createClient(SUPABASE_URL, Deno.env.get("SUPABASE_ANON_KEY")!, {
@@ -382,8 +377,10 @@ Deno.serve(async (req: Request) => {
     }
 
     // ─── Heartbeat: Always write last_sync timestamp so clients know the sync is alive ───
+    // Nutze immer Service-Role-Client — unabhängig vom Aufrufer — damit der Heartbeat nie ausfällt
     try {
-      await adminClient.from('app_settings').upsert({
+      const serviceClient = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
+      await serviceClient.from('app_settings').upsert({
         key: 'last_sync',
         value: new Date().toISOString()
       })
