@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase'
 import type { Match } from '../stores/matchStore'
 import { getTeamLogo } from '../lib/teamLogos'
 import { TeamInspector } from '../components/TeamInspector'
+import { MatchCard } from '../components/MatchCard'
 import { useTranslation } from '../utils/translations'
 import { getTournamentLogo } from '../lib/utils'
 import { useTournamentStore } from '../stores/tournamentStore'
@@ -396,51 +397,9 @@ export function StandingsPage() {
       {viewPhase !== 'table' ? (
         // ─── K.o.-Phase Matches ───
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 w-full">
-          {matchesForPhase.filter(m => m.spieltag === viewPhase).map(m => {
-            const formatTeamName = (name: string) => {
-              const lower = name.toLowerCase()
-              if (lower.includes('winner') || lower.includes('loser') || lower.includes('round of') || lower.includes('tbd')) {
-                return 'TBD'
-              }
-              return name
-            }
-
-            const h = formatTeamName(m.heim_team)
-            const a = formatTeamName(m.gast_team)
-            const ht = m.tore_heim
-            const at = m.tore_gast
-            const isFinished = m.status === 'finished'
-            const isLive = m.status === 'live'
-            const winner = isFinished && ht !== null && at !== null ? (ht > at ? h : at > ht ? a : null) : null
-
-            return (
-              <div key={m.id} className={`bg-white/5 backdrop-blur-md border rounded-xl p-4 text-sm relative transition-colors flex flex-col gap-3 shadow-sm ${
-                isLive ? 'border-red-500/50 shadow-[0_0_12px_rgba(239,68,68,0.15)]' :
-                isFinished ? 'border-white/10' : 'border-white/10'
-              }`}>
-                <div className={`flex justify-between items-center ${winner === h ? 'font-bold text-green-400' : 'text-on-surface'}`}>
-                  <div className="flex items-center gap-2 truncate">
-                    <img src={getTeamLogo(h)} alt="" className="w-5 h-5 object-contain opacity-90" />
-                    <span className="truncate">{h}</span>
-                  </div>
-                  <span className="text-right font-mono text-lg">{isFinished || isLive ? ht : '-'}</span>
-                </div>
-                <div className={`flex justify-between items-center ${winner === a ? 'font-bold text-green-400' : 'text-on-surface'}`}>
-                  <div className="flex items-center gap-2 truncate">
-                    <img src={getTeamLogo(a)} alt="" className="w-5 h-5 object-contain opacity-90" />
-                    <span className="truncate">{a}</span>
-                  </div>
-                  <span className="text-right font-mono text-lg">{isFinished || isLive ? at : '-'}</span>
-                </div>
-                {isLive && (
-                  <div className="absolute top-2 right-2 text-[9px] text-red-400 font-mono flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse" />
-                    LIVE
-                  </div>
-                )}
-              </div>
-            )
-          })}
+          {matchesForPhase.filter(m => m.spieltag === viewPhase).map(m => (
+            <MatchCard key={m.id} match={m} />
+          ))}
           {matchesForPhase.filter(m => m.spieltag === viewPhase).length === 0 && (
             <div className="col-span-full bg-surface-container-low border border-surface-container-high rounded-xl p-8 text-center">
               <p className="text-on-surface-variant font-mono text-sm">{t('noMatchesForPhase')}</p>
