@@ -26,6 +26,7 @@ interface MatchRow {
   spieltag: number;
   tournament: string;
   season: number;
+  spielminute: string | null;
 }
 
 interface UpdateResult {
@@ -85,6 +86,7 @@ export interface EspnMatch {
   status: string;
   date: Date;
   displayClock: string;  // z.B. "65'" oder "HT"
+  isHalftime: boolean;   // ESPN-Status: STATUS_HALFTIME
 }
 
 async function fetchEspnScores(tournament: string, dateStr: string): Promise<EspnMatch[]> {
@@ -109,9 +111,11 @@ async function fetchEspnScores(tournament: string, dateStr: string): Promise<Esp
       if (away.shootoutScore) aScore += away.shootoutScore;
 
       let s = "upcoming";
+      let halftime = false;
       const sn = ev.status.type.name;
       if (sn.includes("FULL_TIME") || sn.includes("FINAL")) s = "finished";
-      else if (sn.includes("HALF") || sn.includes("IN_PROGRESS")) s = "live";
+      else if (sn.includes("HALF")) { s = "live"; halftime = true; }
+      else if (sn.includes("IN_PROGRESS")) s = "live";
       else if (sn.includes("POSTPONED") || sn.includes("CANCELED")) s = "postponed";
       
       matches.push({
@@ -121,7 +125,8 @@ async function fetchEspnScores(tournament: string, dateStr: string): Promise<Esp
         awayScore: aScore,
         status: s,
         date: new Date(ev.date),
-        displayClock: ev.status?.displayClock || ""
+        displayClock: halftime ? "HT" : (ev.status?.displayClock || ""),
+        isHalftime: halftime
       });
     }
     return matches;
@@ -244,12 +249,13 @@ Deno.serve(async (req: Request) => {
             nameUpdated = true;
           }
 
-          if (nameUpdated || match.status !== e.status || match.tore_heim !== e.homeScore || match.tore_gast !== e.awayScore) {
+          if (nameUpdated || match.status !== e.status || match.tore_heim !== e.homeScore || match.tore_gast !== e.awayScore || match.spielminute !== e.displayClock) {
             const { error: ue } = await adminClient.from("matches").update(updatePayload).eq("id", match.id);
             if (!ue) {
               match.status = e.status;
               match.tore_heim = e.homeScore;
               match.tore_gast = e.awayScore;
+              match.spielminute = e.displayClock;
               if (nameUpdated) {
                 bracketUpdates++;
                 match.heim_team = updatePayload.heim_team || match.heim_team;
@@ -293,12 +299,11 @@ Deno.serve(async (req: Request) => {
       const liveMatch = matchList.find(m => m.status === "live");
 
       if (liveMatch) {
-        const kickoff = new Date(liveMatch.anpfiff);
-        const elapsedMin = (now.getTime() - kickoff.getTime()) / 60000;
-
-        // ☕ Halbzeit-Erkennung mit Counter (max. 2× Halbzeit, dann auf Live wechseln)
+        // ☕ Halbzeit-Erkennung via ESPN (spielminute = "HT") — Counter: max. 2× 8min
+        const isHalftime = liveMatch.spielminute === "HT";
         let halbzeitCount = 0;
-        if (elapsedMin >= 45 && elapsedMin < 60) {
+
+        if (isHalftime) {
           try {
             const { data: hzData } = await adminClient.from('app_settings')
               .select('value').eq('key', 'halbzeit_count').single();
@@ -316,8 +321,7 @@ Deno.serve(async (req: Request) => {
             nextSyncLabel = "⚽ Live (Halbzeit-Counter überschritten)";
           } else {
             nextSync = 480; // 8 Minuten
-            nextSyncLabel = `☕ Halbzeit (${halbzeitCount}/2)`;
-            // Counter persistieren
+            nextSyncLabel = `☕ Halbzeit — ESPN (${halbzeitCount}/2)`;
             try {
               await adminClient.from('app_settings').upsert({
                 key: 'halbzeit_count',
@@ -325,19 +329,21 @@ Deno.serve(async (req: Request) => {
               });
             } catch (e) { /* ignore */ }
           }
-        } else if (elapsedMin >= 60 && elapsedMin < 80) {
-          // Halbzeit vorbei → Counter löschen
+        } else {
+          // Nicht Halbzeit → Counter löschen
           try {
             await adminClient.from('app_settings').delete().eq('key', 'halbzeit_count');
           } catch (e) { /* ignore */ }
-          nextSync = 90;
-          nextSyncLabel = "⚽ Live";
-        } else if (elapsedMin >= 80 && elapsedMin <= 130) {
-          nextSync = 90;
-          nextSyncLabel = "🔥 Crunch-Time";
-        } else {
-          nextSync = 90;
-          nextSyncLabel = "⚽ Live";
+
+          const kickoff = new Date(liveMatch.anpfiff);
+          const elapsedMin = (now.getTime() - kickoff.getTime()) / 60000;
+          if (elapsedMin >= 80 && elapsedMin <= 130) {
+            nextSync = 90;
+            nextSyncLabel = "🔥 Crunch-Time";
+          } else {
+            nextSync = 90;
+            nextSyncLabel = "⚽ Live";
+          }
         }
       } else {
         // Kein Live-Spiel → schaue wann nächstes Match anpfiff
