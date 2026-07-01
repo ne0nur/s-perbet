@@ -5,7 +5,7 @@ import { useMatchStore } from '../stores/matchStore'
 import { getTeamLogo } from '../lib/teamLogos'
 import { Trophy, Users, BarChart2, Gift, Award, Crown, Medal, Target } from 'lucide-react'
 import { motion } from 'framer-motion'
-import { getLevelBadgeStyle, calculateLevel } from '../lib/utils'
+import { getLevelBadgeStyle } from '../lib/utils'
 import { LevelBadge } from '../components/ui/LevelBadge'
 import { evaluateAchievements, type TipDetails } from '../utils/achievementEvaluator'
 import { RivalInspector } from '../components/RivalInspector'
@@ -21,6 +21,7 @@ interface RanglisteEintrag {
   gesamt_punkte: number
   exakte_treffer: number
   achievements_count?: number
+  level?: number
   is_admin?: boolean
   trend?: number
   displayRank?: string
@@ -105,8 +106,8 @@ function LeaderboardSection({
                 {tie1_2 ? <Crown size={24} className="text-yellow-900" /> : <Medal size={16} className="text-slate-700" />}
               </div>
               <AvatarLightbox src={top3[1]?.avatar_url} username={top3[1]?.username || ''} size="sm" showLevel levelBadge={
-                <LevelBadge level={calculateLevel(top3[1]?.gesamt_punkte || 0, top3[1]?.achievements_count || 0)} className="absolute -top-1 -right-1 z-10 text-[7px] h-3.5 w-3.5 rounded-full shadow select-none">
-                  {calculateLevel(top3[1]?.gesamt_punkte || 0, top3[1]?.achievements_count || 0)}
+                <LevelBadge level={top3[1]?.level || 1} className="absolute -top-1 -right-1 z-10 text-[7px] h-3.5 w-3.5 rounded-full shadow select-none">
+                  {top3[1]?.level || 1}
                 </LevelBadge>
               } />
               <span className="text-[8px] text-on-surface-variant font-mono truncate w-full text-center mt-2">
@@ -138,8 +139,8 @@ function LeaderboardSection({
               <Crown size={24} className="text-yellow-900" />
             </div>
             <AvatarLightbox src={top3[0]?.avatar_url} username={top3[0]?.username || ''} size="md" showLevel levelBadge={
-              <LevelBadge level={calculateLevel(top3[0]?.gesamt_punkte || 0, top3[0]?.achievements_count || 0)} className="absolute -top-1 -right-1 z-10 text-[8px] h-4 w-4 rounded-full shadow select-none">
-                {calculateLevel(top3[0]?.gesamt_punkte || 0, top3[0]?.achievements_count || 0)}
+              <LevelBadge level={top3[0]?.level || 1} className="absolute -top-1 -right-1 z-10 text-[8px] h-4 w-4 rounded-full shadow select-none">
+                {top3[0]?.level || 1}
               </LevelBadge>
             } />
             <span className="text-[9px] text-primary-fixed-dim font-mono font-bold truncate w-full text-center mt-2">
@@ -176,8 +177,8 @@ function LeaderboardSection({
                 {tie2_3 ? <Medal size={16} className="text-slate-700" /> : <Medal size={16} className="text-amber-900" />}
               </div>
               <AvatarLightbox src={top3[2]?.avatar_url} username={top3[2]?.username || ''} size="sm" showLevel levelBadge={
-                <LevelBadge level={calculateLevel(top3[2]?.gesamt_punkte || 0, top3[2]?.achievements_count || 0)} className="absolute -top-1 -right-1 z-10 text-[7px] h-3.5 w-3.5 rounded-full shadow select-none">
-                  {calculateLevel(top3[2]?.gesamt_punkte || 0, top3[2]?.achievements_count || 0)}
+                <LevelBadge level={top3[2]?.level || 1} className="absolute -top-1 -right-1 z-10 text-[7px] h-3.5 w-3.5 rounded-full shadow select-none">
+                  {top3[2]?.level || 1}
                 </LevelBadge>
               } />
               <span className="text-[9px] text-on-surface-variant font-mono truncate w-full text-center flex items-center justify-center gap-1">
@@ -234,8 +235,8 @@ function LeaderboardSection({
                   showLevel={true}
                   className="!mr-2" // Etwas Abstand für das überstehende Badge
                   levelBadge={
-                    <LevelBadge level={calculateLevel(e.gesamt_punkte, e.achievements_count || 0)} className="absolute -bottom-1 -right-1 z-10 text-[8px] h-3.5 w-3.5 rounded-full shadow shadow-black/80 select-none level-digit border border-surface-container-low">
-                      {calculateLevel(e.gesamt_punkte, e.achievements_count || 0)}
+                    <LevelBadge level={e.level || 1} className="absolute -bottom-1 -right-1 z-10 text-[8px] h-3.5 w-3.5 rounded-full shadow shadow-black/80 select-none level-digit border border-surface-container-low">
+                      {e.level || 1}
                     </LevelBadge>
                   }
                 />
@@ -502,7 +503,7 @@ export function GlobalPage() {
         if (!rawRangData) {
           const { data: fallbackData } = await supabase
             .from('profiles')
-            .select('id,username,avatar_url,gesamt_punkte,exakte_treffer,is_admin,achievements_count')
+            .select('id,username,avatar_url,gesamt_punkte,exakte_treffer,is_admin,achievements_count,level')
             .order('gesamt_punkte', { ascending: false })
             .order('exakte_treffer', { ascending: false })
             .limit(50)
@@ -533,6 +534,7 @@ export function GlobalPage() {
               exakte_treffer: userEntry.exakte_treffer,
               is_admin: userEntry.is_admin,
               achievements_count: userEntry.achievements_count || 0,
+              level: userEntry.level || 1,
               trend: userEntry.trend || 0,
               displayRank: userEntry._displayRank
             } as RanglisteEintrag

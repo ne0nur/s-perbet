@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { RivalInspector } from '../components/RivalInspector'
 import { LeagueChat } from '../components/LeagueChat'
 import { useToastStore } from '../stores/toastStore'
-import { calculateLevel, getLevelBadgeStyle, getTournamentLogo, berechnePunkte } from '../lib/utils'
+import { getLevelBadgeStyle, getTournamentLogo, berechnePunkte } from '../lib/utils'
 import { LevelBadge } from '../components/ui/LevelBadge'
 import { useTranslation } from '../utils/translations'
 
@@ -17,6 +17,7 @@ interface Profile {
   avatar_url: string | null
   gesamt_punkte: number
   achievements_count?: number
+  level?: number
 }
 
 interface TipSummary {
@@ -46,7 +47,7 @@ interface MatchInfo {
   tore_gast: number | null; status: string; spieltag: number; tournament: string
 }
 interface MitgliedRow {
-  id: string; username: string; avatar_url: string | null; gesamt_punkte: number; global_punkte: number; achievements_count: number
+  id: string; username: string; avatar_url: string | null; gesamt_punkte: number; global_punkte: number; achievements_count: number; level: number
   tipps: Record<string, { heim: number; gast: number; punkte: number }>
   spieltag_punkte: number; spieltag_tipps: number; spieltag_gesamt: number
   trend?: number
@@ -175,7 +176,7 @@ export function LeaguePage() {
     const userIds = members.map(m => m.user_id)
 
     // 2. Profile
-    const { data: fetchedProfiles } = await supabase.from('profiles').select('id,username,avatar_url,gesamt_punkte,achievements_count').in('id', userIds)
+    const { data: fetchedProfiles } = await supabase.from('profiles').select('id,username,avatar_url,gesamt_punkte,achievements_count,level').in('id', userIds)
     if (!fetchedProfiles) { setIsLaden(false); return }
     setProfiles(fetchedProfiles as Profile[])
 
@@ -296,6 +297,7 @@ export function LeaguePage() {
         gesamt_punkte: seasonPoints[p.id] || 0,
         global_punkte: p.gesamt_punkte || 0,
         achievements_count: p.achievements_count || 0,
+        level: p.level || 1,
         tipps: tippMap[p.id] || {},
         spieltag_punkte: spPunkte[p.id] || 0,
         spieltag_tipps: Object.keys(tippMap[p.id] || {}).length,
@@ -793,8 +795,8 @@ export function LeaguePage() {
                                           </div>
                                         )}
                                       </div>
-                                      <LevelBadge level={calculateLevel(m.global_punkte, m.achievements_count)} className="absolute -bottom-0.5 -right-0.5 z-10 text-[7px] h-3.5 w-3.5 rounded-full shadow shadow-black/80 select-none">
-                                        {calculateLevel(m.global_punkte, m.achievements_count)}
+                                      <LevelBadge level={m.level} className="absolute -bottom-0.5 -right-0.5 z-10 text-[7px] h-3.5 w-3.5 rounded-full shadow shadow-black/80 select-none">
+                                        {m.level}
                                       </LevelBadge>
                                     </div>
                                     <span className={`text-[11px] font-medium truncate max-w-[80px] flex items-center gap-1 ${isMe ? 'text-primary-fixed-dim' : 'text-on-surface'}`}>

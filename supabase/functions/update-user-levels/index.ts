@@ -1,29 +1,30 @@
 import { createClient } from "npm:@supabase/supabase-js@2.39.0"
 import { evaluateAchievements } from "./achievementEvaluator.ts"
 
-// Kopie von calculateLevelDetails aus utils.ts für Deno
+// Kopie von calculateLevelDetails aus utils.ts für Deno (MUST stay in sync)
 function calculateLevelDetails(punkte: number, achievementsCount: number = 0, bonusTippsCount: number = 0) {
   const calculatedExp = (Math.max(0, punkte) * 10) + (achievementsCount * 50) + (bonusTippsCount * 50)
-  
-  let currentLevel = 1
-  let currentXP = 0
-  let xpRequired = 88
+  const totalExp = Math.max(0, calculatedExp)
 
-  while (currentXP + xpRequired <= calculatedExp) {
-    currentXP += xpRequired
-    currentLevel++
-    xpRequired = Math.floor(xpRequired * 1.09)
+  let remainingExp = totalExp
+  let level = 1
+  let xpRequired = 80 + (level * 8) // 88, 96, 104, 112...
+
+  while (remainingExp >= xpRequired) {
+    remainingExp -= xpRequired
+    level++
+    xpRequired = 80 + (level * 8)
   }
 
-  const xpInCurrentLevel = calculatedExp - currentXP
-  const xpPct = Math.min(100, Math.max(0, (xpInCurrentLevel / xpRequired) * 100))
+  const xpCurrent = remainingExp
+  const xpPct = (xpCurrent / xpRequired) * 100
 
   return {
-    level: currentLevel,
-    xpCurrent: xpInCurrentLevel,
-    xpRequired: xpRequired,
-    xpPct: xpPct,
-    totalExp: calculatedExp
+    level,
+    xpCurrent,
+    xpRequired,
+    xpPct,
+    totalExp
   }
 }
 
