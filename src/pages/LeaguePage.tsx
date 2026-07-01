@@ -447,8 +447,17 @@ export function LeaguePage() {
 
       const headerEl = container.querySelector(`[data-match-id="${activeMatch.id}"]`) as HTMLElement | null
       if (headerEl) {
-        // 192px corresponds to the approximate combined width of the sticky columns (rank + name + total points)
-        const scrollTarget = headerEl.offsetLeft - 192
+        // Sticky columns: # (left-0, ~48px) + Player (left-8, ~120px) + Points (left-[144px], ~60px) = ~228px
+        const stickyCols = container.querySelectorAll('th.sticky')
+        let stickyWidth = 0
+        if (stickyCols.length > 0) {
+          // Measure the rightmost sticky header's right edge
+          const lastSticky = stickyCols[stickyCols.length - 1] as HTMLElement
+          stickyWidth = lastSticky.offsetLeft + lastSticky.offsetWidth + 8 // +8px padding
+        } else {
+          stickyWidth = 228 // fallback
+        }
+        const scrollTarget = headerEl.offsetLeft - stickyWidth
         container.scrollTo({
           left: Math.max(0, scrollTarget),
           behavior: 'smooth'
