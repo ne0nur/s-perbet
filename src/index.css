@@ -1220,6 +1220,36 @@ body {
   will-change: transform, opacity;
 }
 
+/* ═══════════════════════════════════════════
+   Podium Badge Animations
+   ═══════════════════════════════════════════ */
+@keyframes podiumGlow {
+  0%, 100% { opacity: 0.6; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.08); }
+}
+.animate-podium-glow {
+  animation: podiumGlow var(--glow-dur, 2.5s) ease-in-out infinite;
+  will-change: opacity, transform;
+}
+
+@keyframes podiumFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-2px); }
+}
+.animate-podium-float {
+  animation: podiumFloat var(--float-dur, 3.8s) ease-in-out infinite;
+  will-change: transform;
+}
+
+@keyframes podiumShimmer {
+  0% { transform: translateX(-100%) rotate(25deg); }
+  100% { transform: translateX(100%) rotate(25deg); }
+}
+.animate-podium-shimmer {
+  animation: podiumShimmer 2.5s ease-in-out infinite;
+  will-change: transform;
+}
+
 @keyframes expShimmer {
   0% { background-position: -200% 0; }
   100% { background-position: 200% 0; }

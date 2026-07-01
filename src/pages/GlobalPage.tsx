@@ -3,9 +3,9 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useMatchStore } from '../stores/matchStore'
 import { getTeamLogo } from '../lib/teamLogos'
-import { Trophy, Users, BarChart2, Gift, Award, Crown, Medal, Target } from 'lucide-react'
+import { Trophy, Users, BarChart2, Gift, Award, Target } from 'lucide-react'
 import { motion } from 'framer-motion'
-import { getLevelBadgeStyle } from '../lib/utils'
+import { PodiumBadge } from '../components/ui/PodiumBadge'
 import { LevelBadge } from '../components/ui/LevelBadge'
 import { evaluateAchievements, type TipDetails } from '../utils/achievementEvaluator'
 import { RivalInspector } from '../components/RivalInspector'
@@ -98,12 +98,8 @@ function LeaderboardSection({
                   : 'border-transparent hover:bg-white/5'
               }`}
             >
-              <div className={`flex items-center justify-center rounded-full mb-1 ${
-                tie1_2
-                  ? 'w-12 h-12 bg-gradient-to-br from-yellow-300 via-amber-400 to-yellow-600 shadow-[0_0_15px_rgba(var(--primary-rgb),0.6)]'
-                  : 'w-8 h-8 bg-gradient-to-br from-slate-200 to-slate-400 shadow-[0_0_10px_rgba(148,163,184,0.5)]'
-              }`}>
-                {tie1_2 ? <Crown size={24} className="text-yellow-900" /> : <Medal size={16} className="text-slate-700" />}
+              <div className="flex items-center justify-center mb-1">
+                <PodiumBadge rank={tie1_2 ? 1 : 2} size="md" />
               </div>
               <AvatarLightbox src={top3[1]?.avatar_url} username={top3[1]?.username || ''} size="sm" showLevel levelBadge={
                 <LevelBadge level={top3[1]?.level || 1} className="absolute -top-1 -right-1 z-10 text-[7px] h-3.5 w-3.5 rounded-full shadow select-none">
@@ -135,8 +131,8 @@ function LeaderboardSection({
                 : 'border-transparent hover:bg-white/5'
             }`}
           >
-            <div className="w-12 h-12 flex items-center justify-center bg-gradient-to-br from-yellow-300 via-amber-400 to-yellow-600 rounded-full shadow-[0_0_15px_rgba(var(--primary-rgb),0.6)] mb-1">
-              <Crown size={24} className="text-yellow-900" />
+            <div className="flex items-center justify-center mb-1">
+              <PodiumBadge rank={1} size="lg" />
             </div>
             <AvatarLightbox src={top3[0]?.avatar_url} username={top3[0]?.username || ''} size="md" showLevel levelBadge={
               <LevelBadge level={top3[0]?.level || 1} className="absolute -top-1 -right-1 z-10 text-[8px] h-4 w-4 rounded-full shadow select-none">
@@ -169,12 +165,8 @@ function LeaderboardSection({
                   : 'border-transparent hover:bg-white/5'
               }`}
             >
-              <div className={`flex items-center justify-center rounded-full mb-1 ${
-                tie2_3
-                  ? 'w-8 h-8 bg-gradient-to-br from-slate-200 to-slate-400 shadow-[0_0_10px_rgba(148,163,184,0.5)]'
-                  : 'w-8 h-8 bg-gradient-to-br from-amber-600 to-amber-800 shadow-[0_0_10px_rgba(217,119,6,0.5)]'
-              }`}>
-                {tie2_3 ? <Medal size={16} className="text-slate-700" /> : <Medal size={16} className="text-amber-900" />}
+              <div className="flex items-center justify-center mb-1">
+                <PodiumBadge rank={tie2_3 ? 2 : 3} size="sm" />
               </div>
               <AvatarLightbox src={top3[2]?.avatar_url} username={top3[2]?.username || ''} size="sm" showLevel levelBadge={
                 <LevelBadge level={top3[2]?.level || 1} className="absolute -top-1 -right-1 z-10 text-[7px] h-3.5 w-3.5 rounded-full shadow select-none">
