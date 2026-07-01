@@ -431,7 +431,7 @@ export function DashboardPage() {
                         ? 'bg-blue-500' 
                         : 'bg-slate-500'
                 }`} />
-                <span>{syncLabel || t('matchLive')} ({letztesUpdate})</span>
+                <span>zuletzt aktualisiert ({letztesUpdate})</span>
               </div>
             )}
           </div>
