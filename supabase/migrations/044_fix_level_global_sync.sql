@@ -1,5 +1,6 @@
--- Fix level display: ensure level, xp, and total_exp are returned by ranking RPC
--- so GLOBAL and LIGA show the same globally stored level for every user.
+-- Migration 044 (Update): Fix ambiguous column reference in get_ranking_with_trend
+-- The variable name "v_current_season" + unqualified "id" in SELECT conflicted
+-- with the output column "id" in RETURNS TABLE. Fixed by qualifying with alias.
 
 CREATE OR REPLACE FUNCTION get_ranking_with_trend(p_league_id UUID DEFAULT NULL)
 RETURNS TABLE (
@@ -15,10 +16,10 @@ RETURNS TABLE (
   trend INTEGER
 ) AS $$
 DECLARE
-  v_current_season INTEGER;
+  v_cur_season INTEGER;
 BEGIN
-  -- Ermittle aktuelle Saison
-  SELECT id INTO v_current_season FROM seasons WHERE is_current = true LIMIT 1;
+  -- Ermittle aktuelle Saison (qualified to avoid ambiguity with output column "id")
+  SELECT s.id INTO v_cur_season FROM seasons s WHERE s.is_current = true LIMIT 1;
 
   RETURN QUERY
   WITH current_ranking AS (
@@ -38,9 +39,9 @@ BEGIN
     FROM tips t
     JOIN matches m ON t.match_id = m.id
     WHERE m.status = 'finished' 
-      AND m.season = v_current_season
+      AND m.season = v_cur_season
       AND m.spieltag < (
-          SELECT MAX(spieltag) FROM matches WHERE status = 'finished' AND season = v_current_season
+          SELECT MAX(spieltag) FROM matches WHERE status = 'finished' AND season = v_cur_season
       )
     GROUP BY t.user_id
   ),
@@ -51,10 +52,10 @@ BEGIN
         ORDER BY 
           COALESCE(op.old_punkte, 0) DESC, 
           COALESCE(op.old_exakte, 0) DESC, 
-          p.username ASC
+          p2.username ASC
       ) as old_rank
     FROM current_ranking cr
-    JOIN profiles p ON p.id = cr.user_id
+    JOIN profiles p2 ON p2.id = cr.user_id
     LEFT JOIN old_points op ON cr.user_id = op.user_id
   )
   SELECT
