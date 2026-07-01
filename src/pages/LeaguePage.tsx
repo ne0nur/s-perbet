@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuthStore } from '../stores/authStore'
 import { useTournamentStore } from '../stores/tournamentStore'
-import { Users, Copy, Check, Plus, LogIn, X, Trophy, LogOut, Trash2, MoreHorizontal, MessageCircle, Target, Share2 } from 'lucide-react'
+import { Users, Copy, Check, Plus, LogIn, X, Trophy, LogOut, Trash2, MoreHorizontal, MessageCircle, Target, Share2, Edit2 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { RivalInspector } from '../components/RivalInspector'
 import { LeagueChat } from '../components/LeagueChat'
@@ -84,6 +84,9 @@ export function LeaguePage() {
   const [zeigeMenu, setZeigeMenu] = useState(false)
   const [zeigeTurnierModal, setZeigeTurnierModal] = useState(false)
   const [editTurniere, setEditTurniere] = useState<string[]>([])
+  const [zeigeEditNameModal, setZeigeEditNameModal] = useState(false)
+  const [editNameInput, setEditNameInput] = useState('')
+  const [isSavingName, setIsSavingName] = useState(false)
   const [zeigeChatDrawer, setZeigeChatDrawer] = useState(false)
   const [saison, setSaison] = useState<number | null>(2026)
   const [seasonsList, setSeasonsList] = useState<{id: number, name: string}[]>([])
@@ -457,6 +460,24 @@ export function LeaguePage() {
     }
   }
 
+  async function handleLigaNameSpeichern() {
+    if (!user || !aktiveLiga || !editNameInput.trim()) return
+    const istErsteller = aktiveLiga.creator_id === user.id
+    if (!istErsteller) return
+
+    setIsSavingName(true)
+    const { error } = await supabase.from('leagues').update({ name: editNameInput.trim() }).eq('id', aktiveLiga.id)
+    if (!error) {
+      setAktiveLiga({ ...aktiveLiga, name: editNameInput.trim() })
+      setZeigeEditNameModal(false)
+      useToastStore.getState().toast(language === 'tr' ? 'Lig adı başarıyla güncellendi' : language === 'en' ? 'League name updated' : 'Liganame erfolgreich aktualisiert', 'success')
+      await ladeLigen() // Refresh list
+    } else {
+      useToastStore.getState().toast(language === 'tr' ? 'Lig adı güncellenirken hata oluştu' : language === 'en' ? 'Error updating league name' : 'Fehler beim Aktualisieren des Liganamens', 'error')
+    }
+    setIsSavingName(false)
+  }
+
   // ─── Dynamische Tabs ───────────────────────────────
   const getPhaseLabel = (st: number, tournament: string) => {
     const config = useTournamentStore.getState().getTournament(tournament)
@@ -579,6 +600,10 @@ export function LeaguePage() {
                             <button onClick={() => { setEditTurniere(aktiveLiga.active_tournaments || ['Süper Lig']); setZeigeTurnierModal(true); setZeigeMenu(false); }}
                               className="w-full flex items-center gap-2 px-3 py-2 text-[11px] font-medium text-on-surface hover:bg-surface-container-highest transition-colors border-t border-surface-container-high">
                               <Target size={13} className="text-on-surface-variant" /> {t('manageTournaments')}
+                            </button>
+                            <button onClick={() => { setEditNameInput(aktiveLiga.name); setZeigeEditNameModal(true); setZeigeMenu(false); }}
+                              className="w-full flex items-center gap-2 px-3 py-2 text-[11px] font-medium text-on-surface hover:bg-surface-container-highest transition-colors border-t border-surface-container-high">
+                              <Edit2 size={13} className="text-on-surface-variant" /> {language === 'tr' ? 'Lig Adını Düzenle' : language === 'en' ? 'Edit League Name' : 'Liganame bearbeiten'}
                             </button>
                             <button onClick={handleLigaLoeschen}
                               className="w-full flex items-center gap-2 px-3 py-2 text-[11px] font-medium text-red-400 hover:bg-surface-container-highest transition-colors border-t border-surface-container-high">
@@ -976,6 +1001,42 @@ export function LeaguePage() {
               <div className="flex gap-2">
                 <button onClick={() => setZeigeTurnierModal(false)} className="flex-1 py-3 rounded-xl font-mono text-xs font-bold uppercase tracking-wider text-on-surface bg-surface-container hover:bg-surface-container-high transition-colors">{t('cancel')}</button>
                 <button onClick={handleTurniereSpeichern} disabled={editTurniere.length === 0} className="flex-1 py-3 rounded-xl font-mono text-xs font-bold uppercase tracking-wider text-on-primary-container bg-primary-container hover:opacity-90 transition-colors disabled:opacity-50">{t('save')}</button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* ─── Liganame Bearbeiten Modal ─── */}
+      <AnimatePresence>
+        {zeigeEditNameModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setZeigeEditNameModal(false)} />
+            <motion.div 
+              initial={{opacity:0, scale: 0.9, y: 20}} 
+              animate={{opacity:1, scale: 1, y: 0}} 
+              exit={{opacity:0, scale: 0.9, y: 20}}
+              className="bg-surface-container-low border border-surface-container-high rounded-2xl p-6 w-full max-w-sm relative z-10 shadow-2xl"
+            >
+              <h3 className="text-lg font-bold text-on-surface mb-2">
+                {language === 'tr' ? 'Lig Adını Düzenle' : language === 'en' ? 'Edit League Name' : 'Liganame bearbeiten'}
+              </h3>
+              <p className="text-xs text-on-surface-variant mb-4">
+                {language === 'tr' ? 'Liginiz için yeni bir ad girin:' : language === 'en' ? 'Enter a new name for your league:' : 'Gib einen neuen Namen für deine Tipprunde ein:'}
+              </p>
+              
+              <input 
+                type="text"
+                value={editNameInput}
+                onChange={(e) => setEditNameInput(e.target.value)}
+                maxLength={30}
+                className="w-full bg-surface-container border border-surface-container-high rounded-xl px-4 py-3 text-sm text-on-surface font-mono focus:outline-none focus:border-primary mb-6"
+                placeholder={language === 'tr' ? 'Lig Adı' : language === 'en' ? 'League Name' : 'Name der Liga'}
+              />
+              
+              <div className="flex gap-2">
+                <button onClick={() => setZeigeEditNameModal(false)} className="flex-1 py-3 rounded-xl font-mono text-xs font-bold uppercase tracking-wider text-on-surface bg-surface-container hover:bg-surface-container-high transition-colors">{t('cancel')}</button>
+                <button onClick={handleLigaNameSpeichern} disabled={isSavingName || !editNameInput.trim()} className="flex-1 py-3 rounded-xl font-mono text-xs font-bold uppercase tracking-wider text-on-primary-container bg-primary-container hover:opacity-90 transition-colors disabled:opacity-50">{t('save')}</button>
               </div>
             </motion.div>
           </div>
