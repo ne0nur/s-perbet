@@ -44,6 +44,7 @@ export function AppShell() {
   const navigate = useNavigate()
   const { user, avatarUrl } = useAuthStore()
   const [punkte, setPunkte] = useState(0)
+  const [bonusTippsCount, setBonusTippsCount] = useState(0)
   const { isInstallable, triggerInstall } = usePwaStore()
   const [showOnboarding, setShowOnboarding] = useState(false)
   const [onboardingSlide, setOnboardingSlide] = useState(0)
@@ -61,7 +62,7 @@ export function AppShell() {
     return () => window.removeEventListener('achievements_updated', handleAchUpdate)
   }, [])
 
-  const { level, xpCurrent, xpRequired, xpPct } = calculateLevelDetails(punkte, achievementsCount)
+  const { level, xpCurrent, xpRequired, xpPct } = calculateLevelDetails(punkte, achievementsCount, bonusTippsCount)
   const { initPresence, cleanupPresence } = usePresenceStore()
 
   // Real-time Active Presence Tracking based on page visibility and user activity
@@ -212,6 +213,11 @@ export function AppShell() {
           setPunkte(data.gesamt_punkte || 0)
         }
       })
+      
+    supabase.from('bonus_tipps').select('*', { count: 'exact', head: true }).eq('user_id', user.id)
+      .then(({ count }) => {
+        setBonusTippsCount(count || 0)
+      })
 
     // Background Check for New Achievements
     const checkNewAchievements = async () => {
@@ -275,22 +281,13 @@ export function AppShell() {
                   type: 'success' 
                 }
               }))
-              
-              // Save union to storage
-              const union = new Set([...savedSet, ...newlyUnlocked])
-              localStorage.setItem(unlockedKey, JSON.stringify(Array.from(union)))
-              localStorage.setItem('superbet_achievements_count', union.size.toString())
-              setAchievementsCount(union.size)
               window.dispatchEvent(new Event('achievements_updated'))
-            } else {
-              // Sync count & union just in case
-              const union = new Set([...savedSet, ...unlockedSet])
-              if (union.size > savedSet.size) {
-                localStorage.setItem(unlockedKey, JSON.stringify(Array.from(union)))
-              }
-              localStorage.setItem('superbet_achievements_count', union.size.toString())
-              setAchievementsCount(union.size)
             }
+            
+            // Set storage strictly to current unlocked set (no double counting on resets)
+            localStorage.setItem(unlockedKey, JSON.stringify(Array.from(unlockedSet)))
+            localStorage.setItem('superbet_achievements_count', unlockedSet.size.toString())
+            setAchievementsCount(unlockedSet.size)
           }
         }
       } catch (err) {

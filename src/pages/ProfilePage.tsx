@@ -167,19 +167,17 @@ export function ProfilePage() {
     const storageKey = `superbet_unlocked_achievements_${userId}`
     const savedArr = JSON.parse(localStorage.getItem(storageKey) || '[]')
     
-    // Union of evaluated and saved
-    const union = new Set([...savedArr, ...evaluated])
+    // Strictly use evaluated (no double counting on resets)
+    const currentSet = evaluated
     
-    // Save union if it changed
-    if (union.size > savedArr.length) {
-      localStorage.setItem(storageKey, JSON.stringify(Array.from(union)))
-      localStorage.setItem('superbet_achievements_count', union.size.toString())
-      setTimeout(() => {
-        window.dispatchEvent(new Event('achievements_updated'))
-      }, 0)
-    }
+    // Save to storage
+    localStorage.setItem(storageKey, JSON.stringify(Array.from(currentSet)))
+    localStorage.setItem('superbet_achievements_count', currentSet.size.toString())
+    setTimeout(() => {
+      window.dispatchEvent(new Event('achievements_updated'))
+    }, 0)
     
-    return union
+    return currentSet
   }, [userTips, profil, avatarUrl, username, userId])
 
   const [newlyUnlockedCount, setNewlyUnlockedCount] = useState(0)
@@ -859,46 +857,35 @@ export function ProfilePage() {
       {/* Profile Header (Always visible) */}
       <div className="mb-6">
         {(() => {
-          const levelDetails = profil 
-            ? { 
-                level: profil.level || 1, 
-                xpCurrent: profil.xp_current || 0, 
-                xpRequired: profil.xp_required || 88, 
-                xpPct: Math.min(100, Math.max(0, ((profil.xp_current || 0) / (profil.xp_required || 88)) * 100))
-              }
-            : { level: 1, xpCurrent: 0, xpRequired: 88, xpPct: 0 }
-            
-          let levelTitle = undefined
+          const { level, xpCurrent, xpRequired, xpPct } = calculateLevelDetails(profil?.gesamt_punkte || 0, unlockedSet.size, bonusTipps.length)
+          let levelTitle = ''
           if (profil) {
             const ranks = getRangTitelSystem(language)
             for (let i = ranks.length - 1; i >= 0; i--) {
-              if (levelDetails.level >= ranks[i].lvl) {
+              if (level >= ranks[i].lvl) {
                 levelTitle = ranks[i].title
                 break
               }
             }
             if (!levelTitle) levelTitle = ranks[0].title
           }
-
           return (
-            <>
-              <UserInfoSettings
-                username={username}
-                setUsername={setUsername}
-                avatarUrl={avatarUrl}
-                uploading={uploading}
-                fileRef={fileRef}
-                handleBildUpload={handleBildUpload}
-                handleUsernameUpdate={handleUsernameUpdate}
-                isAdmin={!!profil?.is_admin}
-                userRank={profil?.rang ?? null}
-                levelTitle={levelTitle}
-                xpCurrent={levelDetails.xpCurrent}
-                xpRequired={levelDetails.xpRequired}
-                xpPct={levelDetails.xpPct}
-                level={levelDetails.level}
-              />
-            </>
+            <UserInfoSettings
+              username={username}
+              setUsername={setUsername}
+              avatarUrl={avatarUrl}
+              uploading={uploading}
+              fileRef={fileRef}
+              handleBildUpload={handleBildUpload}
+              handleUsernameUpdate={handleUsernameUpdate}
+              isAdmin={profil?.is_admin || false}
+              userRank={profil?.rang || null}
+              levelTitle={levelTitle}
+              xpCurrent={xpCurrent}
+              xpRequired={xpRequired}
+              xpPct={xpPct}
+              level={level}
+            />
           )
         })()}
       </div>
