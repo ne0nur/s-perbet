@@ -114,8 +114,8 @@ async function fetchEspnScores(tournament: string, dateStr: string): Promise<Esp
       let halftime = false;
       const sn = ev.status.type.name;
       if (sn.includes("FULL_TIME") || sn.includes("FINAL")) s = "finished";
-      else if (sn.includes("HALF")) { s = "live"; halftime = true; }
-      else if (sn.includes("IN_PROGRESS")) s = "live";
+      else if (sn.includes("HALFTIME")) { s = "live"; halftime = true; }
+      else if (sn.includes("HALF") || sn.includes("IN_PROGRESS")) s = "live";
       else if (sn.includes("POSTPONED") || sn.includes("CANCELED")) s = "postponed";
       
       matches.push({
