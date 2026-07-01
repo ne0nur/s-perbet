@@ -113,10 +113,11 @@ async function fetchEspnScores(tournament: string, dateStr: string): Promise<Esp
       let s = "upcoming";
       let halftime = false;
       const sn = ev.status.type.name;
-      if (sn.includes("FULL_TIME") || sn.includes("FINAL") || sn.includes("END_OF")) s = "finished";
+      // NUR "FINAL" = wirklich beendet. "FULL_TIME" kann in KO-Spielen Verlängerung bedeuten!
+      if (sn.includes("FINAL") && !sn.includes("FULL_TIME")) s = "finished";
       else if (sn.includes("PENALTY")) s = "live";
       else if (sn.includes("HALFTIME") || sn.includes("HALF_TIME")) { s = "live"; halftime = true; }
-      else if (sn.includes("EXTRA_TIME") || sn.includes("IN_PROGRESS") || sn.includes("HALF")) s = "live";
+      else if (sn.includes("EXTRA_TIME") || sn.includes("OVERTIME") || sn.includes("IN_PROGRESS") || sn.includes("HALF") || sn.includes("FULL_TIME")) s = "live";
       else if (sn.includes("POSTPONED") || sn.includes("CANCELED")) s = "postponed";
       
       matches.push({
@@ -180,7 +181,7 @@ Deno.serve(async (req: Request) => {
     const now = new Date();
     const { data: matches, error: fetchError } = await adminClient
       .from("matches").select("*")
-      .or('status.in.(upcoming,live),and(status.eq.finished,tore_heim.is.null)')
+      .or('status.in.(upcoming,live),and(status.eq.finished,tore_heim.is.null),and(status.eq.finished,anpfiff.gte.' + new Date(Date.now() - 5*60*60*1000).toISOString() + ')')
       .order("anpfiff", { ascending: true });
 
     if (fetchError) return eresp({ error: fetchError.message }, 500);
