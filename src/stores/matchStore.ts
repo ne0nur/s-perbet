@@ -347,17 +347,11 @@ export const useMatchStore = create<MatchState>()(
           try { supabase.removeChannel(existing) } catch (e) {}
         }
 
-        // Initialen Wert sofort laden (falls Realtime verpasst oder alt)
+        // Initialen syncLabel-Wert laden (nur Label, nicht letztesUpdate!)
         try {
-          const { data } = await supabase.from('app_settings').select('key,value').in('key', ['last_sync', 'sync_label'])
-          if (data) {
-            const lastSync = data.find((r: any) => r.key === 'last_sync')
-            const syncLabel = data.find((r: any) => r.key === 'sync_label')
-            if (lastSync?.value) {
-              const d = new Date(lastSync.value)
-              const timeString = d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
-              set({ letztesUpdate: timeString, syncLabel: syncLabel?.value || null })
-            }
+          const { data } = await supabase.from('app_settings').select('key,value').eq('key', 'sync_label').limit(1)
+          if (data?.length) {
+            set({ syncLabel: data[0].value })
           }
         } catch (e) {
           console.error('[Heartbeat] initial fetch error:', e)
@@ -371,11 +365,7 @@ export const useMatchStore = create<MatchState>()(
             (payload) => {
               const row = payload.new as { key: string; value: string } | null
               if (!row) return
-              if (row.key === 'last_sync' && row.value) {
-                const d = new Date(row.value)
-                const timeString = d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
-                set({ letztesUpdate: timeString })
-              }
+              // Nur syncLabel via Heartbeat — letztesUpdate kommt vom Live-Poll
               if (row.key === 'sync_label') {
                 set({ syncLabel: row.value })
               }
@@ -433,12 +423,27 @@ export const useMatchStore = create<MatchState>()(
 
       starteLiveMatchPoll: () => {
         if (get().livePollTimer) return
-        const timer = setInterval(async () => {
+        const pollen = async () => {
           const { matches, aktuellerSpieltag } = get()
           const liveIds = matches.filter(m => m.status === 'live').map(m => m.id)
           if (liveIds.length === 0) return
           try {
-            const { data } = await supabase.from('matches').select('*').in('id', liveIds)
+            // Einheitlicher Poll: Match-Daten + Sync-Info zusammen laden
+            const [matchResult, settingsResult] = await Promise.all([
+              supabase.from('matches').select('*').in('id', liveIds),
+              supabase.from('app_settings').select('key,value').in('key', ['last_sync', 'sync_label']),
+            ])
+
+            const data = matchResult.data
+            const timeString = new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+
+            // Sync-Label aus app_settings extrahieren
+            let neuesSyncLabel: string | null = null
+            if (settingsResult.data) {
+              const labelRow = settingsResult.data.find((r: any) => r.key === 'sync_label')
+              if (labelRow?.value) neuesSyncLabel = labelRow.value
+            }
+
             if (data?.length) {
               set(s => {
                 const updated = [...s.matches]
@@ -453,13 +458,17 @@ export const useMatchStore = create<MatchState>()(
                     const ci = updatedCache.findIndex(m => m.id === fresh.id)
                     if (ci >= 0) updatedCache[ci] = { ...updatedCache[ci], ...fresh }
                   })
-                  return { matches: updated, cacheMatches: { ...s.cacheMatches, [aktuellerSpieltag]: updatedCache } }
+                  return { matches: updated, cacheMatches: { ...s.cacheMatches, [aktuellerSpieltag]: updatedCache }, letztesUpdate: timeString, syncLabel: neuesSyncLabel ?? s.syncLabel }
                 }
-                return { matches: updated }
+                return { matches: updated, letztesUpdate: timeString, syncLabel: neuesSyncLabel ?? s.syncLabel }
               })
             }
           } catch (e) { /* silent */ }
-        }, 90000)
+        }
+
+        // Sofort ersten Poll starten, dann alle 30s
+        pollen()
+        const timer = setInterval(pollen, 30000)
         set({ livePollTimer: timer })
       },
 
