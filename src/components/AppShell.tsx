@@ -581,6 +581,32 @@ export function AppShell() {
                       </div>
                     </div>
 
+                    {/* Visual Breakdown of Distance */}
+                    {(() => {
+                      const [th, tg] = tier.tip.split(':').map(Number)
+                      const [rh, rg] = tier.res.split(':').map(Number)
+                      const diffH = Math.abs(th - rh)
+                      const diffG = Math.abs(tg - rg)
+                      const totalDiff = diffH + diffG
+                      return (
+                        <div className="mt-4 bg-black/20 rounded-xl p-3 max-w-[240px] mx-auto text-left flex flex-col gap-2 border border-white/5">
+                          <div className="flex justify-between items-center text-[10px] font-mono text-on-surface-variant/80">
+                            <span>{language === 'tr' ? 'Ev sahibi hata' : language === 'en' ? 'Home team error' : 'Abweichung Heim'}</span>
+                            <span className="font-bold text-on-surface">{diffH} {language === 'tr' ? 'Gol' : language === 'en' ? 'Goals' : 'Tore'}</span>
+                          </div>
+                          <div className="flex justify-between items-center text-[10px] font-mono text-on-surface-variant/80">
+                            <span>{language === 'tr' ? 'Deplasman hata' : language === 'en' ? 'Away team error' : 'Abweichung Gast'}</span>
+                            <span className="font-bold text-on-surface">{diffG} {language === 'tr' ? 'Gol' : language === 'en' ? 'Goals' : 'Tore'}</span>
+                          </div>
+                          <div className="h-px bg-white/10 my-0.5" />
+                          <div className="flex justify-between items-center text-[11px] font-mono font-bold">
+                            <span className={cText}>{language === 'tr' ? 'Toplam Sapma' : language === 'en' ? 'Total Distance' : 'Gesamtabweichung'}</span>
+                            <span className={cText}>{totalDiff} {language === 'tr' ? 'Gol' : language === 'en' ? 'Goals' : 'Tore'}</span>
+                          </div>
+                        </div>
+                      )
+                    })()}
+
                     <p className="text-[9px] text-on-surface-variant/30 font-mono tracking-widest uppercase">{onboardingSlide} / 7</p>
                   </div>
                 )

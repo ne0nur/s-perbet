@@ -42,7 +42,33 @@ export function RulesPage() {
                   <div className="font-mono text-lg font-bold text-on-surface">{b.erg}</div>
                 </div>
               </div>
-              <p className="text-[11px] text-on-surface-variant">{b.erkl}</p>
+              <p className="text-[11px] text-on-surface-variant text-center">{b.erkl}</p>
+              
+              {(() => {
+                const language = localStorage.getItem('language') || 'de'
+                const [th, tg] = b.tipp.split(':').map(str => Number(str.trim()))
+                const [rh, rg] = b.erg.split(':').map(str => Number(str.trim()))
+                const diffH = Math.abs(th - rh)
+                const diffG = Math.abs(tg - rg)
+                const totalDiff = diffH + diffG
+                return (
+                  <div className="mt-3 bg-black/20 rounded-lg p-2.5 max-w-[240px] text-left flex flex-col gap-1.5 border border-white/5 mx-auto">
+                    <div className="flex justify-between items-center text-[10px] font-mono text-on-surface-variant/80">
+                      <span>{language === 'tr' ? 'Ev sahibi hata' : language === 'en' ? 'Home team error' : 'Abweichung Heim'}</span>
+                      <span className="font-bold text-on-surface">{diffH} {language === 'tr' ? 'Gol' : language === 'en' ? 'Goals' : 'Tore'}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-[10px] font-mono text-on-surface-variant/80">
+                      <span>{language === 'tr' ? 'Deplasman hata' : language === 'en' ? 'Away team error' : 'Abweichung Gast'}</span>
+                      <span className="font-bold text-on-surface">{diffG} {language === 'tr' ? 'Gol' : language === 'en' ? 'Goals' : 'Tore'}</span>
+                    </div>
+                    <div className="h-px bg-white/10 my-0.5" />
+                    <div className="flex justify-between items-center text-[11px] font-mono font-bold">
+                      <span className={b.text}>{language === 'tr' ? 'Toplam Sapma' : language === 'en' ? 'Total Distance' : 'Gesamtabweichung'}</span>
+                      <span className={b.text}>{totalDiff} {language === 'tr' ? 'Gol' : language === 'en' ? 'Goals' : 'Tore'}</span>
+                    </div>
+                  </div>
+                )
+              })()}
             </div>
           ))}
         </div>
