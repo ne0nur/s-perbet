@@ -15,7 +15,7 @@ import { getTournamentLogo } from '../lib/utils'
 
 export function DashboardPage() {
   const { t, language } = useTranslation()
-  const { matches, aktuellerSpieltag, aktuelleSaison, selectedTournament, isLaden, setSpieltag, ladeMatches, initialisiereSpieltag, letztesUpdate, syncLabel, abonnierenRealtimeMatches, abonnierenHeartbeat, setSelectedTournament } = useMatchStore()
+  const { matches, aktuellerSpieltag, aktuelleSaison, selectedTournament, isLaden, setSpieltag, ladeMatches, initialisiereSpieltag, letztesUpdate, syncLabel, abonnierenRealtimeMatches, abonnierenHeartbeat, starteLiveMatchPoll, stoppeLiveMatchPoll, setSelectedTournament } = useMatchStore()
   const ladeMeineTipps = useTipStore(s => s.ladeMeineTipps)
   const meineTipps = useTipStore(s => s.meineTipps)
   const getTippFuerMatch = useTipStore(s => s.getTippFuerMatch)
@@ -73,6 +73,12 @@ export function DashboardPage() {
     const interval = setInterval(poll, 10000)
     return () => clearInterval(interval)
   }, [])
+
+  // Live-Match-Poll: aktualisiert Spielminuten + Scores für alle User
+  useEffect(() => {
+    starteLiveMatchPoll()
+    return () => stoppeLiveMatchPoll()
+  }, [starteLiveMatchPoll, stoppeLiveMatchPoll])
 
   useEffect(() => {
     ladeMatches(aktuellerSpieltag)

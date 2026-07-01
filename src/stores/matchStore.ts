@@ -40,6 +40,7 @@ interface MatchState {
   syncLabel: string | null
   subscription: RealtimeChannel | null
   heartbeatSub: RealtimeChannel | null
+  livePollTimer: ReturnType<typeof setInterval> | null
   ladeMatches: (spieltag: number) => Promise<void>
   setSpieltag: (spieltag: number) => void
   setSaison: (saison: number) => void
@@ -50,6 +51,8 @@ interface MatchState {
   initialisiereSpieltag: () => Promise<number>
   abonnierenRealtimeMatches: () => void
   abonnierenHeartbeat: () => void
+  starteLiveMatchPoll: () => void
+  stoppeLiveMatchPoll: () => void
   recalculateAktivePhase: () => Promise<void>
   cleanup: () => void
 }
@@ -71,6 +74,7 @@ export const useMatchStore = create<MatchState>()(
       syncLabel: null,
       subscription: null,
       heartbeatSub: null,
+      livePollTimer: null,
 
       ladeMatches: async (spieltag: number) => {
         const state = get()
@@ -420,7 +424,52 @@ export const useMatchStore = create<MatchState>()(
           supabase.removeChannel(hb)
           set({ heartbeatSub: null })
         }
-      }
+        const timer = get().livePollTimer
+        if (timer) {
+          clearInterval(timer)
+          set({ livePollTimer: null })
+        }
+      },
+
+      starteLiveMatchPoll: () => {
+        if (get().livePollTimer) return
+        const timer = setInterval(async () => {
+          const { matches, aktuellerSpieltag } = get()
+          const liveIds = matches.filter(m => m.status === 'live').map(m => m.id)
+          if (liveIds.length === 0) return
+          try {
+            const { data } = await supabase.from('matches').select('*').in('id', liveIds)
+            if (data?.length) {
+              set(s => {
+                const updated = [...s.matches]
+                data.forEach((fresh: Match) => {
+                  const idx = updated.findIndex(m => m.id === fresh.id)
+                  if (idx >= 0) updated[idx] = { ...updated[idx], ...fresh }
+                })
+                const cached = s.cacheMatches[aktuellerSpieltag]
+                if (cached) {
+                  const updatedCache = [...cached]
+                  data.forEach((fresh: Match) => {
+                    const ci = updatedCache.findIndex(m => m.id === fresh.id)
+                    if (ci >= 0) updatedCache[ci] = { ...updatedCache[ci], ...fresh }
+                  })
+                  return { matches: updated, cacheMatches: { ...s.cacheMatches, [aktuellerSpieltag]: updatedCache } }
+                }
+                return { matches: updated }
+              })
+            }
+          } catch (e) { /* silent */ }
+        }, 90000)
+        set({ livePollTimer: timer })
+      },
+
+      stoppeLiveMatchPoll: () => {
+        const timer = get().livePollTimer
+        if (timer) {
+          clearInterval(timer)
+          set({ livePollTimer: null })
+        }
+      },
     }),
     {
       name: 'match-store-cache',
