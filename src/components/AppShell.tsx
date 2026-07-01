@@ -546,13 +546,24 @@ export function AppShell() {
                   { pts: '−2', color: 'red',     icon: '💀', tip: '0:3', res: '2:1',
                     de: 'Komplett daneben', en: 'Complete Miss', tr: 'Tamamen Karavana' },
                 ]
-                const title = language === 'tr' ? t.tr : language === 'en' ? t.en : t.de
+                const tier = tiers[onboardingSlide - 1]
+                const cMap: Record<string, string> = { 
+                  emerald: 'border-emerald-500/25 bg-emerald-500/5 text-emerald-400', 
+                  amber: 'border-amber-500/25 bg-amber-500/5 text-amber-400', 
+                  blue: 'border-blue-500/25 bg-blue-500/5 text-blue-400', 
+                  purple: 'border-purple-500/25 bg-purple-500/5 text-purple-400', 
+                  slate: 'border-slate-500/20 bg-slate-500/5 text-slate-400', 
+                  red: 'border-red-500/20 bg-red-500/5 text-red-400/80' 
+                }
+                const c = cMap[tier.color] || cMap.slate
+                const [cBorder, cBg, cText] = c.split(' ')
+                const title = language === 'tr' ? tier.tr : language === 'en' ? tier.en : tier.de
 
                 return (
                   <div className="animate-fade-in space-y-5">
-                    <div className="text-5xl drop-shadow-md mb-2">{t.icon}</div>
+                    <div className="text-5xl drop-shadow-md mb-2">{tier.icon}</div>
                     <div className={`inline-flex items-center gap-1.5 mx-auto px-5 py-2 rounded-full border shadow-sm ${cBorder} ${cBg}`}>
-                      <span className={`text-3xl font-black font-mono leading-none ${cText}`}>{t.pts}</span>
+                      <span className={`text-3xl font-black font-mono leading-none ${cText}`}>{tier.pts}</span>
                       <span className={`text-xs font-mono font-bold leading-none ${cText}`}>{language === 'tr' ? 'Puan' : language === 'en' ? 'PTS' : 'P'}</span>
                     </div>
                     <h2 className={`text-lg font-black tracking-wide ${cText}`}>{title}</h2>
@@ -563,12 +574,12 @@ export function AppShell() {
                       <div className="flex items-center justify-between gap-4 relative z-10">
                         <div className="text-left">
                           <span className="text-[9px] text-on-surface-variant/40 font-mono uppercase tracking-wider block mb-1">{language === 'tr' ? 'Tahmin' : language === 'en' ? 'Tip' : 'Tipp'}</span>
-                          <span className="font-mono text-2xl font-black text-on-surface tracking-wider">{t.tip}</span>
+                          <span className="font-mono text-2xl font-black text-on-surface tracking-wider">{tier.tip}</span>
                         </div>
                         <div className="h-8 w-px bg-white/10" />
                         <div className="text-right">
                           <span className="text-[9px] text-on-surface-variant/40 font-mono uppercase tracking-wider block mb-1">{language === 'tr' ? 'Sonuç' : language === 'en' ? 'Result' : 'Ergebnis'}</span>
-                          <span className="font-mono text-2xl font-black text-on-surface tracking-wider">{t.res}</span>
+                          <span className="font-mono text-2xl font-black text-on-surface tracking-wider">{tier.res}</span>
                         </div>
                       </div>
                     </div>
