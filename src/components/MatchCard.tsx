@@ -105,9 +105,10 @@ interface MatchCardProps {
   onNavigate?: () => void
   className?: string
   trendStats?: { home: number; draw: number; away: number }
+  readOnly?: boolean
 }
 
-export const MatchCard = memo(function MatchCard({ match, onNavigate, className = '', trendStats }: MatchCardProps) {
+export const MatchCard = memo(function MatchCard({ match, onNavigate, className = '', trendStats, readOnly = false }: MatchCardProps) {
   const eigenerTipp = useTipStore(s => s.meineTipps.find(t => t.match_id === match.id))
   const tippSpeichern = useTipStore(s => s.tippSpeichern)
   const tippsFreigeschaltet = useSettingsStore(s => s.tippsFreigeschaltet)
@@ -149,9 +150,9 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
   const isPlaceholder = (name: string) => /winner|loser|tba|tbd|placeholder/i.test(name)
   const teamsStehenFest = !isPlaceholder(match.heim_team) && !isPlaceholder(match.gast_team)
   
-  const isFuturePhase = isKoMatch && aktivePhase !== null && match.spieltag > aktivePhase
+  const isFuturePhase = isKoMatch && (aktivePhase === null || match.spieltag > aktivePhase)
 
-  const kannTippen = istUpcoming && tippsFreigeschaltet && teamsStehenFest && !isFuturePhase
+  const kannTippen = !readOnly && istUpcoming && tippsFreigeschaltet && teamsStehenFest && !isFuturePhase
 
   async function handleSpeichern(e: React.MouseEvent) {
     e.stopPropagation()
@@ -324,8 +325,53 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
       {/* ─── Tipp-Bereich ─── */}
       <div className="pt-2 border-t border-white/5">
 
+        {/* READONLY: Nur Anzeige, kein Tippen möglich */}
+        {readOnly && (
+          <>
+            {eigenerTipp ? (
+              <div className="flex items-center justify-center gap-2 py-0.5">
+                <Lock size={11} className="text-on-surface-variant/30" />
+                <span className="text-[10px] text-on-surface-variant/40 font-mono uppercase tracking-wider">
+                  Tipp: {eigenerTipp.tipp_heim}:{eigenerTipp.tipp_gast}
+                </span>
+                {istLive && livePunkte !== null && (
+                  <span className={`px-1.5 py-0.5 rounded-full text-[9px] font-mono font-black border animate-pulse ${
+                    livePunkte === 4 ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30' :
+                    livePunkte === 3 ? 'text-amber-400 bg-amber-500/10 border-amber-500/30' :
+                    livePunkte === 2 ? 'text-blue-400 bg-blue-500/10 border-blue-500/30' :
+                    livePunkte >= 1 ? 'text-purple-400 bg-purple-500/10 border-purple-500/30' :
+                    'text-slate-400 bg-slate-500/10 border-slate-500/30'
+                  }`}>
+                    {livePunkte > 0 ? `+${livePunkte}` : livePunkte}
+                  </span>
+                )}
+              </div>
+            ) : istUpcoming && isFuturePhase ? (
+              <div className="flex items-center justify-center gap-2 py-1.5 px-2 text-center">
+                <Lock size={12} className="text-on-surface-variant/50 flex-shrink-0" />
+                <span className="text-[10px] text-on-surface-variant/50 font-mono uppercase tracking-wider">
+                  {language === 'tr' ? 'Önceki tur henüz bitmedi' : language === 'en' ? 'Previous round not finished' : 'Vorherige Runde läuft noch'}
+                </span>
+              </div>
+            ) : istUpcoming && !teamsStehenFest ? (
+              <div className="flex items-center justify-center gap-2 py-1.5 px-2 text-center">
+                <Lock size={12} className="text-on-surface-variant/50 flex-shrink-0" />
+                <span className="text-[10px] text-on-surface-variant/50 font-mono uppercase tracking-wider">
+                  {language === 'tr' ? 'Takımlar henüz belli değil' : language === 'en' ? 'Teams not decided yet' : 'Teams stehen noch nicht fest'}
+                </span>
+              </div>
+            ) : !istUpcoming && !eigenerTipp ? (
+              <div className="flex items-center justify-center py-0.5">
+                <span className="text-[10px] text-on-surface-variant/25 font-mono uppercase tracking-wider">
+                  Kein Tipp abgegeben
+                </span>
+              </div>
+            ) : null}
+          </>
+        )}
+
         {/* FALL A: Tipps noch nicht freigeschaltet (Saisonstart abwarten) */}
-        {istUpcoming && !tippsFreigeschaltet && (
+        {!readOnly && istUpcoming && !tippsFreigeschaltet && (
           <div className="flex items-center justify-center gap-2 py-1.5">
             <Lock size={12} className="text-amber-400/50 flex-shrink-0" />
             <span className="text-[11px] text-amber-400/50 font-mono uppercase tracking-wider">
@@ -335,7 +381,7 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
         )}
 
         {/* FALL A2: Teams in KO-Phase stehen noch nicht fest oder Phase gesperrt */}
-        {istUpcoming && tippsFreigeschaltet && (!teamsStehenFest || isFuturePhase) && (
+        {!readOnly && istUpcoming && tippsFreigeschaltet && (!teamsStehenFest || isFuturePhase) && (
           <div className="flex items-center justify-center gap-2 py-1.5 px-2 text-center">
             <Lock size={12} className="text-on-surface-variant/50 flex-shrink-0" />
             <span className="text-[10px] text-on-surface-variant/50 font-mono uppercase tracking-wider">
@@ -409,7 +455,7 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
         )}
 
         {/* FALL C: Tipp gesperrt (nach Anpfiff) — zeigt gespeicherten Tipp + Live-Punkte */}
-        {!istUpcoming && eigenerTipp && (
+        {!readOnly && !istUpcoming && eigenerTipp && (
           <div className="flex items-center justify-center gap-2 py-0.5">
             <Lock size={11} className="text-on-surface-variant/30" />
             <span className="text-[10px] text-on-surface-variant/40 font-mono uppercase tracking-wider">
@@ -430,7 +476,7 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
         )}
 
         {/* FALL D: Upcoming ohne Tipp, nach Anpfiff, kein Tipp abgegeben */}
-        {!istUpcoming && !eigenerTipp && (
+        {!readOnly && !istUpcoming && !eigenerTipp && (
           <div className="flex items-center justify-center py-0.5">
             <span className="text-[10px] text-on-surface-variant/25 font-mono uppercase tracking-wider">
               Kein Tipp abgegeben

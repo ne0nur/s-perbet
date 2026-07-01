@@ -398,7 +398,7 @@ export function StandingsPage() {
         // ─── K.o.-Phase Matches ───
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 w-full">
           {matchesForPhase.filter(m => m.spieltag === viewPhase).map(m => (
-            <MatchCard key={m.id} match={m} />
+            <MatchCard key={m.id} match={m} readOnly />
           ))}
           {matchesForPhase.filter(m => m.spieltag === viewPhase).length === 0 && (
             <div className="col-span-full bg-surface-container-low border border-surface-container-high rounded-xl p-8 text-center">
