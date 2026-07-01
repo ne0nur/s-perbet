@@ -9,6 +9,7 @@ import { useTranslation } from '../utils/translations'
 import { useAuthStore } from '../stores/authStore'
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
 import { getTeamLogo } from '../lib/teamLogos'
+import { AchievementBadge, getAchievementsList, mapRarity, RARITY_CONFIG } from './profile/AchievementsSection'
 
 const TEAM_ABBREV: Record<string, string> = {
   'Galatasaray': 'Gala', 'Fenerbahçe': 'Fener', 'Beşiktaş': 'Beşiktaş',
@@ -119,7 +120,7 @@ function CompareBar({ label, myVal, rivalVal }: { label: string, myVal: number, 
 }
 
 export function RivalInspector({ userId, onClose }: RivalInspectorProps) {
-  const { t } = useTranslation()
+  const { t, language } = useTranslation()
   const { user: me } = useAuthStore()
   
   const isH2H = me?.id && me.id !== userId
@@ -221,6 +222,7 @@ export function RivalInspector({ userId, onClose }: RivalInspectorProps) {
       totalFinished, 
       avgPoints: Number(avgPoints), 
       achievementsCount, 
+      unlockedAchievements: unlockedSet,
       level: lvlDetails.level, 
       spieltagPunkte, 
       xpPct: lvlDetails.xpPct, 
@@ -392,6 +394,17 @@ export function RivalInspector({ userId, onClose }: RivalInspectorProps) {
             <CompareBar label="Exakte Treffer" myVal={myStats.exact} rivalVal={rivalStats.exact} />
             <CompareBar label="Punkte / Spiel" myVal={myStats.avgPoints} rivalVal={rivalStats.avgPoints} />
             <CompareBar label="Level" myVal={myStats.level} rivalVal={rivalStats.level} />
+            <CompareBar 
+              label="Erfolge (EXP)" 
+              myVal={myStats.unlockedAchievements ? Array.from(myStats.unlockedAchievements).reduce((sum, id) => {
+                const ach = getAchievementsList(language).find(a => a.id === id)
+                return sum + (RARITY_CONFIG[mapRarity(ach?.rarity || 'gewoehnlich')]?.exp || 50)
+              }, 0) : 0} 
+              rivalVal={rivalStats.unlockedAchievements ? Array.from(rivalStats.unlockedAchievements).reduce((sum, id) => {
+                const ach = getAchievementsList(language).find(a => a.id === id)
+                return sum + (RARITY_CONFIG[mapRarity(ach?.rarity || 'gewoehnlich')]?.exp || 50)
+              }, 0) : 0} 
+            />
           </div>
         )}
 
@@ -505,6 +518,36 @@ export function RivalInspector({ userId, onClose }: RivalInspectorProps) {
                   </div>
                 )
               })}
+            </div>
+          </div>
+        )}
+
+        {/* ─── Single Mode: Erfolge ─── */}
+        {!isH2H && rivalStats && rivalStats.unlockedAchievements.size > 0 && (
+          <div className="space-y-2">
+            <div className="flex items-center gap-1 text-[9px] font-mono text-on-surface-variant uppercase tracking-wider">
+              <Award size={11} className="text-primary" /> {t('myAchievements')} ({rivalStats.unlockedAchievements.size})
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
+              {getAchievementsList(language)
+                .filter(ach => rivalStats.unlockedAchievements.has(ach.id))
+                .sort((a, b) => {
+                  const aCfg = RARITY_CONFIG[mapRarity(a.rarity)]
+                  const bCfg = RARITY_CONFIG[mapRarity(b.rarity)]
+                  return (aCfg?.order ?? 99) - (bCfg?.order ?? 99)
+                })
+                .map(ach => {
+                  const cfg = RARITY_CONFIG[mapRarity(ach.rarity)]
+                  return (
+                    <div key={ach.id} className={`flex items-center gap-2 p-1.5 rounded-lg border ${cfg.border} ${cfg.bg} transition-all`}>
+                      <AchievementBadge id={ach.id} unlocked={true} rarity={mapRarity(ach.rarity)} />
+                      <div className="flex-1 min-w-0">
+                        <div className="text-[9px] font-mono font-bold text-on-surface truncate">{ach.name}</div>
+                        <span className={`text-[7px] font-mono font-bold ${cfg.text}`}>+{cfg.exp} EXP</span>
+                      </div>
+                    </div>
+                  )
+                })}
             </div>
           </div>
         )}

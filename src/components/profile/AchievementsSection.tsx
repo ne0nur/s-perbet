@@ -5,7 +5,7 @@ import { useTranslation } from '../../utils/translations'
 
 type Rarity = 'gewoehnlich' | 'selten' | 'episch' | 'legendaer'
 
-const RARITY_CONFIG: Record<string, {
+export const RARITY_CONFIG: Record<string, {
   order: number
   exp: number
   name: string
@@ -44,7 +44,7 @@ const RARITY_CONFIG: Record<string, {
 }
 
 // Map old rarities to new Fortnite-style rarities
-function mapRarity(old: string): Rarity {
+export function mapRarity(old: string): Rarity {
   const m: Record<string, Rarity> = {
     legendary: 'legendaer',
     epic: 'episch',
@@ -62,7 +62,7 @@ interface AchievementBadgeProps {
   rarity: Rarity
 }
 
-const AchievementBadge = memo(function AchievementBadge({ id, unlocked, rarity }: AchievementBadgeProps) {
+export const AchievementBadge = memo(function AchievementBadge({ id, unlocked, rarity }: AchievementBadgeProps) {
   const cfg = RARITY_CONFIG[rarity]
   const RarityIcon = cfg.icon
 
@@ -105,7 +105,7 @@ interface AchievementsSectionProps {
   newlyUnlocked: Set<string>
 }
 
-function getAchievementsList(language: string) {
+export function getAchievementsList(language: string) {
   if (language === 'tr') {
     return [
       { id: 'domstadt_don', name: 'Domstadt-Don', desc: 'En az 27 maç tahmin ettikten sonra genel sıralamada 1. sırada yer alırsınız.', req: 'En az 27 tahminden sonra 1. sıra', rarity: 'local' as const },
