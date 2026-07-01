@@ -499,27 +499,30 @@ export function AppShell() {
       {/* Fullscreen Onboarding Carousel Overlay */}
       {showOnboarding && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="fixed inset-0 bg-black/90 backdrop-blur-md animate-fade-in" />
+          <div className="fixed inset-0 bg-black/95 backdrop-blur-md animate-fade-in" />
           
-          <div className="relative glass-panel border border-primary-container/30 rounded-2xl p-6 text-center max-w-sm w-full shadow-[0_0_50px_rgba(var(--primary-rgb),0.15)] flex flex-col min-h-[440px] justify-between animate-scale-in">
+          <div className="relative border border-white/10 rounded-3xl p-8 text-center max-w-md w-full shadow-[0_20px_50px_rgba(0,0,0,0.8),_0_0_40px_rgba(var(--primary-rgb),0.15)] flex flex-col min-h-[480px] justify-between animate-scale-in bg-gradient-to-br from-surface-container-high/70 via-surface-container-low/95 to-surface-container-lowest/80 backdrop-blur-xl">
             {/* Backdrop glowing gradient */}
-            <div className="absolute inset-0 rounded-2xl bg-gradient-to-b from-primary-container/5 to-transparent pointer-events-none" />
+            <div className="absolute inset-0 rounded-3xl bg-gradient-to-b from-primary-container/10 via-transparent to-transparent pointer-events-none" />
 
             {/* Carousel Content */}
             <div className="flex-1 flex flex-col justify-center py-4">
               {onboardingSlide === 0 && (
-                <div className="animate-fade-in space-y-4">
-                  <div className="w-16 h-16 rounded-full bg-primary-container/15 border border-primary-container/30 flex items-center justify-center mx-auto mb-2 animate-bounce">
-                    <Sparkles size={32} className="text-primary-fixed-dim" />
+                <div className="animate-fade-in space-y-5">
+                  <div className="relative w-20 h-20 mx-auto mb-4">
+                    <div className="absolute inset-0 bg-primary/20 rounded-full blur-xl animate-pulse" />
+                    <div className="relative w-20 h-20 rounded-full bg-gradient-to-br from-primary-container/20 to-primary/10 border border-primary/30 flex items-center justify-center shadow-lg">
+                      <Sparkles size={36} className="text-primary animate-glow-pulse" />
+                    </div>
                   </div>
-                  <h2 className="text-xl font-black text-on-surface" dangerouslySetInnerHTML={{
+                  <h2 className="text-2xl font-black text-on-surface tracking-tight" dangerouslySetInnerHTML={{
                     __html: t('onboardingWelcomeTitle', { username: user?.user_metadata?.username || (language === 'de' ? 'Bruder' : language === 'tr' ? 'Kardeşim' : 'Brother') })
-                      .replace('SÜPERBET', '<span class="text-primary-fixed-dim">SÜPERBET</span>')
+                      .replace('SÜPERBET', '<span class="text-primary-fixed-dim bg-primary-container/20 px-2 py-0.5 rounded-lg border border-primary-container/30">SÜPERBET</span>')
                   }} />
-                  <p className="text-xs text-on-surface-variant leading-relaxed font-mono">
+                  <p className="text-xs md:text-sm text-on-surface-variant leading-relaxed font-mono px-2">
                     {t('onboardingWelcomeDesc')}
                   </p>
-                  <p className="text-[11px] text-primary-fixed-dim bg-primary-container/10 border border-primary-container/20 rounded-lg p-2.5 leading-normal">
+                  <p className="text-[11px] md:text-xs text-primary-fixed-dim bg-primary-container/8 border border-primary-container/15 rounded-xl p-3.5 leading-relaxed font-mono shadow-sm">
                     {t('onboardingWelcomeAlert')}
                   </p>
                 </div>
@@ -543,102 +546,105 @@ export function AppShell() {
                   { pts: '−2', color: 'red',     icon: '💀', tip: '0:3', res: '2:1',
                     de: 'Komplett daneben', en: 'Complete Miss', tr: 'Tamamen Karavana' },
                 ]
-                const t = tiers[onboardingSlide - 1]
-                const cMap: Record<string, string> = { emerald: 'border-emerald-500/25 bg-emerald-500/5 text-emerald-400', amber: 'border-amber-500/25 bg-amber-500/5 text-amber-400', blue: 'border-blue-500/25 bg-blue-500/5 text-blue-400', purple: 'border-purple-500/25 bg-purple-500/5 text-purple-400', slate: 'border-slate-500/20 bg-slate-500/5 text-slate-400', red: 'border-red-500/20 bg-red-500/5 text-red-400/80' }
-                const c = cMap[t.color] || cMap.slate
-                const [cBorder, cBg, cText] = c.split(' ')
                 const title = language === 'tr' ? t.tr : language === 'en' ? t.en : t.de
 
                 return (
-                  <div className="animate-fade-in space-y-4">
-                    <div className="text-4xl mb-1">{t.icon}</div>
-                    <div className={`inline-flex items-center gap-1 mx-auto px-4 py-1.5 rounded-full border ${cBorder} ${cBg}`}>
-                      <span className={`text-3xl font-black font-mono ${cText}`}>{t.pts}</span>
-                      <span className={`text-xs font-mono font-bold ${cText}`}>{language === 'tr' ? 'Puan' : language === 'en' ? 'PTS' : 'P'}</span>
+                  <div className="animate-fade-in space-y-5">
+                    <div className="text-5xl drop-shadow-md mb-2">{t.icon}</div>
+                    <div className={`inline-flex items-center gap-1.5 mx-auto px-5 py-2 rounded-full border shadow-sm ${cBorder} ${cBg}`}>
+                      <span className={`text-3xl font-black font-mono leading-none ${cText}`}>{t.pts}</span>
+                      <span className={`text-xs font-mono font-bold leading-none ${cText}`}>{language === 'tr' ? 'Puan' : language === 'en' ? 'PTS' : 'P'}</span>
                     </div>
-                    <h2 className={`text-lg font-black ${cText}`}>{title}</h2>
+                    <h2 className={`text-lg font-black tracking-wide ${cText}`}>{title}</h2>
 
                     {/* Match Card */}
-                    <div className={`glass-panel rounded-xl p-3 border ${cBorder} ${cBg} max-w-[220px] mx-auto`}>
-                      <div className="flex items-center justify-center gap-4">
-                        <div className="text-center">
-                          <span className="text-[8px] text-on-surface-variant/50 font-mono uppercase block mb-0.5">{language === 'tr' ? 'Tahmin' : language === 'en' ? 'Tip' : 'Tipp'}</span>
-                          <span className="font-mono text-xl font-black text-on-surface">{t.tip}</span>
+                    <div className={`relative overflow-hidden rounded-2xl p-4 border border-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.1),_0_8px_20px_rgba(0,0,0,0.4)] max-w-[240px] mx-auto bg-gradient-to-br from-white/[0.04] to-white/[0.01]`}>
+                      <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent pointer-events-none" />
+                      <div className="flex items-center justify-between gap-4 relative z-10">
+                        <div className="text-left">
+                          <span className="text-[9px] text-on-surface-variant/40 font-mono uppercase tracking-wider block mb-1">{language === 'tr' ? 'Tahmin' : language === 'en' ? 'Tip' : 'Tipp'}</span>
+                          <span className="font-mono text-2xl font-black text-on-surface tracking-wider">{t.tip}</span>
                         </div>
-                        <span className="text-on-surface-variant/20 text-sm font-mono">VS</span>
-                        <div className="text-center">
-                          <span className="text-[8px] text-on-surface-variant/50 font-mono uppercase block mb-0.5">{language === 'tr' ? 'Sonuç' : language === 'en' ? 'Result' : 'Ergebnis'}</span>
-                          <span className="font-mono text-xl font-black text-on-surface">{t.res}</span>
+                        <div className="h-8 w-px bg-white/10" />
+                        <div className="text-right">
+                          <span className="text-[9px] text-on-surface-variant/40 font-mono uppercase tracking-wider block mb-1">{language === 'tr' ? 'Sonuç' : language === 'en' ? 'Result' : 'Ergebnis'}</span>
+                          <span className="font-mono text-2xl font-black text-on-surface tracking-wider">{t.res}</span>
                         </div>
                       </div>
                     </div>
 
-                    <p className="text-[9px] text-on-surface-variant/40 font-mono">{onboardingSlide} / 7</p>
+                    <p className="text-[9px] text-on-surface-variant/30 font-mono tracking-widest uppercase">{onboardingSlide} / 7</p>
                   </div>
                 )
               })()}
 
               {onboardingSlide === 8 && (
-                <div className="animate-fade-in space-y-4">
-                  <div className="w-12 h-12 rounded-full bg-purple-500/10 border border-purple-500/30 flex items-center justify-center mx-auto mb-1">
-                    <HoverTrophyIcon size={24} className="text-purple-400" />
+                <div className="animate-fade-in space-y-5">
+                  <div className="relative w-14 h-14 mx-auto mb-1">
+                    <div className="absolute inset-0 bg-purple-500/20 rounded-full blur-lg animate-pulse" />
+                    <div className="relative w-14 h-14 rounded-full bg-purple-500/10 border border-purple-500/30 flex items-center justify-center shadow-md">
+                      <HoverTrophyIcon size={24} className="text-purple-400" />
+                    </div>
                   </div>
-                  <h2 className="text-lg font-black text-on-surface">
+                  <h2 className="text-xl font-black text-on-surface tracking-tight">
                     {t('onboardingLevelTitle')}
                   </h2>
-                  <p className="text-xs text-on-surface-variant leading-relaxed font-mono">
+                  <p className="text-xs text-on-surface-variant leading-relaxed font-mono px-3">
                     {t('onboardingLevelDesc')}
                   </p>
                   
-                  <div className="grid grid-cols-4 gap-2 pt-2 max-w-[280px] mx-auto">
-                    <div className="flex flex-col items-center gap-1">
-                      <LevelBadge level={1} className="h-8 w-8 rounded-lg shadow border text-[8px] leading-none">
+                  <div className="grid grid-cols-4 gap-3 pt-2 max-w-[320px] mx-auto">
+                    <div className="flex flex-col items-center gap-1.5 p-2 bg-white/[0.02] border border-white/5 rounded-xl hover:border-white/10 transition-colors">
+                      <LevelBadge level={1} className="h-9 w-9 rounded-lg shadow-md border text-[9px] leading-none">
                         <span className="opacity-70 text-[6px] block">LVL</span>1
                       </LevelBadge>
-                      <span className="text-[7px] font-mono text-on-surface-variant truncate w-full text-center">Alman</span>
+                      <span className="text-[8px] font-mono font-bold text-on-surface-variant truncate w-full text-center">Alman</span>
                     </div>
-                    <div className="flex flex-col items-center gap-1">
-                      <LevelBadge level={5} className="h-8 w-8 rounded-lg shadow border text-[8px] leading-none">
+                    <div className="flex flex-col items-center gap-1.5 p-2 bg-white/[0.02] border border-white/5 rounded-xl hover:border-white/10 transition-colors">
+                      <LevelBadge level={5} className="h-9 w-9 rounded-lg shadow-md border text-[9px] leading-none">
                         <span className="opacity-70 text-[6px] block">LVL</span>5
                       </LevelBadge>
-                      <span className="text-[7px] font-mono text-on-surface-variant truncate w-full text-center">
+                      <span className="text-[8px] font-mono font-bold text-on-surface-variant truncate w-full text-center">
                         {language === 'tr' ? 'Efsane' : language === 'en' ? 'Legend' : 'Legende'}
                       </span>
                     </div>
-                    <div className="flex flex-col items-center gap-1">
-                      <LevelBadge level={10} className="h-8 w-8 rounded-lg shadow border text-[8px] leading-none">
+                    <div className="flex flex-col items-center gap-1.5 p-2 bg-white/[0.02] border border-white/5 rounded-xl hover:border-white/10 transition-colors">
+                      <LevelBadge level={10} className="h-9 w-9 rounded-lg shadow-md border text-[9px] leading-none">
                         <span className="opacity-70 text-[6px] block">LVL</span>10
                       </LevelBadge>
-                      <span className="text-[7px] font-mono text-on-surface-variant truncate w-full text-center">Baba</span>
+                      <span className="text-[8px] font-mono font-bold text-on-surface-variant truncate w-full text-center">Baba</span>
                     </div>
-                    <div className="flex flex-col items-center gap-1">
-                      <LevelBadge level={13} className="h-8 w-8 rounded-lg shadow border text-[8px] leading-none">
+                    <div className="flex flex-col items-center gap-1.5 p-2 bg-white/[0.02] border border-white/5 rounded-xl hover:border-white/10 transition-colors">
+                      <LevelBadge level={13} className="h-9 w-9 rounded-lg shadow-md border text-[9px] leading-none">
                         <span className="opacity-70 text-[6px] block">LVL</span>13
                       </LevelBadge>
-                      <span className="text-[7px] font-mono text-on-surface-variant truncate w-full text-center">Boss</span>
+                      <span className="text-[8px] font-mono font-bold text-on-surface-variant truncate w-full text-center">Boss</span>
                     </div>
                   </div>
-                  <p className="text-[10px] text-on-surface-variant/60 font-mono italic">
+                  <p className="text-[10px] text-on-surface-variant/50 font-mono italic">
                     {t('onboardingLevelSub')}
                   </p>
                 </div>
               )}
 
               {onboardingSlide === 9 && (
-                <div className="animate-fade-in space-y-4">
-                  <div className="w-12 h-12 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center mx-auto mb-1">
-                    <Award size={24} className="text-emerald-400" />
+                <div className="animate-fade-in space-y-5">
+                  <div className="relative w-14 h-14 mx-auto mb-1">
+                    <div className="absolute inset-0 bg-emerald-500/20 rounded-full blur-lg animate-pulse" />
+                    <div className="relative w-14 h-14 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center shadow-md">
+                      <Award size={24} className="text-emerald-400" />
+                    </div>
                   </div>
-                  <h2 className="text-lg font-black text-on-surface">
+                  <h2 className="text-xl font-black text-on-surface tracking-tight">
                     {t('onboardingAchTitle')}
                   </h2>
-                  <p className="text-xs text-on-surface-variant leading-relaxed font-mono" dangerouslySetInnerHTML={{
+                  <p className="text-xs text-on-surface-variant leading-relaxed font-mono px-2" dangerouslySetInnerHTML={{
                     __html: t('onboardingAchDesc')
                       .replace('Erfolge (Badges)', '<span class="text-emerald-400 font-bold">' + (language === 'tr' ? 'Başarılar (Rozetler)' : language === 'en' ? 'Achievements (Badges)' : 'Erfolge (Badges)') + '</span>')
                       .replace('achievements (badges)', '<span class="text-emerald-400 font-bold">achievements (badges)</span>')
                       .replace('başarının (rozeti)', '<span class="text-emerald-400 font-bold">başarının (rozeti)</span>')
                   }} />
-                  <p className="text-[10px] text-on-surface-variant/70 leading-relaxed font-mono bg-surface-container/30 border border-surface-container-highest p-2.5 rounded-lg text-left" dangerouslySetInnerHTML={{
+                  <p className="text-[10px] md:text-xs text-on-surface-variant/70 leading-relaxed font-mono bg-white/[0.02] border border-white/5 p-3 rounded-2xl text-left" dangerouslySetInnerHTML={{
                     __html: t('onboardingAchAlert')
                       .replace('massiven EXP-Boost', '<span class="text-primary-fixed-dim font-bold">massiven EXP-Boost</span>')
                       .replace('massive EXP boost', '<span class="text-primary-fixed-dim font-bold">massive EXP boost</span>')
@@ -648,20 +654,23 @@ export function AppShell() {
               )}
 
               {onboardingSlide === 10 && (
-                <div className="animate-fade-in space-y-4">
-                  <div className="w-12 h-12 rounded-full bg-orange-500/10 border border-orange-500/30 flex items-center justify-center mx-auto mb-1">
-                    <Gift size={24} className="text-orange-400" />
+                <div className="animate-fade-in space-y-5">
+                  <div className="relative w-14 h-14 mx-auto mb-1">
+                    <div className="absolute inset-0 bg-orange-500/20 rounded-full blur-lg animate-pulse" />
+                    <div className="relative w-14 h-14 rounded-full bg-orange-500/10 border border-orange-500/30 flex items-center justify-center shadow-md">
+                      <Gift size={24} className="text-orange-400" />
+                    </div>
                   </div>
-                  <h2 className="text-lg font-black text-on-surface">
+                  <h2 className="text-xl font-black text-on-surface tracking-tight">
                     {t('onboardingBonusTitle')}
                   </h2>
-                  <p className="text-xs text-on-surface-variant leading-relaxed font-mono" dangerouslySetInnerHTML={{
+                  <p className="text-xs text-on-surface-variant leading-relaxed font-mono px-2" dangerouslySetInnerHTML={{
                     __html: t('onboardingBonusDesc')
                       .replace('Saison-Wetten', '<span class="text-orange-400 font-bold">Saison-Wetten</span>')
                       .replace('season bets', '<span class="text-orange-400 font-bold">season bets</span>')
                       .replace('sezon tahminlerini', '<span class="text-orange-400 font-bold">sezon tahminlerini</span>')
                   }} />
-                  <p className="text-[10px] text-on-surface-variant/70 leading-relaxed font-mono bg-surface-container/30 border border-surface-container-highest p-2.5 rounded-lg text-left" dangerouslySetInnerHTML={{
+                  <p className="text-[10px] md:text-xs text-on-surface-variant/70 leading-relaxed font-mono bg-white/[0.02] border border-white/5 p-3 rounded-2xl text-left" dangerouslySetInnerHTML={{
                     __html: t('onboardingBonusAlert')
                       .replace('fetten Zusatzpunkte & mächtig EXP', '<span class="text-primary-fixed-dim font-bold">fetten Zusatzpunkte & mächtig EXP</span>')
                       .replace('fat extra points & huge EXP', '<span class="text-primary-fixed-dim font-bold">fat extra points & huge EXP</span>')
@@ -671,17 +680,20 @@ export function AppShell() {
               )}
 
               {onboardingSlide === 11 && (
-                <div className="animate-fade-in space-y-4">
-                  <div className="w-16 h-16 rounded-full bg-primary-container/15 border border-primary-container/30 flex items-center justify-center mx-auto mb-2">
-                    <Rocket size={32} className="text-primary-fixed-dim" />
+                <div className="animate-fade-in space-y-5">
+                  <div className="relative w-20 h-20 mx-auto mb-4 animate-pulse">
+                    <div className="absolute inset-0 bg-primary/20 rounded-full blur-xl" />
+                    <div className="relative w-20 h-20 rounded-full bg-gradient-to-br from-primary-container/20 to-primary/10 border border-primary/30 flex items-center justify-center shadow-lg">
+                      <Rocket size={36} className="text-primary animate-bounce" />
+                    </div>
                   </div>
-                  <h2 className="text-xl font-black text-on-surface">
+                  <h2 className="text-2xl font-black text-on-surface tracking-tight">
                     {t('onboardingReadyTitle')}
                   </h2>
-                  <p className="text-xs text-on-surface-variant leading-relaxed font-mono">
+                  <p className="text-xs md:text-sm text-on-surface-variant leading-relaxed font-mono px-3">
                     {t('onboardingReadyDesc')}
                   </p>
-                  <p className="text-[10px] text-on-surface-variant/40 font-mono">
+                  <p className="text-[10px] md:text-xs text-primary-fixed-dim bg-primary-container/5 border border-primary-container/10 rounded-xl p-3 leading-normal font-mono">
                     {t('onboardingReadyAlert')}
                   </p>
                 </div>

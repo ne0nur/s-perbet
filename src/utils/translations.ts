@@ -53,7 +53,7 @@ export const translations = {
     
     // Onboarding
     onboardingWelcome: 'Willkommen bei SüperBET!',
-    onboardingDesc: 'Tippe die Spiele der Süper Lig und Champions League, sammle Punkte und steige Level auf!',
+    onboardingDesc: 'Tippe die Spiele der Süper Lig, Champions League & Weltmeisterschaft, sammle Punkte und steige Level auf!',
     onboardingNext: 'Weiter',
     onboardingStart: 'Loslegen',
     onboardingSlide1Title: 'Tippen & Punkte sammeln',
@@ -66,7 +66,7 @@ export const translations = {
     onboardingBonusTipsBtn: 'Zu den Bonus-Tipps 🎁',
     onboardingStartBtn: 'Bruder, let\'s go! 🚀',
     onboardingWelcomeTitle: '{username}, willkommen bei SÜPERBET! 🚀',
-    onboardingWelcomeDesc: 'Hier tippst du die Süper Lig mit deinen Cousengs. Keine billigen Emojis, sondern echtes Premium-Feeling!',
+    onboardingWelcomeDesc: 'Hier tippst du die Süper Lig, Champions League & Weltmeisterschaft mit deinen Cousengs. Keine billigen Emojis, sondern echtes Premium-Feeling!',
     onboardingWelcomeAlert: 'Gib deine Tipps ab, sammle XP, steig im Level auf und rasiere die Rangliste auf entspannt.',
     onboardingPointsTitle: 'Der Ehren-Punkteschlüssel 🎯',
     onboardingPointsDesc: 'Die Punkte berechnen sich nach Tor-Abstand und Tendenz:',
@@ -502,7 +502,7 @@ export const translations = {
     
     // Onboarding
     onboardingWelcome: 'Welcome to SüperBET!',
-    onboardingDesc: 'Predict matches of Süper Lig and Champions League, collect points and level up!',
+    onboardingDesc: 'Predict matches of Süper Lig, Champions League & World Cup, collect points and level up!',
     onboardingNext: 'Next',
     onboardingStart: 'Get Started',
     onboardingSlide1Title: 'Predict & Collect Points',
@@ -515,7 +515,7 @@ export const translations = {
     onboardingBonusTipsBtn: 'Go to Bonus Tips 🎁',
     onboardingStartBtn: 'Brother, let\'s go! 🚀',
     onboardingWelcomeTitle: 'Welcome to SÜPERBET, {username}! 🚀',
-    onboardingWelcomeDesc: 'Predict the Süper Lig with your brothers. No cheap emojis, just pure premium feeling!',
+    onboardingWelcomeDesc: 'Predict the Süper Lig, Champions League & World Cup with your brothers. No cheap emojis, just pure premium feeling!',
     onboardingWelcomeAlert: 'Submit your predictions, gather XP, level up, and dominate the leaderboard in style.',
     onboardingPointsTitle: 'The Honorable Point System 🎯',
     onboardingPointsDesc: 'Points are calculated based on goal distance and tendency:',
@@ -951,7 +951,7 @@ export const translations = {
     
     // Onboarding
     onboardingWelcome: 'SüperBET\'e Hoş Geldiniz!',
-    onboardingDesc: 'Süper Lig ve Şampiyonlar Ligi maçlarını tahmin et, puan topla ve seviye atla!',
+    onboardingDesc: 'Süper Lig, Şampiyonlar Ligi & Dünya Kupası maçlarını tahmin et, puan topla ve seviye atla!',
     onboardingNext: 'İleri',
     onboardingStart: 'Başla',
     onboardingSlide1Title: 'Tahmin Et & Puan Topla',
@@ -964,7 +964,7 @@ export const translations = {
     onboardingBonusTipsBtn: 'Bonus Tahminlerine Git 🎁',
     onboardingStartBtn: 'Kardeşim, haydi başlayalım! 🚀',
     onboardingWelcomeTitle: 'SÜPERBET\'e hoş geldin, {username}! 🚀',
-    onboardingWelcomeDesc: 'Burada kuzenlerinle Süper Lig tahminleri yapacaksın. Ucuz emojiler yok, tamamen premium hissi!',
+    onboardingWelcomeDesc: 'Burada kuzenlerinle Süper Lig, Şampiyonlar Ligi ve Dünya Kupası tahminleri yapacaksın. Ucuz emojiler yok, tamamen premium hissi!',
     onboardingWelcomeAlert: 'Tahminlerini yap, XP topla, seviye atla ve sıralamayı rahatça domine et.',
     onboardingPointsTitle: 'Şerefli Puan Dağılımı 🎯',
     onboardingPointsDesc: 'Puanlar, gol mesafesine ve eğilime göre hesaplanır:',
