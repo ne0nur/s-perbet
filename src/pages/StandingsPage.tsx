@@ -303,7 +303,7 @@ export function StandingsPage() {
   )
 
   return (
-    <div className="min-h-full px-3 md:px-6 lg:px-8 pt-4 md:pt-6 pb-24 md:pb-8 max-w-[1600px] mx-auto w-full animate-page-enter">
+    <div className="min-h-full px-3 md:px-6 lg:px-8 pt-4 md:pt-6 pb-24 md:pb-8 max-w-[1600px] mx-auto w-full overflow-x-hidden animate-page-enter">
       {/* Turnier-Filter & Saison-Selector */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 md:mb-6 max-w-[1600px] w-full gap-3">
         <div className="flex bg-surface-container/50 border border-white/5 p-1 rounded-2xl gap-1.5 backdrop-blur-md">
