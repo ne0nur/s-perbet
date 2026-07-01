@@ -296,10 +296,42 @@ Deno.serve(async (req: Request) => {
         const kickoff = new Date(liveMatch.anpfiff);
         const elapsedMin = (now.getTime() - kickoff.getTime()) / 60000;
 
-        // Live-Spiel: IMMER 90s — außer Halbzeit
+        // ☕ Halbzeit-Erkennung mit Counter (max. 2× Halbzeit, dann auf Live wechseln)
+        let halbzeitCount = 0;
         if (elapsedMin >= 45 && elapsedMin < 60) {
-          nextSync = 600;
-          nextSyncLabel = "☕ Halbzeit";
+          try {
+            const { data: hzData } = await adminClient.from('app_settings')
+              .select('value').eq('key', 'halbzeit_count').single();
+            if (hzData?.value) {
+              const [savedMatchId, savedCount] = hzData.value.split(':');
+              if (savedMatchId === liveMatch.id) {
+                halbzeitCount = parseInt(savedCount) || 0;
+              }
+            }
+          } catch (e) { /* ignore */ }
+
+          halbzeitCount++;
+          if (halbzeitCount >= 3) {
+            nextSync = 90;
+            nextSyncLabel = "⚽ Live (Halbzeit-Counter überschritten)";
+          } else {
+            nextSync = 480; // 8 Minuten
+            nextSyncLabel = `☕ Halbzeit (${halbzeitCount}/2)`;
+            // Counter persistieren
+            try {
+              await adminClient.from('app_settings').upsert({
+                key: 'halbzeit_count',
+                value: `${liveMatch.id}:${halbzeitCount}`
+              });
+            } catch (e) { /* ignore */ }
+          }
+        } else if (elapsedMin >= 60 && elapsedMin < 80) {
+          // Halbzeit vorbei → Counter löschen
+          try {
+            await adminClient.from('app_settings').delete().eq('key', 'halbzeit_count');
+          } catch (e) { /* ignore */ }
+          nextSync = 90;
+          nextSyncLabel = "⚽ Live";
         } else if (elapsedMin >= 80 && elapsedMin <= 130) {
           nextSync = 90;
           nextSyncLabel = "🔥 Crunch-Time";
