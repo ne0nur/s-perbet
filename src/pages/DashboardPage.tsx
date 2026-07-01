@@ -53,6 +53,27 @@ export function DashboardPage() {
 
   // Beim ersten Mount den richtigen Spieltag ermitteln & Realtime-Abo starten\n  useEffect(() => {\n    if (initialized.current) return\n    initialized.current = true\n    initialisiereSpieltag()\n    abonnierenRealtimeMatches()\n    abonnierenHeartbeat()\n  }, [initialisiereSpieltag, abonnierenRealtimeMatches, abonnierenHeartbeat])\n\n  // Reconnect Realtime wenn App aus Hintergrund zurückkommt\n  useEffect(() => {\n    const handleVisibility = () => {\n      if (document.visibilityState === 'visible') {\n        abonnierenRealtimeMatches()\n        abonnierenHeartbeat()\n      }\n    }\n    document.addEventListener('visibilitychange', handleVisibility)\n    return () => document.removeEventListener('visibilitychange', handleVisibility)\n  }, [abonnierenRealtimeMatches, abonnierenHeartbeat])\n\n  // Cleanup beim Unmount\n  useEffect(() => {\n    return () => {\n      const store = useMatchStore.getState()\n      store.cleanup()\n    }\n  }, [])
 
+  // Fallback-Poll für app_settings — garantiert dass auch non-admin User den Indikator sehen
+  useEffect(() => {
+    const poll = async () => {
+      try {
+        const { data } = await supabase.from('app_settings').select('key,value').in('key', ['last_sync', 'sync_label'])
+        if (data) {
+          const lastSync = data.find((r: any) => r.key === 'last_sync')
+          const syncLabel = data.find((r: any) => r.key === 'sync_label')
+          if (lastSync?.value) {
+            const d = new Date(lastSync.value)
+            const timeStr = d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+            useMatchStore.setState({ letztesUpdate: timeStr, syncLabel: syncLabel?.value || null })
+          }
+        }
+      } catch (e) { /* silent */ }
+    }
+    poll()
+    const interval = setInterval(poll, 10000)
+    return () => clearInterval(interval)
+  }, [])
+
   useEffect(() => {
     ladeMatches(aktuellerSpieltag)
     ladeMeineTipps(aktuellerSpieltag)
