@@ -479,71 +479,66 @@ export function GlobalPage() {
     try {
       const seasonKey = useMatchStore.getState().aktuelleSaison || 2026
 
-      // Cache-Check: Leaderboard (teuerste Query — 2 DB-Calls)
+      // Cache SOFORT anzeigen (Stale-While-Revalidate), aber IMMER frisch von DB laden
       const cachedRangliste = getCached<RanglisteEintrag[]>(CACHE_KEYS.leaderboard(seasonKey))
-      let rangData: RanglisteEintrag[] | null = null
-
       if (cachedRangliste) {
         setRangliste(cachedRangliste)
-        rangData = cachedRangliste
-        // Stats & Bonus trotzdem live laden (sind billiger)
-      } else {
-        // 1. Leaderboard (Versuche RPC für Trend-Pfeile)
-        let rawRangData: any[] | null = null
-        try {
-          const { data, error } = await supabase.rpc('get_ranking_with_trend')
-          if (!error && data) {
-            rawRangData = data
+      }
+
+      // 1. Leaderboard — IMMER frisch von DB (RPC oder Fallback)
+      let rawRangData: any[] | null = null
+      try {
+        const { data, error } = await supabase.rpc('get_ranking_with_trend')
+        if (!error && data) {
+          rawRangData = data
+        }
+      } catch (e) {
+        // ignore
+      }
+
+      // Fallback wenn RPC (noch) nicht existiert
+      if (!rawRangData) {
+        const { data: fallbackData } = await supabase
+          .from('profiles')
+          .select('id,username,avatar_url,gesamt_punkte,exakte_treffer,is_admin,achievements_count,level')
+          .order('gesamt_punkte', { ascending: false })
+          .order('exakte_treffer', { ascending: false })
+          .limit(50)
+        
+        if (fallbackData) {
+          rawRangData = fallbackData.map((d: any) => ({ ...d, trend: 0 }))
+        }
+      }
+
+      let rangData: RanglisteEintrag[] = []
+      if (rawRangData && rawRangData.length > 0) {
+        // Calculate standard competition ranking
+        let currentRank = 1
+        for (let i = 0; i < rawRangData.length; i++) {
+          if (i > 0 && rawRangData[i].gesamt_punkte < rawRangData[i-1].gesamt_punkte) {
+            currentRank = i + 1
           }
-        } catch (e) {
-          // ignore
+          const isTie = i > 0 && rawRangData[i].gesamt_punkte === rawRangData[i-1].gesamt_punkte
+          rawRangData[i]._rank = currentRank
+          rawRangData[i]._displayRank = isTie ? '–' : `#${currentRank}`
         }
 
-        // Fallback wenn RPC (noch) nicht existiert
-        if (!rawRangData) {
-          const { data: fallbackData } = await supabase
-            .from('profiles')
-            .select('id,username,avatar_url,gesamt_punkte,exakte_treffer,is_admin,achievements_count,level')
-            .order('gesamt_punkte', { ascending: false })
-            .order('exakte_treffer', { ascending: false })
-            .limit(50)
-          
-          if (fallbackData) {
-            rawRangData = fallbackData.map((d: any) => ({ ...d, trend: 0 }))
-          }
-        }
-
-        if (rawRangData && rawRangData.length > 0) {
-          // Calculate standard competition ranking
-          let currentRank = 1
-          for (let i = 0; i < rawRangData.length; i++) {
-            if (i > 0 && rawRangData[i].gesamt_punkte < rawRangData[i-1].gesamt_punkte) {
-              currentRank = i + 1
-            }
-            const isTie = i > 0 && rawRangData[i].gesamt_punkte === rawRangData[i-1].gesamt_punkte
-            rawRangData[i]._rank = currentRank
-            rawRangData[i]._displayRank = isTie ? '–' : `#${currentRank}`
-          }
-
-          rangData = rawRangData.map((userEntry: any) => {
-            return {
-              id: userEntry.id,
-              username: userEntry.username,
-              avatar_url: userEntry.avatar_url,
-              gesamt_punkte: userEntry.gesamt_punkte,
-              exakte_treffer: userEntry.exakte_treffer,
-              is_admin: userEntry.is_admin,
-              achievements_count: userEntry.achievements_count || 0,
-              level: userEntry.level || 1,
-              trend: userEntry.trend || 0,
-              displayRank: userEntry._displayRank
-            } as RanglisteEintrag
-          })
-          setRangliste(rangData)
-          setCache(CACHE_KEYS.leaderboard(seasonKey), rangData)
-        } else {
-          setRangliste([])
-        }
+        rangData = rawRangData.map((userEntry: any) => ({
+          id: userEntry.id,
+          username: userEntry.username,
+          avatar_url: userEntry.avatar_url,
+          gesamt_punkte: userEntry.gesamt_punkte,
+          exakte_treffer: userEntry.exakte_treffer,
+          is_admin: userEntry.is_admin,
+          achievements_count: userEntry.achievements_count || 0,
+          level: userEntry.level || 1,
+          trend: userEntry.trend || 0,
+          displayRank: userEntry._displayRank
+        }))
+        setRangliste(rangData)
+        setCache(CACHE_KEYS.leaderboard(seasonKey), rangData)
+      } else if (!cachedRangliste) {
+        setRangliste([])
       }
 
       // 2. Global Tipping Statistics
