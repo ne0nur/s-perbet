@@ -462,7 +462,7 @@ def generate_cim_bom_bom():
     c.set_pixel(16, 18, red)
     return c
 
-def generate_fener_aglama():
+def generate_kadikoy_bogazi():
     c = Canvas()
     yellow = (245, 215, 10)
     navy = (10, 30, 120)
@@ -750,7 +750,7 @@ def main():
         "finito": generate_finito,
         "derby_baba": generate_derby_baba,
         "cim_bom_bom": generate_cim_bom_bom,
-        "fener_aglama": generate_fener_aglama,
+        "kadikoy_bogazi": generate_kadikoy_bogazi,
         "kara_kartal": generate_kara_kartal,
         "bize_her_yer_trabzon": generate_bize_her_yer_trabzon,
         "der_alman": generate_der_alman,

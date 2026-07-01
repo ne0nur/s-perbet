@@ -31,6 +31,7 @@ interface MatchState {
   aktuellerSpieltag: number
   aktuelleSaison: number | null
   selectedTournament: string
+  aktivePhase: number | null
   isLaden: boolean
   cacheMatches: Record<number, Match[]>
   cacheTimestamps: Record<number, number>
@@ -57,6 +58,7 @@ export const useMatchStore = create<MatchState>()(
       aktuellerSpieltag: 1, // Default fallback
       aktuelleSaison: null,
       selectedTournament: 'Süper Lig',
+      aktivePhase: null,
       isLaden: false,
       cacheMatches: {},
       cacheTimestamps: {},
@@ -156,7 +158,7 @@ export const useMatchStore = create<MatchState>()(
         if (season) liveQuery = liveQuery.eq('season', season)
         const { data: liveData } = await liveQuery
         if (liveData?.length) {
-          set({ aktuellerSpieltag: liveData[0].spieltag })
+          set({ aktuellerSpieltag: liveData[0].spieltag, aktivePhase: liveData[0].spieltag })
           return liveData[0].spieltag
         }
 
@@ -167,7 +169,7 @@ export const useMatchStore = create<MatchState>()(
         if (season) upcomingQuery = upcomingQuery.eq('season', season)
         const { data: upcomingData } = await upcomingQuery
         if (upcomingData?.length) {
-          set({ aktuellerSpieltag: upcomingData[0].spieltag })
+          set({ aktuellerSpieltag: upcomingData[0].spieltag, aktivePhase: upcomingData[0].spieltag })
           return upcomingData[0].spieltag
         }
 
@@ -178,7 +180,7 @@ export const useMatchStore = create<MatchState>()(
         if (season) maxQuery = maxQuery.eq('season', season)
         const { data: maxData } = await maxQuery
         if (maxData?.length) {
-          set({ aktuellerSpieltag: maxData[0].spieltag })
+          set({ aktuellerSpieltag: maxData[0].spieltag, aktivePhase: null })
           return maxData[0].spieltag
         }
 
@@ -214,46 +216,46 @@ export const useMatchStore = create<MatchState>()(
           }
 
           // 1. Gibt es ein Live-Spiel in der aktuellen Saison?
-          let liveQuery = supabase.from('matches').select('spieltag').eq('status', 'live').limit(1)
+          let liveQuery = supabase.from('matches').select('spieltag, tournament').eq('status', 'live').limit(1)
           if (currentSeason) liveQuery = liveQuery.eq('season', currentSeason)
           const { data: liveData } = await liveQuery
 
           if (liveData && liveData.length > 0) {
             const st = liveData[0].spieltag
-            set({ aktuellerSpieltag: st })
+            set({ aktuellerSpieltag: st, selectedTournament: liveData[0].tournament, aktivePhase: st })
             return st
           }
 
           // 2. Gibt es ein upcoming-Spiel?
-          let upcomingQuery = supabase.from('matches').select('spieltag').eq('status', 'upcoming').order('anpfiff', { ascending: true }).limit(1)
+          let upcomingQuery = supabase.from('matches').select('spieltag, tournament').eq('status', 'upcoming').order('anpfiff', { ascending: true }).limit(1)
           if (currentSeason) upcomingQuery = upcomingQuery.eq('season', currentSeason)
           const { data: upcomingData } = await upcomingQuery
 
           if (upcomingData && upcomingData.length > 0) {
             const st = upcomingData[0].spieltag
-            set({ aktuellerSpieltag: st })
+            set({ aktuellerSpieltag: st, selectedTournament: upcomingData[0].tournament, aktivePhase: st })
             return st
           }
 
           // 3. Gibt es ein Spiel in der Zukunft?
-          let futureQuery = supabase.from('matches').select('spieltag').gt('anpfiff', new Date().toISOString()).order('anpfiff', { ascending: true }).limit(1)
+          let futureQuery = supabase.from('matches').select('spieltag, tournament').gt('anpfiff', new Date().toISOString()).order('anpfiff', { ascending: true }).limit(1)
           if (currentSeason) futureQuery = futureQuery.eq('season', currentSeason)
           const { data: futureData } = await futureQuery
 
           if (futureData && futureData.length > 0) {
             const st = futureData[0].spieltag
-            set({ aktuellerSpieltag: st })
+            set({ aktuellerSpieltag: st, selectedTournament: futureData[0].tournament, aktivePhase: st })
             return st
           }
 
           // 4. Höchsten Spieltag (letzten) nehmen, falls alles vorbei ist
-          let lastQuery = supabase.from('matches').select('spieltag').order('spieltag', { ascending: false }).limit(1)
+          let lastQuery = supabase.from('matches').select('spieltag, tournament').order('spieltag', { ascending: false }).limit(1)
           if (currentSeason) lastQuery = lastQuery.eq('season', currentSeason)
           const { data: lastData } = await lastQuery
 
           if (lastData && lastData.length > 0) {
             const st = lastData[0].spieltag
-            set({ aktuellerSpieltag: st })
+            set({ aktuellerSpieltag: st, selectedTournament: lastData[0].tournament })
             return st
           }
 

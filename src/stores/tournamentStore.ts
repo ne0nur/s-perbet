@@ -44,7 +44,7 @@ const FALLBACK_TOURNAMENTS: TournamentConfig[] = [
     ko_direct_spots: 8, ko_playoff_spots: 16, has_historical_data: false,
   },
   {
-    id: 2, name: 'WM 2026', emoji: '🏆', season: 2026,
+    id: 2, name: 'World Cup 2026', emoji: '🏆', season: 2026,
     has_table: true, has_knockout: true, group_stage_matchdays: 3,
     cl_spots: 0, cl_playoff_spots: 0, el_spots: 0, conf_spots: 0,
     relegation_playoff_count: 0, relegation_count: 0,

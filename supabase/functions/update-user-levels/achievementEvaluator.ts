@@ -90,20 +90,18 @@ export function evaluateAchievements(
     unlocked.add('maxi_flaneur')
   }
 
-  // Schorle & Çay: Friday night all matches tendency correct (punkte >= 2)
-  // Group Friday matches by date string
   const fridayTipsByDate: Record<string, TipDetails[]> = {}
   finishedTips.forEach(t => {
     const d = new Date(t.match.anpfiff)
     // 5 = Friday
-    if (d.getDay() === 5) {
+    if (d.getUTCDay() === 5) {
       const dateStr = d.toISOString().split('T')[0]
       if (!fridayTipsByDate[dateStr]) fridayTipsByDate[dateStr] = []
       fridayTipsByDate[dateStr].push(t)
     }
   })
   for (const tips of Object.values(fridayTipsByDate)) {
-    if (tips.length >= 2 && tips.every(t => t.punkte >= 1)) {
+    if (tips.length >= 2 && tips.every(t => t.punkte >= 2)) {
       unlocked.add('schorle_cay')
       break
     }
@@ -165,7 +163,7 @@ export function evaluateAchievements(
   // Amk-Modus: 3x in a row missed exact score by exactly 1 goal (only got tendency = 2 pts)
   let amkStreak = 0
   for (const t of finishedTips) {
-    if (t.match.tore_heim !== null && t.match.tore_gast !== null && t.punkte === 3) {
+    if (t.match.tore_heim !== null && t.match.tore_gast !== null && t.punkte === 2) {
       const predDiff = t.tipp_heim - t.tipp_gast
       const actDiff = t.match.tore_heim - t.match.tore_gast
       if (Math.abs(predDiff - actDiff) === 1) {
@@ -199,8 +197,6 @@ export function evaluateAchievements(
     const maxMd = allMatchdays[allMatchdays.length - 1]
     let missingStreak = 0
     for (let md = minMd; md <= maxMd; md++) {
-      const mdHasMatches = allMatchdays.includes(md)
-      if (!mdHasMatches) continue
       const userTipped = tipsByMatchday[md] && tipsByMatchday[md].length > 0
       if (!userTipped) {
         missingStreak++
@@ -274,14 +270,14 @@ export function evaluateAchievements(
   )
   if (exactGalWins.length >= 3) unlocked.add('cim_bom_bom')
 
-  // Fener Ağlama: 3 exact tips on Fenerbahçe wins
+  // Kadıköy Boğazı: 3 exact tips on Fenerbahçe wins
   const exactFenWins = finishedTips.filter(
     t => t.punkte === 4 && 
     t.match.tore_heim !== null && t.match.tore_gast !== null &&
     ((t.match.heim_team === 'Fenerbahçe' && t.match.tore_heim > t.match.tore_gast) ||
      (t.match.gast_team === 'Fenerbahçe' && t.match.tore_gast > t.match.tore_heim))
   )
-  if (exactFenWins.length >= 3) unlocked.add('fener_aglama')
+  if (exactFenWins.length >= 3) unlocked.add('kadikoy_bogazi')
 
   // Kara Kartal: 3 exact tips on Beşiktaş wins
   const exactBesWins = finishedTips.filter(
@@ -310,15 +306,18 @@ export function evaluateAchievements(
 
   // Gurbetçi: Tipped every match of Hinrunde (matchday 1-19)
   let tippedAllHinrunde = true
-  for (let md = 1; md <= 19; md++) {
-    const tipsForMD = tipsByMatchday[md] || []
-    if (tipsForMD.length < 8) {
-      tippedAllHinrunde = false
-      break
+  const maxHinrundeMd = Math.max(...Object.keys(tipsByMatchday).map(Number))
+  if (maxHinrundeMd >= 19) {
+    for (let md = 1; md <= 19; md++) {
+      const tipsForMD = tipsByMatchday[md] || []
+      if (tipsForMD.length < 4) { // Adapt for different tournaments (min 4 matches)
+        tippedAllHinrunde = false
+        break
+      }
     }
-  }
-  if (tippedAllHinrunde) {
-    unlocked.add('gurbetci')
+    if (tippedAllHinrunde) {
+      unlocked.add('gurbetci')
+    }
   }
 
   // Hadi Lan!: Tip submitted within 1 minute before kickoff
@@ -342,7 +341,7 @@ export function evaluateAchievements(
   let macherStreak = 0
   for (let md = 1; md <= 38; md++) {
     const mdTips = tipsByMatchday[md] || []
-    const allGuessed = mdTips.length >= 9
+    const allGuessed = mdTips.length >= 4 // Relaxed for tournaments
     if (allGuessed) {
       macherStreak++
       if (macherStreak >= 5) unlocked.add('macher')

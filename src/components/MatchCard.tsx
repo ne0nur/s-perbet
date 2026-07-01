@@ -7,7 +7,7 @@ import { useSettingsStore } from '../stores/settingsStore'
 import { useNetworkStore } from '../stores/networkStore'
 import { useToastStore } from '../stores/toastStore'
 import { useTranslation } from '../utils/translations'
-import type { Match } from '../stores/matchStore'
+import { useMatchStore, type Match } from '../stores/matchStore'
 import { useTournamentStore } from '../stores/tournamentStore'
 import { motion, AnimatePresence } from 'framer-motion'
 
@@ -113,6 +113,7 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
   const tippsFreigeschaltet = useSettingsStore(s => s.tippsFreigeschaltet)
   const isOnline = useNetworkStore(s => s.isOnline)
   const { language } = useTranslation()
+  const aktivePhase = useMatchStore(s => s.aktivePhase)
 
   const istVorbei  = match.status === 'finished'
   const istLive    = match.status === 'live'
@@ -142,7 +143,15 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
     ? berechnePunkte(eigenerTipp.tipp_heim, eigenerTipp.tipp_gast, match.tore_heim, match.tore_gast)
     : null
 
-  const kannTippen = istUpcoming && tippsFreigeschaltet
+  const config = useTournamentStore(s => s.getTournament(match.tournament || 'Süper Lig'))
+  const isKoMatch = config?.has_knockout && match.spieltag > (config.group_stage_matchdays || 38)
+
+  const isPlaceholder = (name: string) => /winner|loser|tba|tbd|placeholder/i.test(name)
+  const teamsStehenFest = !isPlaceholder(match.heim_team) && !isPlaceholder(match.gast_team)
+  
+  const isFuturePhase = isKoMatch && aktivePhase !== null && match.spieltag > aktivePhase
+
+  const kannTippen = istUpcoming && tippsFreigeschaltet && teamsStehenFest && !isFuturePhase
 
   async function handleSpeichern(e: React.MouseEvent) {
     e.stopPropagation()
@@ -184,9 +193,6 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
     }
 
     // 🛑 KO-Phasen Check — kein Unentschieden erlaubt!
-    const config = useTournamentStore.getState().getTournament(match.tournament || 'Süper Lig')
-    const isKoMatch = config?.has_knockout && match.spieltag > (config.group_stage_matchdays || 38)
-    
     if (isKoMatch && tippHeim === tippGast) {
       const koMessages: Record<string, string> = {
         de: 'KO-Spiele können nicht Unentschieden enden! (Bitte inkl. Elfmeterschießen tippen)',
@@ -322,6 +328,32 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
             <span className="text-[11px] text-amber-400/50 font-mono uppercase tracking-wider">
               Tippabgabe startet mit Spielplan
             </span>
+          </div>
+        )}
+
+        {/* FALL A2: Teams in KO-Phase stehen noch nicht fest oder Phase gesperrt */}
+        {istUpcoming && tippsFreigeschaltet && (!teamsStehenFest || isFuturePhase) && (
+          <div className="flex items-center justify-center gap-2 py-1.5 px-2 text-center">
+            <Lock size={12} className="text-on-surface-variant/50 flex-shrink-0" />
+            <span className="text-[10px] text-on-surface-variant/50 font-mono uppercase tracking-wider">
+              {language === 'tr' 
+                ? (isFuturePhase ? 'Önceki tur henüz bitmedi' : 'Takımlar henüz belli değil')
+                : language === 'en' 
+                  ? (isFuturePhase ? 'Previous round not finished' : 'Teams not decided yet')
+                  : (isFuturePhase ? 'Vorherige Runde läuft noch' : 'Teams stehen noch nicht fest')}
+            </span>
+          </div>
+        )}
+
+        {/* KO-Spiel Warnung */}
+        {kannTippen && isKoMatch && (
+          <div className="flex items-center justify-center gap-1.5 pb-2 text-[9px] font-mono text-amber-400/80 uppercase tracking-wider text-center px-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-400/80 shrink-0" />
+            {language === 'tr' 
+              ? 'Tüm sonucu tahmin et (penaltılar dahil)'
+              : language === 'en'
+                ? 'Tip entire result (incl. penalties)'
+                : 'Gesamtes Ergebnis tippen (inkl. Elfmeterschießen)'}
           </div>
         )}
 

@@ -826,10 +826,10 @@ export function LeaguePage() {
                     <button onClick={async () => {
                       const joinUrl = `${window.location.origin}${import.meta.env.BASE_URL}?join=${aktiveLiga.invite_code}`
                       const text = language === 'tr'
-                        ? `SüperBET ligime katıl! Kod: ${aktiveLiga.invite_code}`
+                        ? `SüperBET ligime katıl! Kod: ${aktiveLiga.invite_code}\n\n${joinUrl}`
                         : language === 'en'
-                        ? `Join my SüperBET league! Code: ${aktiveLiga.invite_code}`
-                        : `Tritt meiner SüperBET-Liga bei! Code: ${aktiveLiga.invite_code}`
+                        ? `Join my SüperBET league! Code: ${aktiveLiga.invite_code}\n\n${joinUrl}`
+                        : `Tritt meiner SüperBET-Liga bei! Code: ${aktiveLiga.invite_code}\n\n${joinUrl}`
                       if (navigator.share) {
                         try { await navigator.share({ title: 'SüperBET Liga', text, url: joinUrl }) } catch {}
                       } else {

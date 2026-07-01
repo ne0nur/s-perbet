@@ -14,7 +14,7 @@ import { useTranslation } from '../utils/translations'
 import { getTournamentLogo } from '../lib/utils'
 
 export function DashboardPage() {
-  const { t } = useTranslation()
+  const { t, language } = useTranslation()
   const { matches, aktuellerSpieltag, aktuelleSaison, selectedTournament, isLaden, setSpieltag, ladeMatches, initialisiereSpieltag, letztesUpdate, abonnierenRealtimeMatches, setSelectedTournament } = useMatchStore()
   const ladeMeineTipps = useTipStore(s => s.ladeMeineTipps)
   const meineTipps = useTipStore(s => s.meineTipps)
@@ -38,7 +38,7 @@ export function DashboardPage() {
       return tournamentConfigs.map(t => t.name)
     }
     // Fallback während DB-Ladephase — NIE leer
-    return ['Süper Lig', 'Champions League', 'WM 2026']
+    return ['Süper Lig', 'Champions League', 'World Cup 2026']
   }, [tournamentConfigs])
 
   // Responsive Check
@@ -61,7 +61,7 @@ export function DashboardPage() {
   useEffect(() => {
     ladeMatches(aktuellerSpieltag)
     ladeMeineTipps(aktuellerSpieltag)
-  }, [aktuellerSpieltag, ladeMatches, ladeMeineTipps])
+  }, [aktuellerSpieltag, selectedTournament, ladeMatches, ladeMeineTipps])
 
   useEffect(() => {
     let query = supabase.from('matches').select('spieltag').order('spieltag', { ascending: false }).limit(1)
@@ -467,10 +467,23 @@ export function DashboardPage() {
                 ))}
               </div>
             ) : anzeigeMatches.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-16 gap-3">
-                <p className="text-on-surface-variant/50 text-sm font-mono">{t('noMatchesShort')}</p>
+              <div className="flex flex-col items-center justify-center py-20 px-6 gap-4 bg-surface-container/30 border border-white/5 rounded-3xl text-center">
+                <div className="w-20 h-20 rounded-full bg-surface-container flex items-center justify-center mb-2 shadow-inner">
+                  <img 
+                    src={getTournamentLogo(selectedTournament)} 
+                    alt={selectedTournament} 
+                    className="w-10 h-10 object-contain opacity-40 grayscale" 
+                    onError={(e) => { (e.target as HTMLImageElement).src = `${import.meta.env.BASE_URL}logos/soccer_ball.png` }} 
+                  />
+                </div>
+                <h3 className="text-lg font-bold text-on-surface">{t('noMatchesFound')}</h3>
+                <p className="text-on-surface-variant/70 text-xs md:text-sm max-w-md font-mono leading-relaxed">
+                  {filter === 'live' 
+                    ? (language === 'tr' ? 'Şu anda bu turnuvada canlı maç yok. Daha sonra tekrar kontrol et!' : language === 'en' ? 'There are no live matches in this tournament right now. Check back later!' : 'Aktuell laufen in diesem Turnier keine Spiele. Schau später wieder vorbei!')
+                    : (language === 'tr' ? 'Bu turnuva için şu anda planlanmış maç yok. Turnuva şu anda tatilde olabilir veya yanlış sezonu seçmiş olabilirsin.' : language === 'en' ? 'There are currently no matches scheduled for this tournament. The league might be on a break or you have selected the wrong season.' : 'Für dieses Turnier sind aktuell keine Spiele angesetzt. Entweder pausiert die Liga aktuell oder du hast die falsche Saison ausgewählt.')}
+                </p>
                 {filter === 'live' && (
-                  <button onClick={() => setFilter('alle')} className="btn-secondary text-xs">
+                  <button onClick={() => setFilter('alle')} className="mt-4 bg-surface-container-high border border-white/10 text-on-surface px-5 py-2.5 rounded-xl text-xs font-bold hover:bg-white/5 transition-all shadow-sm active:scale-95">
                     {t('showAllMatches')}
                   </button>
                 )}

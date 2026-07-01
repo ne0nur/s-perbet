@@ -194,7 +194,7 @@ export function AppShell() {
   const handleShare = async () => {
     const shareData = {
       title: 'SüperBET — Die private Fußball-Tipprunde',
-      text: '🔥 Tippe mit uns die Süper Lig! Komm in die Tipprunde.',
+      text: '🔥 Tippe mit uns die Süper Lig! Komm in die Tipprunde.\n\nhttps://ne0nur.github.io/s-perbet/',
       url: 'https://ne0nur.github.io/s-perbet/',
     }
     if (navigator.share) {
