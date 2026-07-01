@@ -47,8 +47,8 @@ Deno.serve(async (req) => {
     const { data: profiles, error: pError } = await supabase.from('profiles').select('id, username, avatar_url, gesamt_punkte')
     if (pError) throw pError
 
-    // 2. Fetch all finished matches
-    const { data: matches, error: mError } = await supabase.from('matches').select('*').eq('status', 'finished')
+    // 2. Fetch all matches (needed for achievement evaluation)
+    const { data: matches, error: mError } = await supabase.from('matches').select('*')
     if (mError) throw mError
     const matchMap = new Map()
     matches.forEach((m: any) => matchMap.set(m.id, m))
@@ -57,16 +57,14 @@ Deno.serve(async (req) => {
     const { data: tips, error: tError } = await supabase.from('tips').select('*')
     if (tError) throw tError
     
-    // Group tips by user
+    // Group tips by user (include ALL tips, even upcoming — needed for ilk_kan etc.)
     const tipsByUser = new Map()
     tips.forEach((t: any) => {
       if (!tipsByUser.has(t.user_id)) tipsByUser.set(t.user_id, [])
-      if (matchMap.has(t.match_id)) {
-        tipsByUser.get(t.user_id).push({
-          ...t,
-          match: matchMap.get(t.match_id)
-        })
-      }
+      tipsByUser.get(t.user_id).push({
+        ...t,
+        match: matchMap.get(t.match_id) || null
+      })
     })
 
     const updates = []
