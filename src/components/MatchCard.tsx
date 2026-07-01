@@ -114,7 +114,6 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
   const isOnline = useNetworkStore(s => s.isOnline)
   const { language } = useTranslation()
   const aktivePhase = useMatchStore(s => s.aktivePhase)
-  const letztesUpdate = useMatchStore(s => s.letztesUpdate)
 
   const istVorbei  = match.status === 'finished'
   const istLive    = match.status === 'live'
@@ -243,8 +242,8 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
         {istLive && (
           <span className="flex items-center gap-1.5 text-red-400 text-xs font-medium">
             <span className="live-dot" /> LIVE
-            {letztesUpdate && (
-              <span className="text-[10px] text-red-400/50 font-mono">{letztesUpdate}</span>
+            {match.spielminute && (
+              <span className="text-[10px] text-red-400/50 font-mono">{match.spielminute}</span>
             )}
           </span>
         )}

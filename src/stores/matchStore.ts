@@ -14,6 +14,7 @@ export interface Match {
   status: 'upcoming' | 'live' | 'finished' | 'postponed'
   season: number
   tournament?: string
+  spielminute?: string | null  // z.B. "65'" oder "HT"
 }
 
 export interface Tip {

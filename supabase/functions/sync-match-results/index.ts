@@ -84,6 +84,7 @@ export interface EspnMatch {
   awayScore: number;
   status: string;
   date: Date;
+  displayClock: string;  // z.B. "65'" oder "HT"
 }
 
 async function fetchEspnScores(tournament: string, dateStr: string): Promise<EspnMatch[]> {
@@ -119,7 +120,8 @@ async function fetchEspnScores(tournament: string, dateStr: string): Promise<Esp
         homeScore: hScore,
         awayScore: aScore,
         status: s,
-        date: new Date(ev.date)
+        date: new Date(ev.date),
+        displayClock: ev.status?.displayClock || ""
       });
     }
     return matches;
@@ -229,7 +231,8 @@ Deno.serve(async (req: Request) => {
           let updatePayload: any = {
             tore_heim: e.homeScore, 
             tore_gast: e.awayScore, 
-            status: e.status
+            status: e.status,
+            spielminute: e.displayClock || null
           };
 
           if (isRealTeam(e.homeTeam) && e.homeTeam !== match.heim_team) {
