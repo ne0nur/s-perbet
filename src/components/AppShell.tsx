@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Outlet, useLocation, useNavigate } from 'react-router-dom'
-import GooeyNav, { type GooeyNavItem } from './ui/GooeyNav'
+import { BottomNav } from './BottomNav'
 import Plasma from './ui/Plasma'
 import { ToastContainer } from './ToastContainer'
 import { useAuthStore } from '../stores/authStore'
@@ -48,6 +48,7 @@ export function AppShell() {
   const [bonusTippsCount, setBonusTippsCount] = useState(0)
   const { isInstallable, triggerInstall } = usePwaStore()
   const [showOnboarding, setShowOnboarding] = useState(false)
+  const [plasmaColor, setPlasmaColor] = useState('#f9bd22')
   const [onboardingSlide, setOnboardingSlide] = useState(0)
 
   const [achievementsCount, setAchievementsCount] = useState(() => {
@@ -65,6 +66,13 @@ export function AppShell() {
 
   const { level, xpCurrent, xpRequired, xpPct } = calculateLevelDetails(punkte, achievementsCount, bonusTippsCount)
   const { initPresence, cleanupPresence } = usePresenceStore()
+
+  // Plasma background — read app color from CSS variable dynamically
+  useEffect(() => {
+    const el = document.documentElement
+    const color = getComputedStyle(el).getPropertyValue('--primary-fixed-dim').trim()
+    if (color) setPlasmaColor(color)
+  }, [])
 
   // Real-time Active Presence Tracking based on page visibility and user activity
   useEffect(() => {
@@ -321,17 +329,9 @@ export function AppShell() {
     { to: '/profile',   icon: HoverUserIcon,    label: t('profile') },
   ]
 
-  const gooeyNavItems: GooeyNavItem[] = [
-    { to: '/dashboard', label: t('games') },
-    { to: '/tabelle',   label: t('table') },
-    { to: '/global',    label: t('global') },
-    { to: '/league',    label: t('league') },
-    { to: '/profile',   label: t('profile') },
-  ]
-
   return (
     <div className="h-[100dvh] w-full bg-background flex flex-col md:flex-row overflow-hidden select-none">
-      <Plasma color="#f9bd22" speed={0.5} opacity={0.10} scale={1.3} />
+      <Plasma color={plasmaColor} speed={0.5} opacity={0.10} scale={1.3} />
       <NetworkIndicator />
       {/* Desktop Sidebar Navigation */}
       <aside className="hidden md:flex md:flex-col w-64 border-r border-white/5 bg-surface/30 backdrop-blur-xl shrink-0 p-5 justify-between sticky top-0 h-screen">
@@ -500,18 +500,7 @@ export function AppShell() {
         </main>
       </div>
 
-      {/* Gooey Nav — mobile bottom navigation, freistehend */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 pb-2 pt-1 pointer-events-none">
-        <div className="pointer-events-auto flex justify-center">
-          <GooeyNav
-            items={gooeyNavItems}
-            animationTime={600}
-            particleCount={12}
-            particleDistances={[80, 8]}
-            colors={[1, 2, 3, 1, 2, 3, 1, 4]}
-          />
-        </div>
-      </div>
+      <BottomNav />
       <ToastContainer />
 
       {/* Fullscreen Onboarding Carousel Overlay */}

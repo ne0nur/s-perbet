@@ -9,37 +9,28 @@ interface PodiumBadgeProps {
 
 const RANK_CONFIG = {
   1: {
-    gradient: '#F2C94C',
-    glow: '0 0 24px rgba(242,201,76,0.9), 0 0 48px rgba(242,201,76,0.4)',
-    particleColor: 'rgba(255,220,100,0.95)',
-    particleCount: 14,
-    textShadow: '0 0 16px rgba(242,201,76,0.7), 0 0 32px rgba(242,201,76,0.3)',
-    sizeMap: { sm: 28, md: 36, lg: 48 },
-    lightning: true,
     textColor: '#F2C94C',
-    dropGlow: true,
+    textShadow: '0 0 12px rgba(242,201,76,0.5)',
+    particleColor: 'rgba(255,220,100,0.8)',
+    particleCount: 10,
+    sizeMap: { sm: 26, md: 34, lg: 44 },
+    lightning: true,
   },
   2: {
-    gradient: '#CBD5E1',
-    glow: '0 0 16px rgba(203,213,225,0.6), 0 0 32px rgba(203,213,225,0.25)',
-    particleColor: 'rgba(220,230,245,0.85)',
-    particleCount: 8,
-    textShadow: '0 0 10px rgba(203,213,225,0.5)',
-    sizeMap: { sm: 24, md: 30, lg: 40 },
-    lightning: false,
     textColor: '#CBD5E1',
-    dropGlow: true,
-  },
-  3: {
-    gradient: '#CD7F32',
-    glow: '0 0 12px rgba(205,127,50,0.5), 0 0 24px rgba(205,127,50,0.2)',
-    particleColor: 'rgba(220,150,80,0.8)',
-    particleCount: 5,
-    textShadow: '0 0 8px rgba(205,127,50,0.4)',
+    textShadow: '0 0 8px rgba(203,213,225,0.4)',
+    particleColor: 'rgba(200,215,235,0.7)',
+    particleCount: 6,
     sizeMap: { sm: 22, md: 28, lg: 36 },
     lightning: false,
+  },
+  3: {
     textColor: '#CD7F32',
-    dropGlow: true,
+    textShadow: '0 0 6px rgba(205,127,50,0.35)',
+    particleColor: 'rgba(200,140,70,0.65)',
+    particleCount: 4,
+    sizeMap: { sm: 20, md: 26, lg: 32 },
+    lightning: false,
   },
 };
 
@@ -69,13 +60,13 @@ export function PodiumBadge({ rank, size = 'md', className = '' }: PodiumBadgePr
     for (let i = 0; i < count; i++) {
       p.push({
         id: i,
-        particleSize: 2 + pseudoRand(seed + i * 11) * 3,
+        particleSize: 1.5 + pseudoRand(seed + i * 11) * 2,
         left: `${10 + pseudoRand(seed + i * 7) * 80}%`,
-        top: `${45 + pseudoRand(seed + i * 13) * 50}%`,
-        dur: `${2.5 + pseudoRand(seed + i * 17) * 2.5}s`,
-        delay: `${pseudoRand(seed + i * 19) * 2.5}s`,
-        sway: `${2 + pseudoRand(seed + i * 23) * 4}px`,
-        opacity: 0.5 + pseudoRand(seed + i * 29) * 0.45,
+        top: `${40 + pseudoRand(seed + i * 13) * 55}%`,
+        dur: `${3 + pseudoRand(seed + i * 17) * 3}s`,
+        delay: `${pseudoRand(seed + i * 19) * 3}s`,
+        sway: `${1.5 + pseudoRand(seed + i * 23) * 3}px`,
+        opacity: 0.3 + pseudoRand(seed + i * 29) * 0.35,
       });
     }
     return p;
@@ -84,28 +75,17 @@ export function PodiumBadge({ rank, size = 'md', className = '' }: PodiumBadgePr
   return (
     <div
       className={`relative flex items-center justify-center select-none ${className}`}
-      style={{ width: px + 12, height: px + 12 }}
+      style={{ width: px + 8, height: px + 8 }}
     >
-      {/* Lightning Canvas (Gold only) — rectangular area behind number */}
+      {/* Lightning Canvas (Gold only) — subtle, behind everything */}
       {config.lightning && (
-        <div className="absolute inset-[-12px] overflow-hidden z-0">
-          <Lightning hue={40} speed={0.8} intensity={1.5} size={3.5} />
+        <div className="absolute inset-[-8px] overflow-hidden z-0">
+          <Lightning hue={40} speed={0.5} intensity={0.7} size={2.5} />
         </div>
       )}
 
-      {/* Glow behind number */}
-      {config.dropGlow && (
-        <div
-          className="absolute inset-0 rounded-full animate-podium-glow opacity-40"
-          style={{
-            boxShadow: config.glow,
-            animationDuration: rank === 1 ? '2.5s' : rank === 2 ? '3.5s' : '4s',
-          }}
-        />
-      )}
-
-      {/* Particles */}
-      <div className="absolute inset-[-8px] pointer-events-none z-10 overflow-visible">
+      {/* Subtle Particles */}
+      <div className="absolute inset-[-6px] pointer-events-none z-10 overflow-visible">
         {particles.map(p => (
           <div
             key={p.id}
@@ -119,14 +99,14 @@ export function PodiumBadge({ rank, size = 'md', className = '' }: PodiumBadgePr
               animationDuration: p.dur,
               animationDelay: p.delay,
               '--sway': p.sway,
-              boxShadow: `0 0 ${p.particleSize * 5}px ${config.particleColor}, 0 0 ${p.particleSize * 10}px ${config.particleColor}`,
-              background: 'rgba(255,255,255,0.9)',
+              boxShadow: `0 0 ${p.particleSize * 3}px ${config.particleColor}`,
+              background: 'rgba(255,255,255,0.8)',
             } as React.CSSProperties}
           />
         ))}
       </div>
 
-      {/* Number — no circle, just the digit with glow */}
+      {/* Number — clean, no circle, just the digit */}
       <span
         className="relative z-40 font-bold tabular-nums animate-podium-float"
         style={{
@@ -136,9 +116,6 @@ export function PodiumBadge({ rank, size = 'md', className = '' }: PodiumBadgePr
           color: config.textColor,
           textShadow: config.textShadow,
           animationDuration: rank === 1 ? '3.8s' : rank === 2 ? '4.2s' : '4.6s',
-          filter: config.lightning
-            ? 'drop-shadow(0 0 8px rgba(242,201,76,0.6))'
-            : undefined,
         }}
       >
         {rank}

@@ -103,7 +103,7 @@ function LeaderboardSection({
               </div>
               <div className="relative shrink-0">
                 <AvatarLightbox src={top3[1]?.avatar_url} username={top3[1]?.username || ''} size="sm" />
-                <LevelBadge level={top3[1]?.level || 1} className="absolute -bottom-1 -right-1 z-10 text-[7px] h-3.5 w-3.5 rounded-full shadow shadow-black/80 select-none level-digit" />
+                <LevelBadge level={top3[1]?.level || 1} className="absolute -bottom-1 -right-1 z-10 text-[7px] h-3.5 w-3.5 rounded-full shadow shadow-black/80 select-none level-digit">{top3[1]?.level || 1}</LevelBadge>
               </div>
               <span className="text-[8px] text-on-surface-variant font-mono truncate w-full text-center mt-2">
                 {top3[1]?.username}
@@ -135,7 +135,7 @@ function LeaderboardSection({
             </div>
             <div className="relative shrink-0">
               <AvatarLightbox src={top3[0]?.avatar_url} username={top3[0]?.username || ''} size="md" />
-              <LevelBadge level={top3[0]?.level || 1} className="absolute -bottom-1 -right-1 z-10 text-[8px] h-4 w-4 rounded-full shadow shadow-black/80 select-none level-digit" />
+              <LevelBadge level={top3[0]?.level || 1} className="absolute -bottom-1 -right-1 z-10 text-[8px] h-4 w-4 rounded-full shadow shadow-black/80 select-none level-digit">{top3[0]?.level || 1}</LevelBadge>
             </div>
             <span className="text-[9px] text-primary-fixed-dim font-mono font-bold truncate w-full text-center mt-2">
               {top3[0]?.username}
@@ -168,7 +168,7 @@ function LeaderboardSection({
               </div>
               <div className="relative shrink-0">
                 <AvatarLightbox src={top3[2]?.avatar_url} username={top3[2]?.username || ''} size="sm" />
-                <LevelBadge level={top3[2]?.level || 1} className="absolute -bottom-1 -right-1 z-10 text-[7px] h-3.5 w-3.5 rounded-full shadow shadow-black/80 select-none level-digit" />
+                <LevelBadge level={top3[2]?.level || 1} className="absolute -bottom-1 -right-1 z-10 text-[7px] h-3.5 w-3.5 rounded-full shadow shadow-black/80 select-none level-digit">{top3[2]?.level || 1}</LevelBadge>
               </div>
               <span className="text-[9px] text-on-surface-variant font-mono truncate w-full text-center flex items-center justify-center gap-1">
                 {top3[2]?.username}
