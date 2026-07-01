@@ -27,16 +27,13 @@
   );
 }
 
-/* SüperBET GooeyNav particle colors */
-.superbet-gooey-nav {
+/* SüperBET GooeyNav — gold theme */
+.gooey-nav-container {
   --color-1: #f9bd22;   /* primary gold */
   --color-2: #fbbf24;   /* amber */
-  --color-3: #e67e22;   /* dark orange */
+  --color-3: #e67e22;   /* deep orange */
   --color-4: #ffe1a7;   /* light gold */
   --color-5: #b8860b;   /* dark goldenrod */
-}
-
-.gooey-nav-container {
   position: relative;
 }
 
@@ -54,7 +51,7 @@
   margin: 0;
   position: relative;
   z-index: 3;
-  color: white;
+  color: rgba(255,255,255,0.8);
   text-shadow: 0 1px 1px hsl(205deg 30% 10% / 0.2);
 }
 
@@ -67,7 +64,7 @@
     color 0.3s ease,
     box-shadow 0.3s ease;
   box-shadow: 0 0 0.5px 1.5px transparent;
-  color: white;
+  color: rgba(255,255,255,0.8);
 }
 
 .gooey-nav-container nav ul li a {
@@ -75,18 +72,24 @@
   padding: 0.6em 1em;
   color: inherit;
   text-decoration: none;
+  font-family: var(--font-mono, monospace);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
 }
 
 .gooey-nav-container nav ul li:focus-within:has(:focus-visible) {
-  box-shadow: 0 0 0.5px 1.5px white;
+  box-shadow: 0 0 0.5px 1.5px rgba(249,189,34,0.6);
 }
 
+/* Active pill — gold instead of white */
 .gooey-nav-container nav ul li::after {
   content: '';
   position: absolute;
   inset: 0;
   border-radius: 10px;
-  background: white;
+  background: #f9bd22;
   opacity: 0;
   transform: scale(0);
   transition: all 0.3s ease;
@@ -94,7 +97,7 @@
 }
 
 .gooey-nav-container nav ul li.active {
-  color: #1a1a1a;
+  color: #1a1200;
   text-shadow: none;
 }
 
@@ -117,12 +120,17 @@
 }
 
 .gooey-nav-container .effect.text {
-  color: white;
+  color: rgba(255,255,255,0.8);
   transition: color 0.3s ease;
+  font-family: var(--font-mono, monospace);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
 }
 
 .gooey-nav-container .effect.text.active {
-  color: #1a1a1a;
+  color: #1a1200;
 }
 
 .gooey-nav-container .effect.filter {
@@ -135,14 +143,15 @@
   position: absolute;
   inset: -75px;
   z-index: -2;
-  background: black;
+  background: #0e131f;
 }
 
+/* Gold pill in the filter layer */
 .gooey-nav-container .effect.filter::after {
   content: '';
   position: absolute;
   inset: 0;
-  background: white;
+  background: #f9bd22;
   transform: scale(0);
   opacity: 0;
   z-index: -1;

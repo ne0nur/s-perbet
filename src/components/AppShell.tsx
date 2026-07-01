@@ -500,9 +500,9 @@ export function AppShell() {
         </main>
       </div>
 
-      {/* Gooey Nav — mobile bottom navigation */}
-      <div className="md:hidden fixed bottom-4 left-4 right-4 max-w-md mx-auto z-50 bg-surface/85 backdrop-blur-3xl rounded-2xl shadow-[0_12px_40px_rgba(0,0,0,0.8)] border border-white/10 overflow-hidden select-none">
-        <div className="flex justify-around items-center h-[64px] px-2 relative">
+      {/* Gooey Nav — mobile bottom navigation, freistehend */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 pb-2 pt-1 pointer-events-none">
+        <div className="pointer-events-auto flex justify-center">
           <GooeyNav
             items={gooeyNavItems}
             animationTime={600}
