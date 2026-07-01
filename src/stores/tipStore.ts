@@ -8,6 +8,7 @@ interface TipState {
   fehler: string | null
   cacheTipps: Record<number, Tip[]>
   cacheTimestamps: Record<number, number>
+  trendVersion: number
   ladeMeineTipps: (spieltag?: number, forceRefresh?: boolean) => Promise<void>
   tippSpeichern: (matchId: string, tippHeim: number, tippGast: number, spieltag?: number) => Promise<void>
   getTippFuerMatch: (matchId: string) => Tip | undefined
@@ -24,6 +25,7 @@ export const useTipStore = create<TipState>()(
       fehler: null,
       cacheTipps: {},
       cacheTimestamps: {},
+      trendVersion: 0,
 
       ladeMeineTipps: async (spieltag?: number, forceRefresh?: boolean) => {
         const now = Date.now()
@@ -132,6 +134,8 @@ export const useTipStore = create<TipState>()(
           }
 
           await get().ladeMeineTipps(spieltag, true)
+          // Increment trend version to trigger trend stats re-fetch
+          set(s => ({ trendVersion: s.trendVersion + 1 }))
         } catch (error) {
           console.error('Fehler beim Speichern des Tipps:', error)
           const msg = (error as Error | null)?.message || 'Unerwarteter Fehler beim Speichern'
@@ -164,6 +168,7 @@ export const useTipStore = create<TipState>()(
         meineTipps: state.meineTipps,
         cacheTipps: state.cacheTipps,
         cacheTimestamps: state.cacheTimestamps,
+        trendVersion: 0, // never persist — fresh starts at 0
       }),
     }
   )

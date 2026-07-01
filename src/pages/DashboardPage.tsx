@@ -15,10 +15,11 @@ import { getTournamentLogo } from '../lib/utils'
 
 export function DashboardPage() {
   const { t, language } = useTranslation()
-  const { matches, aktuellerSpieltag, aktuelleSaison, selectedTournament, isLaden, setSpieltag, ladeMatches, initialisiereSpieltag, letztesUpdate, abonnierenRealtimeMatches, setSelectedTournament } = useMatchStore()
+  const { matches, aktuellerSpieltag, aktuelleSaison, selectedTournament, isLaden, setSpieltag, ladeMatches, initialisiereSpieltag, letztesUpdate, abonnierenRealtimeMatches, abonnierenHeartbeat, setSelectedTournament } = useMatchStore()
   const ladeMeineTipps = useTipStore(s => s.ladeMeineTipps)
   const meineTipps = useTipStore(s => s.meineTipps)
   const getTippFuerMatch = useTipStore(s => s.getTippFuerMatch)
+  const trendVersion = useTipStore(s => s.trendVersion)
   const { user } = useAuthStore()
   const tippsFreigeschaltet = useSettingsStore(s => s.tippsFreigeschaltet)
   const navigate = useNavigate()
@@ -56,7 +57,8 @@ export function DashboardPage() {
     initialized.current = true
     initialisiereSpieltag()
     abonnierenRealtimeMatches()
-  }, [initialisiereSpieltag, abonnierenRealtimeMatches])
+    abonnierenHeartbeat()
+  }, [initialisiereSpieltag, abonnierenRealtimeMatches, abonnierenHeartbeat])
 
   useEffect(() => {
     ladeMatches(aktuellerSpieltag)
@@ -171,7 +173,7 @@ export function DashboardPage() {
     })
     
     return () => { isMounted = false }
-  }, [anzeigeMatches])  // Group matches by tournament
+  }, [anzeigeMatches, trendVersion])  // Group matches by tournament
   
   const matchesByTournament = useMemo(() => {
     const groups: Record<string, typeof anzeigeMatches> = {}

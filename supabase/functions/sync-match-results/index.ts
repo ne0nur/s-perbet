@@ -381,6 +381,16 @@ Deno.serve(async (req: Request) => {
       }
     }
 
+    // ─── Heartbeat: Always write last_sync timestamp so clients know the sync is alive ───
+    try {
+      await adminClient.from('app_settings').upsert({
+        key: 'last_sync',
+        value: new Date().toISOString()
+      })
+    } catch (e) {
+      console.error("Heartbeat write failed:", e)
+    }
+
     return ok({
       success: true,
       message: `${scoreUpdates} Scores + ${bracketUpdates} Bracket aktualisiert`,

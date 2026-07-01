@@ -37,6 +37,7 @@ interface MatchState {
   cacheTimestamps: Record<number, number>
   letztesUpdate: string | null
   subscription: RealtimeChannel | null
+  heartbeatSub: RealtimeChannel | null
   ladeMatches: (spieltag: number) => Promise<void>
   setSpieltag: (spieltag: number) => void
   setSaison: (saison: number) => void
@@ -46,6 +47,7 @@ interface MatchState {
   getLiveMatches: () => Match[]
   initialisiereSpieltag: () => Promise<number>
   abonnierenRealtimeMatches: () => void
+  abonnierenHeartbeat: () => void
   recalculateAktivePhase: () => Promise<void>
   cleanup: () => void
 }
@@ -65,6 +67,7 @@ export const useMatchStore = create<MatchState>()(
       cacheTimestamps: {},
       letztesUpdate: null,
       subscription: null,
+      heartbeatSub: null,
 
       ladeMatches: async (spieltag: number) => {
         const state = get()
@@ -329,6 +332,28 @@ export const useMatchStore = create<MatchState>()(
         set({ subscription: sub })
       },
 
+      abonnierenHeartbeat: () => {
+        if (get().heartbeatSub) return // Bereits abonniert
+
+        const sub = supabase
+          .channel('heartbeat-sync')
+          .on(
+            'postgres_changes',
+            { event: '*', schema: 'public', table: 'app_settings', filter: 'key=eq.last_sync' },
+            (payload) => {
+              const row = payload.new as { key: string; value: string } | null
+              if (row?.value) {
+                const d = new Date(row.value)
+                const timeString = d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+                set({ letztesUpdate: timeString })
+              }
+            }
+          )
+          .subscribe()
+
+        set({ heartbeatSub: sub })
+      },
+
       recalculateAktivePhase: async () => {
         const tourney = get().selectedTournament
         const currentSeason = get().aktuelleSaison
@@ -359,6 +384,11 @@ export const useMatchStore = create<MatchState>()(
         if (sub) {
           supabase.removeChannel(sub)
           set({ subscription: null })
+        }
+        const hb = get().heartbeatSub
+        if (hb) {
+          supabase.removeChannel(hb)
+          set({ heartbeatSub: null })
         }
       }
     }),
