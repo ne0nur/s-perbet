@@ -24,9 +24,10 @@ export function berechnePunkte(
   }
 }
 
-export function calculateLevelDetails(punkte: number, achievementsCount: number = 0, bonusTippsCount: number = 0) {
-  // Nur positive Punkte geben EXP — 0 und Minuspunkte geben nichts
-  const calculatedExp = (Math.max(0, punkte) * 10) + (achievementsCount * 50) + (bonusTippsCount * 50)
+export function calculateLevelDetails(punkte: number, achievementsCount: number = 0, bonusTippsCount: number = 0, achievementExpOverride?: number) {
+  // achievementExp by rarity: gewöhnlich=50, selten=100, episch=200, legendaer=500
+  const achievementExp = achievementExpOverride ?? (achievementsCount * 50)
+  const calculatedExp = (Math.max(0, punkte) * 10) + achievementExp + (bonusTippsCount * 50)
   const totalExp = Math.max(0, calculatedExp)
   
   let remainingExp = totalExp

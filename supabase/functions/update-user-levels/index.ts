@@ -1,9 +1,47 @@
 import { createClient } from "npm:@supabase/supabase-js@2.39.0"
 import { evaluateAchievements } from "./achievementEvaluator.ts"
 
+// EXP per rarity — MUST stay in sync with AchievementsSection.tsx RARITY_CONFIG
+const RARITY_EXP: Record<string, number> = {
+  legendary: 500, legendaer: 500,
+  epic: 200, episch: 200,
+  rare: 200, random: 200,  // "random" mapped to random rarity
+  selten: 100,
+  common: 50, gewoehnlich: 50,
+  local: 50, toxic: 50,
+}
+
+// Achievement ID → rarity lookup (compact map, keep in sync with getAchievementsList)
+const ACH_RARITY: Record<string, string> = {
+  domstadt_don: 'local', brezelfest_kral: 'local', maxi_flaneur: 'local',
+  schorle_cay: 'local', technik_museum: 'local', altpoertel_sniper: 'local',
+  speyer_boss: 'local',
+  vallah_krise: 'toxic', kupon_yirtan: 'toxic', amk_modus: 'toxic',
+  ters_koese: 'toxic', hayalet: 'toxic', ugursuz: 'toxic',
+  kral_ciplak: 'toxic', finito: 'toxic',
+  derby_baba: 'rare', der_alman: 'rare', hadi_lan: 'rare', son_dakika: 'rare',
+  cim_bom_bom: 'common', kadikoy_bogazi: 'common', kara_kartal: 'common',
+  bize_her_yer_trabzon: 'common', ilk_kan: 'common', hosgeldin_abi: 'common',
+  kardesim_benim: 'common',
+  gurbetci: 'epic', macher: 'epic', bereket: 'epic',
+  sifir_sikinti: 'epic', gegen_den_strom: 'epic',
+  kahin: 'legendary', psikopat: 'legendary', kebap_spiess: 'legendary',
+}
+
+function getAchievementExp(unlockedIds: Set<string>): number {
+  let total = 0
+  for (const id of unlockedIds) {
+    const rarity = ACH_RARITY[id] || 'common'
+    total += RARITY_EXP[rarity] || 50
+  }
+  return total
+}
+
 // Kopie von calculateLevelDetails aus utils.ts für Deno (MUST stay in sync)
-function calculateLevelDetails(punkte: number, achievementsCount: number = 0, bonusTippsCount: number = 0) {
-  const calculatedExp = (Math.max(0, punkte) * 10) + (achievementsCount * 50) + (bonusTippsCount * 50)
+function calculateLevelDetails(punkte: number, achievementsCount: number = 0, bonusTippsCount: number = 0, achievementExp?: number) {
+  // achievementExp by rarity: gewöhnlich=50, selten=100, episch=200, legendaer=500
+  const achExp = achievementExp ?? (achievementsCount * 50)
+  const calculatedExp = (Math.max(0, punkte) * 10) + achExp + (bonusTippsCount * 50)
   const totalExp = Math.max(0, calculatedExp)
 
   let remainingExp = totalExp
@@ -87,9 +125,10 @@ Deno.serve(async (req) => {
       )
       
       const achievementsCount = unlocked.size
+      const achievementExp = getAchievementExp(unlocked)
       const bonusTippsCount = 0
 
-      const details = calculateLevelDetails(profile.gesamt_punkte || 0, achievementsCount, bonusTippsCount)
+      const details = calculateLevelDetails(profile.gesamt_punkte || 0, achievementsCount, bonusTippsCount, achievementExp)
 
       updates.push({
         id: profile.id,
