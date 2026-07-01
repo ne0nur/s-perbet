@@ -8,35 +8,17 @@
     
     <!-- PWA Manifest & Service Worker -->
     <link rel="manifest" href="/manifest.json" />
-    <script>
-      if ('serviceWorker' in navigator && !window.location.hostname.includes('localhost') && !window.location.hostname.includes('127.0.0.1')) {
-        // Auto-refresh when a new service worker takes over, but ONLY if the page was already controlled
-        let refreshing = false;
-        const alreadyControlled = !!navigator.serviceWorker.controller;
-        navigator.serviceWorker.addEventListener('controllerchange', () => {
-          if (alreadyControlled && !refreshing) {
-            refreshing = true;
-            window.location.reload();
-          }
-        });
 
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js')
-            .then(reg => console.log('ServiceWorker registered:', reg.scope))
-            .catch(err => console.log('ServiceWorker registration failed:', err));
-        });
-      }
-    </script>
     
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     
     <title>SüperBET — Süper Lig Tipprunde</title>
-    <script type="module" crossorigin src="/assets/index-B-88BBvX.js"></script>
-    <link rel="modulepreload" crossorigin href="/assets/createLucideIcon-JOfA0lsc.js">
-    <link rel="modulepreload" crossorigin href="/assets/utils-BMXESuxb.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-ma7f-V6y.css">
-  </head>
+    <script type="module" crossorigin src="/assets/index-D_O0AbnW.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/createLucideIcon-BFpCA2cd.js">
+    <link rel="modulepreload" crossorigin href="/assets/utils-DEWj1C6P.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-D9lNWafa.css">
+  <link rel="manifest" href="/manifest.webmanifest"><script id="vite-plugin-pwa:register-sw" src="/registerSW.js"></script></head>
   <body>
     <div id="root"></div>
   </body>
