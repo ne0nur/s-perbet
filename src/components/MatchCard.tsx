@@ -116,9 +116,21 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
   const { language, t } = useTranslation()
   const aktivePhase = useMatchStore(s => s.aktivePhase)
 
+  const kickoffTime = new Date(match.anpfiff).getTime()
+  const now = Date.now()
   const istVorbei  = match.status === 'finished'
-  const istLive    = match.status === 'live'
-  const istUpcoming = match.status === 'upcoming'
+  const istLive    = match.status === 'live' || (match.status === 'upcoming' && kickoffTime < now)
+  const istUpcoming = match.status === 'upcoming' && kickoffTime >= now
+
+  // Re-render bei Anpfiff — auch ohne Sync zeigt die Karte sofort LIVE
+  const [, tick] = useState(0)
+  useEffect(() => {
+    if (match.status !== 'upcoming') return
+    const delay = kickoffTime - Date.now()
+    if (delay <= 0) { tick(n => n + 1); return }
+    const timer = setTimeout(() => tick(n => n + 1), delay + 500)
+    return () => clearTimeout(timer)
+  }, [kickoffTime, match.status])
 
   // Tipp-Input State
   const [tippHeim, setTippHeim] = useState(eigenerTipp?.tipp_heim ?? 0)
