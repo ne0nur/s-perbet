@@ -437,15 +437,17 @@ export function LeaguePage() {
   useEffect(() => {
     if (isLaden || filteredMatches.length === 0 || !tableScrollRef.current) return
 
-    // Find the first match that is live or upcoming
-    const activeMatch = filteredMatches.find(m => m.status === 'live' || m.status === 'upcoming')
-    if (!activeMatch) return
+    // Find the first match that is live or upcoming — scroll to one column BEFORE it
+    const activeIdx = filteredMatches.findIndex(m => m.status === 'live' || m.status === 'upcoming')
+    if (activeIdx === -1) return
+    // Eine Spalte vorher, damit das letzte Spiel noch sichtbar ist
+    const scrollMatch = activeIdx > 0 ? filteredMatches[activeIdx - 1] : filteredMatches[activeIdx]
 
     const timer = setTimeout(() => {
       const container = tableScrollRef.current
       if (!container) return
 
-      const headerEl = container.querySelector(`[data-match-id="${activeMatch.id}"]`) as HTMLElement | null
+      const headerEl = container.querySelector(`[data-match-id="${scrollMatch.id}"]`) as HTMLElement | null
       if (headerEl) {
         // Sticky columns: # (left-0, ~48px) + Player (left-8, ~120px) + Points (left-[144px], ~60px) = ~228px
         const stickyCols = container.querySelectorAll('th.sticky')
