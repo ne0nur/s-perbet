@@ -34,9 +34,9 @@ function getSpieltag(dateStr) {
     return 3
   }
   if ((month === 6 && day >= 28) || (month === 7 && day <= 3)) return 4 // Round of 32
-  if (month === 7 && day >= 4 && day <= 7) return 5 // Round of 16
-  if (month === 7 && day >= 9 && day <= 11) return 6 // QF
-  if (month === 7 && day >= 14 && day <= 15) return 7 // SF
+  if (month === 7 && day >= 4 && day <= 8) return 5 // Round of 16 (close gap on July 8)
+  if (month === 7 && day >= 9 && day <= 13) return 6 // QF (close gap on July 12-13)
+  if (month === 7 && day >= 14 && day <= 17) return 7 // SF (close gap on July 16-17)
   if (month === 7 && day >= 18) return 8 // Final/3rd Place
   
   return 1
