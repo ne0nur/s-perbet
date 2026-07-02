@@ -1,0 +1,17 @@
+.glass-surface {
+  position: relative;
+  overflow: hidden;
+  border-radius: inherit;
+  background: rgba(14, 19, 31, var(--gs-opacity, 0.4));
+  backdrop-filter: blur(var(--gs-blur, 16px));
+  -webkit-backdrop-filter: blur(var(--gs-blur, 16px));
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.glass-surface-content {
+  position: relative;
+  z-index: 1;
+}
