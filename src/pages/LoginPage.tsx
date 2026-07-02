@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../stores/authStore'
 import { supabase } from '../lib/supabase'
@@ -9,6 +9,9 @@ import { HoverLockIcon, HoverEyeIcon, HoverEyeOffIcon, HoverTrophyIcon, HoverUse
 import { useLanguageStore } from '../stores/languageStore'
 import { useTranslation } from '../utils/translations'
 import { HeaderLogo } from '../components/HeaderLogo'
+import ColorBends from '../components/ui/ColorBends'
+import { useThemeStore } from '../stores/themeStore'
+import { THEME_PRIMARY, THEME_CONTAINER } from '../lib/themeColors'
 
 type AuthView = 'login' | 'invite' | 'ask-account' | 'onboarding' | 'forgot-password'
 
@@ -16,6 +19,20 @@ export function LoginPage() {
   const { t, language } = useTranslation()
   const { setLanguage } = useLanguageStore()
   const [view, setView] = useState<AuthView>('login')
+
+  const theme = useThemeStore(s => s.theme)
+  const colorBendsColors = useMemo(() => {
+    const primary = THEME_PRIMARY[theme]
+    const container = THEME_CONTAINER[theme]
+    const darkenHex = (hex: string, amount: number = 30) => {
+      const h = hex.replace('#', '')
+      const r = Math.max(0, parseInt(h.slice(0, 2), 16) - amount)
+      const g = Math.max(0, parseInt(h.slice(2, 4), 16) - amount)
+      const b = Math.max(0, parseInt(h.slice(4, 6), 16) - amount)
+      return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`
+    }
+    return [primary, container, darkenHex(primary)]
+  }, [theme])
   
   // Login states
   const [username, setUsername] = useState('')
@@ -330,6 +347,7 @@ export function LoginPage() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4 animate-page-enter relative overflow-hidden">
+      <ColorBends colors={colorBendsColors} speed={0.12} scale={0.85} intensity={0.9} />
       {/* Stadium Light & Grid Backdrop */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none select-none z-0 opacity-30">
         {/* Pitch Lines (Stadion Spielfeldlinien) */}

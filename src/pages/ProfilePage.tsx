@@ -852,46 +852,50 @@ export function ProfilePage() {
   )
 
   return (
-    <div className="min-h-full px-3 md:px-6 lg:px-8 pt-4 md:pt-6 pb-24 md:pb-8 max-w-[1200px] mx-auto w-full animate-page-enter">
+    <div className="min-h-full px-3 md:px-6 lg:px-8 pt-4 md:pt-6 pb-24 md:pb-8 max-w-[1600px] mx-auto w-full animate-page-enter">
       
-      {/* Profile Header (Always visible) */}
-      <div className="mb-6">
-        {(() => {
-          const { level, xpCurrent, xpRequired, xpPct } = calculateLevelDetails(profil?.gesamt_punkte || 0, unlockedSet.size, bonusTipps.length)
-          let levelTitle = ''
-          if (profil) {
-            const ranks = getRangTitelSystem(language)
-            for (let i = ranks.length - 1; i >= 0; i--) {
-              if (level >= ranks[i].lvl) {
-                levelTitle = ranks[i].title
-                break
+      <div className="flex flex-col lg:grid lg:grid-cols-12 gap-6 lg:gap-8 items-start w-full">
+        {/* Left Column: User Profile Summary (Sticky on Desktop) */}
+        <div className="w-full lg:col-span-4 lg:sticky lg:top-[80px] space-y-6">
+          {(() => {
+            const { level, xpCurrent, xpRequired, xpPct } = calculateLevelDetails(profil?.gesamt_punkte || 0, unlockedSet.size, bonusTipps.length)
+            let levelTitle = ''
+            if (profil) {
+              const ranks = getRangTitelSystem(language)
+              for (let i = ranks.length - 1; i >= 0; i--) {
+                if (level >= ranks[i].lvl) {
+                  levelTitle = ranks[i].title
+                  break
+                }
               }
+              if (!levelTitle) levelTitle = ranks[0].title
             }
-            if (!levelTitle) levelTitle = ranks[0].title
-          }
-          return (
-            <UserInfoSettings
-              username={username}
-              setUsername={setUsername}
-              avatarUrl={avatarUrl}
-              uploading={uploading}
-              fileRef={fileRef}
-              handleBildUpload={handleBildUpload}
-              handleUsernameUpdate={handleUsernameUpdate}
-              isAdmin={profil?.is_admin || false}
-              userRank={profil?.rang || null}
-              levelTitle={levelTitle}
-              xpCurrent={xpCurrent}
-              xpRequired={xpRequired}
-              xpPct={xpPct}
-              level={level}
-            />
-          )
-        })()}
-      </div>
+            return (
+              <UserInfoSettings
+                username={username}
+                setUsername={setUsername}
+                avatarUrl={avatarUrl}
+                uploading={uploading}
+                fileRef={fileRef}
+                handleBildUpload={handleBildUpload}
+                handleUsernameUpdate={handleUsernameUpdate}
+                isAdmin={profil?.is_admin || false}
+                userRank={profil?.rang || null}
+                levelTitle={levelTitle}
+                xpCurrent={xpCurrent}
+                xpRequired={xpRequired}
+                xpPct={xpPct}
+                level={level}
+              />
+            )
+          })()}
+        </div>
 
-      {/* Segmented Control Navigation */}
-      <div className="bg-surface-container/50 border border-white/5 p-1 rounded-2xl flex overflow-x-auto no-scrollbar snap-x snap-mandatory gap-1 mb-6 backdrop-blur-md">
+        {/* Right Column: Navigation & Content Tab Areas */}
+        <div className="w-full lg:col-span-8 flex flex-col min-h-0 space-y-6">
+          
+          {/* Segmented Control Navigation */}
+          <div className="bg-surface-container/50 border border-white/5 p-1 rounded-2xl flex overflow-x-auto no-scrollbar snap-x snap-mandatory gap-1 backdrop-blur-md">
         <button
           onClick={() => setActiveTab('overview')}
           className={`shrink-0 snap-start px-3 py-2 rounded-xl text-[10px] md:text-xs font-mono uppercase tracking-wider transition-all duration-200 cursor-pointer text-center whitespace-nowrap ${
@@ -1110,6 +1114,8 @@ export function ProfilePage() {
           </div>
         )}
 
+        </div>
+        </div>
       </div>
     </div>
   )

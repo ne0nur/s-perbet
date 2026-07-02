@@ -3,6 +3,7 @@ import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { BottomNav } from './BottomNav'
 import ColorBends from './ui/ColorBends'
 import Dock, { type DockItemData } from './ui/Dock'
+import ShinyText from './ui/ShinyText'
 import { ToastContainer } from './ToastContainer'
 import { useAuthStore } from '../stores/authStore'
 import { usePresenceStore } from '../stores/presenceStore'
@@ -358,16 +359,15 @@ export function AppShell() {
       
       {/* Desktop Top Bar (hidden on mobile) */}
       <header className="hidden md:flex items-center justify-between px-8 h-16 shrink-0 relative z-20 border-b border-white/[0.03] backdrop-blur-sm">
-        <div className="flex items-center">
-          {/* Brand Logo — clean, modern */}
-          <div className="flex items-center">
-            <span className="text-sm font-black text-on-surface tracking-tight leading-none">
-              SÜPER<span className="text-primary-fixed-dim">BET</span>
-            </span>
-            <span className="text-[7px] font-mono font-bold text-on-surface-variant/30 uppercase tracking-[0.3em] leading-none ml-2.5 mt-px">
-              PRIVATE TIPPRUNDE
-            </span>
-          </div>
+        <div className="flex items-center gap-3">
+          {/* Brand Logo — premium shimmer & animated entry */}
+          <HeaderLogo size="sm" />
+          <span className="text-sm font-black tracking-tight leading-none uppercase">
+            <ShinyText text="SÜPERBET" speed={3.5} className="font-extrabold" />
+          </span>
+          <span className="text-[7px] font-mono font-bold text-on-surface-variant/35 uppercase tracking-[0.3em] leading-none ml-1 mt-px">
+            PRIVATE TIPPRUNDE
+          </span>
         </div>
         <div className="flex items-center gap-4">
           {/* PWA Install */}
@@ -476,7 +476,7 @@ export function AppShell() {
 
         {/* Content */}
         <main className="flex-1 min-h-0 flex flex-col overflow-hidden">
-          <div className="flex-1 flex flex-col min-h-0 md:max-w-7xl md:mx-auto md:w-full md:px-4 native-scroll pb-28 md:pb-28">
+          <div className="flex-1 flex flex-col min-h-0 md:max-w-[1600px] md:mx-auto md:w-full md:px-6 native-scroll pb-28 md:pb-28">
             <AnimatedOutlet />
           </div>
         </main>
