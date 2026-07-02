@@ -18,6 +18,22 @@ export const THEME_CONTAINER: Record<AppTheme, string> = {
   teal: '#14b8a6',
 }
 
+/** Convert hex to HSL hue (0-360). Returns 40 (gold) for unrecognized colors. */
+export function hexToHue(hex: string): number {
+  const h = hex.replace('#', '')
+  const r = parseInt(h.slice(0, 2), 16) / 255
+  const g = parseInt(h.slice(2, 4), 16) / 255
+  const b = parseInt(h.slice(4, 6), 16) / 255
+  const max = Math.max(r, g, b), min = Math.min(r, g, b)
+  if (max === min) return 0
+  let hue = 0
+  const d = max - min
+  if (max === r) hue = ((g - b) / d + (g < b ? 6 : 0)) * 60
+  else if (max === g) hue = ((b - r) / d + 2) * 60
+  else hue = ((r - g) / d + 4) * 60
+  return Math.round(hue)
+}
+
 /** Hook: current theme's primary hex color */
 export function useAppColor(): string {
   return THEME_PRIMARY[useThemeStore(s => s.theme)]

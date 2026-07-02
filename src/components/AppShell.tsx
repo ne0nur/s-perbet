@@ -357,11 +357,19 @@ export function AppShell() {
       <NetworkIndicator />
       
       {/* Desktop Top Bar (hidden on mobile) */}
-      <header className="hidden md:flex items-center justify-between px-6 h-14 shrink-0 relative z-20 border-b border-white/[0.03]">
-        <div className="flex items-center gap-3">
-          <HeaderLogo size="sm" />
+      <header className="hidden md:flex items-center justify-between px-8 h-16 shrink-0 relative z-20 border-b border-white/[0.03] backdrop-blur-sm">
+        <div className="flex items-center">
+          {/* Brand Logo — clean, modern */}
+          <div className="flex items-center">
+            <span className="text-sm font-black text-on-surface tracking-tight leading-none">
+              SÜPER<span className="text-primary-fixed-dim">BET</span>
+            </span>
+            <span className="text-[7px] font-mono font-bold text-on-surface-variant/30 uppercase tracking-[0.3em] leading-none ml-2.5 mt-px">
+              PRIVATE TIPPRUNDE
+            </span>
+          </div>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-4">
           {/* PWA Install */}
           {isInstallable && (
             <button
@@ -468,19 +476,19 @@ export function AppShell() {
 
         {/* Content */}
         <main className="flex-1 min-h-0 flex flex-col overflow-hidden">
-          <div className="flex-1 flex flex-col min-h-0 md:max-w-6xl md:mx-auto md:w-full native-scroll pb-28 md:pb-24">
+          <div className="flex-1 flex flex-col min-h-0 md:max-w-7xl md:mx-auto md:w-full md:px-4 native-scroll pb-28 md:pb-28">
             <AnimatedOutlet />
           </div>
         </main>
       </div>
 
       {/* Desktop Floating Dock (hidden on mobile) */}
-      <div className="hidden md:block fixed bottom-5 left-1/2 -translate-x-1/2 z-50">
+      <div className="hidden md:block fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
         <Dock
           items={dockItems}
-          magnification={52}
-          distance={140}
-          baseItemSize={38}
+          magnification={68}
+          distance={180}
+          baseItemSize={48}
         />
       </div>
 

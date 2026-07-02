@@ -6,6 +6,7 @@ interface PodiumBadgeProps {
   size?: 'sm' | 'md' | 'lg';
   className?: string;
   primaryColor?: string;
+  lightningHue?: number;
 }
 
 const RANK_CONFIG = {
@@ -32,7 +33,7 @@ function pseudoRand(seed: number): number {
   return x - Math.floor(x);
 }
 
-export function PodiumBadge({ rank, size = 'md', className = '', primaryColor }: PodiumBadgeProps) {
+export function PodiumBadge({ rank, size = 'md', className = '', primaryColor, lightningHue = 40 }: PodiumBadgeProps) {
   const rank1Config = {
     textColor: primaryColor || '#F2C94C',
     textShadow: primaryColor ? `0 0 12px ${primaryColor}80` : '0 0 12px rgba(242,201,76,0.5)',
@@ -82,7 +83,7 @@ export function PodiumBadge({ rank, size = 'md', className = '', primaryColor }:
       {/* Lightning Canvas (Gold only) — subtle, behind everything */}
       {config.lightning && (
         <div className="absolute inset-[-8px] overflow-hidden z-0">
-          <Lightning hue={40} speed={0.5} intensity={0.7} size={2.5} />
+          <Lightning hue={lightningHue} speed={0.5} intensity={0.7} size={2.5} />
         </div>
       )}
 

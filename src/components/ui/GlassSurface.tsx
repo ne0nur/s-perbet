@@ -1,8 +1,8 @@
 /*
  * SüperBET GlassSurface — Adapted from reactbits.dev (MIT)
- * Premium glassmorphism container for desktop.
+ * Tailored for dark-mode glass overlay on mobile BottomNav.
+ * Uses backdrop-filter blur + semi-transparent background for a premium glass look.
  */
-
 import React from 'react';
 import './GlassSurface.css';
 
@@ -12,28 +12,27 @@ export interface GlassSurfaceProps {
   style?: React.CSSProperties;
   blur?: number;
   opacity?: number;
+  saturation?: number;
 }
 
 const GlassSurface: React.FC<GlassSurfaceProps> = ({
   children,
   className = '',
   style = {},
-  blur = 16,
-  opacity = 0.4,
+  blur = 12,
+  opacity = 0.35,
+  saturation = 1.5,
 }) => {
-  const vars = {
-    '--gs-blur': `${blur}px`,
-    '--gs-opacity': opacity,
+  const containerStyle: React.CSSProperties = {
+    ...style,
+    '--gb-blur': `${blur}px`,
+    '--gb-opacity': opacity,
+    '--gb-saturation': saturation,
   } as React.CSSProperties;
 
   return (
-    <div
-      className={`glass-surface ${className}`}
-      style={{ ...vars, ...style }}
-    >
-      <div className="glass-surface-content">
-        {children}
-      </div>
+    <div className={`glass-surface ${className}`} style={containerStyle}>
+      {children}
     </div>
   );
 };

@@ -3,6 +3,7 @@ import { NavLink, useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { HoverTrophyIcon, HoverGlobeIcon, HoverUserIcon, HoverUsersIcon, HoverChartBarIcon } from './icons/HoverIcons'
 import { useTranslation } from '../utils/translations'
+import GlassSurface from './ui/GlassSurface'
 
 export function BottomNav() {
   const location = useLocation()
@@ -27,9 +28,9 @@ export function BottomNav() {
   }
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden select-none pb-2 pt-1">
-      <div className="flex justify-center items-center h-[52px] px-4 relative">
-        {tabs.map(({ to, icon: Icon, label }, index) => {
+    <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden select-none pb-3 pt-1 px-2">
+      <GlassSurface blur={16} opacity={0.25} saturation={1.8} className="rounded-2xl">
+      <div className="flex justify-center items-center h-[52px] px-1 relative">\n        {tabs.map(({ to, icon: Icon, label }, index) => {
           const isActive = activeIndex === index
 
           return (
@@ -89,6 +90,7 @@ export function BottomNav() {
           )
         })}
       </div>
+      </GlassSurface>
     </nav>
   )
 }
