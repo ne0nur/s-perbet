@@ -6,6 +6,8 @@ import Dock, { type DockItemData } from './ui/Dock'
 import { ToastContainer } from './ToastContainer'
 import { useAuthStore } from '../stores/authStore'
 import { usePresenceStore } from '../stores/presenceStore'
+import { useThemeStore } from '../stores/themeStore'
+import { THEME_PRIMARY } from '../lib/themeColors'
 import { supabase } from '../lib/supabase'
 import { calculateLevelDetails, getLevelBadgeStyle } from '../lib/utils'
 import { LevelBadge } from './ui/LevelBadge'
@@ -49,7 +51,6 @@ export function AppShell() {
   const [bonusTippsCount, setBonusTippsCount] = useState(0)
   const { isInstallable, triggerInstall } = usePwaStore()
   const [showOnboarding, setShowOnboarding] = useState(false)
-  const [plasmaColor, setPlasmaColor] = useState('#f9bd22')
   const [onboardingSlide, setOnboardingSlide] = useState(0)
 
   const [achievementsCount, setAchievementsCount] = useState(() => {
@@ -68,12 +69,9 @@ export function AppShell() {
   const { level, xpCurrent, xpRequired, xpPct } = calculateLevelDetails(punkte, achievementsCount, bonusTippsCount)
   const { initPresence, cleanupPresence } = usePresenceStore()
 
-  // Plasma background — read app color from CSS variable dynamically
-  useEffect(() => {
-    const el = document.documentElement
-    const color = getComputedStyle(el).getPropertyValue('--primary-fixed-dim').trim()
-    if (color) setPlasmaColor(color)
-  }, [])
+  // Plasma background — reactive to theme changes
+  const theme = useThemeStore(s => s.theme)
+  const plasmaColor = THEME_PRIMARY[theme]
 
   // Real-time Active Presence Tracking based on page visibility and user activity
   useEffect(() => {
