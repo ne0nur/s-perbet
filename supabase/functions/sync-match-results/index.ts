@@ -112,13 +112,35 @@ async function fetchEspnScores(tournament: string, dateStr: string): Promise<Esp
 
       let s = "upcoming";
       let halftime = false;
-      const sn = ev.status.type.name;
-      // NUR "FINAL" = wirklich beendet. "FULL_TIME" kann in KO-Spielen Verlängerung bedeuten!
-      if (sn.includes("FINAL") && !sn.includes("FULL_TIME")) s = "finished";
-      else if (sn.includes("PENALTY")) s = "live";
-      else if (sn.includes("HALFTIME") || sn.includes("HALF_TIME")) { s = "live"; halftime = true; }
-      else if (sn.includes("EXTRA_TIME") || sn.includes("OVERTIME") || sn.includes("IN_PROGRESS") || sn.includes("HALF") || sn.includes("FULL_TIME")) s = "live";
-      else if (sn.includes("POSTPONED") || sn.includes("CANCELED")) s = "postponed";
+      const statusType = ev.status.type;
+      const sn = statusType.name;
+      const isCompleted = statusType.completed === true;
+      const state = statusType.state; // "pre" | "in" | "post"
+
+      // ─── DEFINITIVE: ESPN's state/completed fields ───
+      // "post" = match over (full time, no matter the label)
+      // "completed" = true → match is done
+      // These are the SOURCE OF TRUTH. status.name is just a display label.
+      if (isCompleted || state === "post") {
+        // Always map to finished — ESPN says it's done.
+        // STATUS_FULL_TIME → regulation finished (normal)
+        // STATUS_FINAL_AET → after extra time
+        // STATUS_FINAL → penalty shootout or group stage finish
+        s = "finished";
+      }
+      // ─── LIVE STATES (only if not completed) ───
+      else if (sn.includes("PENALTY")) {
+        s = "live"; // Penalties in progress
+      } else if (sn.includes("HALFTIME") || sn.includes("HALF_TIME")) {
+        s = "live"; halftime = true;
+      } else if (sn.includes("EXTRA_TIME") || sn.includes("OVERTIME") || sn.includes("IN_PROGRESS") || sn.includes("HALF") || sn.includes("FULL_TIME")) {
+        s = "live"; // These only reach here if completed=false / state≠"post"
+      }
+      // ─── POSTPONED ───
+      else if (sn.includes("POSTPONED") || sn.includes("CANCELED")) {
+        s = "postponed";
+      }
+      // else: stays "upcoming" (STATUS_SCHEDULED or unknown)
       
       matches.push({
         homeTeam: home.team?.name || "TBA",
