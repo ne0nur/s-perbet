@@ -274,9 +274,19 @@ Deno.serve(async (req: Request) => {
         // Time-based fallback NUR wenn kein ESPN-Match gefunden wurde ODER ESPN "upcoming" sagt
         const hasEspnData = !!e;
         if (match.status === "upcoming" && hours >= -0.25) ns = "live";
-        // LIVE → FINISHED nur wenn: (a) kein ESPN-Daten, ODER (b) ESPN selbst finished meldet
-        // NIEMALS live-Spiele in der Verlängerung zwangsbeenden!
-        if (match.status === "live" && hours > 2.5 && !hasEspnData) ns = "finished";
+        // LIVE → FINISHED:
+        // (a) >3.5h → Spiel garantiert vorbei (inkl. Verlängerung+Elfmeter+30min Puffer)
+        // (b) >2.5h + kein ESPN-Daten
+        // (c) >2.5h + Scores vorhanden → Spiel gelaufen, ESPN hängt (z.B. STATUS_FULL_TIME ohne FINAL)
+        if (match.status === "live") {
+          if (hours > 3.5) {
+            ns = "finished";
+          } else if (hours > 2.5 && !hasEspnData) {
+            ns = "finished";
+          } else if (hours > 2.5 && match.tore_heim !== null && match.tore_gast !== null) {
+            ns = "finished";
+          }
+        }
         if (match.status === "upcoming" && hours > 3) ns = "finished";
 
         if (ns && ns !== match.status) {
