@@ -13,6 +13,8 @@ import { AvatarLightbox } from '../components/AvatarLightbox'
 import { useTranslation } from '../utils/translations'
 import { getCached, setCache, CACHE_KEYS } from '../lib/cache'
 import { useToastStore } from '../stores/toastStore'
+import { useThemeStore } from '../stores/themeStore'
+import { THEME_PRIMARY } from '../lib/themeColors'
 
 interface RanglisteEintrag {
   id: string
@@ -70,6 +72,7 @@ function LeaderboardSection({
   isDesktop?: boolean
 }) {
   const { t } = useTranslation()
+  const primaryColor = THEME_PRIMARY[useThemeStore(s => s.theme)]
   const handleUserClick = (userId: string) => {
     if (isDesktop && onSelectUser) {
       onSelectUser(userId)
@@ -99,7 +102,7 @@ function LeaderboardSection({
               }`}
             >
               <div className="flex items-center justify-center mb-1">
-                <PodiumBadge rank={tie1_2 ? 1 : 2} size="md" />
+                <PodiumBadge rank={tie1_2 ? 1 : 2} size="md" primaryColor={tie1_2 ? primaryColor : undefined} />
               </div>
               <div className="relative shrink-0">
                 <AvatarLightbox src={top3[1]?.avatar_url} username={top3[1]?.username || ''} size="sm" />
@@ -131,7 +134,7 @@ function LeaderboardSection({
             }`}
           >
             <div className="flex items-center justify-center mb-1">
-              <PodiumBadge rank={1} size="lg" />
+              <PodiumBadge rank={1} size="lg" primaryColor={primaryColor} />
             </div>
             <div className="relative shrink-0">
               <AvatarLightbox src={top3[0]?.avatar_url} username={top3[0]?.username || ''} size="md" />

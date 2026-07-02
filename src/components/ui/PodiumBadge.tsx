@@ -5,17 +5,10 @@ interface PodiumBadgeProps {
   rank: 1 | 2 | 3;
   size?: 'sm' | 'md' | 'lg';
   className?: string;
+  primaryColor?: string;
 }
 
 const RANK_CONFIG = {
-  1: {
-    textColor: '#F2C94C',
-    textShadow: '0 0 12px rgba(242,201,76,0.5)',
-    particleColor: 'rgba(255,220,100,0.8)',
-    particleCount: 10,
-    sizeMap: { sm: 26, md: 34, lg: 44 },
-    lightning: true,
-  },
   2: {
     textColor: '#CBD5E1',
     textShadow: '0 0 8px rgba(203,213,225,0.4)',
@@ -39,8 +32,17 @@ function pseudoRand(seed: number): number {
   return x - Math.floor(x);
 }
 
-export function PodiumBadge({ rank, size = 'md', className = '' }: PodiumBadgeProps) {
-  const config = RANK_CONFIG[rank];
+export function PodiumBadge({ rank, size = 'md', className = '', primaryColor }: PodiumBadgeProps) {
+  const rank1Config = {
+    textColor: primaryColor || '#F2C94C',
+    textShadow: primaryColor ? `0 0 12px ${primaryColor}80` : '0 0 12px rgba(242,201,76,0.5)',
+    particleColor: primaryColor ? primaryColor + 'cc' : 'rgba(255,220,100,0.8)',
+    particleCount: 10,
+    sizeMap: { sm: 26, md: 34, lg: 44 },
+    lightning: true,
+  }
+
+  const config = rank === 1 ? rank1Config : RANK_CONFIG[rank as 2 | 3];
   const px = config.sizeMap[size];
 
   const particles = useMemo(() => {

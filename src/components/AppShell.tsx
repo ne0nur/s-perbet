@@ -1,13 +1,14 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { BottomNav } from './BottomNav'
-import Plasma from './ui/Plasma'
+import ColorBends from './ui/ColorBends'
 import Dock, { type DockItemData } from './ui/Dock'
 import { ToastContainer } from './ToastContainer'
 import { useAuthStore } from '../stores/authStore'
 import { usePresenceStore } from '../stores/presenceStore'
 import { useThemeStore } from '../stores/themeStore'
-import { THEME_PRIMARY } from '../lib/themeColors'
+import { THEME_PRIMARY, THEME_CONTAINER } from '../lib/themeColors'
+import type { AppTheme } from '../stores/themeStore'
 import { supabase } from '../lib/supabase'
 import { calculateLevelDetails, getLevelBadgeStyle } from '../lib/utils'
 import { LevelBadge } from './ui/LevelBadge'
@@ -22,6 +23,15 @@ import {
   HoverTrophyIcon, HoverChartBarIcon, HoverUsersIcon, HoverUserIcon,
   HoverGlobeIcon, HoverDownloadIcon
 } from './icons/HoverIcons'
+
+/** Simple hex darken — reduces lightness for background depth */
+function darkenHex(hex: string, amount: number = 30): string {
+  const h = hex.replace('#', '')
+  const r = Math.max(0, parseInt(h.slice(0, 2), 16) - amount)
+  const g = Math.max(0, parseInt(h.slice(2, 4), 16) - amount)
+  const b = Math.max(0, parseInt(h.slice(4, 6), 16) - amount)
+  return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`
+}
 
 /** Nur der Page-Content animiert — AppShell & Nav bleiben stabil */
 function AnimatedOutlet() {
@@ -69,9 +79,14 @@ export function AppShell() {
   const { level, xpCurrent, xpRequired, xpPct } = calculateLevelDetails(punkte, achievementsCount, bonusTippsCount)
   const { initPresence, cleanupPresence } = usePresenceStore()
 
-  // Plasma background — reactive to theme changes
+  // ColorBends background — theme-aware color palette
   const theme = useThemeStore(s => s.theme)
-  const plasmaColor = THEME_PRIMARY[theme]
+  const colorBendsColors = useMemo(() => {
+    const primary = THEME_PRIMARY[theme]
+    const container = THEME_CONTAINER[theme]
+    // Generate a 3-color gradient: primary, darker shade, darker container
+    return [primary, container, darkenHex(primary)]
+  }, [theme])
 
   // Real-time Active Presence Tracking based on page visibility and user activity
   useEffect(() => {
@@ -337,25 +352,18 @@ export function AppShell() {
   ]
 
   return (
-    <div className="h-[100dvh] w-full bg-background flex flex-col md:flex-row overflow-hidden select-none">
-      <Plasma color={plasmaColor} speed={0.5} opacity={0.10} scale={1.3} />
+    <div className="h-[100dvh] w-full bg-background flex flex-col overflow-hidden select-none">
+      <ColorBends colors={colorBendsColors} speed={0.12} scale={0.85} intensity={0.9} />
       <NetworkIndicator />
-      {/* Desktop Sidebar Navigation */}
-      <aside className="hidden md:flex md:flex-col w-64 border-r border-white/5 bg-surface/30 backdrop-blur-xl shrink-0 p-5 justify-between sticky top-0 h-screen">
-        {/* Top: Logo + Nav Links */}
-        <div className="space-y-8">
-          <HeaderLogo />
-          <Dock
-            items={dockItems}
-            magnification={52}
-            distance={140}
-            baseItemSize={38}
-          />
+      
+      {/* Desktop Top Bar (hidden on mobile) */}
+      <header className="hidden md:flex items-center justify-between px-6 h-14 shrink-0 relative z-20 border-b border-white/[0.03]">
+        <div className="flex items-center gap-3">
+          <HeaderLogo size="sm" />
         </div>
-
-        {/* PWA Install Promo in Sidebar */}
-        {isInstallable && (
-          <div className="px-2 mt-2">
+        <div className="flex items-center gap-3">
+          {/* PWA Install */}
+          {isInstallable && (
             <button
               onClick={async () => {
                 const success = await triggerInstall()
@@ -365,38 +373,27 @@ export function AppShell() {
                   }))
                 }
               }}
-              className="w-full bg-primary/5 hover:bg-primary/10 border border-primary/20 hover:border-primary/30 text-primary-fixed-dim p-3 rounded-xl flex items-center gap-2.5 transition-all text-left group cursor-pointer"
+              className="text-[10px] font-mono font-bold uppercase tracking-wider text-on-surface-variant/60 hover:text-primary-fixed-dim transition-colors px-3 py-1.5 rounded-lg hover:bg-white/[0.03]"
             >
-              <HoverDownloadIcon size={14} className="shrink-0 group-hover:translate-y-0.5 transition-transform" />
-              <div className="min-w-0">
-                <p className="text-[10px] font-mono font-bold uppercase tracking-wider leading-none">{t('pwaInstallBtn')}</p>
-                <p className="text-[8px] text-on-surface-variant/80 font-mono mt-0.5 truncate leading-none">{t('pwaInstallSubtitle')}</p>
-              </div>
+              {t('pwaInstallBtn')}
             </button>
-          </div>
-        )}
-
-        {/* Share Button (Desktop) */}
-        <div className="px-2 mt-2">
+          )}
+          {/* Share */}
           <button
             onClick={handleShare}
-            className="w-full flex items-center gap-2.5 px-3.5 py-3 rounded-xl text-xs font-mono font-bold uppercase tracking-wider text-on-surface-variant hover:text-on-surface hover:bg-surface-container/40 transition-all border border-transparent hover:border-white/10"
+            className="text-[10px] font-mono font-bold uppercase tracking-wider text-on-surface-variant/60 hover:text-on-surface transition-colors px-3 py-1.5 rounded-lg hover:bg-white/[0.03]"
           >
             <Share2 size={14} />
-            {language === 'tr' ? 'Paylaş' : language === 'en' ? 'Share' : 'Teilen'}
           </button>
-        </div>
-
-        {/* Bottom User Section */}
-        <div className="border-t border-white/5 pt-4">
+          {/* Profile */}
           <button
             onClick={() => navigate('/profile')}
-            className={`w-full flex items-center gap-3 p-2.5 rounded-xl border border-transparent hover:bg-surface-container/30 transition-all ${
-              location.pathname === '/profile' ? 'bg-surface-container/20 border-white/5' : ''
+            className={`relative flex items-center gap-2.5 px-3 py-1.5 rounded-xl transition-all ${
+              location.pathname === '/profile' ? 'bg-primary-container/10 border border-primary-container/20' : 'hover:bg-white/[0.03] border border-transparent'
             }`}
           >
             <div className="relative shrink-0">
-              <div className="w-9 h-9 rounded-full bg-surface-container-high border border-white/10 overflow-hidden flex items-center justify-center">
+              <div className="w-8 h-8 rounded-full bg-surface-container-high border border-white/10 overflow-hidden flex items-center justify-center">
                 {avatarUrl ? (
                   <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
                 ) : (
@@ -405,38 +402,24 @@ export function AppShell() {
                   </span>
                 )}
               </div>
-              <LevelBadge level={level} className="absolute -bottom-1 -right-1 z-10 text-[8px] h-3.5 w-3.5 rounded-full shadow shadow-black/80 select-none level-digit">
+              <LevelBadge level={level} className="absolute -bottom-1 -right-1 z-10 text-[7px] h-3 w-3 rounded-full shadow shadow-black/80 select-none level-digit">
                 {level}
               </LevelBadge>
             </div>
-            <div className="flex-1 min-w-0 text-left">
-              <p className="text-xs font-bold text-on-surface truncate">{user?.user_metadata?.username || t('myProfile')}</p>
-              <div className="flex items-center gap-1.5 mt-0.5">
-                <span className="text-[8px] text-on-surface-variant font-mono uppercase shrink-0">Lvl {level}</span>
-                <div className="flex-1 h-2 bg-black/50 border border-white/20 rounded-full overflow-hidden p-[1px] relative">
-                  <div 
-                    className="h-full bg-primary rounded-full transition-all duration-1000 ease-out shadow-[0_0_8px_rgba(var(--primary-rgb),0.5)]"
-                    style={{ width: `${xpPct}%` }}
-                  />
-                </div>
-              </div>
-            </div>
+            <span className="text-xs font-bold text-on-surface hidden lg:block">{user?.user_metadata?.username || t('myProfile')}</span>
           </button>
         </div>
-      </aside>
+      </header>
 
       {/* Main Page Area */}
-      <div className="flex-1 flex flex-col min-w-0 md:h-screen overflow-hidden">
-        {/* Mobile Header (hidden on desktop) */}
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative z-10">
+        {/* Mobile Header */}
         {isMainTab && (
           <header className="md:hidden sticky top-0 z-40 bg-surface/60 backdrop-blur-xl border-b border-white/5 shrink-0">
             <div className="flex items-center justify-between px-4 h-16 max-w-lg mx-auto w-full">
-              {/* Logo */}
               <div className="flex items-center">
                 <HeaderLogo size="md" />
               </div>
-
-              {/* Profile Avatar Button + EXP Bar + Level Badge */}
               <AnimatePresence>
                 {location.pathname !== '/profile' && (
                   <motion.div 
@@ -445,7 +428,6 @@ export function AppShell() {
                     exit={{ opacity: 0, x: 20 }}
                     className="flex items-center gap-3"
                   >
-                    {/* Dünner horizontaler EXP-Fortschrittsbalken */}
                     <motion.div layoutId="header-exp" className="flex flex-col items-end justify-center">
                       <span className="text-[8px] font-mono text-on-surface-variant/80 uppercase leading-none mb-1.5">XP: {xpCurrent} / {xpRequired}</span>
                       <div className="w-28 h-2.5 bg-black/50 border border-white/20 rounded-full overflow-hidden p-[1px] relative">
@@ -455,12 +437,11 @@ export function AppShell() {
                         />
                       </div>
                     </motion.div>
-
                     <div className="relative shrink-0">
                       <motion.button
                         layoutId="header-avatar"
                         onClick={() => navigate('/profile')}
-                        className={`w-10 h-10 rounded-full border bg-surface-container-high flex items-center justify-center transition-all border-white/10 hover:border-white/20`}
+                        className="w-10 h-10 rounded-full border bg-surface-container-high flex items-center justify-center transition-all border-white/10 hover:border-white/20"
                       >
                         <div className="w-full h-full rounded-full overflow-hidden flex items-center justify-center">
                           {avatarUrl ? (
@@ -485,12 +466,22 @@ export function AppShell() {
           </header>
         )}
 
-        {/* Main Page Content */}
-        <main className="flex-1 min-h-0 flex flex-col md:p-5 md:pb-5 overflow-hidden">
-          <div className="flex-1 flex flex-col min-h-0 md:bg-surface-container-low/20 md:border md:border-white/5 md:rounded-2xl md:shadow-2xl native-scroll pb-28 md:pb-5">
+        {/* Content */}
+        <main className="flex-1 min-h-0 flex flex-col overflow-hidden">
+          <div className="flex-1 flex flex-col min-h-0 md:max-w-6xl md:mx-auto md:w-full native-scroll pb-28 md:pb-24">
             <AnimatedOutlet />
           </div>
         </main>
+      </div>
+
+      {/* Desktop Floating Dock (hidden on mobile) */}
+      <div className="hidden md:block fixed bottom-5 left-1/2 -translate-x-1/2 z-50">
+        <Dock
+          items={dockItems}
+          magnification={52}
+          distance={140}
+          baseItemSize={38}
+        />
       </div>
 
       <BottomNav />
