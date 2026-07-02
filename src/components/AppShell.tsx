@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { BottomNav } from './BottomNav'
 import Plasma from './ui/Plasma'
+import Dock, { type DockItemData } from './ui/Dock'
 import { ToastContainer } from './ToastContainer'
 import { useAuthStore } from '../stores/authStore'
 import { usePresenceStore } from '../stores/presenceStore'
@@ -329,6 +330,14 @@ export function AppShell() {
     { to: '/profile',   icon: HoverUserIcon,    label: t('profile') },
   ]
 
+  const dockItems: DockItemData[] = [
+    { icon: <HoverTrophyIcon size={22} />,   label: t('games'),   onClick: () => navigate('/dashboard'), active: location.pathname === '/dashboard' },
+    { icon: <Table2 size={22} />,            label: t('table'),   onClick: () => navigate('/tabelle'),   active: location.pathname === '/tabelle' },
+    { icon: <HoverGlobeIcon size={22} />,    label: t('global'),  onClick: () => navigate('/global'),    active: location.pathname === '/global' },
+    { icon: <HoverUsersIcon size={22} />,    label: t('league'),  onClick: () => navigate('/league'),    active: location.pathname === '/league' },
+    { icon: <HoverUserIcon size={22} />,     label: t('profile'), onClick: () => navigate('/profile'),   active: location.pathname === '/profile' },
+  ]
+
   return (
     <div className="h-[100dvh] w-full bg-background flex flex-col md:flex-row overflow-hidden select-none">
       <Plasma color={plasmaColor} speed={0.5} opacity={0.10} scale={1.3} />
@@ -338,26 +347,12 @@ export function AppShell() {
         {/* Top: Logo + Nav Links */}
         <div className="space-y-8">
           <HeaderLogo />
-          
-          <nav className="space-y-1">
-            {sidebarTabs.map(({ to, icon: Icon, label }) => {
-              const isActive = location.pathname === to
-              return (
-                <button
-                  key={to}
-                  onClick={() => navigate(to)}
-                  className={`w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-xs font-mono font-bold uppercase tracking-wider transition-all duration-200 border ${
-                    isActive
-                      ? 'bg-primary-container/15 text-primary-fixed-dim border-primary-container/20 shadow-[0_0_15px_rgba(var(--primary-rgb),0.05)]'
-                      : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container/40 border-transparent'
-                  }`}
-                >
-                  <Icon size={16} strokeWidth={isActive ? 2.5 : 1.5} className={isActive ? 'text-primary-fixed-dim' : 'text-on-surface-variant/75'} />
-                  {label}
-                </button>
-              )
-            })}
-          </nav>
+          <Dock
+            items={dockItems}
+            magnification={52}
+            distance={140}
+            baseItemSize={38}
+          />
         </div>
 
         {/* PWA Install Promo in Sidebar */}
