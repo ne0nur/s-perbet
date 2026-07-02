@@ -424,9 +424,9 @@ export function AppShell() {
         {/* Mobile Header */}
         {isMainTab && (
           <header className="md:hidden sticky top-0 z-40 bg-surface/60 backdrop-blur-xl border-b border-white/5 shrink-0">
-            <div className="flex items-center justify-between px-4 h-16 max-w-lg mx-auto w-full">
+            <div className="flex items-center justify-between px-4 h-14 max-w-lg mx-auto w-full">
               <div className="flex items-center">
-                <HeaderLogo size="md" />
+                <HeaderLogo size="sm" />
               </div>
               <AnimatePresence>
                 {location.pathname !== '/profile' && (
@@ -434,13 +434,13 @@ export function AppShell() {
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: 20 }}
-                    className="flex items-center gap-3"
+                    className="flex items-center gap-2.5"
                   >
                     <motion.div layoutId="header-exp" className="flex flex-col items-end justify-center">
-                      <span className="text-[8px] font-mono text-on-surface-variant/80 uppercase leading-none mb-1.5">XP: {xpCurrent} / {xpRequired}</span>
-                      <div className="w-28 h-2.5 bg-black/50 border border-white/20 rounded-full overflow-hidden p-[1px] relative">
+                      <span className="text-[7px] font-mono text-on-surface-variant/80 uppercase leading-none mb-1">XP: {xpCurrent} / {xpRequired}</span>
+                      <div className="w-20 h-1.5 bg-black/50 border border-white/20 rounded-full overflow-hidden p-[0.5px] relative">
                         <div 
-                          className="h-full bg-primary rounded-full transition-all duration-1000 ease-out shadow-[0_0_10px_rgba(var(--primary-rgb),0.5)]"
+                          className="h-full bg-primary rounded-full transition-all duration-1000 ease-out shadow-[0_0_8px_rgba(var(--primary-rgb),0.5)]"
                           style={{ width: `${xpPct}%` }}
                         />
                       </div>
@@ -449,20 +449,20 @@ export function AppShell() {
                       <motion.button
                         layoutId="header-avatar"
                         onClick={() => navigate('/profile')}
-                        className="w-10 h-10 rounded-full border bg-surface-container-high flex items-center justify-center transition-all border-white/10 hover:border-white/20"
+                        className="w-8 h-8 rounded-full border bg-surface-container-high flex items-center justify-center transition-all border-white/10 hover:border-white/20"
                       >
                         <div className="w-full h-full rounded-full overflow-hidden flex items-center justify-center">
                           {avatarUrl ? (
                             <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
                           ) : (
-                            <span className="text-on-surface-variant text-sm font-mono font-bold">
+                            <span className="text-on-surface-variant text-xs font-mono font-bold">
                               {user?.user_metadata?.username?.[0]?.toUpperCase() || '?'}
                             </span>
                           )}
                         </div>
                       </motion.button>
-                      <motion.div layoutId="header-level" className="absolute -bottom-1.5 -right-1.5 z-10">
-                        <LevelBadge level={level} className="text-[10px] h-5 w-5 rounded-full shadow shadow-black/80 select-none level-digit">
+                      <motion.div layoutId="header-level" className="absolute -bottom-1 -right-1 z-10">
+                        <LevelBadge level={level} className="text-[8px] h-4.5 w-4.5 rounded-full shadow shadow-black/80 select-none level-digit">
                           {level}
                         </LevelBadge>
                       </motion.div>

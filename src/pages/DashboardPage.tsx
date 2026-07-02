@@ -287,11 +287,11 @@ export function DashboardPage() {
 
   return (
     <div className="min-h-full flex flex-col pb-24 md:pb-6 animate-page-enter">
-      <header className="sticky top-0 z-30 bg-background/95 backdrop-blur-xl shrink-0 border-b border-white/5 px-4 md:px-6 lg:px-8 pt-4 pb-1">
+      <header className="sticky top-0 z-30 bg-background/95 backdrop-blur-xl shrink-0 border-b border-white/5 px-4 md:px-6 lg:px-8 pt-2.5 pb-1">
         <div className="max-w-[1600px] mx-auto w-full">
-          {/* Turnier-Filter & Saison-Selector */}
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-3 max-w-full">
-            <div className="flex overflow-x-auto no-scrollbar bg-surface-container/50 border border-white/5 p-1 rounded-2xl gap-1.5 backdrop-blur-md max-w-full">
+          {/* Row 1: Turnier-Filter & Saison-Selector & All/Live Toggle */}
+          <div className="flex justify-between items-center mb-2 gap-2 max-w-full">
+            <div className="flex overflow-x-auto no-scrollbar bg-surface-container/50 border border-white/5 p-0.5 rounded-xl gap-1 backdrop-blur-md max-w-[65%] sm:max-w-none">
               {availableTournaments.map(tName => (
                 <button
                   key={tName}
@@ -299,68 +299,75 @@ export function DashboardPage() {
                     setSelectedTournament(tName)
                     useMatchStore.getState().setSelectedTournament(tName)
                   }}
-                  className={`px-3 py-2 text-[9px] xs:text-[10px] md:text-xs font-mono font-black uppercase tracking-wider rounded-xl whitespace-nowrap transition-all duration-200 cursor-pointer flex items-center gap-2 ${selectedTournament === tName ? 'bg-primary-container text-on-primary-container shadow-[0_2px_8px_rgba(var(--primary-rgb),0.15)] border border-primary/20 scale-[1.01]' : 'text-on-surface-variant hover:text-on-surface hover:bg-white/5 border border-transparent'}`}
+                  className={`px-2.5 py-1.5 text-[8px] xs:text-[9px] md:text-xs font-mono font-black uppercase tracking-wider rounded-lg whitespace-nowrap transition-all duration-200 cursor-pointer flex items-center gap-1.5 ${selectedTournament === tName ? 'bg-primary-container text-on-primary-container shadow-[0_1.5px_6px_rgba(var(--primary-rgb),0.1)] border border-primary/20 scale-[1.01]' : 'text-on-surface-variant hover:text-on-surface hover:bg-white/5 border border-transparent'}`}
                 >
-                  <img src={getTournamentLogo(tName)} alt={tName} className="w-5 h-5 object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.6)] brightness-110 shrink-0" onError={(e) => { (e.target as HTMLImageElement).src = `${import.meta.env.BASE_URL}logos/soccer_ball.png` }} />
-                  {tName}
+                  <img src={getTournamentLogo(tName)} alt={tName} className="w-4 h-4 object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.6)] brightness-110 shrink-0" onError={(e) => { (e.target as HTMLImageElement).src = `${import.meta.env.BASE_URL}logos/soccer_ball.png` }} />
+                  <span className="hidden xs:inline">{tName}</span>
+                  <span className="xs:hidden">{tName.split(' ')[0]}</span>
                 </button>
               ))}
             </div>
 
-            <div className="flex items-center gap-2">
-              {/* Kontext-Indikator: immer sichtbar, zeigt wo der User ist */}
-              <div className="flex items-center gap-1.5 px-2.5 py-1 bg-primary-container/10 border border-primary/10 rounded-full">
-                <img src={getTournamentLogo(selectedTournament)} alt="" className="w-3.5 h-3.5 object-contain brightness-110" onError={(e) => { (e.target as HTMLImageElement).src = `${import.meta.env.BASE_URL}logos/soccer_ball.png` }} />
-                <span className="text-[9px] font-mono font-black text-primary uppercase tracking-wider">{selectedTournament}</span>
-                {aktuellerSpieltag > 0 && (
-                  <>
-                    <span className="text-[8px] text-on-surface-variant/30">·</span>
-                    <span className="text-[9px] font-mono text-on-surface-variant/50">{getPhaseLabel(aktuellerSpieltag, selectedTournament)}</span>
-                  </>
-                )}
+            <div className="flex items-center gap-1.5 shrink-0">
+              {/* All/Live Filter-Toggle */}
+              <div className="flex bg-surface-container/50 border border-white/5 p-0.5 rounded-lg">
+                {(['alle', 'live'] as const).map(f => (
+                  <button
+                    key={f}
+                    onClick={() => setFilter(f)}
+                    className={`text-[8px] font-mono font-black uppercase tracking-wider px-2 py-1 rounded-md transition-all duration-200 cursor-pointer ${
+                      filter === f
+                        ? 'bg-primary-container text-on-primary-container border border-primary/25'
+                        : 'text-on-surface-variant hover:text-on-surface hover:bg-white/5 border border-transparent'
+                    }`}
+                  >
+                    {f === 'alle' ? t('filterAll') : t('filterLive')}
+                  </button>
+                ))}
               </div>
-            </div>
 
-            <select
-              value={useMatchStore.getState().aktuelleSaison || 2026}
-              onChange={(e) => useMatchStore.getState().setSaison(parseInt(e.target.value))}
-              className="bg-surface-container border border-surface-container-high rounded-lg px-3 py-1.5 text-xs text-on-surface focus:outline-none focus:border-primary-container font-mono"
-            >
-              {(() => {
-                const config = useTournamentStore.getState().getTournament(selectedTournament)
-                let seasons = [2026, 2025, 2024]
-                if (config && !config.has_historical_data) {
-                  seasons = [config.season]
-                }
-                return seasons.map(s => (
-                  <option key={s} value={s}>
-                    {t('seasonLabel', { year: `${s}/${(s + 1).toString().slice(2)}` })}
-                  </option>
-                ))
-              })()}
-            </select>
+              {/* Saison-Selector */}
+              <select
+                value={useMatchStore.getState().aktuelleSaison || 2026}
+                onChange={(e) => useMatchStore.getState().setSaison(parseInt(e.target.value))}
+                className="bg-surface-container border border-surface-container-high rounded-lg px-2 py-1 text-[10px] text-on-surface focus:outline-none focus:border-primary-container font-mono cursor-pointer"
+              >
+                {(() => {
+                  const config = useTournamentStore.getState().getTournament(selectedTournament)
+                  let seasons = [2026, 2025, 2024]
+                  if (config && !config.has_historical_data) {
+                    seasons = [config.season]
+                  }
+                  return seasons.map(s => (
+                    <option key={s} value={s}>
+                      {s}
+                    </option>
+                  ))
+                })()}
+              </select>
+            </div>
           </div>
 
-          {/* Spieltag-Slider Segmented Control */}
-          <div className="pt-2.5 pb-3 border-t border-white/5 relative flex items-center gap-1.5">
-            <div className="bg-surface-container/40 border border-white/5 p-1 rounded-2xl flex items-center gap-1.5 overflow-hidden backdrop-blur-sm w-full">
+          {/* Row 2: Spieltag-Slider Segmented Control */}
+          <div className="py-1.5 border-t border-white/5 relative flex items-center gap-1.5">
+            <div className="bg-surface-container/40 border border-white/5 p-0.5 rounded-xl flex items-center gap-1 overflow-hidden backdrop-blur-sm w-full">
               {/* Sticky "ALLE" Button — immer sichtbar */}
               <button
                 onClick={() => { setSpieltag(0); ladeMatches(0); }}
-                className={`flex-shrink-0 px-3.5 py-2 rounded-xl text-[9px] xs:text-[10px] md:text-xs font-mono font-black uppercase tracking-wider transition-all duration-200 cursor-pointer ${
+                className={`flex-shrink-0 px-2.5 py-1.5 rounded-lg text-[8px] xs:text-[9px] md:text-xs font-mono font-black uppercase tracking-wider transition-all duration-200 cursor-pointer ${
                   aktuellerSpieltag === 0
-                    ? 'bg-primary-container text-on-primary-container shadow-[0_2px_8px_rgba(var(--primary-rgb),0.15)] border border-primary/20 scale-[1.01]'
+                    ? 'bg-primary-container text-on-primary-container shadow-[0_1.5px_6px_rgba(var(--primary-rgb),0.1)] border border-primary/20 scale-[1.01]'
                     : 'text-on-surface-variant hover:text-on-surface hover:bg-white/5 border border-transparent'
                 }`}
               >
                 {t('filterAll')}
               </button>
 
-              <span className="w-[1px] h-4 bg-white/10 shrink-0" />
+              <span className="w-[1px] h-3.5 bg-white/10 shrink-0" />
 
               {/* Slider (scrollbar) */}
               <div className="relative flex-1 min-w-0">
-                <div ref={sliderRef} className="flex overflow-x-auto no-scrollbar gap-1.5 px-1 relative z-0" style={{ maskImage: 'linear-gradient(to right, transparent 0px, black 8px, black calc(100% - 16px), transparent 100%)', WebkitMaskImage: 'linear-gradient(to right, transparent 0px, black 8px, black calc(100% - 16px), transparent 100%)' }}>
+                <div ref={sliderRef} className="flex overflow-x-auto no-scrollbar gap-1 px-1 relative z-0" style={{ maskImage: 'linear-gradient(to right, transparent 0px, black 8px, black calc(100% - 16px), transparent 100%)', WebkitMaskImage: 'linear-gradient(to right, transparent 0px, black 8px, black calc(100% - 16px), transparent 100%)' }}>
                   {Array.from({ length: getTabsCount() }, (_, i) => i + 1).map(st => {
                     const isActive = st === aktuellerSpieltag
                     const info = spieltagInfo[st]
@@ -369,7 +376,7 @@ export function DashboardPage() {
 
                     let btnStyle = 'text-on-surface-variant hover:text-on-surface hover:bg-white/5 border border-transparent'
                     if (isActive) {
-                      btnStyle = 'bg-primary-container text-on-primary-container font-black shadow-[0_2px_8px_rgba(var(--primary-rgb),0.15)] border border-primary/20 scale-[1.01]'
+                      btnStyle = 'bg-primary-container text-on-primary-container font-black shadow-[0_1.5px_6px_rgba(var(--primary-rgb),0.1)] border border-primary/20 scale-[1.01]'
                     } else if (st < aktuellerSpieltag) {
                       if (fullyTipped) {
                         btnStyle = 'border border-green-500/20 text-green-400 bg-green-500/5 hover:bg-green-500/10'
@@ -383,14 +390,14 @@ export function DashboardPage() {
                         key={st}
                         data-st={st}
                         onClick={() => setSpieltag(st)}
-                        className={`flex-shrink-0 px-3 py-2 rounded-xl text-[9px] xs:text-[10px] md:text-xs font-mono font-black uppercase tracking-wider transition-all duration-200 cursor-pointer relative flex items-center gap-1 ${btnStyle}`}
+                        className={`flex-shrink-0 px-2 py-1.5 rounded-lg text-[8px] xs:text-[9px] md:text-xs font-mono font-black uppercase tracking-wider transition-all duration-200 cursor-pointer relative flex items-center gap-1 ${btnStyle}`}
                       >
                         {getPhaseLabel(st, selectedTournament)}
                         {fullyTipped && st < aktuellerSpieltag && !isActive && (
-                          <Check size={11} className="text-green-400" />
+                          <Check size={9} className="text-green-400" />
                         )}
                         {isLive && (
-                          <span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse" />
+                          <span className="w-1 h-1 bg-red-500 rounded-full animate-pulse" />
                         )}
                       </button>
                     )
@@ -400,47 +407,29 @@ export function DashboardPage() {
             </div>
           </div>
 
-          {/* Filter-Toggle + Letztes Update Badge */}
-          <div className="flex justify-between items-center py-2.5 border-t border-white/5">
-            <div className="flex bg-surface-container/50 border border-white/5 p-0.5 rounded-xl gap-1">
-              {(['alle', 'live'] as const).map(f => (
-                <button
-                  key={f}
-                  onClick={() => setFilter(f)}
-                  className={`text-[9px] font-mono font-black uppercase tracking-wider px-3 py-1.5 rounded-lg transition-all duration-200 cursor-pointer ${
-                    filter === f
-                      ? 'bg-primary-container text-on-primary-container shadow-[0_1.5px_6px_rgba(var(--primary-rgb),0.1)] border border-primary/25 scale-[1.01]'
-                      : 'text-on-surface-variant hover:text-on-surface hover:bg-white/5 border border-transparent'
-                  }`}
-                >
-                  {f === 'alle' ? t('filterAll') : t('filterLive')}
-                </button>
-              ))}
-            </div>
-            
-            {letztesUpdate && (
-              <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-white/5 border border-white/5 text-[9px] font-mono animate-pulse-slow ${
+          {/* Tiny Letztes Update Row */}
+          {letztesUpdate && (
+            <div className={`flex justify-end items-center gap-1 text-[8px] font-mono mt-0.5 opacity-60 ${
+              syncLabel?.includes('Live') || syncLabel?.includes('Crunch') 
+                ? 'text-green-400 font-bold' 
+                : syncLabel?.includes('Halbzeit') 
+                  ? 'text-amber-400' 
+                  : syncLabel?.includes('Kickoff') 
+                    ? 'text-blue-400' 
+                    : 'text-on-surface-variant'
+            }`}>
+              <span className={`w-1 h-1 rounded-full ${
                 syncLabel?.includes('Live') || syncLabel?.includes('Crunch') 
-                  ? 'text-green-400' 
+                  ? 'bg-green-500' 
                   : syncLabel?.includes('Halbzeit') 
-                    ? 'text-amber-400' 
+                    ? 'bg-amber-500' 
                     : syncLabel?.includes('Kickoff') 
-                      ? 'text-blue-400' 
-                      : 'text-on-surface-variant/60'
-              }`}>
-                <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${
-                  syncLabel?.includes('Live') || syncLabel?.includes('Crunch') 
-                    ? 'bg-green-500' 
-                    : syncLabel?.includes('Halbzeit') 
-                      ? 'bg-amber-500' 
-                      : syncLabel?.includes('Kickoff') 
-                        ? 'bg-blue-500' 
-                        : 'bg-slate-500'
-                }`} />
-                <span>zuletzt aktualisiert ({letztesUpdate})</span>
-              </div>
-            )}
-          </div>
+                      ? 'bg-blue-500' 
+                      : 'bg-slate-500'
+              }`} />
+              <span>{letztesUpdate}</span>
+            </div>
+          )}
         </div>
       </header>
 

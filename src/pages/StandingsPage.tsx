@@ -303,10 +303,10 @@ export function StandingsPage() {
   )
 
   return (
-    <div className="min-h-full px-3 md:px-6 lg:px-8 pt-4 md:pt-6 pb-24 md:pb-8 max-w-[1600px] mx-auto w-full overflow-x-hidden animate-page-enter">
+    <div className="min-h-full px-3 md:px-6 lg:px-8 pt-2.5 md:pt-4 pb-24 md:pb-8 max-w-[1600px] mx-auto w-full overflow-x-hidden animate-page-enter">
       {/* Turnier-Filter & Saison-Selector */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 md:mb-6 max-w-[1600px] w-full gap-3">
-        <div className="flex bg-surface-container/50 border border-white/5 p-1 rounded-2xl gap-1.5 backdrop-blur-md">
+      <div className="flex justify-between items-center mb-2.5 max-w-[1600px] w-full gap-2">
+        <div className="flex bg-surface-container/50 border border-white/5 p-0.5 rounded-xl gap-1 backdrop-blur-md overflow-x-auto no-scrollbar max-w-[70%] sm:max-w-none">
           {availableTournaments.map(tName => (
             <button
               key={tName}
@@ -315,10 +315,11 @@ export function StandingsPage() {
                 setViewPhase('table')
                 setSaison(availableSeasons[0]?.id ?? 2026)
               }}
-              className={`px-3 py-2 text-[9px] xs:text-[10px] md:text-xs font-mono font-black uppercase tracking-wider rounded-xl whitespace-nowrap transition-all duration-200 cursor-pointer flex items-center gap-2 ${viewTournament === tName ? 'bg-primary-container text-on-primary-container shadow-[0_2px_8px_rgba(var(--primary-rgb),0.15)] border border-primary/20 scale-[1.01]' : 'text-on-surface-variant hover:text-on-surface hover:bg-white/5 border border-transparent'}`}
+              className={`px-2.5 py-1.5 text-[8px] xs:text-[9px] md:text-xs font-mono font-black uppercase tracking-wider rounded-lg whitespace-nowrap transition-all duration-200 cursor-pointer flex items-center gap-1.5 ${viewTournament === tName ? 'bg-primary-container text-on-primary-container shadow-[0_1.5px_6px_rgba(var(--primary-rgb),0.1)] border border-primary/20 scale-[1.01]' : 'text-on-surface-variant hover:text-on-surface hover:bg-white/5 border border-transparent'}`}
             >
-              <img src={getTournamentLogo(tName)} alt={tName} className="w-5 h-5 object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.6)] brightness-110 shrink-0" />
-              {tName}
+              <img src={getTournamentLogo(tName)} alt={tName} className="w-4 h-4 object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.6)] brightness-110 shrink-0" />
+              <span className="hidden xs:inline">{tName}</span>
+              <span className="xs:hidden">{tName.split(' ')[0]}</span>
             </button>
           ))}
         </div>
@@ -330,20 +331,20 @@ export function StandingsPage() {
             setSaison(parseInt(e.target.value))
             setViewPhase('table')
           }}
-          className="bg-surface-container border border-surface-container-high rounded-lg px-3 py-1.5 text-xs text-on-surface focus:outline-none focus:border-primary-container font-mono"
+          className="bg-surface-container border border-surface-container-high rounded-lg px-2 py-1 text-[10px] text-on-surface focus:outline-none focus:border-primary-container font-mono cursor-pointer shrink-0"
         >
           {availableSeasons.map(s => (
-            <option key={s.id} value={s.id}>{t('seasonLabel', { year: s.label })}</option>
+            <option key={s.id} value={s.id}>{s.label.split('/')[0]}</option>
           ))}
         </select>
       </div>
 
       {/* K.o.-Phasen Tabs — nur wenn das Turnier K.o.-Phasen hat */}
       {activeConfig?.has_knockout && (
-        <div className="flex bg-surface-container/40 border border-white/5 p-1 rounded-2xl mb-4 overflow-x-auto hide-scrollbar gap-1.5 backdrop-blur-sm">
+        <div className="flex bg-surface-container/40 border border-white/5 p-0.5 rounded-xl mb-2.5 overflow-x-auto hide-scrollbar gap-1 backdrop-blur-sm">
           <button
             onClick={() => setViewPhase('table')}
-            className={`px-4 py-2.5 text-[9px] xs:text-[10px] md:text-xs font-mono font-black uppercase tracking-wider rounded-xl whitespace-nowrap transition-all duration-200 cursor-pointer text-center ${viewPhase === 'table' ? 'bg-primary-container text-on-primary-container shadow-[0_2px_8px_rgba(var(--primary-rgb),0.15)] border border-primary/20 scale-[1.01]' : 'text-on-surface-variant hover:text-on-surface hover:bg-white/5 border border-transparent'}`}
+            className={`px-3 py-1.5 text-[8px] xs:text-[9px] md:text-xs font-mono font-black uppercase tracking-wider rounded-lg whitespace-nowrap transition-all duration-200 cursor-pointer text-center ${viewPhase === 'table' ? 'bg-primary-container text-on-primary-container shadow-[0_1.5px_6px_rgba(var(--primary-rgb),0.1)] border border-primary/20 scale-[1.01]' : 'text-on-surface-variant hover:text-on-surface hover:bg-white/5 border border-transparent'}`}
           >
             {viewTournament.toLowerCase().includes('world cup') || viewTournament.toLowerCase().includes('wm') ? 'Gruppenphase' : t('clLeaguePhaseTable')}
           </button>
@@ -368,29 +369,12 @@ export function StandingsPage() {
               <button
                 key={phase}
                 onClick={() => setViewPhase(phase)}
-                className={`px-4 py-2.5 text-[9px] xs:text-[10px] md:text-xs font-mono font-black uppercase tracking-wider rounded-xl whitespace-nowrap transition-all duration-200 cursor-pointer text-center ${viewPhase === phase ? 'bg-primary-container text-on-primary-container shadow-[0_2px_8px_rgba(var(--primary-rgb),0.15)] border border-primary/20 scale-[1.01]' : 'text-on-surface-variant hover:text-on-surface hover:bg-white/5 border border-transparent'}`}
+                className={`px-3 py-1.5 text-[8px] xs:text-[9px] md:text-xs font-mono font-black uppercase tracking-wider rounded-lg whitespace-nowrap transition-all duration-200 cursor-pointer text-center ${viewPhase === phase ? 'bg-primary-container text-on-primary-container shadow-[0_1.5px_6px_rgba(var(--primary-rgb),0.1)] border border-primary/20 scale-[1.01]' : 'text-on-surface-variant hover:text-on-surface hover:bg-white/5 border border-transparent'}`}
               >
                 {label}
               </button>
             )
           })}
-        </div>
-      )}
-
-      {/* Turnier-Kontext Header */}
-      {viewTournament && (
-        <div className="flex items-center gap-3 mb-4 px-2">
-          <img src={getTournamentLogo(viewTournament)} alt="" className="w-6 h-6 object-contain brightness-110 drop-shadow-[0_0_8px_rgba(255,255,255,0.6)]" />
-          <div>
-            <h2 className="text-sm font-black text-on-surface uppercase tracking-wider">{viewTournament}</h2>
-            <p className="text-[10px] font-mono text-on-surface-variant/50">
-              {viewPhase !== 'table' 
-                ? `K.o.-Phase · Phase ${viewPhase}` 
-                : activeConfig?.has_knockout 
-                  ? `Gruppenphase · ${t('clRoundLeague', { st: activeConfig.group_stage_matchdays })}`
-                  : `Saison ${saison}`}
-            </p>
-          </div>
         </div>
       )}
 

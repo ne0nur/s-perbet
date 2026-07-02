@@ -621,20 +621,20 @@ export function LeaguePage() {
       {aktiveLiga && (
         <div className="flex flex-col flex-1 min-h-0 md:px-6 lg:px-8 md:pt-4 max-w-[1600px] mx-auto w-full animate-page-enter">
           {/* Header mit Back-Button */}
-          <div className="px-4 pt-4 mb-3 md:px-0">
-            <div className="flex items-start justify-between gap-4 mb-5">
+          <div className="px-4 pt-2.5 mb-2 md:px-0">
+            <div className="flex items-start justify-between gap-3 mb-3">
               {/* Links: Zurück-Button + Titel */}
-              <div className="flex items-center gap-3 md:gap-4 flex-1 min-w-0">
-                <button onClick={() => { setAktiveLiga(null); setZeigeChatDrawer(false); }} className="shrink-0 p-2 bg-surface-container-low border border-surface-container-high shadow-sm text-on-surface-variant hover:text-on-surface hover:bg-surface-container rounded-full transition-all">
-                  <X size={20} />
+              <div className="flex items-center gap-2.5 md:gap-3 flex-1 min-w-0">
+                <button onClick={() => { setAktiveLiga(null); setZeigeChatDrawer(false); }} className="shrink-0 p-1.5 bg-surface-container-low border border-surface-container-high shadow-sm text-on-surface-variant hover:text-on-surface hover:bg-surface-container rounded-full transition-all">
+                  <X size={16} />
                 </button>
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-1.5 text-primary-fixed-dim mb-1 relative z-10">
-                    <Trophy size={14} />
-                    <span className="text-[10px] font-mono font-bold uppercase tracking-wider">{t('currentLeague')}</span>
+                  <div className="flex items-center gap-1.5 text-primary-fixed-dim mb-0.5 relative z-10">
+                    <Trophy size={12} />
+                    <span className="text-[9px] font-mono font-bold uppercase tracking-wider">{t('currentLeague')}</span>
                   </div>
                   <h1 
-                    className={`${aktiveLiga.name.length > 15 ? 'text-2xl md:text-3xl' : aktiveLiga.name.length > 10 ? 'text-3xl md:text-4xl' : 'text-4xl md:text-5xl'} text-on-surface leading-none mt-1 truncate`} 
+                    className={`${aktiveLiga.name.length > 15 ? 'text-lg md:text-xl' : aktiveLiga.name.length > 10 ? 'text-xl md:text-2xl' : 'text-2xl md:text-3xl'} text-on-surface leading-none mt-0.5 truncate font-extrabold`} 
                     style={{ fontFamily: "'Urban Thunder', sans-serif" }}
                   >
                     {aktiveLiga.name}
@@ -642,14 +642,14 @@ export function LeaguePage() {
 
                   {/* Saison-Selector */}
                   {seasonsList.length > 0 && (
-                    <div className="mt-2.5">
+                    <div className="mt-1.5">
                       <select
                         value={saison || ''}
                         onChange={(e) => setSaison(parseInt(e.target.value))}
-                        className="bg-surface-container border border-surface-container-high hover:border-surface-container-highest rounded-lg px-2 py-1 text-[11px] text-on-surface-variant hover:text-on-surface focus:outline-none focus:border-primary-container font-mono transition-colors cursor-pointer"
+                        className="bg-surface-container border border-surface-container-high hover:border-surface-container-highest rounded-lg px-2 py-0.5 text-[10px] text-on-surface-variant hover:text-on-surface focus:outline-none focus:border-primary-container font-mono transition-colors cursor-pointer"
                       >
                         {seasonsList.map(s => (
-                          <option key={s.id} value={s.id}>{s.name}</option>
+                          <option key={s.id} value={s.id}>{s.name.split('/')[0]}</option>
                         ))}
                       </select>
                     </div>
@@ -698,10 +698,10 @@ export function LeaguePage() {
 
             {/* Turnier-Filter */}
             {aktiveLiga.active_tournaments?.length > 1 && (
-              <div className="flex bg-surface-container/50 border border-white/5 p-1 rounded-2xl mb-3 mx-4 md:mx-0 overflow-x-auto hide-scrollbar backdrop-blur-md gap-1">
+              <div className="flex bg-surface-container/50 border border-white/5 p-0.5 rounded-xl mb-2 mx-4 md:mx-0 overflow-x-auto hide-scrollbar backdrop-blur-md gap-1">
                 <button
                   onClick={() => setViewTournament('Alle')}
-                  className={`px-3 py-2 text-[9px] xs:text-[10px] md:text-xs font-mono font-black uppercase tracking-wider rounded-xl whitespace-nowrap transition-all duration-200 cursor-pointer ${viewTournament === 'Alle' ? 'bg-primary-container text-on-primary-container shadow-[0_2px_8px_rgba(var(--primary-rgb),0.15)] border border-primary/20 scale-[1.01]' : 'text-on-surface-variant hover:text-on-surface hover:bg-white/5 border border-transparent'}`}
+                  className={`px-2.5 py-1.5 text-[8px] xs:text-[9px] md:text-xs font-mono font-black uppercase tracking-wider rounded-lg whitespace-nowrap transition-all duration-200 cursor-pointer ${viewTournament === 'Alle' ? 'bg-primary-container text-on-primary-container shadow-[0_1.5px_6px_rgba(var(--primary-rgb),0.1)] border border-primary/20 scale-[1.01]' : 'text-on-surface-variant hover:text-on-surface hover:bg-white/5 border border-transparent'}`}
                 >
                   {t('filterAll')}
                 </button>
@@ -709,10 +709,11 @@ export function LeaguePage() {
                   <button
                     key={t}
                     onClick={() => setViewTournament(t)}
-                    className={`px-3 py-2 text-[9px] xs:text-[10px] md:text-xs font-mono font-black uppercase tracking-wider rounded-xl whitespace-nowrap transition-all duration-200 cursor-pointer flex items-center gap-2 ${viewTournament === t ? 'bg-primary-container text-on-primary-container shadow-[0_2px_8px_rgba(var(--primary-rgb),0.15)] border border-primary/20 scale-[1.01]' : 'text-on-surface-variant hover:text-on-surface hover:bg-white/5 border border-transparent'}`}
+                    className={`px-2.5 py-1.5 text-[8px] xs:text-[9px] md:text-xs font-mono font-black uppercase tracking-wider rounded-lg whitespace-nowrap transition-all duration-200 cursor-pointer flex items-center gap-1.5 ${viewTournament === t ? 'bg-primary-container text-on-primary-container shadow-[0_1.5px_6px_rgba(var(--primary-rgb),0.1)] border border-primary/20 scale-[1.01]' : 'text-on-surface-variant hover:text-on-surface hover:bg-white/5 border border-transparent'}`}
                   >
-                    <img src={getTournamentLogo(t)} alt={t} className="w-5 h-5 object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.6)] brightness-110 shrink-0" />
-                    {t}
+                    <img src={getTournamentLogo(t)} alt={t} className="w-4 h-4 object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.6)] brightness-110 shrink-0" />
+                    <span className="hidden xs:inline">{t}</span>
+                    <span className="xs:hidden">{t.split(' ')[0]}</span>
                   </button>
                 ))}
               </div>
@@ -742,30 +743,30 @@ export function LeaguePage() {
                   </div>
                 )}
                 {/* Spieltag-Tabs Segmented Control */}
-                <div ref={scrollContainerRef} className="bg-surface-container/40 border border-white/5 p-1 rounded-2xl flex items-center gap-1.5 overflow-x-auto no-scrollbar backdrop-blur-sm -mx-4 md:mx-0 max-w-full">
+                <div ref={scrollContainerRef} className="bg-surface-container/40 border border-white/5 p-0.5 rounded-xl flex items-center gap-1 overflow-x-auto no-scrollbar backdrop-blur-sm -mx-4 md:mx-0 max-w-full">
                   {/* Sticky "Gesamt" Button */}
                   <button
                     data-st="gesamt"
                     onClick={() => setViewSpieltag('gesamt')}
-                    className={`shrink-0 px-3.5 py-2 rounded-xl text-[9px] xs:text-[10px] md:text-xs font-mono font-black uppercase tracking-wider whitespace-nowrap transition-all duration-200 cursor-pointer ${
+                    className={`shrink-0 px-2.5 py-1.5 rounded-lg text-[8px] xs:text-[9px] md:text-xs font-mono font-black uppercase tracking-wider whitespace-nowrap transition-all duration-200 cursor-pointer ${
                       viewSpieltag === 'gesamt'
-                        ? 'bg-primary-container text-on-primary-container shadow-[0_2px_8px_rgba(var(--primary-rgb),0.15)] border border-primary/20 scale-[1.01]'
+                        ? 'bg-primary-container text-on-primary-container shadow-[0_1.5px_6px_rgba(var(--primary-rgb),0.1)] border border-primary/20 scale-[1.01]'
                         : 'text-on-surface-variant hover:text-on-surface hover:bg-white/5 border border-transparent'
                     }`}
                   >
                     {t('gesamt')}
                   </button>
 
-                  <span className="w-[1px] h-4 bg-white/10 shrink-0" />
+                  <span className="w-[1px] h-3.5 bg-white/10 shrink-0" />
 
                   {/* Scrollable Spieltag-Nummern */}
                   <div ref={tabRef} className="overflow-x-auto no-scrollbar flex-1" style={{ maskImage: 'linear-gradient(to right, transparent 0px, black 8px, black calc(100% - 16px), transparent 100%)', WebkitMaskImage: 'linear-gradient(to right, transparent 0px, black 8px, black calc(100% - 16px), transparent 100%)' }}>
-                    <div className="flex gap-1.5 px-3 min-w-max">
+                    <div className="flex gap-1 px-2 min-w-max">
                       {tabs.filter(t => t.key !== 'gesamt').map(t => (
                         <button key={t.key} data-st={t.key} onClick={() => setViewSpieltag(t.key)}
-                          className={`px-3 py-2 rounded-xl text-[9px] xs:text-[10px] md:text-xs font-mono font-black uppercase tracking-wider whitespace-nowrap transition-all duration-200 cursor-pointer ${
+                          className={`px-2.5 py-1.5 rounded-lg text-[8px] xs:text-[9px] md:text-xs font-mono font-black uppercase tracking-wider whitespace-nowrap transition-all duration-200 cursor-pointer ${
                             viewSpieltag === t.key
-                              ? 'bg-primary-container text-on-primary-container shadow-[0_2px_8px_rgba(var(--primary-rgb),0.15)] border border-primary/20 scale-[1.01]'
+                              ? 'bg-primary-container text-on-primary-container shadow-[0_1.5px_6px_rgba(var(--primary-rgb),0.1)] border border-primary/20 scale-[1.01]'
                               : 'text-on-surface-variant hover:text-on-surface hover:bg-white/5 border border-transparent'
                           }`}>
                           {t.label}
