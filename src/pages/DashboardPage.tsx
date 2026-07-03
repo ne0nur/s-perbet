@@ -12,6 +12,7 @@ import { useTournamentStore } from '../stores/tournamentStore'
 import { useToastStore } from '../stores/toastStore'
 import { useTranslation } from '../utils/translations'
 import { getTournamentLogo } from '../lib/utils'
+import { motion } from 'framer-motion'
 
 export function DashboardPage() {
   const { t, language } = useTranslation()
@@ -462,93 +463,114 @@ export function DashboardPage() {
       )}
 
       {/* Main Content Area */}
-      <main className="flex-1 px-4 md:px-6 lg:px-8 pt-4 md:pt-6 max-w-[1600px] mx-auto w-full">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 xl:gap-10 items-start">
-          {/* Matches column */}
-          <div className="lg:col-span-7 space-y-3">
-            {isLaden ? (
-              <div className="space-y-3">
-                {[1,2,3,4].map(i => (
-                  <div key={i} className="skeleton rounded-xl h-[112px]" style={{ animationDelay: `${(i-1) * 80}ms` }} />
-                ))}
-              </div>
-            ) : anzeigeMatches.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-20 px-6 gap-4 bg-surface-container/30 border border-white/5 rounded-3xl text-center">
-                <div className="w-20 h-20 rounded-full bg-surface-container flex items-center justify-center mb-2 shadow-inner">
-                  <img 
-                    src={getTournamentLogo(selectedTournament)} 
-                    alt={selectedTournament} 
-                    className="w-10 h-10 object-contain opacity-40 grayscale" 
-                    onError={(e) => { (e.target as HTMLImageElement).src = `${import.meta.env.BASE_URL}logos/soccer_ball.png` }} 
-                  />
-                </div>
-                <h3 className="text-lg font-bold text-on-surface">{t('noMatchesFound')}</h3>
-                <p className="text-on-surface-variant/70 text-xs md:text-sm max-w-md font-mono leading-relaxed">
-                  {filter === 'live' 
-                    ? (language === 'tr' ? 'Şu anda bu turnuvada canlı maç yok. Daha sonra tekrar kontrol et!' : language === 'en' ? 'There are no live matches in this tournament right now. Check back later!' : 'Aktuell laufen in diesem Turnier keine Spiele. Schau später wieder vorbei!')
-                    : (language === 'tr' ? 'Bu turnuva için şu anda planlanmış maç yok. Turnuva şu anda tatilde olabilir veya yanlış sezonu seçmiş olabilirsin.' : language === 'en' ? 'There are currently no matches scheduled for this tournament. The league might be on a break or you have selected the wrong season.' : 'Für dieses Turnier sind aktuell keine Spiele angesetzt. Entweder pausiert die Liga aktuell oder du hast die falsche Saison ausgewählt.')}
-                </p>
-                {filter === 'live' && (
-                  <button onClick={() => setFilter('alle')} className="mt-4 bg-surface-container-high border border-white/10 text-on-surface px-5 py-2.5 rounded-xl text-xs font-bold hover:bg-white/5 transition-all shadow-sm active:scale-95">
-                    {t('showAllMatches')}
-                  </button>
-                )}
-              </div>
-            ) : (
-              <div className="space-y-8">
-                {Object.entries(matchesByTournament)
-                  .filter(([tournamentName]) => {
-                    // "ALLE" (spieltag=0): zeige alle Turniere
-                    if (aktuellerSpieltag === 0) return true
-                    return tournamentName === selectedTournament;
-                  })
-                  .map(([tournamentName, tourneyMatches]) => (
-                  <div key={tournamentName} className="mb-6">
-                    <h2 className="text-sm font-bold text-on-surface mb-4 border-b border-white/10 pb-2 uppercase tracking-wide">
-                      <span className="flex items-center gap-2">
+      <main className="flex-1 px-4 md:px-6 lg:px-8 pt-4 md:pt-6 max-w-[1600px] mx-auto w-full relative">
+        {isLaden ? (
+          <div className="space-y-3">
+            {[1,2,3,4].map(i => (
+              <div key={i} className="skeleton rounded-xl h-[112px]" style={{ animationDelay: `${(i-1) * 80}ms` }} />
+            ))}
+          </div>
+        ) : anzeigeMatches.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-20 px-6 gap-4 bg-surface-container/30 border border-white/5 rounded-3xl text-center">
+            <div className="w-20 h-20 rounded-full bg-surface-container flex items-center justify-center mb-2 shadow-inner">
+              <img 
+                src={getTournamentLogo(selectedTournament)} 
+                alt={selectedTournament} 
+                className="w-10 h-10 object-contain opacity-40 grayscale" 
+                onError={(e) => { (e.target as HTMLImageElement).src = `${import.meta.env.BASE_URL}logos/soccer_ball.png` }} 
+              />
+            </div>
+            <h3 className="text-lg font-bold text-on-surface">{t('noMatchesFound')}</h3>
+            <p className="text-on-surface-variant/70 text-xs md:text-sm max-w-md font-mono leading-relaxed">
+              {filter === 'live' 
+                ? (language === 'tr' ? 'Şu anda bu turnuvada canlı maç yok. Daha sonra tekrar kontrol et!' : language === 'en' ? 'There are no live matches in this tournament right now. Check back later!' : 'Aktuell laufen in diesem Turnier keine Spiele. Schau später wieder vorbei!')
+                : (language === 'tr' ? 'Bu turnuva için şu anda planlanmış maç yok. Turnuva şu anda tatilde olabilir veya yanlış sezonu seçmiş olabilirsin.' : language === 'en' ? 'There are currently no matches scheduled for this tournament. The league might be on a break or you have selected the wrong season.' : 'Für dieses Turnier sind aktuell keine Spiele angesetzt. Entweder pausiert die Liga aktuell oder du hast die falsche Saison ausgewählt.')}
+            </p>
+            {filter === 'live' && (
+              <button onClick={() => setFilter('alle')} className="mt-4 bg-surface-container-high border border-white/10 text-on-surface px-5 py-2.5 rounded-xl text-xs font-bold hover:bg-white/5 transition-all shadow-sm active:scale-95">
+                {t('showAllMatches')}
+              </button>
+            )}
+          </div>
+        ) : (
+          <>
+            {/* Desktop: cards shift left when detail panel is open */}
+            <div className={isDesktop && selectedMatchId ? 'lg:mr-96 transition-all duration-300' : 'transition-all duration-300'}>
+              {Object.entries(matchesByTournament)
+                .filter(([tournamentName]) => {
+                  if (aktuellerSpieltag === 0) return true
+                  return tournamentName === selectedTournament;
+                })
+                .map(([tournamentName, tourneyMatches]) => {
+                  // Dynamic grid: 2 cols for 6 or fewer matches, 3 cols for more
+                  const cols = tourneyMatches.length <= 6 
+                    ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-2' 
+                    : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'
+                  
+                  return (
+                    <div key={tournamentName} className="mb-8">
+                      {/* Tournament header — subtle, desktop-only styling */}
+                      <h2 className="hidden md:flex items-center gap-2 text-xs font-bold text-on-surface-variant/60 uppercase tracking-widest mb-4 pb-2 border-b border-white/[0.04]">
                         <img 
                           src={getTournamentLogo(tournamentName)} 
                           alt={tournamentName} 
-                          className="w-5 h-5 object-contain brightness-110 drop-shadow-[0_0_8px_rgba(255,255,255,0.6)]" 
+                          className="w-4 h-4 object-contain opacity-60" 
                           onError={(e) => { (e.target as HTMLImageElement).src = `${import.meta.env.BASE_URL}logos/soccer_ball.png` }}
                         />
                         {tournamentName}
-                      </span>
-                    </h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2 gap-4 xl:gap-6 w-full">
-                      {tourneyMatches.map((match: Match) => {
-                        const isSelected = selectedMatchId === match.id
-                        return (
-                          <div key={match.id} id={`match-card-${match.id}`} className="stagger-in">
-                            <MatchCard
-                              match={match}
-                              trendStats={trendStatsMap[match.id]}
-                              onNavigate={() => {
-                                if (isDesktop) {
-                                  setSelectedMatchId(match.id)
-                                } else {
-                                  navigate(`/match/${match.id}`)
-                                }
-                              }}
-                              className={isSelected && isDesktop ? 'border-primary/50 shadow-[0_0_15px_rgba(var(--primary-rgb),0.15)] bg-surface-container-high/60 scale-[1.01]' : ''}
-                            />
-                          </div>
-                        )
-                      })}
+                      </h2>
+                      {/* Mobile tournament header (simpler) */}
+                      <h2 className="md:hidden text-xs font-bold text-on-surface/70 uppercase tracking-wide mb-3 flex items-center gap-1.5">
+                        <img 
+                          src={getTournamentLogo(tournamentName)} 
+                          alt={tournamentName} 
+                          className="w-4 h-4 object-contain opacity-60" 
+                          onError={(e) => { (e.target as HTMLImageElement).src = `${import.meta.env.BASE_URL}logos/soccer_ball.png` }}
+                        />
+                        {tournamentName}
+                      </h2>
+                      <div className={`grid ${cols} gap-4 xl:gap-5 w-full`}>
+                        {tourneyMatches.map((match: Match) => {
+                          const isSelected = selectedMatchId === match.id
+                          return (
+                            <div key={match.id} id={`match-card-${match.id}`} className="stagger-in">
+                              <MatchCard
+                                match={match}
+                                trendStats={trendStatsMap[match.id]}
+                                onNavigate={() => {
+                                  if (isDesktop) {
+                                    setSelectedMatchId(match.id)
+                                  } else {
+                                    navigate(`/match/${match.id}`)
+                                  }
+                                }}
+                                className={isSelected && isDesktop ? 'ring-1 ring-primary/50 shadow-[0_0_20px_rgba(var(--primary-rgb),0.12)] bg-surface-container-high/70 scale-[1.01]' : ''}
+                              />
+                            </div>
+                          )
+                        })}
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Persistent Match Detail Panel (Desktop only) */}
-          {isDesktop && selectedMatchId && (
-            <div className="hidden lg:block lg:col-span-5 lg:sticky lg:top-[120px]">
-              <MatchDetailPanel matchId={selectedMatchId} />
+                  )
+                })}
             </div>
-          )}
-        </div>
+
+            {/* Desktop slide-in detail panel */}
+            {isDesktop && selectedMatchId && (
+              <motion.div 
+                initial={{ x: 400, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                exit={{ x: 400, opacity: 0 }}
+                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                className="hidden lg:block fixed right-0 top-[65px] bottom-6 w-96 z-40"
+              >
+                <div className="h-full bg-surface/90 backdrop-blur-2xl border-l border-white/[0.06] rounded-l-2xl shadow-[-8px_0_40px_rgba(0,0,0,0.5)] overflow-hidden flex flex-col">
+                  <MatchDetailPanel matchId={selectedMatchId} onClose={() => setSelectedMatchId(null)} />
+                </div>
+              </motion.div>
+            )}
+          </>
+        )}
       </main>
     </div>
   )

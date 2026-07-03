@@ -392,8 +392,9 @@ export function StandingsPage() {
         </div>
       ) : (
         // ─── Tabellen-Ansicht ───
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 xl:gap-10 items-start w-full">
-          <div className="lg:col-span-8 flex flex-col">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start w-full">
+          {/* Tabelle */}
+          <div className={`${isDesktop ? 'lg:col-span-7' : ''} flex flex-col`}>
             {/* Historische Daten nicht verfügbar */}
             {activeConfig && !activeConfig.has_historical_data && saison !== (availableSeasons[0]?.id ?? 2026) ? (
               <div className="bg-surface-container-low border border-surface-container-high rounded-xl p-8 text-center">
@@ -531,12 +532,34 @@ export function StandingsPage() {
             )}
           </div>
 
-          {/* Team Inspector (Desktop only) */}
-          {isDesktop && selectedTeam && (
-            <div className="hidden lg:block lg:col-span-4 lg:sticky lg:top-[80px]">
-              <TeamInspector teamName={selectedTeam} />
-            </div>
-          )}
+          {/* Team Inspector Panel (Desktop only) */}
+          <div className="hidden lg:block lg:col-span-5 lg:sticky lg:top-[80px]">
+            {isDesktop && selectedTeam ? (
+              <div className="bg-surface/80 backdrop-blur-xl border border-white/[0.06] rounded-2xl overflow-hidden shadow-[0_4px_30px_rgba(0,0,0,0.4)]">
+                <div className="flex items-center justify-between px-4 py-3 border-b border-white/[0.04] bg-surface-container/50">
+                  <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-on-surface-variant/70">
+                    {t('teamDetails')}
+                  </span>
+                  <button
+                    onClick={() => setSelectedTeam(null)}
+                    className="text-on-surface-variant/50 hover:text-on-surface p-1 rounded-lg hover:bg-white/5 transition-colors"
+                  >
+                    <span className="text-xs font-mono">✕</span>
+                  </button>
+                </div>
+                <TeamInspector teamName={selectedTeam} onClose={() => setSelectedTeam(null)} />
+              </div>
+            ) : (
+              <div className="bg-surface/40 backdrop-blur-sm border border-white/[0.03] rounded-2xl p-8 text-center flex flex-col items-center gap-3">
+                <div className="w-12 h-12 rounded-full bg-surface-container/50 flex items-center justify-center">
+                  <span className="text-lg opacity-30">👆</span>
+                </div>
+                <p className="text-[10px] font-mono text-on-surface-variant/30 uppercase tracking-wider">
+                  {language === 'tr' ? 'Detaylar için takıma tıkla' : language === 'en' ? 'Click a team for details' : 'Team auswählen für Details'}
+                </p>
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>
