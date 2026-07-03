@@ -19,9 +19,9 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
   children,
   className = '',
   style = {},
-  blur = 12,
-  opacity = 0.35,
-  saturation = 1.5,
+  blur = 24,
+  opacity = 0.18,
+  saturation = 2.0,
 }) => {
   const containerStyle: React.CSSProperties = {
     ...style,
