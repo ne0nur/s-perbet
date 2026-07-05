@@ -8,3 +8,7 @@ android/.gradle/
 !android/SuperBET.apk
 android/local.properties
 android/*.keystore
+android/superbet.keystore
+android/local.properties
+android/build_apk.js
+android/manifest-checksum.txt
