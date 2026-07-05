@@ -1,0 +1,50 @@
+{
+  "packageId": "com.superbet.app",
+  "host": "ne0nur.github.io",
+  "name": "S\u00fcperBET",
+  "launcherName": "S\u00fcperBET",
+  "display": "standalone",
+  "themeColor": "#0F172A",
+  "themeColorDark": "#000000",
+  "navigationColor": "#0F172A",
+  "navigationColorDark": "#000000",
+  "navigationDividerColor": "#000000",
+  "navigationDividerColorDark": "#000000",
+  "backgroundColor": "#0F172A",
+  "startUrl": "/s-perbet/",
+  "iconUrl": "https://ne0nur.github.io/s-perbet/pwa-512x512.png",
+  "maskableIconUrl": "https://ne0nur.github.io/s-perbet/pwa-512x512.png",
+  "monochromeIconUrl": "https://ne0nur.github.io/s-perbet/pwa-512x512.png",
+  "splashScreenFadeOutDuration": 300,
+  "appVersionName": "1.0.0",
+  "appVersionCode": 1,
+  "shortcuts": [],
+  "generatorApp": "bubblewrap-cli",
+  "webManifestUrl": "https://ne0nur.github.io/s-perbet/manifest.webmanifest",
+  "fallbackType": "customtabs",
+  "features": {
+    "playBilling": {
+      "enabled": false
+    },
+    "locationDelegation": {
+      "enabled": false
+    }
+  },
+  "alphaDependencies": {
+    "enabled": false
+  },
+  "enableSiteSettingsShortcut": true,
+  "isChromeOSOnly": false,
+  "isMetaQuest": false,
+  "minSdkVersion": 21,
+  "orientation": "portrait",
+  "fingerprints": [],
+  "additionalTrustedOrigins": [],
+  "retainedBundles": [],
+  "displayOverride": [],
+  "appVersion": "y",
+  "signingKey": {
+    "path": "/home/ne0nur/Projekte/fussball-tipprunde/android/superbet.keystore",
+    "alias": "superbet"
+  }
+}
