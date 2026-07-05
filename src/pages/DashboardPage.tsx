@@ -292,7 +292,13 @@ export function DashboardPage() {
         <div className="max-w-[1600px] mx-auto w-full">
           {/* Row 1: Turnier-Filter & Saison-Selector & All/Live Toggle */}
           <div className="flex justify-between items-center mb-2 gap-2 max-w-full">
-            <div className="flex overflow-x-auto no-scrollbar bg-surface-container/50 border border-white/5 p-0.5 rounded-xl gap-1 backdrop-blur-md max-w-[65%] sm:max-w-none">
+            <div 
+              className="flex overflow-x-auto no-scrollbar bg-surface-container/50 border border-white/5 p-0.5 rounded-xl gap-1 backdrop-blur-md max-w-[70%] sm:max-w-none relative"
+              style={{ 
+                maskImage: 'linear-gradient(to right, black calc(100% - 32px), transparent 100%)', 
+                WebkitMaskImage: 'linear-gradient(to right, black calc(100% - 32px), transparent 100%)' 
+              }}
+            >
               {availableTournaments.map(tName => (
                 <button
                   key={tName}

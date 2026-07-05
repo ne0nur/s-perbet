@@ -306,7 +306,13 @@ export function StandingsPage() {
     <div className="min-h-full px-3 md:px-6 lg:px-8 pt-2.5 md:pt-4 pb-24 md:pb-8 max-w-[1600px] mx-auto w-full overflow-x-hidden animate-page-enter">
       {/* Turnier-Filter & Saison-Selector */}
       <div className="flex justify-between items-center mb-2.5 max-w-[1600px] w-full gap-2">
-        <div className="flex bg-surface-container/50 border border-white/5 p-0.5 rounded-xl gap-1 backdrop-blur-md overflow-x-auto no-scrollbar max-w-[70%] sm:max-w-none">
+        <div 
+          className="flex bg-surface-container/50 border border-white/5 p-0.5 rounded-xl gap-1 backdrop-blur-md overflow-x-auto no-scrollbar max-w-[70%] sm:max-w-none"
+          style={{ 
+            maskImage: 'linear-gradient(to right, black calc(100% - 32px), transparent 100%)', 
+            WebkitMaskImage: 'linear-gradient(to right, black calc(100% - 32px), transparent 100%)' 
+          }}
+        >
           {availableTournaments.map(tName => (
             <button
               key={tName}
