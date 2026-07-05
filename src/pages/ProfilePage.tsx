@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuthStore } from '../stores/authStore'
 import { usePresenceStore } from '../stores/presenceStore'
-import { BookOpen, Sparkles, Download, RefreshCw } from 'lucide-react'
+import { BookOpen, Sparkles, Download, RefreshCw, Lock } from 'lucide-react'
 import { usePwaStore } from '../stores/pwaStore'
 import { useToastStore } from '../stores/toastStore'
 import { calculateLevelDetails, getRangTitelSystem } from '../lib/utils'
@@ -150,6 +150,10 @@ export function ProfilePage() {
   const { isInstallable, triggerInstall } = usePwaStore()
   const [isIosNotStandalone, setIsIosNotStandalone] = useState(false)
   const [updateAvailable, setUpdateAvailable] = useState(false)
+  const [pwCurrent, setPwCurrent] = useState('')
+  const [pwNew, setPwNew] = useState('')
+  const [pwConfirm, setPwConfirm] = useState('')
+  const [changingPw, setChangingPw] = useState(false)
 
   // Service Worker update detection
   useEffect(() => {
@@ -192,6 +196,39 @@ export function ProfilePage() {
     } else {
       window.location.reload()
     }
+  }
+
+  const handlePasswordChange = async () => {
+    if (!user?.email) return
+    if (pwNew !== pwConfirm) {
+      useToastStore.getState().toast(t('passwordsDontMatch'), 'error')
+      return
+    }
+    if (pwNew.length < 6) {
+      useToastStore.getState().toast(t('passwordTooShort'), 'error')
+      return
+    }
+    setChangingPw(true)
+    try {
+      // Verify current password first
+      const { error: verifyError } = await supabase.auth.signInWithPassword({
+        email: user.email,
+        password: pwCurrent,
+      })
+      if (verifyError) {
+        useToastStore.getState().toast(t('wrongPassword'), 'error')
+        setChangingPw(false)
+        return
+      }
+      await useAuthStore.getState().passwortAendern(pwNew)
+      useToastStore.getState().toast(t('passwordChangeSuccess'), 'success')
+      setPwCurrent('')
+      setPwNew('')
+      setPwConfirm('')
+    } catch (err: any) {
+      useToastStore.getState().toast(err.message || 'Fehler beim Ändern des Passworts', 'error')
+    }
+    setChangingPw(false)
   }
 
   useEffect(() => {
@@ -1134,16 +1171,64 @@ export function ProfilePage() {
                 <h3 className="text-[10px] font-mono font-bold text-on-surface-variant/50 uppercase tracking-wider mb-2 px-1">
                   {t('accountSection')}
                 </h3>
-                <div className="bg-surface-container-highest/30 border border-white/[0.03] rounded-lg p-3">
-                  <div className="flex items-center justify-between mb-1.5">
+                <div className="bg-surface-container-highest/30 border border-white/[0.03] rounded-lg p-3 space-y-3">
+                  {/* Login Name */}
+                  <div className="flex items-center justify-between">
                     <span className="text-[10px] text-on-surface-variant/50 font-mono">{t('loginNameLabel')}</span>
                     <span className="text-[11px] font-mono font-bold text-on-surface">
-                      {user?.user_metadata?.username || user?.email || '—'}
+                      {user?.email || '—'}
                     </span>
                   </div>
-                  <p className="text-[9px] text-on-surface-variant/40 font-mono leading-relaxed">
+                  <p className="text-[9px] text-on-surface-variant/40 font-mono leading-relaxed -mt-1">
                     {t('loginNameHint')}
                   </p>
+
+                  {/* Password Change */}
+                  <div className="border-t border-white/[0.03] pt-3">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Lock size={13} className="text-on-surface-variant shrink-0" />
+                      <span className="text-[11px] font-bold">{t('changePassword')}</span>
+                    </div>
+                    <p className="text-[9px] text-on-surface-variant/40 font-mono mb-3">
+                      {t('changePasswordDesc')}
+                    </p>
+                    <div className="space-y-2">
+                      <input
+                        type="password"
+                        placeholder={t('currentPassword')}
+                        value={pwCurrent}
+                        onChange={e => setPwCurrent(e.target.value)}
+                        className="w-full bg-surface-container border border-surface-container-high rounded-lg px-3 py-2.5 text-[11px] font-mono text-on-surface placeholder:text-on-surface-variant/30 focus:outline-none focus:border-primary/30 transition-colors"
+                      />
+                      <div className="flex gap-2">
+                        <input
+                          type="password"
+                          placeholder={t('newPassword')}
+                          value={pwNew}
+                          onChange={e => setPwNew(e.target.value)}
+                          className="flex-1 bg-surface-container border border-surface-container-high rounded-lg px-3 py-2.5 text-[11px] font-mono text-on-surface placeholder:text-on-surface-variant/30 focus:outline-none focus:border-primary/30 transition-colors"
+                        />
+                        <input
+                          type="password"
+                          placeholder={t('confirmPassword')}
+                          value={pwConfirm}
+                          onChange={e => setPwConfirm(e.target.value)}
+                          className="flex-1 bg-surface-container border border-surface-container-high rounded-lg px-3 py-2.5 text-[11px] font-mono text-on-surface placeholder:text-on-surface-variant/30 focus:outline-none focus:border-primary/30 transition-colors"
+                        />
+                      </div>
+                      <button
+                        onClick={handlePasswordChange}
+                        disabled={changingPw || !pwCurrent || !pwNew || !pwConfirm}
+                        className="w-full flex items-center justify-center gap-2 px-3 py-2.5 bg-primary/10 border border-primary/20 rounded-lg text-primary-fixed-dim hover:bg-primary/15 transition-colors disabled:opacity-30 font-mono text-[11px] font-bold cursor-pointer"
+                      >
+                        {changingPw ? (
+                          <><div className="w-3.5 h-3.5 border-2 border-primary border-t-transparent rounded-full animate-spin" /> {t('changingPassword')}</>
+                        ) : (
+                          t('changePassword')
+                        )}
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
