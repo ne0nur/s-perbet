@@ -183,7 +183,7 @@ export function BonusTippsCard({
                       {currentTeams.map(team => <option key={team} value={team}>{team}</option>)}
                     </select>
                     {wert && logoUrl ? (
-                      <img src={logoUrl} alt="" className="absolute left-2.5 top-1/2 -translate-y-1/2 w-5 h-5 object-contain pointer-events-none" />
+                      <img src={logoUrl} alt="" className="absolute left-2.5 top-1/2 -translate-y-1/2 w-5 h-5 object-contain pointer-events-none"  loading="lazy" />
                     ) : (
                       <div className="absolute left-2.5 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full border border-white/10 border-dashed pointer-events-none" />
                     )}

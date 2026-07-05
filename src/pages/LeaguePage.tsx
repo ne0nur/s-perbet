@@ -699,7 +699,7 @@ export function LeaguePage() {
                     onClick={() => setViewTournament(t)}
                     className={`px-2.5 py-1.5 text-[8px] xs:text-[9px] md:text-xs font-mono font-black uppercase tracking-wider rounded-lg whitespace-nowrap transition-all duration-200 cursor-pointer flex items-center gap-1.5 ${viewTournament === t ? 'bg-primary-container text-on-primary-container shadow-[0_1.5px_6px_rgba(var(--primary-rgb),0.1)] border border-primary/20 scale-[1.01]' : 'text-on-surface-variant hover:text-on-surface hover:bg-white/5 border border-transparent'}`}
                   >
-                    <img src={getTournamentLogo(t)} alt={t} className="w-4 h-4 object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.6)] brightness-110 shrink-0" />
+                    <img src={getTournamentLogo(t)} alt={t} className="w-4 h-4 object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.6)] brightness-110 shrink-0"  loading="lazy" />
                     <span className="hidden xs:inline">{t}</span>
                     <span className="xs:hidden">{t.split(' ')[0]}</span>
                   </button>
@@ -827,7 +827,7 @@ export function LeaguePage() {
                                     <div className="relative w-6.5 h-6.5 flex-shrink-0">
                                       <div className="w-full h-full rounded-full bg-surface-container-high overflow-hidden border border-white/5">
                                         {m.avatar_url ? (
-                                          <img src={m.avatar_url} alt="" className="w-full h-full object-cover" />
+                                          <img src={m.avatar_url} alt="" className="w-full h-full object-cover"  loading="lazy" />
                                         ) : (
                                           <div className="w-full h-full flex items-center justify-center text-[9px] font-bold text-on-surface-variant/40">
                                             {m.username?.charAt(0).toUpperCase() || '?'}
@@ -1286,7 +1286,7 @@ export function LeaguePage() {
                       className={`flex flex-col items-center justify-center p-3 rounded-xl border-2 cursor-pointer transition-colors relative overflow-hidden ${neueLigaTurniere.includes('Süper Lig') ? 'border-primary bg-primary/10' : 'border-surface-container-high bg-surface-container-lowest hover:border-surface-variant'}`}
                     >
                       {neueLigaTurniere.includes('Süper Lig') && <div className="absolute top-2 right-2 w-4 h-4 bg-primary rounded-full flex items-center justify-center text-on-primary"><Check size={10} strokeWidth={4} /></div>}
-                      <img src={`${import.meta.env.BASE_URL}logos/Süper_Lig.png`} alt="SL" className="w-8 h-8 object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.6)] brightness-110 mb-2" />
+                      <img src={`${import.meta.env.BASE_URL}logos/Süper_Lig.png`} alt="SL" className="w-8 h-8 object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.6)] brightness-110 mb-2"  loading="lazy" />
                       <span className={`text-xs font-bold ${neueLigaTurniere.includes('Süper Lig') ? 'text-primary' : 'text-on-surface'}`}>Süper Lig</span>
                     </motion.div>
                     
@@ -1300,7 +1300,7 @@ export function LeaguePage() {
                       className={`flex flex-col items-center justify-center p-3 rounded-xl border-2 cursor-pointer transition-colors relative overflow-hidden ${neueLigaTurniere.includes('Champions League') ? 'border-primary bg-primary/10' : 'border-surface-container-high bg-surface-container-lowest hover:border-surface-variant'}`}
                     >
                       {neueLigaTurniere.includes('Champions League') && <div className="absolute top-2 right-2 w-4 h-4 bg-primary rounded-full flex items-center justify-center text-on-primary"><Check size={10} strokeWidth={4} /></div>}
-                      <img src={`${import.meta.env.BASE_URL}logos/UEFA_Champions_League_logo.png`} alt="CL" className="w-8 h-8 object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.6)] brightness-110 mb-2" />
+                      <img src={`${import.meta.env.BASE_URL}logos/UEFA_Champions_League_logo.png`} alt="CL" className="w-8 h-8 object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.6)] brightness-110 mb-2"  loading="lazy" />
                       <span className={`text-xs font-bold text-center ${neueLigaTurniere.includes('Champions League') ? 'text-primary' : 'text-on-surface'}`}>Champions League</span>
                     </motion.div>
                   </div>

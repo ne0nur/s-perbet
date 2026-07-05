@@ -403,7 +403,7 @@ export function AppShell() {
             <div className="relative shrink-0">
               <div className="w-8 h-8 rounded-full bg-surface-container-high border border-white/10 overflow-hidden flex items-center justify-center">
                 {avatarUrl ? (
-                  <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
+                  <img src={avatarUrl} alt="" className="w-full h-full object-cover"  loading="lazy" />
                 ) : (
                   <span className="text-on-surface-variant text-xs font-mono font-bold">
                     {user?.user_metadata?.username?.[0]?.toUpperCase() || '?'}
@@ -453,7 +453,7 @@ export function AppShell() {
                       >
                         <div className="w-full h-full rounded-full overflow-hidden flex items-center justify-center">
                           {avatarUrl ? (
-                            <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
+                            <img src={avatarUrl} alt="" className="w-full h-full object-cover"  loading="lazy" />
                           ) : (
                             <span className="text-on-surface-variant text-xs font-mono font-bold">
                               {user?.user_metadata?.username?.[0]?.toUpperCase() || '?'}

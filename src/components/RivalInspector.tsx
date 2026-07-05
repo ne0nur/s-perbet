@@ -589,12 +589,12 @@ export function RivalInspector({ userId, onClose }: RivalInspectorProps) {
                   <div className="flex items-center gap-2 min-w-0 flex-1">
                     <span className="text-[8px] text-on-surface-variant/50 uppercase shrink-0">{t('spieltagShort')} {tip.match.spieltag}</span>
                     <div className="flex items-center gap-1.5 min-w-0">
-                      <img src={getTeamLogo(tip.match.heim_team)} alt="" className="w-5 h-5 object-contain shrink-0 opacity-80" />
+                      <img src={getTeamLogo(tip.match.heim_team)} alt="" className="w-5 h-5 object-contain shrink-0 opacity-80"  loading="lazy" />
                       <span className="text-on-surface font-medium truncate text-[11px]">{abbrevTeam(tip.match.heim_team)}</span>
                     </div>
                     <span className="text-on-surface-variant/30 shrink-0">-</span>
                     <div className="flex items-center gap-1.5 min-w-0">
-                      <img src={getTeamLogo(tip.match.gast_team)} alt="" className="w-5 h-5 object-contain shrink-0 opacity-80" />
+                      <img src={getTeamLogo(tip.match.gast_team)} alt="" className="w-5 h-5 object-contain shrink-0 opacity-80"  loading="lazy" />
                       <span className="text-on-surface font-medium truncate text-[11px]">{abbrevTeam(tip.match.gast_team)}</span>
                     </div>
                   </div>

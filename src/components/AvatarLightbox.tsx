@@ -37,7 +37,7 @@ export function AvatarLightbox({
       >
         <div className="w-full h-full rounded-full bg-surface-container-high border border-surface-container-highest overflow-hidden flex items-center justify-center">
           {src ? (
-            <img src={src} alt={username} className="w-full h-full object-cover" />
+            <img src={src} alt={username} className="w-full h-full object-cover"  loading="lazy" />
           ) : (
             <span className="text-on-surface-variant font-bold">{initial}</span>
           )}

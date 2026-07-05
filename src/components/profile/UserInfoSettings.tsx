@@ -52,7 +52,7 @@ export function UserInfoSettings({
             onClick={() => fileRef.current?.click()}
           >
             {avatarUrl ? (
-              <img src={avatarUrl} alt="" className="w-full h-full object-cover transition-all group-hover:scale-105" />
+              <img src={avatarUrl} alt="" className="w-full h-full object-cover transition-all group-hover:scale-105"  loading="lazy" />
             ) : (
               <span className="text-on-surface-variant text-2xl font-bold">{username.slice(0, 1).toUpperCase()}</span>
             )}

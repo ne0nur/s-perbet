@@ -323,7 +323,7 @@ export function StandingsPage() {
               }}
               className={`px-2.5 py-1.5 text-[8px] xs:text-[9px] md:text-xs font-mono font-black uppercase tracking-wider rounded-lg whitespace-nowrap transition-all duration-200 cursor-pointer flex items-center gap-1.5 ${viewTournament === tName ? 'bg-primary-container text-on-primary-container shadow-[0_1.5px_6px_rgba(var(--primary-rgb),0.1)] border border-primary/20 scale-[1.01]' : 'text-on-surface-variant hover:text-on-surface hover:bg-white/5 border border-transparent'}`}
             >
-              <img src={getTournamentLogo(tName)} alt={tName} className="w-4 h-4 object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.6)] brightness-110 shrink-0" />
+              <img src={getTournamentLogo(tName)} alt={tName} className="w-4 h-4 object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.6)] brightness-110 shrink-0"  loading="lazy" />
               <span className="hidden xs:inline">{tName}</span>
               <span className="xs:hidden">{tName.split(' ')[0]}</span>
             </button>

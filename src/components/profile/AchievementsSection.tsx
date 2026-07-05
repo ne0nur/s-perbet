@@ -85,7 +85,7 @@ export const AchievementBadge = memo(function AchievementBadge({ id, unlocked, r
         src={`${import.meta.env.BASE_URL}achievements/${id}.webp`} 
         alt="" 
         className="relative z-10 w-full h-full object-contain rounded-lg drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)]" 
-      />
+       loading="lazy" />
     </div>
   )
 })

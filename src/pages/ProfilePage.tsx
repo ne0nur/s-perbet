@@ -1,5 +1,5 @@
  
-import { useEffect, useState, useRef, useMemo, useCallback } from 'react'
+import { useEffect, useState, useRef, useMemo, useCallback, lazy, Suspense } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuthStore } from '../stores/authStore'
@@ -19,7 +19,7 @@ import { PushSubscriptionManager } from '../components/push/PushSubscriptionMana
 import { AdminSection } from '../components/profile/AdminSection'
 
 import { StatsGrid } from '../components/profile/StatsGrid'
-import { AchievementsSection } from '../components/profile/AchievementsSection'
+const AchievementsSection = lazy(() => import('../components/profile/AchievementsSection').then(m => ({ default: m.AchievementsSection })))
 import { evaluateAchievements, type TipDetails } from '../utils/achievementEvaluator'
 import { BonusTippsCard } from '../components/profile/BonusTippsCard'
 import { PointsChart } from '../components/profile/PointsChart'
@@ -1049,10 +1049,12 @@ export function ProfilePage() {
         {/* ACHIEVEMENTS TAB */}
         {activeTab === 'achievements' && (
           <div className="animate-fade-in space-y-6">
+            <Suspense fallback={<div className="animate-pulse bg-surface-container rounded-xl h-48" />}>
             <AchievementsSection 
               unlockedSet={unlockedSet}
               newlyUnlocked={newlyUnlockedSet}
             />
+            </Suspense>
           </div>
         )}
 

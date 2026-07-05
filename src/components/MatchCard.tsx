@@ -132,6 +132,28 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
   const [isSaving, setIsSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const initialized = useRef(false)
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => { if (saveTimerRef.current) clearTimeout(saveTimerRef.current) }
+  }, [])
+
+  // Auto-Save: debounce 1.5s nach letzter Änderung
+  useEffect(() => {
+    if (!initialized.current) return
+    if (readOnly || !istUpcoming || !tippsFreigeschaltet || !isOnline) return
+    if (tippHeim === (eigenerTipp?.tipp_heim ?? 0) && tippGast === (eigenerTipp?.tipp_gast ?? 0)) return
+
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
+    saveTimerRef.current = setTimeout(async () => {
+      try {
+        await tippSpeichern(match.id, tippHeim, tippGast, match.spieltag)
+        setSaved(true)
+        setTimeout(() => setSaved(false), 2000)
+      } catch { /* silent — manual save fallback available */ }
+    }, 1500)
+  }, [tippHeim, tippGast])
 
   // Einmal initialisieren wenn Tipp aus Store geladen wird
   useEffect(() => {
@@ -241,7 +263,7 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
           <span>{formatDatum(match.anpfiff)} · {formatUhrzeit(match.anpfiff)}</span>
           {match.tournament === 'Champions League' && (
             <span className="text-amber-400 bg-amber-400/10 px-1 py-0.5 rounded text-[9px] font-bold flex items-center gap-1" title="Champions League">
-              <img src={`${import.meta.env.BASE_URL}logos/UEFA_Champions_League_logo.png`} alt="CL" className="w-5 h-5 object-contain drop-shadow-[0_0_6px_rgba(255,255,255,0.6)] brightness-110" />
+              <img src={`${import.meta.env.BASE_URL}logos/UEFA_Champions_League_logo.png`} alt="CL" className="w-5 h-5 object-contain drop-shadow-[0_0_6px_rgba(255,255,255,0.6)] brightness-110"  loading="lazy" />
               CL
             </span>
           )}

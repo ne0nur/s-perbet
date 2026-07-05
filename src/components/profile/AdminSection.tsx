@@ -388,7 +388,7 @@ export function AdminSection({
                     <div key={u.id} className="flex items-center gap-2 bg-surface-container-lowest border border-surface-container-high rounded-lg p-2">
                       <div className="w-6 h-6 rounded-full bg-surface-container-high overflow-hidden shrink-0 border border-green-500/30">
                         {u.avatar_url ? (
-                          <img src={u.avatar_url} className="w-full h-full object-cover" />
+                          <img src={u.avatar_url} className="w-full h-full object-cover"  loading="lazy" />
                         ) : (
                           <span className="w-full h-full flex items-center justify-center text-[10px] font-bold">{u.username?.[0]?.toUpperCase()}</span>
                         )}

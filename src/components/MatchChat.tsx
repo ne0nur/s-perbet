@@ -42,7 +42,7 @@ function Avatar({ url, name, size = 'sm' }: { url?: string | null; name: string;
   const dims = size === 'md' ? 'w-8 h-8' : 'w-6 h-6'
   const textSize = size === 'md' ? 'text-xs' : 'text-[9px]'
   if (url) {
-    return <img src={url} alt="" className={`${dims} rounded-full object-cover border border-white/10 flex-shrink-0`} />
+    return <img src={url} alt="" className={`${dims} rounded-full object-cover border border-white/10 flex-shrink-0`}  loading="lazy" />
   }
   return (
     <div className={`${dims} rounded-full bg-surface-container-high border border-white/5 flex items-center justify-center flex-shrink-0`}>

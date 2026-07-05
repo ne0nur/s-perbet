@@ -113,7 +113,7 @@ export function MatchDetailPanel({ matchId, onClose }: MatchDetailPanelProps) {
         {/* Core Match Info: Teams + Score */}
         <div className="flex items-center justify-center gap-6 mt-1 mb-2">
           <div className="flex flex-col items-center gap-1 w-24">
-            <img src={getTeamLogo(match.heim_team)} alt="" className="w-10 h-10 object-contain drop-shadow" />
+            <img src={getTeamLogo(match.heim_team)} alt="" className="w-10 h-10 object-contain drop-shadow"  loading="lazy" />
             <span className="text-[10px] font-mono text-on-surface text-center truncate w-full font-bold">{match.heim_team}</span>
           </div>
 
@@ -135,7 +135,7 @@ export function MatchDetailPanel({ matchId, onClose }: MatchDetailPanelProps) {
           </div>
 
           <div className="flex flex-col items-center gap-1 w-24">
-            <img src={getTeamLogo(match.gast_team)} alt="" className="w-10 h-10 object-contain drop-shadow" />
+            <img src={getTeamLogo(match.gast_team)} alt="" className="w-10 h-10 object-contain drop-shadow"  loading="lazy" />
             <span className="text-[10px] font-mono text-on-surface text-center truncate w-full font-bold">{match.gast_team}</span>
           </div>
         </div>
@@ -201,7 +201,7 @@ export function MatchDetailPanel({ matchId, onClose }: MatchDetailPanelProps) {
                   >
                     <div className="w-7 h-7 rounded-full bg-surface-container-high border border-surface-container-highest flex items-center justify-center flex-shrink-0 overflow-hidden">
                       {tip.profile?.avatar_url ? (
-                        <img src={tip.profile.avatar_url} alt="" className="w-full h-full object-cover" />
+                        <img src={tip.profile.avatar_url} alt="" className="w-full h-full object-cover"  loading="lazy" />
                       ) : (
                         <UserIcon size={12} className="text-on-surface-variant" />
                       )}

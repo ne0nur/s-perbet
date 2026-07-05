@@ -78,11 +78,9 @@ export default function App() {
   useEffect(() => {
     const handleOnline = () => {
       useNetworkStore.getState().setIsOnline(true)
-      useToastStore.getState().toast('🟢 ' + t('onlineAgain'), 'info')
     }
     const handleOffline = () => {
       useNetworkStore.getState().setIsOnline(false)
-      useToastStore.getState().toast('🔴 ' + t('offlineWarning'), 'error')
     }
 
     window.addEventListener('online', handleOnline)

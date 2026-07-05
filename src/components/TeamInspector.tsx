@@ -164,7 +164,7 @@ export function TeamInspector({ teamName, onClose }: TeamInspectorProps) {
       {/* Header */}
       <div className="flex items-center justify-between pb-3 border-b border-white/5 mb-4">
         <div className="flex items-center gap-2.5">
-          <img src={getTeamLogo(teamName)} alt="" className="w-8 h-8 object-contain drop-shadow" />
+          <img src={getTeamLogo(teamName)} alt="" className="w-8 h-8 object-contain drop-shadow"  loading="lazy" />
           <h2 className="text-sm font-mono font-bold text-white uppercase tracking-wider">{teamName}</h2>
         </div>
         {onClose && (
@@ -196,14 +196,14 @@ export function TeamInspector({ teamName, onClose }: TeamInspectorProps) {
                 {/* Score / Teams Row */}
                 <div className="flex items-center justify-center gap-4">
                   <div className="flex flex-col items-center gap-1 w-20">
-                    <img src={getTeamLogo(nextMatch.heim_team)} alt="" className="w-7 h-7 object-contain" />
+                    <img src={getTeamLogo(nextMatch.heim_team)} alt="" className="w-7 h-7 object-contain"  loading="lazy" />
                     <span className="text-[10px] font-mono font-bold text-center truncate w-full text-on-surface">{nextMatch.heim_team}</span>
                   </div>
 
                   <span className="font-mono text-xs text-on-surface-variant/40">VS</span>
 
                   <div className="flex flex-col items-center gap-1 w-20">
-                    <img src={getTeamLogo(nextMatch.gast_team)} alt="" className="w-7 h-7 object-contain" />
+                    <img src={getTeamLogo(nextMatch.gast_team)} alt="" className="w-7 h-7 object-contain"  loading="lazy" />
                     <span className="text-[10px] font-mono font-bold text-center truncate w-full text-on-surface">{nextMatch.gast_team}</span>
                   </div>
                 </div>

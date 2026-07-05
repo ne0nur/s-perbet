@@ -445,6 +445,21 @@ export const useMatchStore = create<MatchState>()(
             }
 
             if (data?.length) {
+              // ─── PWA Badge: Zähle neu beendete Spiele ───
+              const prevFinishedIds = new Set(get().matches.filter(m => m.status === 'finished').map(m => m.id))
+              let newFinishedCount = 0
+              data.forEach((fresh: Match) => {
+                if (fresh.status === 'finished' && !prevFinishedIds.has(fresh.id)) {
+                  newFinishedCount++
+                }
+              })
+              if (newFinishedCount > 0 && 'setAppBadge' in navigator) {
+                try {
+                  const current = await (navigator as any).getAppBadge?.() ?? 0
+                  await (navigator as any).setAppBadge?.(current + newFinishedCount)
+                } catch { /* badge API optional */ }
+              }
+
               set(s => {
                 const updated = [...s.matches]
                 data.forEach((fresh: Match) => {

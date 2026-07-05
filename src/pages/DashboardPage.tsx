@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { MatchCard } from '../components/MatchCard'
 import { MatchDetailPanel } from '../components/MatchDetailPanel'
-import { Lock, Check } from 'lucide-react'
+import { Lock, Check, ChevronRight } from 'lucide-react'
 import { useAuthStore } from '../stores/authStore'
 import { useSettingsStore } from '../stores/settingsStore'
 import { useTournamentStore } from '../stores/tournamentStore'
@@ -13,6 +13,7 @@ import { useToastStore } from '../stores/toastStore'
 import { useTranslation } from '../utils/translations'
 import { getTournamentLogo } from '../lib/utils'
 import { motion } from 'framer-motion'
+import { PullToRefresh } from '../components/ui/PullToRefresh'
 
 export function DashboardPage() {
   const { t, language } = useTranslation()
@@ -59,6 +60,13 @@ export function DashboardPage() {
     starteLiveMatchPoll()
     return () => stoppeLiveMatchPoll()
   }, [starteLiveMatchPoll, stoppeLiveMatchPoll])
+
+  // PWA Badge clearen beim Betreten der App
+  useEffect(() => {
+    if ('clearAppBadge' in navigator) {
+      (navigator as any).clearAppBadge?.()
+    }
+  }, [])
 
   useEffect(() => {
     ladeMatches(aktuellerSpieltag)
@@ -286,7 +294,15 @@ export function DashboardPage() {
     return maxSpieltag || 38
   }
 
+  const handleManualRefresh = async () => {
+    await Promise.all([
+      ladeMatches(aktuellerSpieltag),
+      ladeMeineTipps(aktuellerSpieltag),
+    ])
+  }
+
   return (
+    <PullToRefresh onRefresh={handleManualRefresh}>
     <div className="min-h-full flex flex-col pb-24 md:pb-6 animate-page-enter">
       <header className="sticky top-0 z-30 bg-background/95 backdrop-blur-xl shrink-0 border-b border-white/5 px-4 md:px-6 lg:px-8 pt-2.5 pb-1">
         <div className="max-w-[1600px] mx-auto w-full">
@@ -392,6 +408,13 @@ export function DashboardPage() {
                   })}
                 </div>
               </div>
+              {/* Desktop Next Button */}
+              <button
+                onClick={() => setSpieltag(aktuellerSpieltag + 1)}
+                className="hidden md:flex flex-shrink-0 px-1.5 py-1.5 rounded-lg text-on-surface-variant/50 hover:text-on-surface hover:bg-white/5 transition-colors cursor-pointer"
+              >
+                <ChevronRight size={16} />
+              </button>
             </div>
           </div>
 
@@ -464,6 +487,7 @@ export function DashboardPage() {
                 src={getTournamentLogo(selectedTournament)} 
                 alt={selectedTournament} 
                 className="w-10 h-10 object-contain opacity-40 grayscale" 
+                loading="lazy"
                 onError={(e) => { (e.target as HTMLImageElement).src = `${import.meta.env.BASE_URL}logos/soccer_ball.png` }} 
               />
             </div>
@@ -560,5 +584,6 @@ export function DashboardPage() {
         )}
       </main>
     </div>
+    </PullToRefresh>
   )
 }
