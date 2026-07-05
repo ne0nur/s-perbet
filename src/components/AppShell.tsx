@@ -353,7 +353,7 @@ export function AppShell() {
   ]
 
   return (
-    <div className="h-[100dvh] w-full bg-background flex flex-col overflow-hidden select-none">
+    <div className="min-h-[100dvh] w-full bg-background flex flex-col overflow-hidden select-none">
       <ColorBends colors={colorBendsColors} speed={0.12} scale={0.85} intensity={0.9} />
       <NetworkIndicator />
       
