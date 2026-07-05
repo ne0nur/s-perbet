@@ -1,0 +1,10 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "com.superbet.app",
+    "sha256_cert_fingerprints": [
+      "E0:62:8D:9D:CD:E1:1F:46:86:D6:9C:AC:5E:EB:D1:A0:7B:D7:B8:B7:50:6C:F6:14:13:09:EC:B6:8E:D3:51:99"
+    ]
+  }
+}]
