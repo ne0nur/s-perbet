@@ -361,7 +361,7 @@ export function AppShell() {
       <header className="hidden md:flex items-center justify-between px-8 h-16 shrink-0 relative z-20 border-b border-white/[0.03] backdrop-blur-sm">
         <div className="flex items-center gap-3">
           {/* Brand Logo — premium shimmer & animated entry */}
-          <HeaderLogo size="sm" />
+          <HeaderLogo size="md" />
           <span className="text-sm font-black tracking-tight leading-none uppercase">
             <ShinyText text="SÜPERBET" speed={3.5} className="font-extrabold" />
           </span>
@@ -426,7 +426,7 @@ export function AppShell() {
           <header className="md:hidden sticky top-0 z-40 bg-surface/60 backdrop-blur-xl border-b border-white/5 shrink-0">
             <div className="flex items-center justify-between px-4 h-14 max-w-lg mx-auto w-full">
               <div className="flex items-center">
-                <HeaderLogo size="sm" />
+                <HeaderLogo size="md" />
               </div>
               <AnimatePresence>
                 {location.pathname !== '/profile' && (
