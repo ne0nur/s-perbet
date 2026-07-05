@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, memo } from 'react'
 import { useTipStore } from '../stores/tipStore'
 import { getTeamLogo } from '../lib/teamLogos'
 import { berechnePunkte } from '../lib/utils'
-import { ChevronRight, Check, Minus, Plus, Lock, WifiOff } from 'lucide-react'
+import { ChevronRight, Check, Minus, Plus, Lock, WifiOff, AlertTriangle } from 'lucide-react'
 import { useSettingsStore } from '../stores/settingsStore'
 import { useNetworkStore } from '../stores/networkStore'
 import { useToastStore } from '../stores/toastStore'
@@ -387,27 +387,12 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
         {/* FALL B: Tipp-Input aktiv */}
         {kannTippen && (() => {
           const ringCircumference = 2 * Math.PI * 24
-
-          // KO-Draw-Validierung: verhindert gleiche Werte
-          const validateKoNoDraw = (newVal: number, isHeim: boolean): boolean => {
-            if (!isKoMatch) return true
-            const other = isHeim ? tippGast : tippHeim
-            if (newVal === other) {
-              const msgs: Record<string, string> = {
-                de: 'KO-Spiele können nicht Unentschieden enden! (Bitte inkl. Elfmeterschießen tippen)',
-                en: 'Knockout matches cannot end in a draw! (Please include penalty shootout)',
-                tr: 'Eleme maçları berabere bitemez! (Lütfen penaltı atışları dahil tahmin edin)',
-              }
-              useToastStore.getState().toast(msgs[language] || msgs.de, 'error')
-              return false
-            }
-            return true
-          }
+          const koDrawWarning = isKoMatch && hasChanges && tippHeim === tippGast
 
           return (
           <div className="flex items-center justify-between gap-2 px-1">
             {/* Heim-Stepper */}
-            <Stepper value={tippHeim} onChange={setTippHeim} disabled={isSaving || !isOnline} onValidate={(v: number) => validateKoNoDraw(v, true)} />
+            <Stepper value={tippHeim} onChange={setTippHeim} disabled={isSaving || !isOnline} />
 
             {/* Status-Indikator (Auto-Save, kein Klick) */}
             <div
@@ -418,15 +403,17 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
                     ? 'bg-primary-container/10 border border-primary-container/20 text-primary-fixed-dim'
                     : saved
                       ? 'bg-green-500/20 border border-green-500/40 text-green-400 shadow-[0_0_12px_rgba(34,197,94,0.2)]'
-                      : hasChanges
-                        ? pending
-                          ? 'bg-amber-500/5 border border-amber-500/30 text-amber-400'
-                          : 'bg-primary-container/10 border border-primary-container/20 text-primary-fixed-dim'
-                        : 'bg-green-500/10 border border-green-500/20 text-green-400/70'
+                      : koDrawWarning
+                        ? 'bg-amber-500/10 border border-amber-500/40 text-amber-400'
+                        : hasChanges
+                          ? pending
+                            ? 'bg-amber-500/5 border border-amber-500/30 text-amber-400'
+                            : 'bg-primary-container/10 border border-primary-container/20 text-primary-fixed-dim'
+                          : 'bg-green-500/10 border border-green-500/20 text-green-400/70'
               }`}
             >
               {/* Fortschrittsring — füllt sich in 1.5s */}
-              {hasChanges && pending && (
+              {hasChanges && pending && !koDrawWarning && (
                 <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 56 56">
                   <circle
                     cx="28" cy="28" r="24"
@@ -450,6 +437,10 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
                   <motion.span key="saved" initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.8, opacity: 0 }} transition={{ type: 'spring', stiffness: 500, damping: 15 }}>
                     <Check size={22} className="stroke-[3]" />
                   </motion.span>
+                ) : koDrawWarning ? (
+                  <motion.span key="kodraw" initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
+                    <AlertTriangle size={20} className="stroke-[2.5]" />
+                  </motion.span>
                 ) : (
                   <motion.span key="idle" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="opacity-60">
                     <Check size={18} className="stroke-[2.5]" />
@@ -459,7 +450,7 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
             </div>
 
             {/* Gast-Stepper */}
-            <Stepper value={tippGast} onChange={setTippGast} disabled={isSaving || !isOnline} onValidate={(v: number) => validateKoNoDraw(v, false)} />
+            <Stepper value={tippGast} onChange={setTippGast} disabled={isSaving || !isOnline} />
           </div>
           )
         })()}
