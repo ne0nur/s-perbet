@@ -1377,3 +1377,20 @@ html {
   --on-primary-fixed-variant: #00504f;
   --primary-rgb: 20, 184, 166;
 }
+
+/* ─── Live Match Premium Border Pulse ─── */
+@keyframes liveBorderPulse {
+  0%, 100% { 
+    border-color: rgba(239, 68, 68, 0.25); 
+    box-shadow: 0 0 8px rgba(239, 68, 68, 0.08), inset 0 0 8px rgba(239, 68, 68, 0.02);
+  }
+  50% { 
+    border-color: rgba(239, 68, 68, 0.55); 
+    box-shadow: 0 0 22px rgba(239, 68, 68, 0.18), inset 0 0 14px rgba(239, 68, 68, 0.04);
+  }
+}
+.live-card-pulse {
+  animation: liveBorderPulse 2.8s ease-in-out infinite;
+  border-width: 1px;
+  border-style: solid;
+}

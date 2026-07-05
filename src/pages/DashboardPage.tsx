@@ -293,10 +293,10 @@ export function DashboardPage() {
           {/* Row 1: Turnier-Filter & Saison-Selector & All/Live Toggle */}
           <div className="flex justify-between items-center mb-2 gap-2 max-w-full">
             <div 
-              className="flex overflow-x-auto no-scrollbar bg-surface-container/50 border border-white/5 p-0.5 rounded-xl gap-1 backdrop-blur-md max-w-[70%] sm:max-w-none relative"
+              className="flex overflow-x-auto no-scrollbar bg-surface-container/50 border border-white/5 p-0.5 rounded-xl gap-1 backdrop-blur-md flex-1 relative"
               style={{ 
-                maskImage: 'linear-gradient(to right, black calc(100% - 32px), transparent 100%)', 
-                WebkitMaskImage: 'linear-gradient(to right, black calc(100% - 32px), transparent 100%)' 
+                maskImage: 'linear-gradient(to right, black calc(100% - 24px), transparent 100%)', 
+                WebkitMaskImage: 'linear-gradient(to right, black calc(100% - 24px), transparent 100%)' 
               }}
             >
               {availableTournaments.map(tName => (
@@ -315,25 +315,7 @@ export function DashboardPage() {
               ))}
             </div>
 
-            <div className="flex items-center gap-1.5 shrink-0">
-              {/* All/Live Filter-Toggle */}
-              <div className="flex bg-surface-container/50 border border-white/5 p-0.5 rounded-lg">
-                {(['alle', 'live'] as const).map(f => (
-                  <button
-                    key={f}
-                    onClick={() => setFilter(f)}
-                    className={`text-[8px] font-mono font-black uppercase tracking-wider px-2 py-1 rounded-md transition-all duration-200 cursor-pointer ${
-                      filter === f
-                        ? 'bg-primary-container text-on-primary-container border border-primary/25'
-                        : 'text-on-surface-variant hover:text-on-surface hover:bg-white/5 border border-transparent'
-                    }`}
-                  >
-                    {f === 'alle' ? t('filterAll') : t('filterLive')}
-                  </button>
-                ))}
-              </div>
-
-              {/* Saison-Selector */}
+            {/* Saison-Selector */}
               <select
                 value={useMatchStore.getState().aktuelleSaison || 2026}
                 onChange={(e) => useMatchStore.getState().setSaison(parseInt(e.target.value))}
@@ -352,7 +334,6 @@ export function DashboardPage() {
                   ))
                 })()}
               </select>
-            </div>
           </div>
 
           {/* Row 2: Spieltag-Slider Segmented Control */}

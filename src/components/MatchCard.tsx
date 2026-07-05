@@ -31,14 +31,8 @@ function randFarbe(punkte: number): string {
   return ''
 }
 
-function liveGlowKlasse(punkte: number): string {
-  if (punkte === 4) return 'animate-pulse border-emerald-500/50 shadow-[0_0_15px_rgba(16,185,129,0.3)] bg-emerald-950/[0.04]'
-  if (punkte === 3) return 'animate-pulse border-amber-500/50 shadow-[0_0_15px_rgba(245,158,11,0.3)] bg-amber-950/[0.04]'
-  if (punkte === 2) return 'animate-pulse border-blue-500/50 shadow-[0_0_15px_rgba(59,130,246,0.3)] bg-blue-950/[0.04]'
-  if (punkte === 1) return 'animate-pulse border-purple-500/50 shadow-[0_0_15px_rgba(168,85,247,0.3)] bg-purple-950/[0.04]'
-  if (punkte === -1) return 'animate-pulse border-red-500/30 shadow-[0_0_10px_rgba(239,68,68,0.15)] bg-red-950/[0.02]'
-  if (punkte === -2) return 'animate-pulse border-red-600/40 shadow-[0_0_12px_rgba(220,38,38,0.2)] bg-red-950/[0.03]'
-  return 'animate-pulse border-slate-500/30 shadow-[0_0_8px_rgba(100,116,139,0.15)] bg-slate-950/[0.02]'
+function liveGlowKlasse(): string {
+  return 'live-card-pulse bg-red-950/[0.03]'
 }
 
 function formatDatum(iso: string): string {
@@ -235,8 +229,8 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
       className={`glass-card p-3 transition-all duration-300 hover:border-white/15 hover:shadow-[0_8px_24px_rgba(0,0,0,0.4)] ${
         istVorbei && punkte !== null 
           ? randFarbe(punkte) 
-          : istLive && livePunkte !== null 
-            ? liveGlowKlasse(livePunkte) 
+          : istLive
+            ? liveGlowKlasse() 
             : ''
       } ${className}`}
     >
