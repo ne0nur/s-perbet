@@ -337,7 +337,7 @@ export function RivalInspector({ userId, onClose }: RivalInspectorProps) {
   }
 
   return (
-    <div className="bg-surface-container-low border border-surface-container-high rounded-xl overflow-hidden flex flex-col h-full shadow-lg max-h-[85vh] lg:max-h-[calc(100vh-130px)]">
+    <div className="bg-surface-container-low border border-surface-container-high rounded-xl overflow-hidden flex flex-col h-full shadow-lg max-h-[85dvh] lg:max-h-[calc(100dvh-130px)]">
       
       {/* ─── Header: VS Mode oder Single Mode ─── */}
       <div className="bg-surface-container border-b border-surface-container-high p-4 relative">

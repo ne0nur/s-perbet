@@ -48,7 +48,7 @@ export function AvatarLightbox({
       {/* Lightbox Modal */}
       {isOpen && src && (
         <div
-          className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in"
+          className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-sm flex items-center justify-center px-4 pt-[calc(1rem+env(safe-area-inset-top,0px))] pb-[calc(1rem+env(safe-area-inset-bottom,0px))] animate-fade-in"
           onClick={() => setIsOpen(false)}
         >
           <button

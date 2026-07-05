@@ -93,7 +93,7 @@ export function MatchDetailPanel({ matchId, onClose }: MatchDetailPanelProps) {
       initial={{ y: 24, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ type: 'spring', stiffness: 280, damping: 24 }}
-      className="glass-panel rounded-2xl overflow-hidden flex flex-col h-full shadow-[0_20px_50px_rgba(0,0,0,0.6)] border border-white/10 max-h-[85vh] lg:max-h-[calc(100vh-130px)] backdrop-blur-xl bg-surface-container-low/60 relative"
+      className="glass-panel rounded-2xl overflow-hidden flex flex-col h-full shadow-[0_20px_50px_rgba(0,0,0,0.6)] border border-white/10 max-h-[85dvh] lg:max-h-[calc(100dvh-130px)] backdrop-blur-xl bg-surface-container-low/60 relative"
     >
       {/* Panel Header: Team vs Team & Close Button */}
       <div className="bg-surface-container border-b border-surface-container-high p-4 flex flex-col relative">

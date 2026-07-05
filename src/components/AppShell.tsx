@@ -497,7 +497,7 @@ export function AppShell() {
 
       {/* Fullscreen Onboarding Carousel Overlay */}
       {showOnboarding && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4 pt-[calc(1rem+env(safe-area-inset-top,0px))] pb-[calc(1rem+env(safe-area-inset-bottom,0px))]">
           <div className="fixed inset-0 bg-black/95 backdrop-blur-md animate-fade-in" />
           
           <div className="relative border border-white/10 rounded-3xl p-8 text-center max-w-md w-full shadow-[0_20px_50px_rgba(0,0,0,0.8),_0_0_40px_rgba(var(--primary-rgb),0.15)] flex flex-col min-h-[480px] justify-between animate-scale-in bg-gradient-to-br from-surface-container-high/70 via-surface-container-low/95 to-surface-container-lowest/80 backdrop-blur-xl">
