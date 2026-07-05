@@ -428,21 +428,21 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
                 </svg>
               )}
 
-              <AnimatePresence mode="wait">
+              <AnimatePresence mode="sync">
                 {!isOnline ? (
-                  <motion.span key="offline" initial={{ opacity: 0 }} animate={{ opacity: 1 }}><WifiOff size={16} /></motion.span>
+                  <motion.span key="offline" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.12 }}><WifiOff size={16} /></motion.span>
                 ) : isSaving ? (
-                  <motion.div key="saving" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="w-4 h-4 border-2 border-primary-fixed-dim border-t-transparent rounded-full animate-spin" />
+                  <motion.div key="saving" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.12 }} className="w-4 h-4 border-2 border-primary-fixed-dim border-t-transparent rounded-full animate-spin" />
                 ) : saved ? (
-                  <motion.span key="saved" initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.8, opacity: 0 }} transition={{ type: 'spring', stiffness: 500, damping: 15 }}>
+                  <motion.span key="saved" initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.8, opacity: 0 }} transition={{ duration: 0.15 }}>
                     <Check size={22} className="stroke-[3]" />
                   </motion.span>
                 ) : koDrawWarning ? (
-                  <motion.span key="kodraw" initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
+                  <motion.span key="kodraw" initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} transition={{ duration: 0.15 }}>
                     <AlertTriangle size={20} className="stroke-[2.5]" />
                   </motion.span>
                 ) : (
-                  <motion.span key="idle" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="opacity-60">
+                  <motion.span key="idle" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.12 }} className="opacity-60">
                     <Check size={18} className="stroke-[2.5]" />
                   </motion.span>
                 )}
