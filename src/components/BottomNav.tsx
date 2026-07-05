@@ -29,7 +29,7 @@ export function BottomNav() {
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden select-none pb-3 pt-1 px-2">
-      <GlassSurface blur={24} opacity={0.15} saturation={2.2} className="rounded-2xl">
+      <GlassSurface blur={28} opacity={0.65} saturation={2.4} className="rounded-2xl">
         <div className="flex justify-center items-center h-[52px] px-1 relative">
           {tabs.map(({ to, icon: Icon, label }, index) => {
             const isActive = activeIndex === index
