@@ -46,13 +46,17 @@ function formatUhrzeit(iso: string): string {
 }
 
 // ─── Stepper-Komponente ───────────────────────────────
-function Stepper({ value, onChange, disabled }: { value: number; onChange: (v: number) => void; disabled?: boolean }) {
+function Stepper({ value, onChange, disabled, onValidate }: { value: number; onChange: (v: number) => void; disabled?: boolean; onValidate?: (v: number) => boolean }) {
+  const tryChange = (newVal: number) => {
+    if (onValidate && !onValidate(newVal)) return
+    onChange(newVal)
+  }
   return (
     <div className="flex items-center gap-2">
       <motion.button
         type="button"
         onPointerDown={(e) => e.stopPropagation()}
-        onClick={(e) => { e.stopPropagation(); onChange(Math.max(0, value - 1)) }}
+        onClick={(e) => { e.stopPropagation(); tryChange(Math.max(0, value - 1)) }}
         disabled={disabled || value === 0}
         whileTap={{ scale: 0.85 }}
         className="w-8 h-8 rounded-full bg-surface-container-highest border border-surface-container-high flex items-center justify-center text-on-surface-variant
@@ -80,7 +84,7 @@ function Stepper({ value, onChange, disabled }: { value: number; onChange: (v: n
       <motion.button
         type="button"
         onPointerDown={(e) => e.stopPropagation()}
-        onClick={(e) => { e.stopPropagation(); onChange(Math.min(20, value + 1)) }}
+        onClick={(e) => { e.stopPropagation(); tryChange(Math.min(20, value + 1)) }}
         disabled={disabled || value === 20}
         whileTap={{ scale: 0.85 }}
         className="w-8 h-8 rounded-full bg-surface-container-highest border border-surface-container-high flex items-center justify-center text-on-surface-variant
@@ -107,7 +111,7 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
   const tippSpeichern = useTipStore(s => s.tippSpeichern)
   const tippsFreigeschaltet = useSettingsStore(s => s.tippsFreigeschaltet)
   const isOnline = useNetworkStore(s => s.isOnline)
-  const { language, t } = useTranslation()
+  const { language } = useTranslation()
   const aktivePhase = useMatchStore(s => s.aktivePhase)
 
   const kickoffTime = new Date(match.anpfiff).getTime()
@@ -146,6 +150,8 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
     if (!initialized.current) return
     if (readOnly || !istUpcoming || !tippsFreigeschaltet || !isOnline) return
     if (!hasChanges) return
+    // KO: kein Speichern bei Unentschieden
+    if (isKoMatch && tippHeim === tippGast) return
 
     setPending(true)
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
@@ -187,68 +193,6 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
   const isFuturePhase = isKoMatch && (aktivePhase === null || match.spieltag > aktivePhase)
 
   const kannTippen = !readOnly && istUpcoming && tippsFreigeschaltet && teamsStehenFest && !isFuturePhase
-
-  async function handleSpeichern(e: React.MouseEvent) {
-    e.stopPropagation()
-    if (isSaving || !isOnline) return
-
-    // ⏰ Anpfiff-Check — kein Tippen nach Spielbeginn!
-    // Nutzt den Match-Status vom Server als Quelle der Wahrheit
-    if (!istUpcoming) {
-      const jokes: Record<string, string[]> = {
-        de: [
-          '🏃‍♂️ Der Zug ist abgefahren!',
-          '⏰ Zu spät, das Spiel läuft!',
-          '🔮 Deine hellseherischen Fähigkeiten kommen zu spät.',
-          '😏 Netter Versuch, Zeitreisender.',
-          '🕰️ Tipp-Abgabe geschlossen — das Spiel hat begonnen!',
-          '⚽ Der Ball rollt bereits — keine Tipps mehr!',
-        ],
-        en: [
-          "🏃‍♂️ That ship has sailed!",
-          "⏰ Too late — the match is underway!",
-          "🔮 Your psychic powers arrived too late.",
-          "😏 Nice try, time traveler.",
-          "🕰️ Tip window closed — kickoff has passed!",
-          "⚽ The ball is rolling — no more tips!",
-        ],
-        tr: [
-          '🏃‍♂️ Tren kalktı!',
-          '⏰ Çok geç — maç başladı!',
-          '🔮 Kâhin yeteneklerin geç kaldı.',
-          '😏 İyi deneme, zaman yolcusu.',
-          '🕰️ Tahmin penceresi kapandı — maç başladı!',
-          '⚽ Top yuvarlanıyor — daha fazla tahmin yok!',
-        ],
-      }
-      const langJokes = jokes[language] || jokes.de
-      const joke = langJokes[Math.floor(Math.random() * langJokes.length)]
-      useToastStore.getState().toast(joke, 'info')
-      return
-    }
-
-    // 🛑 KO-Phasen Check — kein Unentschieden erlaubt!
-    if (isKoMatch && tippHeim === tippGast) {
-      const koMessages: Record<string, string> = {
-        de: 'KO-Spiele können nicht Unentschieden enden! (Bitte inkl. Elfmeterschießen tippen)',
-        en: 'Knockout matches cannot end in a draw! (Please include penalty shootout)',
-        tr: 'Eleme maçları berabere bitemez! (Lütfen penaltı atışları dahil tahmin edin)'
-      }
-      useToastStore.getState().toast(koMessages[language] || koMessages.de, 'error')
-      return
-    }
-
-    setIsSaving(true)
-    try {
-      await tippSpeichern(match.id, tippHeim, tippGast, match.spieltag)
-      setSaved(true)
-      setTimeout(() => setSaved(false), 2500)
-    } catch (err) {
-      console.error(err)
-      useToastStore.getState().toast('❌ ' + t('errorSavingTip'), 'error')
-    }
-    setIsSaving(false)
-  }
 
   return (
     <motion.div 
@@ -441,17 +385,33 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
         )}
 
         {/* FALL B: Tipp-Input aktiv */}
-        {kannTippen && (
+        {kannTippen && (() => {
+          const ringCircumference = 2 * Math.PI * 24
+
+          // KO-Draw-Validierung: verhindert gleiche Werte
+          const validateKoNoDraw = (newVal: number, isHeim: boolean): boolean => {
+            if (!isKoMatch) return true
+            const other = isHeim ? tippGast : tippHeim
+            if (newVal === other) {
+              const msgs: Record<string, string> = {
+                de: 'KO-Spiele können nicht Unentschieden enden! (Bitte inkl. Elfmeterschießen tippen)',
+                en: 'Knockout matches cannot end in a draw! (Please include penalty shootout)',
+                tr: 'Eleme maçları berabere bitemez! (Lütfen penaltı atışları dahil tahmin edin)',
+              }
+              useToastStore.getState().toast(msgs[language] || msgs.de, 'error')
+              return false
+            }
+            return true
+          }
+
+          return (
           <div className="flex items-center justify-between gap-2 px-1">
             {/* Heim-Stepper */}
-            <Stepper value={tippHeim} onChange={setTippHeim} disabled={isSaving || !isOnline} />
+            <Stepper value={tippHeim} onChange={setTippHeim} disabled={isSaving || !isOnline} onValidate={(v: number) => validateKoNoDraw(v, true)} />
 
-            {/* Speichern-Button */}
-            <motion.button
-              onClick={handleSpeichern}
-              disabled={isSaving || !isOnline}
-              whileTap={{ scale: 0.95 }}
-              className={`flex-shrink-0 flex items-center justify-center gap-1.5 px-4 py-2 rounded-full text-[11px] font-mono font-bold uppercase tracking-wider transition-all duration-200 cursor-pointer ${
+            {/* Status-Indikator (Auto-Save, kein Klick) */}
+            <div
+              className={`relative flex-shrink-0 w-[56px] h-[56px] flex items-center justify-center rounded-full transition-all duration-300 ${
                 !isOnline
                   ? 'bg-red-500/10 border border-red-500/20 text-red-400'
                   : isSaving
@@ -460,49 +420,49 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
                       ? 'bg-green-500/20 border border-green-500/40 text-green-400 shadow-[0_0_12px_rgba(34,197,94,0.2)]'
                       : hasChanges
                         ? pending
-                          ? 'bg-amber-500/10 border border-amber-500/30 text-amber-400 animate-pulse'
-                          : 'bg-primary-container/15 border border-primary-container/30 text-primary-fixed-dim hover:bg-primary-container/25'
+                          ? 'bg-amber-500/5 border border-amber-500/30 text-amber-400'
+                          : 'bg-primary-container/10 border border-primary-container/20 text-primary-fixed-dim'
                         : 'bg-green-500/10 border border-green-500/20 text-green-400/70'
-              } disabled:opacity-50`}
+              }`}
             >
+              {/* Fortschrittsring — füllt sich in 1.5s */}
+              {hasChanges && pending && (
+                <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 56 56">
+                  <circle
+                    cx="28" cy="28" r="24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeDasharray={ringCircumference}
+                    className="text-amber-400 animate-save-ring"
+                    style={{ '--ring-circumference': ringCircumference } as React.CSSProperties}
+                  />
+                </svg>
+              )}
+
               <AnimatePresence mode="wait">
                 {!isOnline ? (
-                  <motion.span key="offline" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-1.5"><WifiOff size={12} /> Offline</motion.span>
+                  <motion.span key="offline" initial={{ opacity: 0 }} animate={{ opacity: 1 }}><WifiOff size={16} /></motion.span>
                 ) : isSaving ? (
-                  <motion.div key="saving" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="w-3.5 h-3.5 border-2 border-primary-fixed-dim border-t-transparent rounded-full animate-spin" />
+                  <motion.div key="saving" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="w-4 h-4 border-2 border-primary-fixed-dim border-t-transparent rounded-full animate-spin" />
                 ) : saved ? (
-                  <motion.span 
-                    key="saved" 
-                    initial={{ scale: 0.8, opacity: 0 }} 
-                    animate={{ scale: 1, opacity: 1 }} 
-                    exit={{ scale: 0.8, opacity: 0 }}
-                    transition={{ type: 'spring', stiffness: 500, damping: 15 }}
-                    className="flex items-center gap-1.5"
-                  >
-                    <Check size={16} className="stroke-[3]" />
-                  </motion.span>
-                ) : hasChanges && pending ? (
-                  <motion.span key="pending" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
-                    {t('saving')}
-                  </motion.span>
-                ) : hasChanges ? (
-                  <motion.span key="unsaved" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-1.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
-                    {t('changeTip')}
+                  <motion.span key="saved" initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.8, opacity: 0 }} transition={{ type: 'spring', stiffness: 500, damping: 15 }}>
+                    <Check size={22} className="stroke-[3]" />
                   </motion.span>
                 ) : (
-                  <motion.span key="saved-idle" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-1.5 opacity-70">
-                    <Check size={14} className="stroke-[3]" />
+                  <motion.span key="idle" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="opacity-60">
+                    <Check size={18} className="stroke-[2.5]" />
                   </motion.span>
                 )}
               </AnimatePresence>
-            </motion.button>
+            </div>
 
             {/* Gast-Stepper */}
-            <Stepper value={tippGast} onChange={setTippGast} disabled={isSaving || !isOnline} />
+            <Stepper value={tippGast} onChange={setTippGast} disabled={isSaving || !isOnline} onValidate={(v: number) => validateKoNoDraw(v, false)} />
           </div>
-        )}
+          )
+        })()}
 
         {/* FALL C: Tipp gesperrt (nach Anpfiff) — zeigt gespeicherten Tipp + Live-Punkte */}
         {!readOnly && !istUpcoming && eigenerTipp && (

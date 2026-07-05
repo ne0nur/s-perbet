@@ -1393,3 +1393,12 @@ html {
   border-width: 1px;
   border-style: solid;
 }
+
+/* ─── Auto-Save Progress Ring ─── */
+@keyframes saveProgressRing {
+  from { stroke-dashoffset: var(--ring-circumference); }
+  to   { stroke-dashoffset: 0; }
+}
+.animate-save-ring {
+  animation: saveProgressRing 1.5s linear forwards;
+}
