@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuthStore } from '../stores/authStore'
 import { usePresenceStore } from '../stores/presenceStore'
-import { BookOpen, Sparkles, Download, RefreshCw, Lock } from 'lucide-react'
+import { BookOpen, Sparkles, Download, RefreshCw } from 'lucide-react'
 import { usePwaStore } from '../stores/pwaStore'
 import { useToastStore } from '../stores/toastStore'
 import { calculateLevelDetails, getRangTitelSystem } from '../lib/utils'
@@ -150,7 +150,6 @@ export function ProfilePage() {
   const { isInstallable, triggerInstall } = usePwaStore()
   const [isIosNotStandalone, setIsIosNotStandalone] = useState(false)
   const [updateAvailable, setUpdateAvailable] = useState(false)
-  const [resettingPw, setResettingPw] = useState(false)
 
   // Service Worker update detection
   useEffect(() => {
@@ -193,18 +192,6 @@ export function ProfilePage() {
     } else {
       window.location.reload()
     }
-  }
-
-  const handlePasswordReset = async () => {
-    if (!user?.email) return
-    setResettingPw(true)
-    const { error } = await supabase.auth.resetPasswordForEmail(user.email)
-    if (!error) {
-      useToastStore.getState().toast(t('passwordResetSent'), 'success')
-    } else {
-      useToastStore.getState().toast(error.message, 'error')
-    }
-    setResettingPw(false)
   }
 
   useEffect(() => {
@@ -1148,25 +1135,15 @@ export function ProfilePage() {
                   {t('accountSection')}
                 </h3>
                 <div className="bg-surface-container-highest/30 border border-white/[0.03] rounded-lg p-3">
-                  <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center justify-between mb-1.5">
                     <span className="text-[10px] text-on-surface-variant/50 font-mono">{t('loginNameLabel')}</span>
-                    <span className="text-[11px] font-mono font-bold text-on-surface">{user?.email || '—'}</span>
+                    <span className="text-[11px] font-mono font-bold text-on-surface">
+                      {user?.user_metadata?.username || user?.email || '—'}
+                    </span>
                   </div>
-                  <p className="text-[9px] text-on-surface-variant/40 font-mono leading-relaxed mb-3">
+                  <p className="text-[9px] text-on-surface-variant/40 font-mono leading-relaxed">
                     {t('loginNameHint')}
                   </p>
-                  <button
-                    onClick={handlePasswordReset}
-                    disabled={resettingPw}
-                    className="w-full flex items-center gap-2.5 px-3 py-2.5 bg-surface-container border border-surface-container-high rounded-lg text-on-surface hover:bg-surface-container-high transition-colors disabled:opacity-50"
-                  >
-                    <Lock size={13} className="text-on-surface-variant shrink-0" />
-                    <div className="flex-1 text-left">
-                      <div className="text-[11px] font-bold">{t('changePassword')}</div>
-                      <div className="text-[9px] text-on-surface-variant/50 font-mono">{t('changePasswordDesc')}</div>
-                    </div>
-                    {resettingPw && <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin shrink-0" />}
-                  </button>
                 </div>
               </div>
             </div>
