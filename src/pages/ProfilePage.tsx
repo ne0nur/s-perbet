@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuthStore } from '../stores/authStore'
 import { usePresenceStore } from '../stores/presenceStore'
-import { BookOpen, Sparkles, Download } from 'lucide-react'
+import { BookOpen, Sparkles, Download, RefreshCw } from 'lucide-react'
 import { usePwaStore } from '../stores/pwaStore'
 import { useToastStore } from '../stores/toastStore'
 import { calculateLevelDetails, getRangTitelSystem } from '../lib/utils'
@@ -149,6 +149,51 @@ export function ProfilePage() {
 
   const { isInstallable, triggerInstall } = usePwaStore()
   const [isIosNotStandalone, setIsIosNotStandalone] = useState(false)
+  const [updateAvailable, setUpdateAvailable] = useState(false)
+
+  // Service Worker update detection
+  useEffect(() => {
+    if (!('serviceWorker' in navigator)) return
+    navigator.serviceWorker.ready.then(reg => {
+      // Check if there's already a waiting worker
+      if (reg.waiting) {
+        setUpdateAvailable(true)
+        return
+      }
+      // Listen for new updates
+      reg.addEventListener('updatefound', () => {
+        const newWorker = reg.installing
+        if (!newWorker) return
+        newWorker.addEventListener('statechange', () => {
+          if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+            setUpdateAvailable(true)
+          }
+        })
+      })
+    })
+  }, [])
+
+  const handleAppUpdate = async () => {
+    if (!('serviceWorker' in navigator)) return
+    const reg = await navigator.serviceWorker.ready
+    // Check for updates
+    await reg.update()
+    // If a new SW is waiting, skip waiting and reload
+    if (reg.waiting) {
+      reg.waiting.postMessage({ type: 'SKIP_WAITING' })
+      // Also try the direct approach
+      reg.waiting.addEventListener('statechange', () => {
+        if (reg.waiting?.state === 'activated') {
+          window.location.reload()
+        }
+      })
+      // Fallback: reload after a short delay
+      setTimeout(() => window.location.reload(), 1500)
+    } else {
+      // No update found, just reload
+      window.location.reload()
+    }
+  }
 
   useEffect(() => {
     const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as unknown as { MSStream?: unknown }).MSStream
@@ -1066,6 +1111,24 @@ export function ProfilePage() {
                   </div>
                 </div>
               )}
+
+              {/* App Update */}
+              <button
+                onClick={handleAppUpdate}
+                className={`w-full flex items-center gap-3 px-4 py-4 text-on-surface text-sm hover:bg-surface-container transition-colors font-medium border-t border-white/5 cursor-pointer ${
+                  updateAvailable ? 'bg-green-500/5 hover:bg-green-500/10' : ''
+                }`}
+              >
+                <RefreshCw size={18} className={`${updateAvailable ? 'text-green-400 animate-spin' : 'text-primary-fixed-dim'} shrink-0`} />
+                <div className="flex-1 text-left">
+                  <div className={`font-bold ${updateAvailable ? 'text-green-400' : ''}`}>
+                    {updateAvailable ? t('appUpdateAvailable') : t('appUpdate')}
+                  </div>
+                  <div className="text-[10px] text-on-surface-variant font-mono mt-0.5">
+                    {t('appUpdateDesc')}
+                  </div>
+                </div>
+              </button>
             </div>
 
             <div className="bg-surface-container-low border border-surface-container-high rounded-xl p-4 shadow-sm text-left mt-8">
