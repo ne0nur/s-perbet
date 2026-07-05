@@ -1176,7 +1176,7 @@ export function ProfilePage() {
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] text-on-surface-variant/50 font-mono">{t('loginNameLabel')}</span>
                     <span className="text-[11px] font-mono font-bold text-on-surface">
-                      {user?.email || '—'}
+                      {user?.email?.split('@')[0] || '—'}
                     </span>
                   </div>
                   <p className="text-[9px] text-on-surface-variant/40 font-mono leading-relaxed -mt-1">
