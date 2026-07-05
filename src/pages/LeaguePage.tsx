@@ -1315,6 +1315,27 @@ export function LeaguePage() {
               </div>
             )}
           </div>
+
+          {/* Liga-Hilfe */}
+          <div className="bg-surface-container-low/50 border border-white/[0.04] rounded-xl p-4 mt-4">
+            <h3 className="text-xs font-bold text-on-surface-variant/70 uppercase tracking-wider mb-3 flex items-center gap-2">
+              <span>📖</span> {t('leagueHelpTitle')}
+            </h3>
+            <div className="space-y-2.5">
+              <div className="flex items-start gap-2.5">
+                <span className="text-[10px] font-bold text-primary-fixed-dim bg-primary-container/15 rounded-full w-5 h-5 flex items-center justify-center shrink-0 mt-0.5">1</span>
+                <p className="text-[10px] text-on-surface-variant/60 font-mono leading-relaxed">{t('leagueHelpCreate')}</p>
+              </div>
+              <div className="flex items-start gap-2.5">
+                <span className="text-[10px] font-bold text-primary-fixed-dim bg-primary-container/15 rounded-full w-5 h-5 flex items-center justify-center shrink-0 mt-0.5">2</span>
+                <p className="text-[10px] text-on-surface-variant/60 font-mono leading-relaxed">{t('leagueHelpInvite')}</p>
+              </div>
+              <div className="flex items-start gap-2.5">
+                <span className="text-[10px] font-bold text-primary-fixed-dim bg-primary-container/15 rounded-full w-5 h-5 flex items-center justify-center shrink-0 mt-0.5">3</span>
+                <p className="text-[10px] text-on-surface-variant/60 font-mono leading-relaxed">{t('leagueHelpJoin')}</p>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>

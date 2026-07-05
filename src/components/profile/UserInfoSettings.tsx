@@ -148,6 +148,13 @@ export function UserInfoSettings({
       <p className="text-[9px] text-on-surface-variant/40 font-mono mt-4 text-center border-t border-surface-container-high/60 pt-2">
         {t('tapToEditProfile')}
       </p>
+      {/* Login vs Nickname clarification */}
+      <div className="mt-3 bg-surface-container-highest/30 border border-white/[0.03] rounded-lg p-3 flex items-start gap-2">
+        <span className="text-xs shrink-0 mt-0.5">ℹ️</span>
+        <p className="text-[9px] text-on-surface-variant/50 font-mono leading-relaxed">
+          {t('loginIsPermanent')}
+        </p>
+      </div>
     </div>
   )
 }
