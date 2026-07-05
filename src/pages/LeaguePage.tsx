@@ -194,19 +194,7 @@ export function LeaguePage() {
 
     if (!initialized.current || aktiveLiga) {
       initialized.current = true
-      let currentST = 1
-      const liveMatch = fetchedMatches.find(m => m.status === 'live')
-      if (liveMatch) {
-        currentST = liveMatch.spieltag
-      } else {
-        const upcomingMatch = fetchedMatches.find(m => m.status === 'upcoming')
-        if (upcomingMatch) currentST = upcomingMatch.spieltag
-        else if (fetchedMatches.length > 0) {
-          const lastFinished = [...fetchedMatches].reverse().find(m => m.status === 'finished')
-          if (lastFinished) currentST = lastFinished.spieltag
-        }
-      }
-      setViewSpieltag(currentST)
+      // Keep default 'gesamt' — don't auto-jump to current matchday
     }
 
     // MaxSpieltag updaten
