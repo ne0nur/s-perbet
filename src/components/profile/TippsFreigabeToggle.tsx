@@ -1,9 +1,17 @@
 import { useSettingsStore } from '../../stores/settingsStore'
+import { useToastStore } from '../../stores/toastStore'
 
 export function TippsFreigabeToggle() {
   const tippsFreigeschaltet = useSettingsStore(s => s.tippsFreigeschaltet)
   const setTippsFreigeschaltet = useSettingsStore(s => s.setTippsFreigeschaltet)
   const isLaden = useSettingsStore(s => s.isLaden)
+
+  const handleToggle = async () => {
+    const neuerWert = !tippsFreigeschaltet
+    await setTippsFreigeschaltet(neuerWert)
+    const msg = neuerWert ? '🟢 Tipps jetzt freigegeben' : '🔴 Tipps gesperrt'
+    useToastStore.getState().toast(msg)
+  }
 
   if (isLaden) return (
     <div className="bg-surface-container border border-surface-container-high rounded-lg p-3 animate-pulse">
@@ -25,7 +33,7 @@ export function TippsFreigabeToggle() {
         </p>
       </div>
       <button
-        onClick={() => setTippsFreigeschaltet(!tippsFreigeschaltet)}
+        onClick={handleToggle}
         className={`relative w-12 h-7 rounded-full transition-colors duration-200 shrink-0 ${
           tippsFreigeschaltet
             ? 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.3)]'
