@@ -123,6 +123,7 @@ export function MatchEvents({ espnId, tournament, isOpen }: {
             {events.map((ev, i) => {
               const isLeft = i % 2 === 0
               const isGoal = ev.type === 'goal' || ev.type === 'penalty'
+              const icon = isGoal ? '⚽' : ev.type === 'red_card' ? '🟥' : '🟨'
 
               return (
                 <motion.div
@@ -130,32 +131,56 @@ export function MatchEvents({ espnId, tournament, isOpen }: {
                   initial={{ opacity: 0, x: isLeft ? -6 : 6 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: Math.min(i * 0.03, 0.4) }}
-                  className={`flex items-center ${isLeft ? '' : 'flex-row-reverse'}`}
+                  className="flex items-center"
                 >
-                  {/* Side content */}
-                  <div className={`w-[calc(50%-16px)] ${isLeft ? 'text-right pr-3' : 'text-left pl-3'}`}>
-                    <p className={`text-xs font-medium truncate ${
-                      isGoal ? 'text-slate-200' :
-                      ev.type === 'red_card' ? 'text-red-300' : 'text-amber-300'
-                    }`}>
-                      {ev.player || ev.text}
-                    </p>
-                  </div>
-
-                  {/* Center dot + minute */}
-                  <div className="flex-shrink-0 flex flex-col items-center gap-1 z-10 px-1">
-                    <span className={`text-[10px] font-bold font-mono tabular-nums whitespace-nowrap ${
-                      isGoal ? 'text-emerald-400' : ev.type === 'red_card' ? 'text-red-400' : 'text-amber-400'
-                    }`}>
-                      {ev.minute}'
-                    </span>
-                    <span className="text-[14px] leading-none">
-                      {isGoal ? '⚽' : ev.type === 'red_card' ? '🟥' : '🟨'}
-                    </span>
-                  </div>
-
-                  {/* Empty side */}
-                  <div className="w-[calc(50%-16px)]" />
+                  {/* Left side: icon + name + minute */}
+                  {isLeft ? (
+                    <>
+                      <div className="w-[calc(50%-16px)] text-right pr-3">
+                        <span className={`text-xs ${
+                          isGoal ? 'text-slate-200' :
+                          ev.type === 'red_card' ? 'text-red-300' : 'text-amber-300'
+                        }`}>
+                          <span className="mr-1">{icon}</span>
+                          <span className="font-medium">{ev.player || ev.text}</span>
+                          <span className={`ml-2 text-[10px] font-mono tabular-nums ${
+                            isGoal ? 'text-emerald-500' :
+                            ev.type === 'red_card' ? 'text-red-500' : 'text-amber-500'
+                          }`}>{ev.minute}'</span>
+                        </span>
+                      </div>
+                      <div className="w-[32px] flex-shrink-0 flex justify-center z-10">
+                        <div className={`w-2 h-2 rounded-full ${
+                          isGoal ? 'bg-emerald-500/60' :
+                          ev.type === 'red_card' ? 'bg-red-500/60' : 'bg-amber-500/60'
+                        }`} />
+                      </div>
+                      <div className="flex-1" />
+                    </>
+                  ) : (
+                    <>
+                      <div className="flex-1" />
+                      <div className="w-[32px] flex-shrink-0 flex justify-center z-10">
+                        <div className={`w-2 h-2 rounded-full ${
+                          isGoal ? 'bg-emerald-500/60' :
+                          ev.type === 'red_card' ? 'bg-red-500/60' : 'bg-amber-500/60'
+                        }`} />
+                      </div>
+                      <div className="w-[calc(50%-16px)] text-left pl-3">
+                        <span className={`text-xs ${
+                          isGoal ? 'text-slate-200' :
+                          ev.type === 'red_card' ? 'text-red-300' : 'text-amber-300'
+                        }`}>
+                          <span className={`mr-2 text-[10px] font-mono tabular-nums ${
+                            isGoal ? 'text-emerald-500' :
+                            ev.type === 'red_card' ? 'text-red-500' : 'text-amber-500'
+                          }`}>{ev.minute}'</span>
+                          <span className="mr-1">{icon}</span>
+                          <span className="font-medium">{ev.player || ev.text}</span>
+                        </span>
+                      </div>
+                    </>
+                  )}
                 </motion.div>
               )
             })}
