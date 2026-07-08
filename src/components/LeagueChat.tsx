@@ -105,8 +105,9 @@ export function LeagueChat({ leagueId }: LeagueChatProps) {
       supabase.removeChannel(channelRef.current)
     }
 
+    const uniqueId = `league-chat-${leagueId}-${Math.random().toString(36).substring(2, 9)}`
     const channel = supabase
-      .channel(`league-chat-${leagueId}`)
+      .channel(uniqueId)
       .on(
         'postgres_changes',
         {
