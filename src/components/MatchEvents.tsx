@@ -149,25 +149,23 @@ export function MatchEvents({ espnId, tournament, isOpen }: {
           {/* Center line */}
           <div className="absolute left-1/2 top-1 bottom-1 w-px bg-white/[0.06] -translate-x-px" />
 
-          <div className="space-y-1.5">
+          <div className="space-y-1">
             {events.map((ev, i) => {
-              // Phase marker: full-width banner
+              // Phase marker: minute + label on the line
               if (ev.type === 'phase') {
                 return (
                   <motion.div
                     key={i}
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    transition={{ delay: Math.min(i * 0.03, 0.4) }}
-                    className="relative flex items-center gap-3 py-1.5"
+                    className="relative flex items-center gap-2 py-2"
                   >
-                    <div className="w-3 h-3 rounded-full bg-slate-600/60 flex-shrink-0 z-10" />
-                    <div className="flex-1 h-px bg-white/[0.04]" />
-                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex-shrink-0">
-                      {ev.text}
-                    </span>
-                    <div className="flex-1 h-px bg-white/[0.04]" />
-                    <div className="w-3 h-3 rounded-full bg-slate-600/60 flex-shrink-0 z-10" />
+                    <div className="flex-1 h-px bg-white/[0.05]" />
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      {ev.minute && <span className="text-[10px] font-mono text-slate-600 tabular-nums">{ev.minute}'</span>}
+                      <span className="text-[9px] font-bold text-slate-500 uppercase tracking-[0.15em]">{ev.text}</span>
+                    </div>
+                    <div className="flex-1 h-px bg-white/[0.05]" />
                   </motion.div>
                 )
               }
@@ -176,73 +174,65 @@ export function MatchEvents({ espnId, tournament, isOpen }: {
               const isGoal = ev.type === 'goal' || ev.type === 'penalty'
               const icon = isGoal ? '⚽' : ev.type === 'red_card' ? '🟥' : '🟨'
 
-              // Running score for goals
+              // Running score
               let scoreText = ''
               if (isGoal && teams.home) {
-                const prevGoals = events.slice(0, i).filter(e => (e.type === 'goal' || e.type === 'penalty'))
-                const homeGoals = prevGoals.filter(e => e.team === teams.home).length + (ev.team === teams.home ? 1 : 0)
-                const awayGoals = prevGoals.filter(e => e.team === teams.away).length + (ev.team === teams.away ? 1 : 0)
-                scoreText = `${homeGoals}:${awayGoals}`
+                const prev = events.slice(0, i).filter(e => e.type === 'goal' || e.type === 'penalty')
+                const hg = prev.filter(e => e.team === teams.home).length + (ev.team === teams.home ? 1 : 0)
+                const ag = prev.filter(e => e.team === teams.away).length + (ev.team === teams.away ? 1 : 0)
+                scoreText = `${hg}:${ag}`
               }
 
               return (
                 <motion.div
                   key={i}
-                  initial={{ opacity: 0, x: isLeft ? -6 : 6 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: Math.min(i * 0.03, 0.4) }}
-                  className="flex items-center"
+                  initial={{ opacity: 0, y: 4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: Math.min(i * 0.04, 0.5) }}
+                  className={`flex items-center gap-3 py-1 ${isLeft ? '' : 'flex-row-reverse'}`}
                 >
-                  {/* Left side: icon + name + minute */}
-                  {isLeft ? (
-                    <>
-                      <div className="w-[calc(50%-16px)] text-right pr-3">
-                        <span className={`text-xs ${
-                          isGoal ? 'text-slate-200' :
-                          ev.type === 'red_card' ? 'text-red-300' : 'text-amber-300'
-                        }`}>
-                          <span className="mr-1">{icon}</span>
-                          <span className="font-medium">{ev.player || ev.text}</span>
-                          {scoreText && <span className="ml-1.5 text-[11px] font-bold font-mono text-white/80 tabular-nums">{scoreText}</span>}
-                          <span className={`ml-2 text-[10px] font-mono tabular-nums ${
-                            isGoal ? 'text-emerald-500' :
-                            ev.type === 'red_card' ? 'text-red-500' : 'text-amber-500'
-                          }`}>{ev.minute}'</span>
-                        </span>
-                      </div>
-                      <div className="w-[32px] flex-shrink-0 flex justify-center z-10">
-                        <div className={`w-2 h-2 rounded-full ${
-                          isGoal ? 'bg-emerald-500/60' :
-                          ev.type === 'red_card' ? 'bg-red-500/60' : 'bg-amber-500/60'
-                        }`} />
-                      </div>
-                      <div className="flex-1" />
-                    </>
+                  {/* Score badge (only for goals, in center) */}
+                  {scoreText ? (
+                    <div className="flex-shrink-0 w-12 text-center">
+                      <span className="inline-flex items-center justify-center w-10 h-6 rounded-md bg-white/[0.06] border border-white/[0.08] text-[13px] font-extrabold font-mono text-white/90 tracking-tight tabular-nums">
+                        {scoreText}
+                      </span>
+                    </div>
                   ) : (
-                    <>
-                      <div className="flex-1" />
-                      <div className="w-[32px] flex-shrink-0 flex justify-center z-10">
-                        <div className={`w-2 h-2 rounded-full ${
-                          isGoal ? 'bg-emerald-500/60' :
-                          ev.type === 'red_card' ? 'bg-red-500/60' : 'bg-amber-500/60'
-                        }`} />
-                      </div>
-                      <div className="w-[calc(50%-16px)] text-left pl-3">
-                        <span className={`text-xs ${
-                          isGoal ? 'text-slate-200' :
-                          ev.type === 'red_card' ? 'text-red-300' : 'text-amber-300'
-                        }`}>
-                          <span className={`mr-2 text-[10px] font-mono tabular-nums ${
-                            isGoal ? 'text-emerald-500' :
-                            ev.type === 'red_card' ? 'text-red-500' : 'text-amber-500'
-                          }`}>{ev.minute}'</span>
-                          <span className="mr-1">{icon}</span>
-                          <span className="font-medium">{ev.player || ev.text}</span>
-                          {scoreText && <span className="ml-1.5 text-[11px] font-bold font-mono text-white/80 tabular-nums">{scoreText}</span>}
-                        </span>
-                      </div>
-                    </>
+                    <div className="flex-shrink-0 w-12 text-center">
+                      <span className="text-[10px] font-mono text-slate-600 tabular-nums">{ev.minute}'</span>
+                    </div>
                   )}
+
+                  {/* Player + icon */}
+                  <div className={`flex-1 min-w-0 ${isLeft ? 'text-right' : 'text-left'}`}>
+                    <div className={`flex items-center gap-2 ${isLeft ? 'justify-end' : 'justify-start'}`}>
+                      {isLeft ? (
+                        <>
+                          <span className={`text-[13px] font-semibold truncate ${
+                            isGoal ? 'text-white' : ev.type === 'red_card' ? 'text-red-300' : 'text-amber-300'
+                          }`}>{ev.player || ev.text}</span>
+                          <span className="text-sm flex-shrink-0">{icon}</span>
+                          <span className={`text-[10px] font-mono tabular-nums flex-shrink-0 ${
+                            isGoal ? 'text-emerald-500/70' : ev.type === 'red_card' ? 'text-red-500/70' : 'text-amber-500/70'
+                          }`}>{ev.minute}'</span>
+                        </>
+                      ) : (
+                        <>
+                          <span className={`text-[10px] font-mono tabular-nums flex-shrink-0 ${
+                            isGoal ? 'text-emerald-500/70' : ev.type === 'red_card' ? 'text-red-500/70' : 'text-amber-500/70'
+                          }`}>{ev.minute}'</span>
+                          <span className="text-sm flex-shrink-0">{icon}</span>
+                          <span className={`text-[13px] font-semibold truncate ${
+                            isGoal ? 'text-white' : ev.type === 'red_card' ? 'text-red-300' : 'text-amber-300'
+                          }`}>{ev.player || ev.text}</span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Empty side */}
+                  <div className="w-12 flex-shrink-0" />
                 </motion.div>
               )
             })}
