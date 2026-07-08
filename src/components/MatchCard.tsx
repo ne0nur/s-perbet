@@ -9,6 +9,7 @@ import { useTranslation } from '../utils/translations'
 import { useMatchStore, type Match } from '../stores/matchStore'
 import { useTournamentStore } from '../stores/tournamentStore'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useSaveState } from './useSaveState'
 
 function punkteFarbe(punkte: number): string {
   if (punkte === 4) return 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30'
@@ -139,10 +140,7 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
   // Tipp-Input State
   const [tippHeim, setTippHeim] = useState(eigenerTipp?.tipp_heim ?? 0)
   const [tippGast, setTippGast] = useState(eigenerTipp?.tipp_gast ?? 0)
-  const [isSaving, setIsSaving] = useState(false)
-  const [saved, setSaved] = useState(false)
-  const [pending, setPending] = useState(false)
-  const [saveTick, setSaveTick] = useState(0)
+  const saveState = useSaveState()
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const hasChanges = tippHeim !== (eigenerTipp?.tipp_heim ?? 0) || tippGast !== (eigenerTipp?.tipp_gast ?? 0)
 
@@ -151,36 +149,31 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
     return () => { if (saveTimerRef.current) clearTimeout(saveTimerRef.current) }
   }, [])
 
+  // Reset save state when tip changes externally (e.g. store hydration)
+  useEffect(() => {
+    if (!hasChanges && saveState.status === 'dirty') saveState.reset()
+  }, [hasChanges, saveState])
+
   const config = useTournamentStore(s => s.getTournament(match.tournament || 'Süper Lig'))
   const isKoMatch = config?.has_knockout && match.spieltag > (config.group_stage_matchdays || 38)
 
   // Auto-Save: debounce 1.5s nach letzter Änderung
-  // mounted.current verhindert nur das erste Render (Initialisierung vom Store)
   useEffect(() => {
     if (!mounted.current) return
     if (readOnly || !istUpcoming || !tippsFreigeschaltet || !isOnline) return
     if (!hasChanges) return
-    // KO: kein Speichern bei Unentschieden
-    if (isKoMatch && tippHeim === tippGast) return
+    if (isKoMatch && tippHeim === tippGast) { saveState.markKoDraw(); return }
 
-    setPending(true)
-    setSaved(false) // reset saved state on new change
-    setSaveTick(t => t + 1) // force ring animation restart
+    saveState.markDirty()
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
     saveTimerRef.current = setTimeout(async () => {
-      // Ring ist abgelaufen → Save beginnt. Spinner erst nach 300ms zeigen
-      const spinnerTimer = setTimeout(() => setIsSaving(true), 300)
+      saveState.markSaveStart()
       try {
         await tippSpeichern(match.id, tippHeim, tippGast, match.spieltag)
-        clearTimeout(spinnerTimer) // Save war schnell genug — kein Spinner nötig
-        setIsSaving(false)
-        setPending(false)
-        setSaved(true)
-        setTimeout(() => setSaved(false), 2000)
+        saveState.markSaveDone()
+        setTimeout(() => saveState.reset(), 2000)
       } catch {
-        clearTimeout(spinnerTimer)
-        setIsSaving(false)
-        setPending(false)
+        saveState.markSaveError()
       }
     }, 1500)
   }, [tippHeim, tippGast])
@@ -408,29 +401,29 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
           return (
           <div className="flex items-center justify-between gap-2 px-1">
             {/* Heim-Stepper */}
-            <Stepper value={tippHeim} onChange={setTippHeim} disabled={isSaving || !isOnline} />
+            <Stepper value={tippHeim} onChange={setTippHeim} disabled={saveState.status === 'saving' || !isOnline} />
 
             {/* Status-Indikator (Auto-Save, kein Klick) */}
             <div
               className={`relative flex-shrink-0 w-[56px] h-[56px] flex items-center justify-center rounded-full transition-all duration-300 ${
                 !isOnline
                   ? 'bg-red-500/10 border border-red-500/20 text-red-400'
-                  : isSaving
+                  : saveState.status === 'saving'
                     ? 'bg-primary-container/10 border border-primary-container/20 text-primary-fixed-dim'
-                    : saved
+                    : saveState.status === 'saved'
                       ? 'bg-green-500/20 border border-green-500/40 text-green-400 shadow-[0_0_12px_rgba(34,197,94,0.2)]'
-                      : koDrawWarning
+                      : saveState.status === 'kodraw'
                         ? 'bg-amber-500/10 border border-amber-500/40 text-amber-400'
                         : hasChanges
-                          ? pending
+                          ? saveState.status === 'dirty'
                             ? 'bg-amber-500/5 border border-amber-500/30 text-amber-400'
                             : 'bg-primary-container/10 border border-primary-container/20 text-primary-fixed-dim'
                           : 'bg-green-500/10 border border-green-500/20 text-green-400/70'
               }`}
             >
               {/* Fortschrittsring — füllt sich in 1.5s */}
-              {hasChanges && pending && !koDrawWarning && (
-                <svg key={saveTick} className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 56 56">
+              {hasChanges && saveState.status === 'dirty' && (
+                <svg key={saveState.tick} className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 56 56">
                   <circle
                     cx="28" cy="28" r="24"
                     fill="none"
@@ -449,14 +442,14 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
                   <motion.span key="off" initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }} transition={{ duration: 0.2 }}>
                     <WifiOff size={16} />
                   </motion.span>
-                ) : isSaving ? (
+                ) : saveState.status === 'saving' ? (
                   <motion.div key="saving" initial={{ opacity: 0, rotate: -90 }} animate={{ opacity: 1, rotate: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}
                     className="w-4 h-4 border-2 border-primary-fixed-dim border-t-transparent rounded-full animate-spin" />
-                ) : saved ? (
+                ) : saveState.status === 'saved' ? (
                   <motion.span key="saved" initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0, opacity: 0 }} transition={{ type: 'spring', stiffness: 400, damping: 20 }}>
                     <Check size={22} className="stroke-[3]" />
                   </motion.span>
-                ) : koDrawWarning ? (
+                ) : saveState.status === 'kodraw' ? (
                   <motion.span key="kodraw" initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.8, opacity: 0 }} transition={{ duration: 0.2 }}>
                     <AlertTriangle size={20} className="stroke-[2.5]" />
                   </motion.span>
@@ -469,7 +462,7 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
             </div>
 
             {/* Gast-Stepper */}
-            <Stepper value={tippGast} onChange={setTippGast} disabled={isSaving || !isOnline} />
+            <Stepper value={tippGast} onChange={setTippGast} disabled={saveState.status === 'saving' || !isOnline} />
           </div>
           )
         })()}
