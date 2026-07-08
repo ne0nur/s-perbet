@@ -33,14 +33,11 @@ function getPhaseLabel(typeText: string): string | null {
   const t = (typeText || '').toLowerCase()
   if (t.includes('kickoff')) return 'Anpfiff'
   if (t.includes('halftime') && !t.includes('extra')) return 'Halbzeit'
-  if (t.includes('end regular') || t.includes('end match')) return 'Abpfiff'
+  if (t.includes('end regular') || t.includes('end match')) return 'Ende'
   if (t.includes('start extra')) return 'Verlängerung'
-  if (t.includes('halftime extra')) return 'Halbzeit n.V.'
   if (t.includes('end extra')) return 'Ende n.V.'
   if (t.includes('start shootout')) return 'Elfmeterschießen'
-  if (t.includes('start 2nd half') && !t.includes('extra')) return '2. Halbzeit'
-  if (t.includes('start 2nd half extra')) return '2. Halbzeit n.V.'
-  return null
+  return null // 2. Halbzeit, Halbzeit n.V., 2. Halbzeit n.V. → raus
 }
 
 export function MatchEvents({ espnId, tournament, isOpen }: {
@@ -49,6 +46,7 @@ export function MatchEvents({ espnId, tournament, isOpen }: {
   const [events, setEvents] = useState<MatchEvent[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(false)
+  const [teams, setTeams] = useState({ home: '', away: '' })
 
   useEffect(() => {
     if (!isOpen || !espnId || events.length > 0) return
@@ -61,6 +59,12 @@ export function MatchEvents({ espnId, tournament, isOpen }: {
         )
         if (!res.ok) { setError(true); setLoading(false); return }
         const data = await res.json()
+
+        // Get home/away team names for score tracking
+        const comp = data.header?.competitions?.[0]
+        const homeTeam = comp?.competitors?.find((c: any) => c.homeAway === 'home')?.team?.displayName || ''
+        const awayTeam = comp?.competitors?.find((c: any) => c.homeAway === 'away')?.team?.displayName || ''
+
         const parsed: MatchEvent[] = []
 
         for (const ev of data.keyEvents || []) {
@@ -117,6 +121,7 @@ export function MatchEvents({ espnId, tournament, isOpen }: {
 
         parsed.sort((a, b) => (parseInt(a.minute) || 0) - (parseInt(b.minute) || 0))
         setEvents(parsed)
+        setTeams({ home: homeTeam, away: awayTeam })
       } catch { setError(true) }
       setLoading(false)
     }
@@ -171,6 +176,15 @@ export function MatchEvents({ espnId, tournament, isOpen }: {
               const isGoal = ev.type === 'goal' || ev.type === 'penalty'
               const icon = isGoal ? '⚽' : ev.type === 'red_card' ? '🟥' : '🟨'
 
+              // Running score for goals
+              let scoreText = ''
+              if (isGoal && teams.home) {
+                const prevGoals = events.slice(0, i).filter(e => (e.type === 'goal' || e.type === 'penalty'))
+                const homeGoals = prevGoals.filter(e => e.team === teams.home).length + (ev.team === teams.home ? 1 : 0)
+                const awayGoals = prevGoals.filter(e => e.team === teams.away).length + (ev.team === teams.away ? 1 : 0)
+                scoreText = `${homeGoals}:${awayGoals}`
+              }
+
               return (
                 <motion.div
                   key={i}
@@ -189,6 +203,7 @@ export function MatchEvents({ espnId, tournament, isOpen }: {
                         }`}>
                           <span className="mr-1">{icon}</span>
                           <span className="font-medium">{ev.player || ev.text}</span>
+                          {scoreText && <span className="ml-1.5 text-[11px] font-bold font-mono text-white/80 tabular-nums">{scoreText}</span>}
                           <span className={`ml-2 text-[10px] font-mono tabular-nums ${
                             isGoal ? 'text-emerald-500' :
                             ev.type === 'red_card' ? 'text-red-500' : 'text-amber-500'
@@ -223,6 +238,7 @@ export function MatchEvents({ espnId, tournament, isOpen }: {
                           }`}>{ev.minute}'</span>
                           <span className="mr-1">{icon}</span>
                           <span className="font-medium">{ev.player || ev.text}</span>
+                          {scoreText && <span className="ml-1.5 text-[11px] font-bold font-mono text-white/80 tabular-nums">{scoreText}</span>}
                         </span>
                       </div>
                     </>
