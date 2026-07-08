@@ -27,6 +27,10 @@ interface MatchRow {
   tournament: string;
   season: number;
   spielminute: string | null;
+  heim_logo?: string | null;
+  gast_logo?: string | null;
+  venue?: string | null;
+  espn_id?: string | null;
 }
 
 interface UpdateResult {
@@ -285,7 +289,9 @@ Deno.serve(async (req: Request) => {
             nameUpdated = true;
           }
 
-          if (nameUpdated || match.status !== e.status || match.tore_heim !== e.homeScore || match.tore_gast !== e.awayScore || match.spielminute !== e.displayClock) {
+          // Update wenn: Status/Score geändert ODER neue ESPN-Daten vorhanden (Logos/Venue)
+          const hasNewEspnData = !match.heim_logo && (e.homeLogo || e.awayLogo || e.venue || e.espnId);
+          if (hasNewEspnData || nameUpdated || match.status !== e.status || match.tore_heim !== e.homeScore || match.tore_gast !== e.awayScore || match.spielminute !== e.displayClock) {
             const { error: ue } = await adminClient.from("matches").update(updatePayload).eq("id", match.id);
             if (!ue) {
               match.status = e.status;

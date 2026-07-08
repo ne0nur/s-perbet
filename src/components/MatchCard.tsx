@@ -217,20 +217,34 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
       } ${className}`}
     >
 
-      {/* Status-Leiste */}
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-[11px] font-mono text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
-          <span>{formatDatum(match.anpfiff)} · {formatUhrzeit(match.anpfiff)}</span>
-          {match.venue && (
-            <span className="text-[9px] text-slate-600 truncate max-w-[120px]" title={match.venue}>{match.venue}</span>
-          )}
+      {/* Status-Leiste: Datum + Uhrzeit + Stadion */}
+      <div className="mb-2">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            {/* Datum + Uhrzeit */}
+            <span className="text-[11px] font-mono text-slate-400 uppercase tracking-wider">
+              {formatDatum(match.anpfiff)}
+            </span>
+            <span className="w-0.5 h-3 rounded-full bg-slate-700" />
+            <span className="text-[11px] font-mono text-slate-500 tabular-nums">
+              {formatUhrzeit(match.anpfiff)} Uhr
+            </span>
+          </div>
           {match.tournament === 'Champions League' && (
-            <span className="text-amber-400 bg-amber-400/10 px-1 py-0.5 rounded text-[9px] font-bold flex items-center gap-1" title="Champions League">
-              <img src={`${import.meta.env.BASE_URL}logos/UEFA_Champions_League_logo.png`} alt="CL" className="w-5 h-5 object-contain drop-shadow-[0_0_6px_rgba(255,255,255,0.6)] brightness-110"  loading="lazy" />
+            <span className="text-amber-400 bg-amber-400/10 px-1.5 py-0.5 rounded text-[9px] font-bold flex items-center gap-1" title="Champions League">
+              <img src={`${import.meta.env.BASE_URL}logos/UEFA_Champions_League_logo.png`} alt="CL" className="w-4 h-4 object-contain drop-shadow-[0_0_6px_rgba(255,255,255,0.6)] brightness-110"  loading="lazy" />
               CL
             </span>
           )}
-        </span>
+        </div>
+
+        {/* Stadion — eigene Zeile, vollständig lesbar */}
+        {match.venue && (
+          <p className="text-[10px] text-slate-600 mt-0.5 font-mono truncate" title={match.venue}>
+            📍 {match.venue}
+          </p>
+        )}
+
         {istLive && (
           <span className="flex items-center gap-1.5 text-red-400 text-xs font-medium">
             <span className="live-dot" /> LIVE
