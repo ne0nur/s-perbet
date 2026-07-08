@@ -122,6 +122,10 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
 
   // Re-render bei Anpfiff — auch ohne Sync zeigt die Karte sofort LIVE
   const [, tick] = useState(0)
+  // Separierte Flags: 'mounted' blockt erstes Render, 'tipLoaded' zeigt an ob Store-Tipp geladen wurde
+  const mounted = useRef(false)
+  const tipLoaded = useRef(false)
+  useEffect(() => { mounted.current = true }, [])
   useEffect(() => {
     if (match.status !== 'upcoming') return
     const delay = kickoffTime - Date.now()
@@ -136,7 +140,6 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
   const [isSaving, setIsSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [pending, setPending] = useState(false)
-  const initialized = useRef(false)
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const hasChanges = tippHeim !== (eigenerTipp?.tipp_heim ?? 0) || tippGast !== (eigenerTipp?.tipp_gast ?? 0)
 
@@ -146,8 +149,9 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
   }, [])
 
   // Auto-Save: debounce 1.5s nach letzter Änderung
+  // mounted.current verhindert nur das erste Render (Initialisierung vom Store)
   useEffect(() => {
-    if (!initialized.current) return
+    if (!mounted.current) return
     if (readOnly || !istUpcoming || !tippsFreigeschaltet || !isOnline) return
     if (!hasChanges) return
     // KO: kein Speichern bei Unentschieden
@@ -169,11 +173,12 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
 
   // Einmal initialisieren wenn Tipp aus Store geladen wird
   useEffect(() => {
-    if (eigenerTipp && !initialized.current) {
+    if (tipLoaded.current) return
+    if (eigenerTipp) {
       setTippHeim(eigenerTipp.tipp_heim)
       setTippGast(eigenerTipp.tipp_gast)
-      initialized.current = true
     }
+    tipLoaded.current = true
   }, [eigenerTipp])
 
   const punkte = istVorbei && eigenerTipp && match.tore_heim != null && match.tore_gast != null
