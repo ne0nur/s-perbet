@@ -1,0 +1,1 @@
+import{St as e,lt as t,xt as n}from"./vendor-core-iQ89zwOI.js";import{t as r}from"./MatchDetailPanel-DXXdTbfV.js";var i=t();function a(){let{id:t}=e(),a=n();return t?(0,i.jsx)(`div`,{className:`min-h-screen bg-background pb-24 max-w-xl mx-auto w-full px-3 pt-4 animate-page-enter`,children:(0,i.jsx)(r,{matchId:t,onClose:()=>a(-1)})}):null}export{a as MatchDetailPage};
