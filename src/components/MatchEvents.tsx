@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronDown, Loader2 } from 'lucide-react'
 
 interface MatchEvent {
-  type: 'goal' | 'penalty' | 'yellow_card' | 'red_card'
+  type: 'goal' | 'penalty' | 'yellow_card' | 'red_card' | 'phase'
   minute: string
   team: string
   player: string
@@ -26,6 +26,20 @@ function mapEspnType(typeId: string, typeText: string, shortText: string): Match
   if (t.includes('penalty')) return 'penalty'
   if (t.includes('yellow')) return 'yellow_card'
   if (t.includes('red')) return 'red_card'
+  return null
+}
+
+function getPhaseLabel(typeText: string): string | null {
+  const t = (typeText || '').toLowerCase()
+  if (t.includes('kickoff')) return 'Anpfiff'
+  if (t.includes('halftime') && !t.includes('extra')) return 'Halbzeit'
+  if (t.includes('end regular') || t.includes('end match')) return 'Abpfiff'
+  if (t.includes('start extra')) return 'Verlängerung'
+  if (t.includes('halftime extra')) return 'Halbzeit n.V.'
+  if (t.includes('end extra')) return 'Ende n.V.'
+  if (t.includes('start shootout')) return 'Elfmeterschießen'
+  if (t.includes('start 2nd half') && !t.includes('extra')) return '2. Halbzeit'
+  if (t.includes('start 2nd half extra')) return '2. Halbzeit n.V.'
   return null
 }
 
@@ -55,14 +69,25 @@ export function MatchEvents({ espnId, tournament, isOpen }: {
             ev.type?.text || ev.type?.type || '',
             ev.shortText || ''
           )
-          if (!eventType) continue
-          parsed.push({
-            type: eventType,
-            minute: ev.clock?.displayValue || '',
-            team: ev.team?.displayName || '',
-            player: ev.participants?.[0]?.athlete?.displayName || '',
-            text: ev.shortText || ev.text || '',
-          })
+          const phaseLabel = getPhaseLabel(ev.type?.text || ev.type?.type || '')
+
+          if (eventType) {
+            parsed.push({
+              type: eventType,
+              minute: ev.clock?.displayValue || '',
+              team: ev.team?.displayName || '',
+              player: ev.participants?.[0]?.athlete?.displayName || '',
+              text: ev.shortText || ev.text || '',
+            })
+          } else if (phaseLabel) {
+            parsed.push({
+              type: 'phase',
+              minute: ev.clock?.displayValue || '',
+              team: '',
+              player: '',
+              text: phaseLabel,
+            })
+          }
         }
 
         for (const c of data.header?.competitions?.[0]?.cards || []) {
@@ -121,6 +146,27 @@ export function MatchEvents({ espnId, tournament, isOpen }: {
 
           <div className="space-y-1.5">
             {events.map((ev, i) => {
+              // Phase marker: full-width banner
+              if (ev.type === 'phase') {
+                return (
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: Math.min(i * 0.03, 0.4) }}
+                    className="relative flex items-center gap-3 py-1.5"
+                  >
+                    <div className="w-3 h-3 rounded-full bg-slate-600/60 flex-shrink-0 z-10" />
+                    <div className="flex-1 h-px bg-white/[0.04]" />
+                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex-shrink-0">
+                      {ev.text}
+                    </span>
+                    <div className="flex-1 h-px bg-white/[0.04]" />
+                    <div className="w-3 h-3 rounded-full bg-slate-600/60 flex-shrink-0 z-10" />
+                  </motion.div>
+                )
+              }
+
               const isLeft = i % 2 === 0
               const isGoal = ev.type === 'goal' || ev.type === 'penalty'
               const icon = isGoal ? '⚽' : ev.type === 'red_card' ? '🟥' : '🟨'
