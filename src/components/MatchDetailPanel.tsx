@@ -4,10 +4,10 @@ import { useAuthStore } from '../stores/authStore'
 import { useMatchStore, type Match, type Tip } from '../stores/matchStore'
 import { getTeamLogo } from '../lib/teamLogos'
 import { MatchChat } from './MatchChat'
-import { Users, MessageCircle, User as UserIcon, X } from 'lucide-react'
+import { Users, MessageCircle, User as UserIcon, X, Lock } from 'lucide-react'
 import { berechnePunkte } from '../lib/utils'
 import { useTranslation } from '../utils/translations'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 
 interface MatchDetailPanelProps {
   matchId: string
@@ -96,7 +96,9 @@ export function MatchDetailPanel({ matchId, onClose }: MatchDetailPanelProps) {
       className="glass-panel rounded-2xl overflow-hidden flex flex-col h-full shadow-[0_20px_50px_rgba(0,0,0,0.6)] border border-white/10 max-h-[85dvh] lg:max-h-[calc(100dvh-130px)] backdrop-blur-xl bg-surface-container-low/60 relative"
     >
       {/* Panel Header: Team vs Team & Close Button */}
-      <div className="bg-surface-container border-b border-surface-container-high p-4 flex flex-col relative">
+      <div className="bg-surface-container border-b border-surface-container-high p-4 pt-3 flex flex-col relative">
+        {/* Drag-Handle für mobile Haptik */}
+        <div className="w-12 h-1 rounded-full bg-white/10 mx-auto mb-3 flex-shrink-0" />
         {onClose && (
           <button 
             onClick={onClose}
@@ -166,68 +168,79 @@ export function MatchDetailPanel({ matchId, onClose }: MatchDetailPanelProps) {
       </div>
 
       {/* Tab Contents */}
-      <div className="flex-1 overflow-y-auto p-3">
-        {activeTab === 'tips' ? (
-          <div className="space-y-1.5">
-            {isLaden ? (
-              <div className="flex items-center justify-center py-12">
-                <div className="w-6 h-6 border-2 border-primary-container border-t-transparent rounded-full animate-spin" />
-              </div>
-            ) : istVorAnpfiff ? (
-              <div className="bg-surface-container-low border border-surface-container-high rounded-xl p-6 text-center text-left">
-                <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-2.5">
-                  <span className="text-sm">🔒</span>
-                </div>
-                <p className="text-on-surface text-[12px] font-mono font-bold uppercase tracking-wider text-on-surface-variant mb-1">{t('tipsHidden')}</p>
-                <p className="text-on-surface-variant text-[11px] font-mono leading-normal">
-                  {t('tipsHiddenDesc')}
-                </p>
-              </div>
-            ) : tipps.length === 0 ? (
-              <div className="text-center py-12 font-mono text-on-surface-variant/40 text-xs">
-                {t('noTipsForMatch')}
+      <div className="flex-1 overflow-hidden relative">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeTab}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.18, ease: 'easeOut' }}
+            className="h-full overflow-y-auto p-3 [mask-image:linear-gradient(to_bottom,transparent,black_12px,black_calc(100%-12px),transparent)]"
+          >
+            {activeTab === 'tips' ? (
+              <div className="space-y-1.5 pb-4">
+                {isLaden ? (
+                  <div className="flex items-center justify-center py-12">
+                    <div className="w-6 h-6 border-2 border-primary-container border-t-transparent rounded-full animate-spin" />
+                  </div>
+                ) : istVorAnpfiff ? (
+                  <div className="bg-surface-container-low border border-surface-container-high rounded-xl p-6 text-center">
+                    <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-2.5 shadow-inner">
+                      <Lock size={16} className="text-amber-500/80 drop-shadow-[0_0_8px_rgba(245,158,11,0.4)] animate-pulse" />
+                    </div>
+                    <p className="text-on-surface text-[12px] font-mono font-bold uppercase tracking-wider text-on-surface-variant mb-1">{t('tipsHidden')}</p>
+                    <p className="text-on-surface-variant text-[11px] font-mono leading-normal">
+                      {t('tipsHiddenDesc')}
+                    </p>
+                  </div>
+                ) : tipps.length === 0 ? (
+                  <div className="text-center py-12 font-mono text-on-surface-variant/40 text-xs">
+                    {t('noTipsForMatch')}
+                  </div>
+                ) : (
+                  tipps.map(tip => {
+                    const p = match.tore_heim != null && match.tore_gast != null
+                      ? berechnePunkte(tip.tipp_heim, tip.tipp_gast, match.tore_heim, match.tore_gast)
+                      : 0
+                    const isOwn = tip.user_id === user?.id
+                    return (
+                      <div key={tip.id}
+                        className={`bg-surface-container-lowest border rounded-xl p-2.5 flex items-center gap-3 transition-all ${
+                          isOwn ? 'border-primary-container/30 bg-primary-container/5' : 'border-surface-container-high'
+                        }`}
+                      >
+                        <div className="w-7 h-7 rounded-full bg-surface-container-high border border-surface-container-highest flex items-center justify-center flex-shrink-0 overflow-hidden">
+                          {tip.profile?.avatar_url ? (
+                            <img src={tip.profile.avatar_url} alt="" className="w-full h-full object-cover"  loading="lazy" />
+                          ) : (
+                            <UserIcon size={12} className="text-on-surface-variant" />
+                          )}
+                        </div>
+                        <span className={`flex-1 text-xs truncate ${isOwn ? 'text-primary font-bold font-mono' : 'text-on-surface font-medium'}`}>
+                          {tip.profile?.username || t('unknownUser')}
+                          {isOwn && <span className="text-[9px] text-on-surface-variant/50 ml-1">{t('youLabel')}</span>}
+                        </span>
+                        <span className="font-mono text-xs font-bold text-on-surface px-2 py-0.5 bg-surface-container rounded">
+                          {tip.tipp_heim}:{tip.tipp_gast}
+                        </span>
+                        {match.status === 'finished' && (
+                          <span className={`font-mono text-[10px] font-black ${punkteFarbe(p)} bg-surface-container px-1.5 py-0.5 rounded border border-white/5`}>
+                            {p}P
+                          </span>
+                        )}
+                      </div>
+                    )
+                  })
+                )}
               </div>
             ) : (
-              tipps.map(tip => {
-                const p = match.tore_heim != null && match.tore_gast != null
-                  ? berechnePunkte(tip.tipp_heim, tip.tipp_gast, match.tore_heim, match.tore_gast)
-                  : 0
-                const isOwn = tip.user_id === user?.id
-                return (
-                  <div key={tip.id}
-                    className={`bg-surface-container-lowest border rounded-xl p-2.5 flex items-center gap-3 transition-all ${
-                      isOwn ? 'border-primary-container/30 bg-primary-container/5' : 'border-surface-container-high'
-                    }`}
-                  >
-                    <div className="w-7 h-7 rounded-full bg-surface-container-high border border-surface-container-highest flex items-center justify-center flex-shrink-0 overflow-hidden">
-                      {tip.profile?.avatar_url ? (
-                        <img src={tip.profile.avatar_url} alt="" className="w-full h-full object-cover"  loading="lazy" />
-                      ) : (
-                        <UserIcon size={12} className="text-on-surface-variant" />
-                      )}
-                    </div>
-                    <span className={`flex-1 text-xs truncate ${isOwn ? 'text-primary font-bold font-mono' : 'text-on-surface font-medium'}`}>
-                      {tip.profile?.username || t('unknownUser')}
-                      {isOwn && <span className="text-[9px] text-on-surface-variant/50 ml-1">{t('youLabel')}</span>}
-                    </span>
-                    <span className="font-mono text-xs font-bold text-on-surface px-2 py-0.5 bg-surface-container rounded">
-                      {tip.tipp_heim}:{tip.tipp_gast}
-                    </span>
-                    {match.status === 'finished' && (
-                      <span className={`font-mono text-[10px] font-black ${punkteFarbe(p)} bg-surface-container px-1.5 py-0.5 rounded border border-white/5`}>
-                        {p}P
-                      </span>
-                    )}
-                  </div>
-                )
-              })
+              <div className="h-full pb-4">
+                <MatchChat matchId={matchId} />
+              </div>
             )}
-          </div>
-        ) : (
-          <div className="h-full">
-            <MatchChat matchId={matchId} />
-          </div>
-        )}
+          </motion.div>
+        </AnimatePresence>
       </div>
     </motion.div>
   )

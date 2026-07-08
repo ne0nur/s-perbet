@@ -27,11 +27,17 @@ export function HeaderLogo({ size = 'md' }: HeaderLogoProps) {
     else if (nameLen > 10) nameSize = 'text-base'
   }
 
-  // Start-Animation: Zeige Username für 3.5 Sekunden, dann wechsle smooth zum SüperBET Logo
+  // Start-Animation: Zeige Username für 1.8 Sekunden, dann wechsle smooth zum SüperBET Logo (nur einmal pro Session)
   useEffect(() => {
+    const shown = sessionStorage.getItem('superbet_welcome_shown')
+    if (shown) {
+      setShowUsername(false)
+      return
+    }
     const timer = setTimeout(() => {
       setShowUsername(false)
-    }, 3500)
+      sessionStorage.setItem('superbet_welcome_shown', 'true')
+    }, 1800)
     return () => clearTimeout(timer)
   }, [])
 

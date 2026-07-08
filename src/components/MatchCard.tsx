@@ -57,17 +57,21 @@ function Stepper({ value, onChange, disabled, onValidate }: { value: number; onC
       <motion.button
         type="button"
         onPointerDown={(e) => e.stopPropagation()}
-        onClick={(e) => { e.stopPropagation(); tryChange(Math.max(0, value - 1)) }}
+        onClick={(e) => { 
+          e.stopPropagation(); 
+          if ('vibrate' in navigator) navigator.vibrate(10);
+          tryChange(Math.max(0, value - 1));
+        }}
         disabled={disabled || value === 0}
         whileTap={{ scale: 0.85 }}
-        className="w-8 h-8 rounded-full bg-surface-container-highest border border-surface-container-high flex items-center justify-center text-on-surface-variant
+        className="w-11 h-11 rounded-full bg-surface-container-highest border border-surface-container-high flex items-center justify-center text-on-surface-variant
           hover:border-primary-container/40 hover:text-on-surface active:scale-90
           disabled:opacity-30 transition-all duration-150 cursor-pointer"
       >
-        <Minus size={13} />
+        <Minus size={15} />
       </motion.button>
 
-      <div className="w-7 h-8 relative overflow-hidden flex items-center justify-center">
+      <div className="w-7 h-11 relative overflow-hidden flex items-center justify-center">
         <AnimatePresence mode="popLayout">
           <motion.span
             key={value}
@@ -85,14 +89,18 @@ function Stepper({ value, onChange, disabled, onValidate }: { value: number; onC
       <motion.button
         type="button"
         onPointerDown={(e) => e.stopPropagation()}
-        onClick={(e) => { e.stopPropagation(); tryChange(Math.min(20, value + 1)) }}
+        onClick={(e) => { 
+          e.stopPropagation(); 
+          if ('vibrate' in navigator) navigator.vibrate(10);
+          tryChange(Math.min(20, value + 1));
+        }}
         disabled={disabled || value === 20}
         whileTap={{ scale: 0.85 }}
-        className="w-8 h-8 rounded-full bg-surface-container-highest border border-surface-container-high flex items-center justify-center text-on-surface-variant
+        className="w-11 h-11 rounded-full bg-surface-container-highest border border-surface-container-high flex items-center justify-center text-on-surface-variant
           hover:border-primary-container/40 hover:text-on-surface active:scale-90
           disabled:opacity-30 transition-all duration-150 cursor-pointer"
       >
-        <Plus size={13} />
+        <Plus size={15} />
       </motion.button>
     </div>
   )

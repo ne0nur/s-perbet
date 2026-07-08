@@ -50,16 +50,16 @@ function getRowStyle(index: number, total: number, config: TournamentConfig | nu
   // K.o.-Phasen-Tabelle (z.B. CL Ligaphase)
   if (config.has_knockout) {
     if (ko_direct_spots > 0 && index < ko_direct_spots)
-      return { posColor: 'text-green-400 font-bold', posBorder: 'border-l-[3px] border-green-500', rowBg: 'bg-green-500/5' }
+      return { posColor: 'text-success font-bold', posBorder: 'border-l-[3px] border-success', rowBg: 'bg-success-container' }
     if (ko_playoff_spots > 0 && index < ko_direct_spots + ko_playoff_spots)
       return { posColor: 'text-emerald-400 font-bold', posBorder: 'border-l-[3px] border-emerald-400', rowBg: 'bg-emerald-500/5' }
-    return { posColor: 'text-red-400 font-bold', posBorder: 'border-l-[3px] border-red-500', rowBg: 'bg-red-500/5' }
+    return { posColor: 'text-error font-bold', posBorder: 'border-l-[3px] border-error/50', rowBg: 'bg-error-container' }
   }
 
   // Normale Ligatabelle
   let cumulative = 0
   if (cl_spots > 0 && index < cumulative + cl_spots)
-    return { posColor: 'text-green-400 font-bold', posBorder: 'border-l-[3px] border-green-500', rowBg: 'bg-green-500/5' }
+    return { posColor: 'text-success font-bold', posBorder: 'border-l-[3px] border-success', rowBg: 'bg-success-container' }
   cumulative += cl_spots
 
   if (cl_playoff_spots > 0 && index < cumulative + cl_playoff_spots)
@@ -67,7 +67,7 @@ function getRowStyle(index: number, total: number, config: TournamentConfig | nu
   cumulative += cl_playoff_spots
 
   if (el_spots > 0 && index < cumulative + el_spots)
-    return { posColor: 'text-blue-400 font-bold', posBorder: 'border-l-[3px] border-blue-500', rowBg: 'bg-blue-500/5' }
+    return { posColor: 'text-info font-bold', posBorder: 'border-l-[3px] border-info', rowBg: 'bg-info-container' }
   cumulative += el_spots
 
   if (conf_spots > 0 && index < cumulative + conf_spots)
@@ -75,10 +75,10 @@ function getRowStyle(index: number, total: number, config: TournamentConfig | nu
 
   // Abstieg von hinten rechnen
   if (relegation_count > 0 && index >= total - relegation_count && total >= relegation_count + 1)
-    return { posColor: 'text-red-400 font-bold', posBorder: 'border-l-[3px] border-red-500', rowBg: 'bg-red-500/5' }
+    return { posColor: 'text-error font-bold', posBorder: 'border-l-[3px] border-error/50', rowBg: 'bg-error-container' }
 
   if (relegation_playoff_count > 0 && index >= total - relegation_count - relegation_playoff_count && total >= relegation_count + relegation_playoff_count + 1)
-    return { posColor: 'text-orange-400 font-bold', posBorder: 'border-l-[3px] border-orange-500', rowBg: 'bg-orange-500/5' }
+    return { posColor: 'text-warning font-bold', posBorder: 'border-l-[3px] border-warning', rowBg: 'bg-warning-container' }
 
   return { posColor: 'text-on-surface-variant', posBorder: '', rowBg: index % 2 === 0 ? '' : 'bg-surface-container-lowest' }
 }
@@ -88,18 +88,18 @@ function buildLegend(config: TournamentConfig, t: (key: string) => string): { co
   const items: { color: string; label: string }[] = []
 
   if (config.has_knockout) {
-    if (config.ko_direct_spots > 0) items.push({ color: 'bg-green-500', label: t('legendClDirect') })
+    if (config.ko_direct_spots > 0) items.push({ color: 'bg-success', label: t('legendClDirect') })
     if (config.ko_playoff_spots > 0) items.push({ color: 'bg-emerald-400', label: t('legendClPlayoffs') })
-    items.push({ color: 'bg-red-500', label: t('legendClOut') })
+    items.push({ color: 'bg-error', label: t('legendClOut') })
     return items
   }
 
-  if (config.cl_spots > 0) items.push({ color: 'bg-green-500', label: t('legendClGroups') })
+  if (config.cl_spots > 0) items.push({ color: 'bg-success', label: t('legendClGroups') })
   if (config.cl_playoff_spots > 0) items.push({ color: 'bg-emerald-400', label: t('legendClQuali') })
-  if (config.el_spots > 0) items.push({ color: 'bg-blue-500', label: t('legendEl') })
+  if (config.el_spots > 0) items.push({ color: 'bg-info', label: t('legendEl') })
   if (config.conf_spots > 0) items.push({ color: 'bg-sky-400', label: t('legendConfQuali') })
-  if (config.relegation_playoff_count > 0) items.push({ color: 'bg-orange-400', label: t('legendRelegationPlayoffs') })
-  if (config.relegation_count > 0) items.push({ color: 'bg-red-500', label: t('legendRelegation') })
+  if (config.relegation_playoff_count > 0) items.push({ color: 'bg-warning', label: t('legendRelegationPlayoffs') })
+  if (config.relegation_count > 0) items.push({ color: 'bg-error', label: t('legendRelegation') })
 
   return items
 }
@@ -492,14 +492,14 @@ export function StandingsPage() {
                                 <td className="py-2 px-1 text-center font-mono text-on-surface-variant hidden sm:table-cell">{row.drawn}</td>
                                 <td className="py-2 px-1 text-center font-mono text-on-surface-variant hidden sm:table-cell">{row.lost}</td>
                                 <td className="py-2 px-1 text-center font-mono text-on-surface-variant hidden sm:table-cell">{row.goalsFor}:{row.goalsAgainst}</td>
-                                <td className={`py-2 px-1 text-center font-mono ${row.goalDifference > 0 ? 'text-green-400' : row.goalDifference < 0 ? 'text-red-400' : 'text-on-surface-variant'}`}>
+                                <td className={`py-2 px-1 text-center font-mono ${row.goalDifference > 0 ? 'text-success' : row.goalDifference < 0 ? 'text-error' : 'text-on-surface-variant'}`}>
                                   {row.goalDifference > 0 ? `+${row.goalDifference}` : row.goalDifference}
                                 </td>
                                 <td className="py-2 px-2 text-center font-mono font-bold text-on-surface">{row.points}</td>
                                 <td className="py-2 px-1">
                                   <div className="flex items-center justify-center gap-0.5">
                                     {row.form.map((f, i) => {
-                                      const color = f === 'W' ? 'bg-green-500' : f === 'L' ? 'bg-red-500' : 'bg-slate-600'
+                                      const color = f === 'W' ? 'bg-success' : f === 'L' ? 'bg-error' : 'bg-surface-container-highest'
                                       const letter = f === 'W' ? (language === 'de' ? 'S' : language === 'tr' ? 'G' : 'W') :
                                                     f === 'L' ? (language === 'de' ? 'N' : language === 'tr' ? 'M' : 'L') :
                                                     (language === 'de' ? 'U' : language === 'tr' ? 'B' : 'D')
