@@ -30,7 +30,7 @@ export function SetPasswordPage() {
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <div className="glass-panel rounded-xl p-8 max-w-sm w-full text-center">
           <div className="w-16 h-16 rounded-full bg-primary-container/10 flex items-center justify-center mx-auto mb-4">
-            <Check size={32} className="text-emerald-400" />
+            <Check size={32} className="text-success" />
           </div>
           <h2 className="text-xl font-bold text-on-surface mb-2">{t('passwordChanged')}</h2>
           <p className="text-on-surface-variant text-sm">{t('redirecting')}</p>

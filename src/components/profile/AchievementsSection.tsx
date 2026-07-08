@@ -8,38 +8,37 @@ type Rarity = 'gewoehnlich' | 'selten' | 'episch' | 'legendaer'
 export const RARITY_CONFIG: Record<string, {
   order: number
   exp: number
-  name: string
   border: string; bg: string; text: string; glow: string
   icon: typeof Star; iconColor: string
   badge: string
 }> = {
   gewoehnlich: {
-    order: 0, exp: 50, name: 'Gewöhnlich',
-    border: 'border-slate-500/30', bg: 'bg-slate-500/3', text: 'text-slate-400',
-    glow: 'shadow-[0_0_8px_rgba(148,163,184,0.1)]',
-    icon: Star, iconColor: 'text-slate-400',
-    badge: 'bg-slate-500/10 border-slate-500/30 text-slate-400',
+    order: 0, exp: 50,
+    border: 'border-outline-variant/40', bg: 'bg-white/[0.01]', text: 'text-on-surface-variant',
+    glow: 'shadow-[0_0_8px_rgba(255,255,255,0.02)]',
+    icon: Star, iconColor: 'text-on-surface-variant',
+    badge: 'bg-white/5 border-outline-variant/40 text-on-surface-variant',
   },
   selten: {
-    order: 1, exp: 100, name: 'Selten',
-    border: 'border-blue-500/30', bg: 'bg-blue-500/5', text: 'text-blue-400',
-    glow: 'shadow-[0_0_10px_rgba(59,130,246,0.15)]',
-    icon: Star, iconColor: 'text-blue-400',
-    badge: 'bg-blue-500/10 border-blue-500/30 text-blue-400',
+    order: 1, exp: 100,
+    border: 'border-info/30', bg: 'bg-info-container/40', text: 'text-info',
+    glow: 'shadow-[0_0_10px_rgba(var(--info-rgb),0.15)]',
+    icon: Star, iconColor: 'text-info',
+    badge: 'bg-info-container border-info/30 text-info',
   },
   episch: {
-    order: 2, exp: 200, name: 'Episch',
-    border: 'border-purple-500/30', bg: 'bg-purple-500/5', text: 'text-purple-400',
-    glow: 'shadow-[0_0_12px_rgba(168,85,247,0.2)]',
-    icon: Flame, iconColor: 'text-purple-400',
-    badge: 'bg-purple-500/10 border-purple-500/30 text-purple-400',
+    order: 2, exp: 200,
+    border: 'border-tertiary/30', bg: 'bg-tertiary-container/30', text: 'text-tertiary',
+    glow: 'shadow-[0_0_12px_rgba(var(--tertiary-rgb),0.15)]',
+    icon: Flame, iconColor: 'text-tertiary',
+    badge: 'bg-tertiary-container/40 border-tertiary/30 text-tertiary',
   },
   legendaer: {
-    order: 3, exp: 500, name: 'Legendär',
-    border: 'border-yellow-500/40', bg: 'bg-yellow-500/5', text: 'text-yellow-400',
-    glow: 'shadow-[0_0_15px_rgba(234,179,8,0.3)]',
-    icon: Star, iconColor: 'text-yellow-400',
-    badge: 'bg-yellow-500/10 border-yellow-500/30 text-yellow-400',
+    order: 3, exp: 500,
+    border: 'border-warning/40', bg: 'bg-warning-container/35', text: 'text-warning',
+    glow: 'shadow-[0_0_15px_rgba(var(--warning-rgb),0.25)]',
+    icon: Star, iconColor: 'text-warning',
+    badge: 'bg-warning-container/50 border-warning/40 text-warning',
   },
 }
 
@@ -91,11 +90,15 @@ export const AchievementBadge = memo(function AchievementBadge({ id, unlocked, r
 })
 
 const RarityPill = memo(function RarityPill({ rarity }: { rarity: string }) {
+  const { t } = useTranslation()
   const cfg = RARITY_CONFIG[rarity as keyof typeof RARITY_CONFIG]
   if (!cfg) return null
+
+  const nameKey = rarity === 'gewoehnlich' ? 'rarityCommon' : rarity === 'selten' ? 'rarityRare' : rarity === 'episch' ? 'rarityEpic' : 'rarityLegendary'
+
   return (
     <span className={`text-[7px] font-mono uppercase tracking-wider px-1.5 py-0.5 rounded border font-bold ${cfg.badge}`}>
-      {cfg.name}
+      {t(nameKey)}
     </span>
   )
 })
@@ -278,7 +281,7 @@ export function AchievementsSection({ unlockedSet, newlyUnlocked }: Achievements
               <div className="relative">
                 <AchievementBadge id={ach.id} unlocked={unlocked} rarity={mapRarity(ach.rarity)} />
                 {isNew && (
-                  <div className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-red-500 rounded-full border-2 border-[#1E1E1E] animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.8)] z-20" />
+                  <div className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-error rounded-full border-2 border-[#1E1E1E] animate-pulse shadow-[0_0_8px_rgba(var(--error-rgb),0.8)] z-20" />
                 )}
               </div>
               <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
@@ -293,11 +296,11 @@ export function AchievementsSection({ unlockedSet, newlyUnlocked }: Achievements
                         +{cfg.exp}
                       </span>
                       {unlocked ? (
-                        <span className="flex items-center gap-1 text-[7px] font-mono uppercase tracking-wider text-green-400 bg-green-500/10 px-1.5 py-0.5 rounded border border-green-500/20 font-bold">
+                        <span className="flex items-center gap-1 text-[7px] font-mono uppercase tracking-wider text-success bg-success-container px-1.5 py-0.5 rounded border border-success/20 font-bold">
                           <Check size={8} strokeWidth={3} />
                         </span>
                       ) : (
-                        <span className="flex items-center gap-1 text-[7px] font-mono uppercase tracking-wider text-slate-400 bg-slate-500/10 px-1.5 py-0.5 rounded border border-slate-500/20 shrink-0 font-bold">
+                        <span className="flex items-center gap-1 text-[7px] font-mono uppercase tracking-wider text-on-surface-variant bg-surface-container px-1.5 py-0.5 rounded border border-outline-variant/30 shrink-0 font-bold">
                           <Lock size={8} strokeWidth={3} />
                         </span>
                       )}

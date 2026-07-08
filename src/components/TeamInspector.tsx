@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabase'
 import type { Match } from '../stores/matchStore'
 import { useTipStore } from '../stores/tipStore'
 import { getTeamLogo } from '../lib/teamLogos'
-import { Trophy, Calendar, Minus, Plus, Lock } from 'lucide-react'
+import { Trophy, Calendar, Minus, Plus, Lock, X } from 'lucide-react'
 import { useSettingsStore } from '../stores/settingsStore'
 import { useTournamentStore } from '../stores/tournamentStore'
 import { useToastStore } from '../stores/toastStore'
@@ -30,33 +30,33 @@ function getClubGradient(team: string): string {
   return CLUB_GRADIENTS[team] || 'from-surface-container/30 to-background border-white/5'
 }
 
-function formatDatum(iso: string): string {
+function formatDatum(iso: string, lang: string): string {
   const d = new Date(iso)
-  return d.toLocaleDateString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit' })
+  return d.toLocaleDateString(lang === 'tr' ? 'tr-TR' : lang === 'en' ? 'en-US' : 'de-DE', { weekday: 'short', day: '2-digit', month: '2-digit' })
 }
 
-function formatUhrzeit(iso: string): string {
+function formatUhrzeit(iso: string, lang: string): string {
   const d = new Date(iso)
-  return d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })
+  return d.toLocaleTimeString(lang === 'tr' ? 'tr-TR' : lang === 'en' ? 'en-US' : 'de-DE', { hour: '2-digit', minute: '2-digit' })
 }
 
 function Stepper({ value, onChange, disabled }: { value: number; onChange: (v: number) => void; disabled?: boolean }) {
   return (
     <div className="flex items-center gap-1.5">
       <button
-        onClick={(e) => { e.stopPropagation(); onChange(Math.max(0, value - 1)) }}
+        onClick={(e) => { e.stopPropagation(); navigator.vibrate?.(10); onChange(Math.max(0, value - 1)) }}
         disabled={disabled || value === 0}
-        className="w-7 h-7 rounded-full bg-surface-container-highest border border-surface-container-high flex items-center justify-center text-on-surface-variant hover:text-on-surface disabled:opacity-35 active:scale-90 transition-transform"
+        className="w-11 h-11 rounded-full bg-surface-container-highest border border-surface-container-high flex items-center justify-center text-on-surface-variant hover:text-on-surface disabled:opacity-35 active:scale-90 transition-transform cursor-pointer"
       >
-        <Minus size={11} />
+        <Minus size={12} />
       </button>
-      <span className="w-5 text-center font-mono text-sm font-bold text-on-surface tabular-nums">{value}</span>
+      <span className="w-6 text-center font-mono text-base font-bold text-on-surface tabular-nums">{value}</span>
       <button
-        onClick={(e) => { e.stopPropagation(); onChange(Math.min(20, value + 1)) }}
+        onClick={(e) => { e.stopPropagation(); navigator.vibrate?.(10); onChange(Math.min(20, value + 1)) }}
         disabled={disabled || value === 20}
-        className="w-7 h-7 rounded-full bg-surface-container-highest border border-surface-container-high flex items-center justify-center text-on-surface-variant hover:text-on-surface disabled:opacity-35 active:scale-90 transition-transform"
+        className="w-11 h-11 rounded-full bg-surface-container-highest border border-surface-container-high flex items-center justify-center text-on-surface-variant hover:text-on-surface disabled:opacity-35 active:scale-90 transition-transform cursor-pointer"
       >
-        <Plus size={11} />
+        <Plus size={12} />
       </button>
     </div>
   )
@@ -168,8 +168,8 @@ export function TeamInspector({ teamName, onClose }: TeamInspectorProps) {
           <h2 className="text-sm font-mono font-bold text-white uppercase tracking-wider">{teamName}</h2>
         </div>
         {onClose && (
-          <button onClick={onClose} className="text-on-surface-variant hover:text-on-surface text-xs font-mono">
-            [X]
+          <button onClick={onClose} className="text-on-surface-variant hover:text-on-surface p-2.5 rounded-full hover:bg-white/5 transition-colors cursor-pointer min-w-[44px] min-h-[44px] flex items-center justify-center">
+            <X size={16} />
           </button>
         )}
       </div>
@@ -183,14 +183,14 @@ export function TeamInspector({ teamName, onClose }: TeamInspectorProps) {
           {/* Section: Next Fixture & Quick Tipp */}
           <div className="space-y-2">
             <div className="flex items-center gap-1.5 text-on-surface-variant font-mono text-[9px] uppercase tracking-wider">
-              <Calendar size={11} className="text-primary-fixed-dim" /> Nächstes Spiel
+              <Calendar size={11} className="text-primary-fixed-dim" /> {t('nextMatch')}
             </div>
 
             {nextMatch ? (
               <div className="bg-surface-container-low/60 border border-white/5 rounded-xl p-3.5 space-y-3">
                 {/* Date / Kickoff */}
                 <div className="text-center text-[10px] font-mono text-on-surface-variant/75 mb-1">
-                  Spieltag {nextMatch.spieltag} · {formatDatum(nextMatch.anpfiff)} · {formatUhrzeit(nextMatch.anpfiff)}
+                  Spieltag {nextMatch.spieltag} · {formatDatum(nextMatch.anpfiff, language)} · {formatUhrzeit(nextMatch.anpfiff, language)}
                 </div>
 
                 {/* Score / Teams Row */}
@@ -216,26 +216,26 @@ export function TeamInspector({ teamName, onClose }: TeamInspectorProps) {
                       <button
                         onClick={handleTippSpeichern}
                         disabled={isSaving}
-                        className={`px-3 py-1.5 rounded-full text-[9px] font-mono font-bold uppercase tracking-wider transition-all border ${
+                        className={`px-4 py-2 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider transition-all border cursor-pointer min-h-[44px] flex items-center ${
                           saved
-                            ? 'bg-green-500/20 border-green-500/40 text-green-400'
-                            : 'bg-primary-container/15 border-primary-container/30 text-primary-fixed-dim hover:bg-primary-container/25'
+                            ? 'bg-success-container border-success/35 text-success'
+                            : 'bg-primary-container/15 border-primary/30 text-primary-fixed-dim hover:bg-primary-container/25'
                         }`}
                       >
-                        {isSaving ? '...' : saved ? 'Tipp ok' : 'Tippen'}
+                        {isSaving ? '...' : saved ? t('saved') || 'Tipp ok' : t('save') || 'Tippen'}
                       </button>
                       <Stepper value={tippGast} onChange={setTippGast} disabled={isSaving} />
                     </>
                   ) : (
-                    <div className="w-full flex items-center justify-center gap-1.5 text-[9px] text-amber-500/50 font-mono">
-                      <Lock size={10} /> Tippabgabe gesperrt
+                    <div className="w-full flex items-center justify-center gap-1.5 text-[10px] text-warning/50 font-mono">
+                      <Lock size={11} /> {t('tippingLocked') || 'Tippabgabe gesperrt'}
                     </div>
                   )}
                 </div>
               </div>
             ) : (
               <div className="text-center py-4 text-xs font-mono text-on-surface-variant/40 bg-surface-container-low/40 rounded-xl">
-                Keine weiteren anstehenden Spiele.
+                {t('noUpcomingMatches')}
               </div>
             )}
           </div>
@@ -243,7 +243,7 @@ export function TeamInspector({ teamName, onClose }: TeamInspectorProps) {
           {/* Section: Form / Last 5 Results */}
           <div className="space-y-2">
             <div className="flex items-center gap-1.5 text-on-surface-variant font-mono text-[9px] uppercase tracking-wider">
-              <Trophy size={11} className="text-primary-fixed-dim" /> Formkurve & Letzte Ergebnisse
+              <Trophy size={11} className="text-primary-fixed-dim" /> {t('formAndResults')}
             </div>
 
             {last5.length > 0 ? (
@@ -261,16 +261,18 @@ export function TeamInspector({ teamName, onClose }: TeamInspectorProps) {
                   }
 
                   const outcomeStyles = {
-                    W: 'bg-green-500/25 border-green-500/45 text-green-300',
-                    D: 'bg-slate-600/25 border-slate-600/45 text-slate-300',
-                    L: 'bg-red-500/25 border-red-500/45 text-red-300',
+                    W: 'bg-success-container border-success/30 text-success',
+                    D: 'bg-surface-container-high border-outline-variant/30 text-on-surface-variant',
+                    L: 'bg-error-container border-error/30 text-error',
                   }
+
+                  const outcomeLetter = outcome === 'W' ? t('outcomeWin') : outcome === 'L' ? t('outcomeLoss') : t('outcomeDraw')
 
                   return (
                     <div key={m.id} className="bg-surface-container-low/40 border border-white/5 rounded-lg px-2.5 py-1.5 flex items-center justify-between text-[11px] font-mono">
                       <div className="flex items-center gap-2">
                         <span className={`w-5 h-5 rounded-full border text-[9px] font-black flex items-center justify-center ${outcomeStyles[outcome]}`}>
-                          {outcome === 'W' ? 'S' : outcome === 'L' ? 'N' : 'U'}
+                          {outcomeLetter}
                         </span>
                         <span className="text-on-surface-variant">vs</span>
                         <span className="font-medium text-on-surface truncate max-w-[100px]">{opponent}</span>
@@ -284,7 +286,7 @@ export function TeamInspector({ teamName, onClose }: TeamInspectorProps) {
               </div>
             ) : (
               <div className="text-center py-4 text-xs font-mono text-on-surface-variant/40 bg-surface-container-low/40 rounded-xl">
-                Noch keine Ergebnisse in dieser Saison.
+                {t('noResultsThisSeason')}
               </div>
             )}
           </div>

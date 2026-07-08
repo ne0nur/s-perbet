@@ -11,7 +11,7 @@ import { useSettingsStore } from '../stores/settingsStore'
 import { useTournamentStore } from '../stores/tournamentStore'
 import { useToastStore } from '../stores/toastStore'
 import { useTranslation } from '../utils/translations'
-import { getTournamentLogo } from '../lib/utils'
+import { getTournamentLogo, getPhaseLabel as sharedGetPhaseLabel } from '../lib/utils'
 import { motion } from 'framer-motion'
 import { PullToRefresh } from '../components/ui/PullToRefresh'
 
@@ -282,43 +282,7 @@ export function DashboardPage() {
   }, [meineTipps, matches, aktuellerSpieltag, spieltagInfo])
   const offeneTipps = matches.filter(m => m.status === 'upcoming' && !getTippFuerMatch(m.id)).length
 
-  const getPhaseLabel = (st: number, tournament: string) => {
-    const config = useTournamentStore.getState().getTournament(tournament)
-    
-    // K.o.-Turniere (CL, WM, etc.): zeige Phase statt "Spieltag X"
-    if (config?.has_knockout) {
-      const groupStages = config.group_stage_matchdays
-      if (st <= groupStages) {
-        return t('clRoundLeague', { st })
-      }
-      // K.o.-Runde aus Spieltag-Nummer berechnen
-      const koRound = st - groupStages
-      const isWC = tournament.toLowerCase().includes('world cup') || tournament.toLowerCase().includes('wm')
-      
-      if (isWC) {
-        const wmLabels: Record<number, string> = {
-          1: t('koPhase32'),
-          2: t('koPhase16'),
-          3: t('koPhase8'),
-          4: t('koPhase4'),
-          5: t('koPhase2'),
-        }
-        return wmLabels[koRound] || `Runde ${koRound}`
-      }
-      
-      const koLabels: Record<number, string> = {
-        1: t('clRoundPlayoffs'),
-        2: t('clRoundLast16'),
-        3: t('clRoundQuarter'),
-        4: t('clRoundSemi'),
-        5: t('clRoundFinal'),
-      }
-      return koLabels[koRound] || `${t('clRoundLeague', { st: koRound })}`
-    }
-    
-    // Liga-Turniere: "Spieltag X"
-    return t('slRoundLabel', { st })
-  }
+  const getPhaseLabel = (st: number, tournament: string) => sharedGetPhaseLabel(st, tournament, t)
 
   // Bestimme wie viele Tabs gezeigt werden dynamically
   const getTabsCount = () => {

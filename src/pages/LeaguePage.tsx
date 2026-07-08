@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { RivalInspector } from '../components/RivalInspector'
 import { LeagueChat } from '../components/LeagueChat'
 import { useToastStore } from '../stores/toastStore'
-import { getLevelBadgeStyle, getTournamentLogo, berechnePunkte } from '../lib/utils'
+import { getLevelBadgeStyle, getTournamentLogo, berechnePunkte, getPunkteKlasse, getPhaseLabel as sharedGetPhaseLabel } from '../lib/utils'
 import { LevelBadge } from '../components/ui/LevelBadge'
 import { useTranslation } from '../utils/translations'
 
@@ -56,14 +56,7 @@ interface MitgliedRow {
 interface Liga { id: string; name: string; invite_code: string; creator_id: string; active_tournaments: string[] }
 
 // ─── Punkte-Farbe ────────────────────────────────────
-function punkteKlasse(p: number): string {
-  if (p >= 4) return 'text-green-400 drop-shadow-[0_0_6px_rgba(74,222,128,0.4)]'
-  if (p === 3) return 'text-amber-400 drop-shadow-[0_0_6px_rgba(251,191,36,0.4)]'
-  if (p === 2) return 'text-blue-400 drop-shadow-[0_0_6px_rgba(96,165,250,0.4)]'
-  if (p === 1) return 'text-purple-400 drop-shadow-[0_0_6px_rgba(192,132,252,0.4)]'
-  if (p < 0) return 'text-red-400 drop-shadow-[0_0_6px_rgba(248,113,113,0.4)]'
-  return 'text-on-surface-variant/70'
-}
+const punkteKlasse = getPunkteKlasse;
 function subscriptPunkte(p: number): string {
   const subs = ['₀','₁','₂','₃','₄']
   return subs[Math.min(p, 4)] || ''
@@ -536,44 +529,16 @@ export function LeaguePage() {
     if (!error) {
       setAktiveLiga({ ...aktiveLiga, name: editNameInput.trim() })
       setZeigeEditNameModal(false)
-      useToastStore.getState().toast(language === 'tr' ? 'Lig adı başarıyla güncellendi' : language === 'en' ? 'League name updated' : 'Liganame erfolgreich aktualisiert', 'success')
+      useToastStore.getState().toast(t('toastLeagueNameUpdated'), 'success')
       await ladeLigen() // Refresh list
     } else {
-      useToastStore.getState().toast(language === 'tr' ? 'Lig adı güncellenirken hata oluştu' : language === 'en' ? 'Error updating league name' : 'Fehler beim Aktualisieren des Liganamens', 'error')
+      useToastStore.getState().toast(t('toastErrorUpdatingLeagueName'), 'error')
     }
     setIsSavingName(false)
   }
 
   // ─── Dynamische Tabs ───────────────────────────────
-  const getPhaseLabel = (st: number, tournament: string) => {
-    const config = useTournamentStore.getState().getTournament(tournament)
-
-    // K.o.-Turniere (WM, CL, etc.)
-    if (config?.has_knockout) {
-      const gs = config.group_stage_matchdays
-      if (st <= gs) return t('clRoundLeague', { st })
-
-      const koRound = st - gs
-      const isWC = tournament.toLowerCase().includes('world cup') || tournament.toLowerCase().includes('wm')
-
-      if (isWC) {
-        const wmPhases: Record<number, string> = {
-          1: t('koPhase32'), 2: t('koPhase16'), 3: t('koPhase8'), 4: t('koPhase4'), 5: t('koPhase2')
-        }
-        return wmPhases[koRound] || `Runde ${koRound}`
-      }
-
-      // CL-Style
-      const clPhases: Record<number, string> = {
-        1: t('clRoundPlayoffs'), 2: t('clRoundLast16'), 3: t('clRoundQuarter'),
-        4: t('clRoundSemi'), 5: t('clRoundFinal')
-      }
-      return clPhases[koRound] || `Runde ${koRound}`
-    }
-
-    // Liga: einfache Spieltag-Nummer
-    return `${st}.`
-  }
+  const getPhaseLabel = (st: number, tournament: string) => sharedGetPhaseLabel(st, tournament, t)
 
   const availableSpieltage = useMemo(() => {
     let matches = allMatches;
@@ -669,10 +634,10 @@ export function LeaguePage() {
                             </button>
                             <button onClick={() => { setEditNameInput(aktiveLiga.name); setZeigeEditNameModal(true); setZeigeMenu(false); }}
                               className="w-full flex items-center gap-2 px-3 py-2 text-[11px] font-medium text-on-surface hover:bg-surface-container-highest transition-colors border-t border-surface-container-high">
-                              <Edit2 size={13} className="text-on-surface-variant" /> {language === 'tr' ? 'Lig Adını Düzenle' : language === 'en' ? 'Edit League Name' : 'Liganame bearbeiten'}
+                              <Edit2 size={13} className="text-on-surface-variant" /> {t('editLeagueName')}
                             </button>
                             <button onClick={handleLigaLoeschen}
-                              className="w-full flex items-center gap-2 px-3 py-2 text-[11px] font-medium text-red-400 hover:bg-surface-container-highest transition-colors border-t border-surface-container-high">
+                              className="w-full flex items-center gap-2 px-3 py-2 text-[11px] font-medium text-error hover:bg-surface-container-highest transition-colors border-t border-surface-container-high cursor-pointer">
                               <Trash2 size={13} /> {t('deleteLeague')}
                             </button>
                           </>
@@ -917,16 +882,12 @@ export function LeaguePage() {
                     </button>
                     <button onClick={async () => {
                       const joinUrl = `${window.location.origin}${import.meta.env.BASE_URL}?join=${aktiveLiga.invite_code}`
-                      const text = language === 'tr'
-                        ? `SüperBET ligime katıl! Kod: ${aktiveLiga.invite_code}\n\n${joinUrl}`
-                        : language === 'en'
-                        ? `Join my SüperBET league! Code: ${aktiveLiga.invite_code}\n\n${joinUrl}`
-                        : `Tritt meiner SüperBET-Liga bei! Code: ${aktiveLiga.invite_code}\n\n${joinUrl}`
+                      const text = t('inviteTextTemplate', { code: aktiveLiga.invite_code, link: joinUrl })
                       if (navigator.share) {
                         try { await navigator.share({ title: 'SüperBET Liga', text, url: joinUrl }) } catch {}
                       } else {
                         try { await navigator.clipboard.writeText(joinUrl) } catch {}
-                        useToastStore.getState().toast(language === 'tr' ? 'Link kopyalandı!' : language === 'en' ? 'Link copied!' : 'Link kopiert!')
+                        useToastStore.getState().toast(t('toastLinkCopied'))
                       }
                     }}
                       className="btn-press bg-surface-container-high text-on-surface-variant px-3 py-1.5 rounded-lg font-mono text-[10px] font-bold uppercase tracking-wider hover:bg-primary-container/10 hover:text-primary border border-white/10 flex items-center gap-1.5">
@@ -1086,10 +1047,10 @@ export function LeaguePage() {
               className="bg-surface-container-low border border-surface-container-high rounded-2xl p-6 w-full max-w-sm relative z-10 shadow-2xl"
             >
               <h3 className="text-lg font-bold text-on-surface mb-2">
-                {language === 'tr' ? 'Lig Adını Düzenle' : language === 'en' ? 'Edit League Name' : 'Liganame bearbeiten'}
+                {t('editLeagueName')}
               </h3>
               <p className="text-xs text-on-surface-variant mb-4">
-                {language === 'tr' ? 'Liginiz için yeni bir ad girin:' : language === 'en' ? 'Enter a new name for your league:' : 'Gib einen neuen Namen für deine Tipprunde ein:'}
+                {t('enterNewLeagueName')}
               </p>
               
               <input 
@@ -1098,7 +1059,7 @@ export function LeaguePage() {
                 onChange={(e) => setEditNameInput(e.target.value)}
                 maxLength={30}
                 className="w-full bg-surface-container border border-surface-container-high rounded-xl px-4 py-3 text-sm text-on-surface font-mono focus:outline-none focus:border-primary mb-6"
-                placeholder={language === 'tr' ? 'Lig Adı' : language === 'en' ? 'League Name' : 'Name der Liga'}
+                placeholder={t('editLeagueNamePlaceholder')}
               />
               
               <div className="flex gap-2">

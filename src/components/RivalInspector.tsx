@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 import { BarChart2, Award, X, Swords, Target } from 'lucide-react'
-import { calculateLevelDetails, getLevelBadgeStyle } from '../lib/utils'
+import { calculateLevelDetails, getLevelBadgeStyle, getPunkteKlasse } from '../lib/utils'
 import { LevelBadge } from './ui/LevelBadge'
 import { evaluateAchievements, type TipDetails } from '../utils/achievementEvaluator'
 import { AvatarLightbox } from './AvatarLightbox'
@@ -70,14 +70,7 @@ interface TippMitMatch {
   }
 }
 
-function PunkteFarbe(p: number): string {
-  if (p === 4) return 'text-green-400'
-  if (p === 3) return 'text-amber-400'
-  if (p === 2) return 'text-blue-400'
-  if (p === 1) return 'text-orange-400'
-  if (p < 0) return 'text-red-500'
-  return 'text-slate-500'
-}
+const PunkteFarbe = getPunkteKlasse;
 
 interface RivalInspectorProps {
   userId: string

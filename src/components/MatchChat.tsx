@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuthStore } from '../stores/authStore'
+import { useTranslation } from '../utils/translations'
+import { getUserColor } from '../lib/chatColors'
 import { Send, MessageCircle } from 'lucide-react'
 
 interface ChatMessage {
@@ -13,29 +15,10 @@ interface ChatMessage {
   created_at: string
 }
 
-const USER_COLORS = [
-  { bg: 'bg-amber-600/15', text: 'text-amber-300', border: 'border-amber-600/30' },
-  { bg: 'bg-blue-600/15', text: 'text-blue-300', border: 'border-blue-600/30' },
-  { bg: 'bg-emerald-600/15', text: 'text-emerald-300', border: 'border-emerald-600/30' },
-  { bg: 'bg-violet-600/15', text: 'text-violet-300', border: 'border-violet-600/30' },
-  { bg: 'bg-rose-600/15', text: 'text-rose-300', border: 'border-rose-600/30' },
-  { bg: 'bg-cyan-600/15', text: 'text-cyan-300', border: 'border-cyan-600/30' },
-  { bg: 'bg-orange-600/15', text: 'text-orange-300', border: 'border-orange-600/30' },
-  { bg: 'bg-fuchsia-600/15', text: 'text-fuchsia-300', border: 'border-fuchsia-600/30' },
-]
-
-function getUserColor(userId: string) {
-  let hash = 0
-  for (let i = 0; i < userId.length; i++) {
-    hash = ((hash << 5) - hash) + userId.charCodeAt(i)
-    hash |= 0
-  }
-  return USER_COLORS[Math.abs(hash) % USER_COLORS.length]
-}
-
-function formatZeit(iso: string): string {
+function formatZeit(iso: string, language: string): string {
   const d = new Date(iso)
-  return d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })
+  const locale = language === 'tr' ? 'tr-TR' : language === 'en' ? 'en-US' : 'de-DE'
+  return d.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })
 }
 
 function Avatar({ url, name, size = 'sm' }: { url?: string | null; name: string; size?: 'sm' | 'md' }) {
@@ -57,6 +40,7 @@ interface MatchChatProps {
 
 export function MatchChat({ matchId }: MatchChatProps) {
   const { user } = useAuthStore()
+  const { t, language } = useTranslation()
   const [nachrichten, setNachrichten] = useState<ChatMessage[]>([])
   const [text, setText] = useState('')
   const [isLaden, setIsLaden] = useState(true)
@@ -89,13 +73,13 @@ export function MatchChat({ matchId }: MatchChatProps) {
 
     const enriched: ChatMessage[] = data.map(m => ({
       ...m,
-      username: profileMap[m.user_id]?.username || 'Unbekannt',
+      username: profileMap[m.user_id]?.username || t('unknown'),
       avatar_url: profileMap[m.user_id]?.avatar_url || null,
     }))
 
     setNachrichten(enriched)
     setIsLaden(false)
-  }, [matchId])
+  }, [matchId, t])
 
   const subscribeRealtime = useCallback(() => {
     const channel = supabase
@@ -117,7 +101,7 @@ export function MatchChat({ matchId }: MatchChatProps) {
               .select('username, avatar_url')
               .eq('id', msg.user_id)
               .single()
-            prof = { username: profile?.username || 'Unbekannt', avatar_url: profile?.avatar_url || null }
+            prof = { username: profile?.username || t('unknown'), avatar_url: profile?.avatar_url || null }
             profileCacheRef.current[msg.user_id] = prof
           }
 
@@ -131,7 +115,7 @@ export function MatchChat({ matchId }: MatchChatProps) {
       .subscribe()
 
     channelRef.current = channel
-  }, [matchId])
+  }, [matchId, t])
 
   useEffect(() => {
     ladeNachrichten()
@@ -178,10 +162,10 @@ export function MatchChat({ matchId }: MatchChatProps) {
       <div className="px-3 py-2 border-b border-surface-container-high flex items-center gap-2 bg-surface-container-low">
         <MessageCircle size={14} className="text-primary-fixed-dim" />
         <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-on-surface-variant">
-          Trash-Talk (Live)
+          {t('trashTalkLive')}
         </span>
         <span className="ml-auto text-[9px] font-mono text-on-surface-variant/40">
-          {nachrichten.length} Beiträge
+          {nachrichten.length} {t('posts')}
         </span>
       </div>
 
@@ -200,7 +184,7 @@ export function MatchChat({ matchId }: MatchChatProps) {
           <div className="text-center py-10">
             <MessageCircle size={20} className="text-on-surface-variant/20 mx-auto mb-2" />
             <p className="text-[9px] text-on-surface-variant/40 font-mono uppercase tracking-wider">
-              Kein Trash-Talk bisher. Schreib das erste "Hadi lan!"
+              {t('noTrashTalkYet')}
             </p>
           </div>
         )}
@@ -223,11 +207,11 @@ export function MatchChat({ matchId }: MatchChatProps) {
               <div className={`flex flex-col ${isSelf ? 'items-end' : 'items-start'} min-w-0`}>
                 {!prevSame && (
                   <div className={`flex items-center gap-1.5 mb-0.5 ${isSelf ? 'flex-row-reverse mr-1' : 'ml-1'}`}>
-                    <span className="text-[9px] font-mono font-bold uppercase tracking-wider" style={{ color: color.text.replace('text-', '') }}>
+                    <span className={`text-[9px] font-mono font-bold uppercase tracking-wider ${color.text}`}>
                       {msg.username}
                     </span>
                     <span className="text-[8px] font-mono text-on-surface-variant/30">
-                      {formatZeit(msg.created_at)}
+                      {formatZeit(msg.created_at, language)}
                     </span>
                   </div>
                 )}
@@ -248,22 +232,22 @@ export function MatchChat({ matchId }: MatchChatProps) {
       </div>
 
       {/* Input section */}
-      <div className="px-3 py-2 border-t border-surface-container-high flex items-center gap-2 bg-surface-container-lowest">
+      <div className="px-3 py-2.5 border-t border-surface-container-high flex items-center gap-2 bg-surface-container-lowest">
         <input
           ref={inputRef}
           type="text"
           value={text}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={(e) => { if (e.key === 'Enter') handleSenden() }}
-          placeholder="Trash-Talk schreiben..."
-          className="flex-1 bg-surface-container-highest border border-surface-container-high rounded-full px-4 py-1.5 text-xs text-on-surface placeholder-on-surface-variant/30 focus:border-primary focus:outline-none font-mono"
+          placeholder={t('writeTrashTalk')}
+          className="flex-1 bg-surface-container-highest border border-surface-container-high rounded-full px-4 py-2.5 text-xs text-on-surface placeholder-on-surface-variant/30 focus:border-primary focus:outline-none font-mono"
         />
         <button
           onClick={handleSenden}
           disabled={!text.trim() || sendeState === 'sending'}
-          className="w-8 h-8 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center hover:opacity-90 transition-opacity disabled:opacity-30 flex-shrink-0"
+          className="w-11 h-11 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center hover:opacity-90 transition-opacity disabled:opacity-30 flex-shrink-0 cursor-pointer"
         >
-          <Send size={12} />
+          <Send size={15} />
         </button>
       </div>
     </div>

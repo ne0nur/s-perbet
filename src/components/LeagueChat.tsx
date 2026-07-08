@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase'
 import { useAuthStore } from '../stores/authStore'
 import { useToastStore } from '../stores/toastStore'
 import { useTranslation } from '../utils/translations'
+import { getUserColor } from '../lib/chatColors'
 import { Send, MessageCircle } from 'lucide-react'
 
 // ─── Typen ───────────────────────────────────────────
@@ -16,31 +17,11 @@ interface ChatMessage {
   created_at: string
 }
 
-// ─── User-Farben (smart syntax: jeder User behält seine Farbe) ───
-const USER_COLORS = [
-  { bg: 'bg-amber-600/15', text: 'text-amber-300', border: 'border-amber-600/30', dot: 'bg-amber-500' },
-  { bg: 'bg-blue-600/15', text: 'text-blue-300', border: 'border-blue-600/30', dot: 'bg-blue-500' },
-  { bg: 'bg-emerald-600/15', text: 'text-emerald-300', border: 'border-emerald-600/30', dot: 'bg-emerald-500' },
-  { bg: 'bg-violet-600/15', text: 'text-violet-300', border: 'border-violet-600/30', dot: 'bg-violet-500' },
-  { bg: 'bg-rose-600/15', text: 'text-rose-300', border: 'border-rose-600/30', dot: 'bg-rose-500' },
-  { bg: 'bg-cyan-600/15', text: 'text-cyan-300', border: 'border-cyan-600/30', dot: 'bg-cyan-500' },
-  { bg: 'bg-orange-600/15', text: 'text-orange-300', border: 'border-orange-600/30', dot: 'bg-orange-500' },
-  { bg: 'bg-fuchsia-600/15', text: 'text-fuchsia-300', border: 'border-fuchsia-600/30', dot: 'bg-fuchsia-500' },
-]
-
-function getUserColor(userId: string) {
-  let hash = 0
-  for (let i = 0; i < userId.length; i++) {
-    hash = ((hash << 5) - hash) + userId.charCodeAt(i)
-    hash |= 0
-  }
-  return USER_COLORS[Math.abs(hash) % USER_COLORS.length]
-}
-
 // ─── Zeit formatieren ────────────────────────────────
-function formatZeit(iso: string): string {
+function formatZeit(iso: string, language: string): string {
   const d = new Date(iso)
-  return d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })
+  const locale = language === 'tr' ? 'tr-TR' : language === 'en' ? 'en-US' : 'de-DE'
+  return d.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })
 }
 
 // ─── Avatar-Komponente ───────────────────────────────
@@ -64,7 +45,7 @@ interface LeagueChatProps {
 
 export function LeagueChat({ leagueId }: LeagueChatProps) {
   const { user } = useAuthStore()
-  const { t } = useTranslation()
+  const { t, language } = useTranslation()
   const [nachrichten, setNachrichten] = useState<ChatMessage[]>([])
   const [text, setText] = useState('')
   const [isLaden, setIsLaden] = useState(true)
@@ -106,7 +87,7 @@ export function LeagueChat({ leagueId }: LeagueChatProps) {
 
       const enriched: ChatMessage[] = data.map(m => ({
         ...m,
-        username: profileMap[m.user_id]?.username || 'Unbekannt',
+        username: profileMap[m.user_id]?.username || t('unknown'),
         avatar_url: profileMap[m.user_id]?.avatar_url || null,
       }))
 
@@ -117,7 +98,7 @@ export function LeagueChat({ leagueId }: LeagueChatProps) {
     } finally {
       setIsLaden(false)
     }
-  }, [leagueId])
+  }, [leagueId, t])
 
   const subscribeRealtime = useCallback(() => {
     if (channelRef.current) {
@@ -144,7 +125,7 @@ export function LeagueChat({ leagueId }: LeagueChatProps) {
               .select('username, avatar_url')
               .eq('id', msg.user_id)
               .single()
-            prof = { username: profile?.username || 'Unbekannt', avatar_url: profile?.avatar_url || null }
+            prof = { username: profile?.username || t('unknown'), avatar_url: profile?.avatar_url || null }
             profileCacheRef.current[msg.user_id] = prof
           }
 
@@ -158,7 +139,7 @@ export function LeagueChat({ leagueId }: LeagueChatProps) {
       .subscribe()
 
     channelRef.current = channel
-  }, [leagueId])
+  }, [leagueId, t])
 
   // ─── Nachrichten laden ─────────────────────────────
   useEffect(() => {
@@ -212,10 +193,10 @@ export function LeagueChat({ leagueId }: LeagueChatProps) {
       <div className="px-3 py-2.5 border-b border-surface-container-high flex items-center gap-2">
         <MessageCircle size={16} className="text-primary-fixed-dim" />
         <span className="text-xs font-mono font-medium uppercase tracking-wider text-on-surface-variant">
-          Liga-Chat
+          {t('leagueChat')}
         </span>
         <span className="ml-auto text-[10px] font-mono text-on-surface-variant/40">
-          {nachrichten.length} Nachrichten
+          {nachrichten.length} {t('messages')}
         </span>
       </div>
 
@@ -235,7 +216,7 @@ export function LeagueChat({ leagueId }: LeagueChatProps) {
           <div className="text-center py-8">
             <MessageCircle size={24} className="text-on-surface-variant/20 mx-auto mb-2" />
             <p className="text-[11px] text-on-surface-variant/40 font-mono uppercase tracking-wider">
-              Noch keine Nachrichten
+              {t('noMessagesYet')}
             </p>
           </div>
         )}
@@ -264,7 +245,7 @@ export function LeagueChat({ leagueId }: LeagueChatProps) {
                       {msg.username}
                     </span>
                     <span className="text-[9px] font-mono text-on-surface-variant/30">
-                      {formatZeit(msg.created_at)}
+                      {formatZeit(msg.created_at, language)}
                     </span>
                   </div>
                 )}
@@ -295,13 +276,13 @@ export function LeagueChat({ leagueId }: LeagueChatProps) {
           value={text}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={(e) => { if (e.key === 'Enter') handleSenden() }}
-          placeholder="Nachricht…"
-          className="flex-1 bg-surface-container-highest border border-surface-container-high rounded-full px-4 py-2 text-sm text-on-surface placeholder-on-surface-variant/30 focus:border-primary focus:outline-none"
+          placeholder={t('writeMessage')}
+          className="flex-1 bg-surface-container-highest border border-surface-container-high rounded-full px-4 py-2.5 text-sm text-on-surface placeholder-on-surface-variant/30 focus:border-primary focus:outline-none"
         />
         <button
           onClick={handleSenden}
           disabled={!text.trim() || sendeState === 'sending'}
-          className="w-9 h-9 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center hover:opacity-90 transition-opacity disabled:opacity-30 flex-shrink-0"
+          className="w-11 h-11 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center hover:opacity-90 transition-opacity disabled:opacity-30 flex-shrink-0 cursor-pointer"
         >
           <Send size={15} />
         </button>

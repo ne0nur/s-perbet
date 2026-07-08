@@ -19,8 +19,8 @@ export function SplashPage() {
   useEffect(() => {
     if (isLaden) return
     if (isEingeloggt) { navigate('/dashboard', { replace: true }); return }
-    const t = setTimeout(() => navigate('/login', { replace: true }), 2500)
-    return () => clearTimeout(t)
+    const tRedirect = setTimeout(() => navigate('/login', { replace: true }), 2500)
+    return () => clearTimeout(tRedirect)
   }, [isEingeloggt, isLaden, navigate])
 
   return (

@@ -1,5 +1,5 @@
 import { useState, type ChangeEvent } from 'react'
-import { Shield, Check, X, Copy } from 'lucide-react'
+import { Shield, Check, X, Copy, Settings, Megaphone, RefreshCw } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { useTranslation } from '../../utils/translations'
 import { useAuthStore } from '../../stores/authStore'
@@ -372,8 +372,8 @@ export function AdminSection({
                 <div className="text-[10px] font-mono text-on-surface-variant uppercase mt-1">{t('adminPlayersTotal')}</div>
               </div>
               <div className="bg-surface-container border border-surface-container-high p-3 rounded-lg text-center relative overflow-hidden">
-                <div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                <div className="text-2xl font-black text-green-400">{Object.keys(onlineUsers).length}</div>
+                <div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-success animate-pulse" />
+                <div className="text-2xl font-black text-success">{Object.keys(onlineUsers).length}</div>
                 <div className="text-[10px] font-mono text-on-surface-variant uppercase mt-1">{t('adminLiveOnline')}</div>
               </div>
             </div>
@@ -386,7 +386,7 @@ export function AdminSection({
                 <div className="space-y-2 max-h-48 overflow-y-auto pr-1 custom-scrollbar">
                   {Object.values(onlineUsers).map(u => (
                     <div key={u.id} className="flex items-center gap-2 bg-surface-container-lowest border border-surface-container-high rounded-lg p-2">
-                      <div className="w-6 h-6 rounded-full bg-surface-container-high overflow-hidden shrink-0 border border-green-500/30">
+                      <div className="w-6 h-6 rounded-full bg-surface-container-high overflow-hidden shrink-0 border border-success/30">
                         {u.avatar_url ? (
                           <img src={u.avatar_url} className="w-full h-full object-cover"  loading="lazy" />
                         ) : (
@@ -394,7 +394,7 @@ export function AdminSection({
                         )}
                       </div>
                       <span className="text-xs font-medium text-on-surface truncate flex-1">{u.username}</span>
-                      <span className="w-1.5 h-1.5 rounded-full bg-green-500 shadow-[0_0_5px_rgba(34,197,94,0.5)]"></span>
+                      <span className="w-1.5 h-1.5 rounded-full bg-success shadow-[0_0_8px_rgba(var(--success-rgb),0.4)]"></span>
                     </div>
                   ))}
                 </div>
@@ -403,30 +403,34 @@ export function AdminSection({
 
             {/* Globaler Tipp-Toggle */}
             <div className="border-t border-surface-container-high pt-3">
-              <p className="text-[10px] font-mono text-on-surface-variant uppercase tracking-wider mb-2">⚙️ Tipp-Freigabe</p>
+              <p className="text-[10px] font-mono text-on-surface-variant uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                <Settings size={12} className="text-primary-fixed-dim" />
+                {t('adminTippRelease')}
+              </p>
               <TippsFreigabeToggle />
             </div>
 
             {/* Broadcast an alle User */}
             <div className="border-t border-surface-container-high pt-3">
-              <p className="text-[10px] font-mono text-on-surface-variant uppercase tracking-wider mb-2">📢 {language === 'tr' ? 'Duyuru Gönder' : language === 'en' ? 'Send Broadcast' : 'Broadcast senden'}</p>
+              <p className="text-[10px] font-mono text-on-surface-variant uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                <Megaphone size={12} className="text-primary-fixed-dim" />
+                {t('adminSendBroadcast')}
+              </p>
               <textarea
                 value={broadcastMessage}
                 onChange={e => setBroadcastMessage(e.target.value)}
-                placeholder={language === 'tr' ? 'Tüm kullanıcılara mesaj...' : language === 'en' ? 'Message to all users...' : 'Nachricht an alle User...'}
-                className="w-full bg-black/30 border border-outline-variant rounded-lg px-3 py-2.5 text-on-surface font-mono text-xs focus:border-red-500/50 focus:outline-none resize-none h-20 mb-3"
+                placeholder={t('adminBroadcastPlaceholder')}
+                className="w-full bg-black/30 border border-outline-variant rounded-lg px-3 py-2.5 text-on-surface font-mono text-xs focus:border-error/50 focus:outline-none resize-none h-20 mb-3"
               />
               <button
                 onClick={handleSendBroadcast}
                 disabled={!broadcastMessage.trim() || sendingBroadcast}
-                className="w-full bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 py-2.5 rounded-lg font-mono text-xs font-bold uppercase tracking-wider transition-all active:scale-[0.98] disabled:opacity-30 disabled:cursor-not-allowed"
+                className="w-full bg-error-container hover:bg-error-container/80 border border-error/20 text-error py-2.5 rounded-lg font-mono text-xs font-bold uppercase tracking-wider transition-all active:scale-[0.98] disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
               >
-                {sendingBroadcast
-                  ? (language === 'tr' ? 'Gönderiliyor...' : language === 'en' ? 'Sending...' : 'Sende...')
-                  : (language === 'tr' ? 'Herkese Gönder' : language === 'en' ? 'Send to All' : 'An Alle senden')}
+                {sendingBroadcast ? t('adminSending') : t('adminSendToAll')}
               </button>
               {broadcastResult && (
-                <p className={`text-[10px] font-mono mt-2 ${broadcastResult.type === 'success' ? 'text-green-400' : 'text-red-400'}`}>
+                <p className={`text-[10px] font-mono mt-2 ${broadcastResult.type === 'success' ? 'text-success' : 'text-error'}`}>
                   {broadcastResult.text}
                 </p>
               )}
@@ -434,23 +438,22 @@ export function AdminSection({
 
             {/* Sync Match Results */}
             <div className="border-t border-surface-container-high pt-3">
-              <p className="text-[10px] font-mono text-on-surface-variant uppercase tracking-wider mb-2">
-                🔄 {language === 'tr' ? 'Sonuçları Güncelle' : language === 'en' ? 'Update Results' : 'Ergebnisse aktualisieren'}
+              <p className="text-[10px] font-mono text-on-surface-variant uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                <RefreshCw size={12} className="text-primary-fixed-dim" />
+                {t('adminUpdateResults')}
               </p>
               <button
                 onClick={handleSyncResults}
                 disabled={syncingResults}
-                className="w-full bg-green-500/10 hover:bg-green-500/20 border border-green-500/20 text-green-400 py-2.5 rounded-lg font-mono text-xs font-bold uppercase tracking-wider transition-all active:scale-[0.98] disabled:opacity-30 disabled:cursor-not-allowed"
+                className="w-full bg-success-container hover:bg-success-container/80 border border-success/20 text-success py-2.5 rounded-lg font-mono text-xs font-bold uppercase tracking-wider transition-all active:scale-[0.98] disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
               >
-                {syncingResults
-                  ? (language === 'tr' ? '🔄 Güncelleniyor...' : language === 'en' ? '🔄 Updating...' : '🔄 Aktualisiere...')
-                  : (language === 'tr' ? '⚡ Tüm Sonuçları Getir' : language === 'en' ? '⚡ Fetch All Results' : '⚡ Alle Ergebnisse abrufen')}
+                {syncingResults ? `🔄 ${t('adminUpdating')}` : `⚡ ${t('adminFetchAllResults')}`}
               </button>
               {syncResult && (
                 <div className={`mt-2 p-2 rounded-lg border text-[10px] font-mono ${
                   syncResult.type === 'success'
-                    ? 'bg-green-500/5 border-green-500/20 text-green-400'
-                    : 'bg-red-500/5 border-red-500/20 text-red-400'
+                    ? 'bg-success-container border border-success/20 text-success'
+                    : 'bg-error-container border border-error/20 text-error'
                 }`}>
                   <p className="font-bold mb-1">{syncResult.text}</p>
                   {syncResult.details && syncResult.details.length > 0 && (
@@ -564,13 +567,13 @@ export function AdminSection({
                       <div className="flex gap-2 mt-1">
                         <button
                           onClick={() => handleApproveRequest(req.id, req.username)}
-                          className="flex-1 bg-green-500/10 hover:bg-green-500/15 border border-green-500/20 text-green-400 py-1.5 rounded font-mono text-[9px] uppercase font-bold tracking-wider transition-all cursor-pointer"
+                          className="flex-1 bg-success-container hover:bg-success-container/80 border border-success/20 text-success py-1.5 rounded font-mono text-[9px] uppercase font-bold tracking-wider transition-all cursor-pointer"
                         >
                           {t('adminApproveReset')}
                         </button>
                         <button
                           onClick={() => handleRejectRequest(req.id, req.username)}
-                          className="bg-red-500/10 hover:bg-red-500/15 border border-red-500/20 text-red-400 px-3 py-1.5 rounded font-mono text-[9px] uppercase font-bold tracking-wider transition-all cursor-pointer"
+                          className="bg-error-container hover:bg-error-container/80 border border-error/20 text-error px-3 py-1.5 rounded font-mono text-[9px] uppercase font-bold tracking-wider transition-all cursor-pointer"
                         >
                           {t('adminRejectReset')}
                         </button>
@@ -596,12 +599,12 @@ export function AdminSection({
             </div>
             
             <div className="border-t border-surface-container-high pt-4 space-y-2">
-              <p className="text-[10px] font-mono text-red-400 uppercase tracking-wider mb-1">{t('adminDangerZone')}</p>
-              <input type="text" value={targetUsername} onChange={e => setTargetUsername(e.target.value)} placeholder={t('adminPlaceholderUserToReset')} className="w-full bg-surface-container-lowest border border-red-500/30 rounded-lg px-3 py-2 text-sm text-on-surface focus:border-red-500 outline-none" />
+              <p className="text-[10px] font-mono text-error uppercase tracking-wider mb-1">{t('adminDangerZone')}</p>
+              <input type="text" value={targetUsername} onChange={e => setTargetUsername(e.target.value)} placeholder={t('adminPlaceholderUserToReset')} className="w-full bg-surface-container-lowest border border-error/30 rounded-lg px-3 py-2 text-sm text-on-surface focus:border-error outline-none" />
               <button 
                 onClick={() => handleAdminDeleteUser(targetUsername)} 
                 disabled={creatingUser || !targetUsername.trim()} 
-                className="w-full bg-red-500/10 text-red-400 border border-red-500/20 py-2.5 rounded-lg font-mono text-xs font-bold uppercase hover:bg-red-500/20 disabled:opacity-30 cursor-pointer"
+                className="w-full bg-error-container text-error border border-error/20 py-2.5 rounded-lg font-mono text-xs font-bold uppercase hover:bg-error-container/80 disabled:opacity-30 cursor-pointer"
               >
                 {t('adminBtnDeleteUser')}
               </button>
@@ -622,7 +625,7 @@ export function AdminSection({
                     <button
                       onClick={() => handleAdminDeleteLeague(l.id, l.name)}
                       disabled={creatingUser}
-                      className="p-1.5 text-red-400 hover:bg-red-500/10 rounded transition-colors"
+                      className="p-1.5 text-error hover:bg-error-container/50 rounded transition-colors cursor-pointer"
                       title={t('close')}
                     >
                       <X size={14} />
@@ -717,7 +720,7 @@ export function AdminSection({
               </button>
               
               {pushResult && (
-                <div className={`p-3 rounded-lg text-xs mt-4 ${pushResult.type === 'success' ? 'bg-green-500/10 text-green-400 border border-green-500/20' : 'bg-error/10 text-error border border-error/20'}`}>
+                <div className={`p-3 rounded-lg text-xs mt-4 ${pushResult.type === 'success' ? 'bg-success-container text-success border border-success/20' : 'bg-error/10 text-error border border-error/20'}`}>
                   {pushResult.text}
                 </div>
               )}
@@ -726,7 +729,7 @@ export function AdminSection({
         )}
 
         {adminMsg && (
-          <div className={`flex items-start gap-2 p-2 rounded-lg text-[10px] font-mono leading-tight ${adminMsg.type === 'success' ? 'bg-green-500/10 text-green-400' : 'bg-error/10 text-error'}`}>
+          <div className={`flex items-start gap-2 p-2 rounded-lg text-[10px] font-mono leading-tight ${adminMsg.type === 'success' ? 'bg-success-container text-success' : 'bg-error/10 text-error'}`}>
             {adminMsg.type === 'success' ? <Check size={14} className="mt-0.5 flex-shrink-0" /> : <X size={14} className="mt-0.5 flex-shrink-0" />}
             <span>{adminMsg.text}</span>
           </div>
@@ -745,10 +748,10 @@ export function AdminSection({
                   </div>
                   <button
                     onClick={() => handleCopyUserCreds(usr.username, usr.password, index)}
-                    className="p-1.5 hover:bg-surface-container rounded text-on-surface-variant hover:text-primary transition-all flex-shrink-0"
+                    className="p-1.5 hover:bg-surface-container rounded text-on-surface-variant hover:text-primary transition-all flex-shrink-0 cursor-pointer"
                     title={t('copy')}
                   >
-                    {copiedIndex === index ? <Check size={14} className="text-green-400" /> : <Copy size={14} />}
+                    {copiedIndex === index ? <Check size={14} className="text-success" /> : <Copy size={14} />}
                   </button>
                 </div>
               ))}

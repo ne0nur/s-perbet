@@ -111,7 +111,7 @@ function LeaderboardSection({
               </div>
               <span className="text-[8px] text-on-surface-variant font-mono truncate w-full text-center mt-2">
                 {top3[1]?.username}
-                {top3[1]?.is_admin && <span className="ml-1 inline-flex shrink-0 px-1 py-0.5 rounded text-[7px] font-black bg-amber-500/20 text-amber-400 border border-amber-500/30 font-mono tracking-wide scale-90">ADM</span>}
+                {top3[1]?.is_admin && <span className="ml-1 inline-flex shrink-0 px-1 py-0.5 rounded text-[7px] font-black bg-warning-container/30 text-warning border border-warning/30 font-mono tracking-wide scale-90">ADM</span>}
               </span>
               <div className={`w-full rounded-t-lg border-x border-t flex flex-col items-center justify-start pt-2 relative overflow-hidden ${
                 tie1_2
@@ -144,11 +144,11 @@ function LeaderboardSection({
             <span className="text-[9px] text-primary-fixed-dim font-mono font-bold truncate w-full text-center mt-2">
               {top3[0]?.username}
               {top3[0]?.trend !== undefined && top3[0]?.trend !== 0 && (
-                <span className={`ml-1 text-[7px] font-bold ${top3[0].trend > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                <span className={`ml-1 text-[7px] font-bold ${top3[0].trend > 0 ? 'text-success' : 'text-error'}`}>
                   {top3[0].trend > 0 ? '▲' : '▼'}{Math.abs(top3[0].trend)}
                 </span>
               )}
-              {top3[0]?.is_admin && <span className="ml-1 inline-flex shrink-0 px-1 py-0.5 rounded text-[7px] font-black bg-amber-500/20 text-amber-400 border border-amber-500/30 font-mono tracking-wide">ADM</span>}
+              {top3[0]?.is_admin && <span className="ml-1 inline-flex shrink-0 px-1 py-0.5 rounded text-[7px] font-black bg-warning-container/30 text-warning border border-warning/30 font-mono tracking-wide">ADM</span>}
             </span>
             <div className="w-full h-24 bg-gradient-to-t from-primary/30 to-transparent rounded-t-lg border-x border-t border-primary/40 flex flex-col items-center justify-start pt-2 relative overflow-hidden">
               <div className="absolute inset-0 bg-surface-container-low/30 backdrop-blur-[2px] -z-10" />
@@ -177,11 +177,11 @@ function LeaderboardSection({
               <span className="text-[9px] text-on-surface-variant font-mono truncate w-full text-center flex items-center justify-center gap-1">
                 {top3[2]?.username}
                 {top3[2]?.trend !== undefined && top3[2]?.trend !== 0 && (
-                  <span className={`text-[7px] font-bold ${top3[2].trend > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                  <span className={`text-[7px] font-bold ${top3[2].trend > 0 ? 'text-success' : 'text-error'}`}>
                     {top3[2].trend > 0 ? '▲' : '▼'}{Math.abs(top3[2].trend)}
                   </span>
                 )}
-                {top3[2]?.is_admin && <span className="inline-flex shrink-0 px-1 py-0.2 rounded text-[7px] font-black bg-amber-500/20 text-amber-400 border border-amber-500/30 font-mono tracking-wide scale-90">ADM</span>}
+                {top3[2]?.is_admin && <span className="inline-flex shrink-0 px-1 py-0.2 rounded text-[7px] font-black bg-warning-container/30 text-warning border border-warning/30 font-mono tracking-wide scale-90">ADM</span>}
               </span>
               <div className={`w-full rounded-t-lg border-x border-t flex flex-col items-center justify-start pt-2 relative overflow-hidden ${
                 tie2_3
@@ -213,7 +213,7 @@ function LeaderboardSection({
                 <span className="w-6 flex flex-col items-center justify-center gap-0.5 font-mono text-on-surface-variant">
                   <span className="text-[11px]">{e.displayRank}</span>
                   {e.trend !== undefined && e.trend !== 0 && (
-                    <span className={`text-[8px] font-bold ${e.trend > 0 ? 'text-emerald-400' : 'text-red-400'} animate-bounce`}>
+                    <span className={`text-[8px] font-bold ${e.trend > 0 ? 'text-success' : 'text-error'} animate-bounce`}>
                       {e.trend > 0 ? '▲' : '▼'} {Math.abs(e.trend)}
                     </span>
                   )}
@@ -236,7 +236,7 @@ function LeaderboardSection({
                 <span className="flex-1 text-sm text-on-surface truncate font-semibold flex items-center gap-1.5">
                   {e.username}
                   {e.is_admin && (
-                    <span className="inline-flex px-1.5 py-0.5 rounded text-[8px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30 font-mono uppercase tracking-wider">{t('admin')}</span>
+                    <span className="inline-flex px-1.5 py-0.5 rounded text-[8px] font-bold bg-warning-container/30 text-warning border border-warning/30 font-mono uppercase tracking-wider">{t('admin')}</span>
                   )}
                 </span>
                 <span className="font-mono text-sm text-on-surface font-bold shrink-0">{e.gesamt_punkte} {t('pointsShort')}</span>
@@ -301,17 +301,17 @@ function StatsSection({
       {/* Global Numbers Overview */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
         <div className="bg-surface-container-low border border-surface-container-high rounded-xl p-3 text-center shadow-sm">
-          <Users className="text-blue-400 mx-auto mb-1.5" size={20} />
+          <Users className="text-info mx-auto mb-1.5" size={20} />
           <div className="font-mono text-base font-black text-on-surface">{totalUsers}</div>
           <div className="font-mono text-[8px] text-on-surface-variant uppercase tracking-wider">{t('totalPlayers')}</div>
         </div>
         <div className="bg-surface-container-low border border-surface-container-high rounded-xl p-3 text-center shadow-sm">
-          <Gift className="text-emerald-400 mx-auto mb-1.5" size={20} />
+          <Gift className="text-success mx-auto mb-1.5" size={20} />
           <div className="font-mono text-base font-black text-on-surface">{totalTips}</div>
           <div className="font-mono text-[8px] text-on-surface-variant uppercase tracking-wider">{t('totalTips')}</div>
         </div>
         <div className="bg-surface-container-low border border-surface-container-high rounded-xl p-3 text-center shadow-sm">
-          <Trophy className="text-amber-400 mx-auto mb-1.5" size={20} />
+          <Trophy className="text-warning mx-auto mb-1.5" size={20} />
           <div className="font-mono text-base font-black text-on-surface">{avgPoints}</div>
           <div className="font-mono text-[8px] text-on-surface-variant uppercase tracking-wider">{t('avgPoints')}</div>
         </div>

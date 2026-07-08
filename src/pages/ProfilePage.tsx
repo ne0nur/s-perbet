@@ -1145,7 +1145,9 @@ export function ProfilePage() {
                   <Download size={18} className="text-primary-fixed-dim shrink-0" />
                   <div className="flex-1 text-left">
                     <div className="font-bold text-primary-fixed-dim">{t('iosInstallGuide')}</div>
-                    <div className="text-[10px] text-on-surface-variant/80 font-mono mt-0.5" dangerouslySetInnerHTML={{ __html: t('iosInstallDesc') }} />
+                    <div className="text-[10px] text-on-surface-variant/80 font-mono mt-0.5">
+                      {t('iosInstallDesc')}
+                    </div>
                   </div>
                 </div>
               )}

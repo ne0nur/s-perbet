@@ -630,15 +630,15 @@ export function LoginPage() {
                     ) : (
                       <div className="space-y-2">
                         {statusResult.status === 'pending' && (
-                          <div className="text-amber-400 font-bold">{t('statusPending')}</div>
+                          <div className="text-warning font-bold">{t('statusPending')}</div>
                         )}
                         {statusResult.status === 'rejected' && (
-                          <div className="text-red-400 font-bold">{t('statusRejected')}</div>
+                          <div className="text-error font-bold">{t('statusRejected')}</div>
                         )}
                         {statusResult.status === 'resolved' && (
                           <div className="space-y-1">
-                            <div className="text-green-400 font-bold">{t('statusResolved')}</div>
-                            <div className="bg-black/50 border border-green-500/20 text-green-300 font-bold font-mono text-sm px-3.5 py-2.5 rounded-lg tracking-widest text-center select-all cursor-pointer">
+                            <div className="text-success font-bold">{t('statusResolved')}</div>
+                            <div className="bg-black/50 border border-success/20 text-success font-bold font-mono text-sm px-3.5 py-2.5 rounded-lg tracking-widest text-center select-all cursor-pointer">
                               {statusResult.tempPw}
                             </div>
                           </div>

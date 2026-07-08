@@ -377,7 +377,7 @@ export function AppShell() {
                 const success = await triggerInstall()
                 if (success) {
                   window.dispatchEvent(new CustomEvent('show-toast', { 
-                    detail: { message: language === 'tr' ? '🎉 Uygulama başarıyla yüklendi!' : language === 'en' ? '🎉 App installed successfully!' : '🎉 App wurde erfolgreich installiert!', type: 'success' } 
+                    detail: { message: t('pwaInstalledToast'), type: 'success' } 
                   }))
                 }
               }}
@@ -523,7 +523,7 @@ export function AppShell() {
                         </div>
                       </div>
                       <h2 className="text-2xl font-black text-on-surface tracking-tight" dangerouslySetInnerHTML={{
-                        __html: t('onboardingWelcomeTitle', { username: user?.user_metadata?.username || (language === 'de' ? 'Bruder' : language === 'tr' ? 'Kardeşim' : 'Brother') })
+                        __html: t('onboardingWelcomeTitle', { username: user?.user_metadata?.username || t('onboardingFallbackUsername') })
                           .replace('SÜPERBET', '<span class="text-primary-fixed-dim bg-primary-container/20 px-2 py-0.5 rounded-lg border border-primary-container/30">SÜPERBET</span>')
                       }} />
                       <p className="text-xs md:text-sm text-on-surface-variant leading-relaxed font-mono px-2">
@@ -571,7 +571,7 @@ export function AppShell() {
                         <div className="text-5xl drop-shadow-md mb-1">{tier.icon}</div>
                         <div className={`inline-flex items-center gap-1.5 mx-auto px-5 py-2 rounded-full border shadow-sm ${cBorder} ${cBg}`}>
                           <span className={`text-3xl font-black font-mono leading-none ${cText}`}>{tier.pts}</span>
-                          <span className={`text-xs font-mono font-bold leading-none ${cText}`}>{language === 'tr' ? 'Puan' : language === 'en' ? 'PTS' : 'P'}</span>
+                          <span className={`text-xs font-mono font-bold leading-none ${cText}`}>{t('onboardingPointsLabel')}</span>
                         </div>
                         <h2 className={`text-lg font-black tracking-wide ${cText}`}>{title}</h2>
 
@@ -580,12 +580,12 @@ export function AppShell() {
                           <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent pointer-events-none" />
                           <div className="flex items-center justify-between gap-4 relative z-10">
                             <div className="text-left">
-                              <span className="text-[9px] text-on-surface-variant/40 font-mono uppercase tracking-wider block mb-1">{language === 'tr' ? 'Tahmin' : language === 'en' ? 'Tip' : 'Tipp'}</span>
+                              <span className="text-[9px] text-on-surface-variant/40 font-mono uppercase tracking-wider block mb-1">{t('tipShort')}</span>
                               <span className="font-mono text-2xl font-black text-on-surface tracking-wider">{tier.tip}</span>
                             </div>
                             <div className="h-8 w-px bg-white/10" />
                             <div className="text-right">
-                              <span className="text-[9px] text-on-surface-variant/40 font-mono uppercase tracking-wider block mb-1">{language === 'tr' ? 'Sonuç' : language === 'en' ? 'Result' : 'Ergebnis'}</span>
+                              <span className="text-[9px] text-on-surface-variant/40 font-mono uppercase tracking-wider block mb-1">{t('resultLabel')}</span>
                               <span className="font-mono text-2xl font-black text-on-surface tracking-wider">{tier.res}</span>
                             </div>
                           </div>
@@ -601,14 +601,14 @@ export function AppShell() {
                           return (
                             <div className="mt-4 bg-black/20 border border-white/5 rounded-2xl p-3.5 max-w-[260px] mx-auto text-center space-y-2">
                               <div className="flex justify-between items-center text-[10px] font-mono text-on-surface-variant/60 uppercase tracking-wider">
-                                <span>{language === 'tr' ? 'Hesaplama' : language === 'en' ? 'Calculation' : 'Berechnung'}</span>
+                                <span>{t('calculationLabel')}</span>
                                 <span>|Tipp - Ergebnis|</span>
                               </div>
                               
                               <div className="flex flex-col gap-1.5 pt-0.5">
                                 {/* Home */}
                                 <div className="flex items-center justify-between text-[11px] font-mono">
-                                  <span className="text-on-surface-variant/70">{language === 'tr' ? 'Ev Sahibi' : language === 'en' ? 'Home' : 'Heim'}</span>
+                                  <span className="text-on-surface-variant/70">{t('homeLabel')}</span>
                                   <div className="flex items-center gap-1 font-bold">
                                     <span className="bg-white/5 border border-white/10 px-1.5 py-0.5 rounded text-[9px]">{th}</span>
                                     <span className="opacity-40">-</span>
@@ -619,7 +619,7 @@ export function AppShell() {
                                 </div>
                                 {/* Away */}
                                 <div className="flex items-center justify-between text-[11px] font-mono">
-                                  <span className="text-on-surface-variant/70">{language === 'tr' ? 'Deplasman' : language === 'en' ? 'Away' : 'Auswärts'}</span>
+                                  <span className="text-on-surface-variant/70">{t('awayLabel')}</span>
                                   <div className="flex items-center gap-1 font-bold">
                                     <span className="bg-white/5 border border-white/10 px-1.5 py-0.5 rounded text-[9px]">{tg}</span>
                                     <span className="opacity-40">-</span>
@@ -634,8 +634,8 @@ export function AppShell() {
 
                               {/* Total distance / points sum */}
                               <div className="flex justify-between items-center text-[11px] font-mono font-bold">
-                                <span className="text-on-surface/90">{language === 'tr' ? 'Toplam Hata' : language === 'en' ? 'Total Distance' : 'Gesamtabweichung'}</span>
-                                <span className={`px-2 py-0.5 rounded border ${cBorder} ${cBg} ${cText}`}>{totalDiff} {language === 'tr' ? 'Gol' : language === 'en' ? 'Goals' : 'Tore'}</span>
+                                <span className="text-on-surface/90">{t('ruleTotalDistance')}</span>
+                                <span className={`px-2 py-0.5 rounded border ${cBorder} ${cBg} ${cText}`}>{totalDiff} {t('goalsLabel')}</span>
                               </div>
                             </div>
                           )
@@ -673,7 +673,7 @@ export function AppShell() {
                             <span className="opacity-70 text-[6px] block">LVL</span>5
                           </LevelBadge>
                           <span className="text-[8px] font-mono font-bold text-on-surface-variant truncate w-full text-center">
-                            {language === 'tr' ? 'Efsane' : language === 'en' ? 'Legend' : 'Legende'}
+                            {t('onboardingLegend')}
                           </span>
                         </div>
                         <div className="flex flex-col items-center gap-1.5 p-2 bg-white/[0.02] border border-white/5 rounded-xl hover:border-white/10 transition-colors">
@@ -708,9 +708,9 @@ export function AppShell() {
                       </h2>
                       <p className="text-xs text-on-surface-variant leading-relaxed font-mono px-2" dangerouslySetInnerHTML={{
                         __html: t('onboardingAchDesc')
-                          .replace('Erfolge (Badges)', '<span class="text-success font-bold">' + (language === 'tr' ? 'Başarılar (Rozetler)' : language === 'en' ? 'Achievements (Badges)' : 'Erfolge (Badges)') + '</span>')
-                          .replace('achievements (badges)', '<span class="text-success font-bold">achievements (badges)</span>')
-                          .replace('başarının (rozeti)', '<span class="text-success font-bold">başarının (rozeti)</span>')
+                          .replace('Erfolge (Badges)', '<span class="text-success font-bold">' + t('onboardingAchievements') + '</span>')
+                          .replace('achievements (badges)', '<span class="text-success font-bold">' + t('onboardingAchievements').toLowerCase() + '</span>')
+                          .replace('başarının (rozeti)', '<span class="text-success font-bold">' + t('onboardingAchievements') + '</span>')
                       }} />
                       <p className="text-[10px] md:text-xs text-on-surface-variant/70 leading-relaxed font-mono bg-white/[0.02] border border-white/5 p-3 rounded-2xl text-left" dangerouslySetInnerHTML={{
                         __html: t('onboardingAchAlert')

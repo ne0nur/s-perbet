@@ -1,3 +1,5 @@
+import { useTournamentStore } from '../stores/tournamentStore'
+
 /**
  * Berechnet die Punkte für einen Tipp anhand des tatsächlichen Ergebnisses.
  * 4P = Exaktes Ergebnis
@@ -161,5 +163,49 @@ export function getTournamentLogo(tournamentName: string): string {
   }
 
   return `${base}logos/soccer_ball.png`
+}
+
+export function getPunkteKlasse(p: number): string {
+  if (p === 4) return 'text-success drop-shadow-[0_0_6px_rgba(52,211,153,0.35)]'
+  if (p === 3) return 'text-warning drop-shadow-[0_0_6px_rgba(251,191,36,0.35)]'
+  if (p === 2) return 'text-info drop-shadow-[0_0_6px_rgba(56,189,248,0.35)]'
+  if (p === 1) return 'text-tertiary drop-shadow-[0_0_6px_rgba(215,229,255,0.35)]'
+  if (p < 0) return 'text-error drop-shadow-[0_0_6px_rgba(255,180,171,0.35)] font-bold'
+  return 'text-on-surface-variant/70'
+}
+
+export function getPhaseLabel(st: number, tournament: string, t: (key: string, params?: any) => string): string {
+  const config = useTournamentStore.getState().getTournament(tournament)
+  
+  if (config?.has_knockout) {
+    const groupStages = config.group_stage_matchdays
+    if (st <= groupStages) {
+      return t('clRoundLeague', { st })
+    }
+    const koRound = st - groupStages
+    const isWC = tournament.toLowerCase().includes('world cup') || tournament.toLowerCase().includes('wm')
+    
+    if (isWC) {
+      const wmLabels: Record<number, string> = {
+        1: t('koPhase32'),
+        2: t('koPhase16'),
+        3: t('koPhase8'),
+        4: t('koPhase4'),
+        5: t('koPhase2'),
+      }
+      return wmLabels[koRound] || `Runde ${koRound}`
+    }
+    
+    const koLabels: Record<number, string> = {
+      1: t('clRoundPlayoffs'),
+      2: t('clRoundLast16'),
+      3: t('clRoundQuarter'),
+      4: t('clRoundSemi'),
+      5: t('clRoundFinal'),
+    }
+    return koLabels[koRound] || `Runde ${koRound}`
+  }
+  
+  return t('slRoundLabel', { st })
 }
 
