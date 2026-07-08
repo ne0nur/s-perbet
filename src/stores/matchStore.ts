@@ -67,7 +67,7 @@ export const useMatchStore = create<MatchState>()(
       aktuelleSaison: null,
       selectedTournament: 'Süper Lig',
       aktivePhase: null,
-      isLaden: false,
+      isLaden: true, // true beim ersten Laden, wird von ladeMatches auf false gesetzt
       cacheMatches: {},
       cacheTimestamps: {},
       letztesUpdate: null,
@@ -81,12 +81,11 @@ export const useMatchStore = create<MatchState>()(
         const cached = state.cacheMatches[spieltag]
 
         if (cached && cached.length > 0) {
-          // Zeige Cache sofort an
+          // Cache sofort anzeigen — kein Ladespinner
           set({ matches: cached, isLaden: false })
-          // Führe trotzdem einen Hintergrund-Fetch aus (Stale-While-Revalidate)
         } else {
-          // Keine Daten vorhanden: Ladespinner anzeigen
-          set({ isLaden: true })
+          // Kein Cache: alte Matches BEHALTEN (nicht leeren!), nur subtle Loading-Indikator
+          // isLaden wird NICHT auf true gesetzt, um Skeletons zu vermeiden
         }
 
         // Führe active phase check aus
