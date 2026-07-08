@@ -273,11 +273,9 @@ export function MatchEvents({ espnId, tournament, isOpen }: {
                             {scoreText}
                           </span>
                         )}
-                        {isMissedPenalty && (
-                          <span className="text-sm flex-shrink-0" title={t('penaltyMissed')}>❌</span>
-                        )}
+                        {isMissedPenalty && <MissedBadge />}
                         {ev.type === 'penalty' && ev.text === 'penaltyScored' && (
-                          <span className="text-sm flex-shrink-0" title={t('penaltyScored')}>✅</span>
+                          <span className="w-3 h-3 rounded-full bg-success flex-shrink-0" />
                         )}
                         <span className={`text-[12px] font-semibold truncate ${
                           isGoal ? 'text-white' : ev.type === 'red_card' ? 'text-error/80' : ev.type === 'yellow_card' ? 'text-warning/80' : 'text-on-surface-variant/80'
@@ -333,11 +331,9 @@ export function MatchEvents({ espnId, tournament, isOpen }: {
                             {scoreText}
                           </span>
                         )}
-                        {isMissedPenalty && (
-                          <span className="text-sm flex-shrink-0" title={t('penaltyMissed')}>❌</span>
-                        )}
+                        {isMissedPenalty && <MissedBadge />}
                         {ev.type === 'penalty' && ev.text === 'penaltyScored' && (
-                          <span className="text-sm flex-shrink-0" title={t('penaltyScored')}>✅</span>
+                          <span className="w-3 h-3 rounded-full bg-success flex-shrink-0" />
                         )}
                       </div>
                     )}
