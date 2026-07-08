@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, memo } from 'react'
 import { useTipStore } from '../stores/tipStore'
 import { getTeamLogo } from '../lib/teamLogos'
 import { berechnePunkte } from '../lib/utils'
-import { ChevronRight, Check, Minus, Plus, Lock, WifiOff, AlertTriangle } from 'lucide-react'
+import { ChevronRight, Check, Minus, Plus, Lock, WifiOff, AlertTriangle, MapPin } from 'lucide-react'
 import { useSettingsStore } from '../stores/settingsStore'
 import { useNetworkStore } from '../stores/networkStore'
 import { useTranslation } from '../utils/translations'
@@ -222,11 +222,11 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             {/* Datum + Uhrzeit */}
-            <span className="text-[11px] font-mono text-slate-400 uppercase tracking-wider">
+            <span className="text-[11px] font-mono text-slate-300 font-semibold uppercase tracking-wider">
               {formatDatum(match.anpfiff)}
             </span>
             <span className="w-0.5 h-3 rounded-full bg-slate-700" />
-            <span className="text-[11px] font-mono text-slate-500 tabular-nums">
+            <span className="text-[11px] font-mono text-slate-400 tabular-nums">
               {formatUhrzeit(match.anpfiff)} Uhr
             </span>
           </div>
@@ -240,9 +240,10 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
 
         {/* Stadion — eigene Zeile, vollständig lesbar */}
         {match.venue && (
-          <p className="text-[10px] text-slate-600 mt-0.5 font-mono truncate" title={match.venue}>
-            📍 {match.venue}
-          </p>
+          <div className="text-[10px] text-slate-400/70 mt-1 font-mono truncate flex items-center gap-1" title={match.venue}>
+            <MapPin size={11} className="text-amber-500/70 flex-shrink-0" />
+            <span className="truncate">{match.venue}</span>
+          </div>
         )}
 
         {istLive && (
