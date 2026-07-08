@@ -21,14 +21,11 @@ function getLeagueCode(tournament: string): string {
 }
 
 function mapEspnType(typeId: string, typeText: string, shortText: string): MatchEvent['type'] | null {
-  // Match by type text pattern — viel zuverlässiger als numerische IDs
   const t = (typeText || '').toLowerCase()
-  if (t.startsWith('goal')) return 'goal'
-  if (t.includes('penalty') && t.includes('goal')) return 'penalty'
-  if (t === 'yellow card' || t === 'yellow-card') return 'yellow_card'
-  if (t === 'red card' || t === 'red-card') return 'red_card'
-  // Fallback: check text for penalty keywords
-  if (shortText?.toLowerCase().includes('penalty')) return 'penalty'
+  if (t.startsWith('goal') || t.startsWith('own goal')) return 'goal'
+  if (t.includes('penalty')) return 'penalty'
+  if (t.includes('yellow')) return 'yellow_card'
+  if (t.includes('red')) return 'red_card'
   return null
 }
 
@@ -76,6 +73,19 @@ export function MatchEvents({ espnId, tournament, isOpen }: {
               team: c.team?.displayName || '',
               player: detail.athlete?.displayName || '',
               text: detail.label || '',
+            })
+          }
+        }
+
+        // Penalty shootout falls vorhanden
+        for (const team of data.shootout || []) {
+          for (const shot of team.shots || []) {
+            parsed.push({
+              type: shot.didScore ? 'penalty' : 'penalty',
+              minute: 'Elfm.',
+              team: team.team || '',
+              player: shot.player || '',
+              text: shot.didScore ? 'Verwandelt' : 'Verschossen',
             })
           }
         }
