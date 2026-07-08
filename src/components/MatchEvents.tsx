@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronDown, Loader2 } from 'lucide-react'
+import { useTranslation } from '../utils/translations'
 
 interface MatchEvent {
   type: 'goal' | 'penalty' | 'yellow_card' | 'red_card' | 'phase'
@@ -31,18 +32,19 @@ function mapEspnType(typeId: string, typeText: string, shortText: string): Match
 
 function getPhaseLabel(typeText: string): string | null {
   const t = (typeText || '').toLowerCase()
-  if (t.includes('kickoff')) return 'Anpfiff'
-  if (t.includes('halftime') && !t.includes('extra')) return 'Halbzeit'
-  if (t.includes('end regular') || t.includes('end match')) return 'Ende'
-  if (t.includes('start extra')) return 'Verlängerung'
-  if (t.includes('end extra')) return 'Ende n.V.'
-  if (t.includes('start shootout')) return 'Elfmeterschießen'
-  return null // 2. Halbzeit, Halbzeit n.V., 2. Halbzeit n.V. → raus
+  if (t.includes('kickoff')) return 'phaseKickoff'
+  if (t.includes('halftime') && !t.includes('extra')) return 'phaseHalftime'
+  if (t.includes('end regular') || t.includes('end match')) return 'phaseEnd'
+  if (t.includes('start extra')) return 'phaseExtra'
+  if (t.includes('end extra')) return 'phaseEndExtra'
+  if (t.includes('start shootout')) return 'phaseShootout'
+  return null // 2. Halbzeit, Halbzeit n.V. etc. -> raus
 }
 
 export function MatchEvents({ espnId, tournament, isOpen }: {
   espnId: string; tournament: string; isOpen: boolean
 }) {
+  const { t } = useTranslation()
   const [events, setEvents] = useState<MatchEvent[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(false)
@@ -106,20 +108,36 @@ export function MatchEvents({ espnId, tournament, isOpen }: {
           }
         }
 
-        // Penalty shootout falls vorhanden
+        // Penalty shootout
         for (const team of data.shootout || []) {
           for (const shot of team.shots || []) {
             parsed.push({
-              type: shot.didScore ? 'penalty' : 'penalty',
+              type: 'penalty',
               minute: 'Elfm.',
               team: team.team || '',
               player: shot.player || '',
-              text: shot.didScore ? 'Verwandelt' : 'Verschossen',
+              text: shot.didScore ? 'penaltyScored' : 'penaltyMissed',
             })
           }
         }
 
-        parsed.sort((a, b) => (parseInt(a.minute) || 0) - (parseInt(b.minute) || 0))
+        // Sort events chronologically (shootouts at the end)
+        parsed.sort((a, b) => {
+          const getMinVal = (m: string | null | undefined) => {
+            if (!m) return 0
+            if (m === 'Elfm.') return 999
+            const cleaned = String(m).replace(/'/g, '')
+            if (cleaned.includes('+')) {
+              const parts = cleaned.split('+')
+              const base = parseInt(parts[0]) || 0
+              const ext = parseInt(parts[1]) || 0
+              return base + ext / 100
+            }
+            return parseInt(cleaned) || 0
+          }
+          return getMinVal(a.minute) - getMinVal(b.minute)
+        })
+
         setEvents(parsed)
         setTeams({ home: homeTeam, away: awayTeam })
       } catch { setError(true) }
@@ -129,110 +147,189 @@ export function MatchEvents({ espnId, tournament, isOpen }: {
   }, [isOpen, espnId, tournament])
 
   if (!isOpen) return null
-  if (!espnId) return <p className="text-[10px] text-slate-600 py-2 text-center">Keine Event-Daten</p>
+  if (!espnId) return <p className="text-[10px] text-slate-600 py-2 text-center">{t('noEventData')}</p>
+
+  const GoalBadge = () => (
+    <span className="text-[13px] filter drop-shadow-[0_0_4px_rgba(255,255,255,0.4)] flex-shrink-0 select-none">⚽</span>
+  )
+
+  const MissedBadge = () => (
+    <span className="text-xs text-red-500 font-extrabold flex-shrink-0 drop-shadow-[0_0_4px_rgba(239,68,68,0.4)] select-none">❌</span>
+  )
 
   return (
     <div className="mt-3 border-t border-white/5 pt-3">
       {loading && (
         <div className="flex items-center justify-center gap-2 py-4 text-slate-500 text-xs">
           <Loader2 size={14} className="animate-spin" />
-          Events werden geladen…
+          {t('loadingEvents')}
         </div>
       )}
-      {error && <p className="text-[11px] text-slate-600 py-3 text-center">Events nicht verfügbar</p>}
+      {error && <p className="text-[11px] text-slate-600 py-3 text-center">{t('eventsUnavailable')}</p>}
       {!loading && !error && events.length === 0 && (
-        <p className="text-[11px] text-slate-600 py-3 text-center">Noch keine Ereignisse</p>
+        <p className="text-[11px] text-slate-600 py-3 text-center">{t('noEvents')}</p>
       )}
 
       {!loading && events.length > 0 && (
-        <div className="relative py-1">
+        <div className="relative py-2">
           {/* Center line */}
-          <div className="absolute left-1/2 top-1 bottom-1 w-px bg-white/[0.06] -translate-x-px" />
+          <div className="absolute left-1/2 top-1 bottom-1 w-px bg-white/[0.08] -translate-x-[0.5px]" />
 
-          <div className="space-y-1">
+          <div className="space-y-2">
             {events.map((ev, i) => {
-              // Phase marker: minute + label on the line
+              // Phase marker: Centered horizontal badge
               if (ev.type === 'phase') {
                 return (
                   <motion.div
                     key={i}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="relative flex items-center gap-2 py-2"
+                    initial={{ opacity: 0, y: 4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: Math.min(i * 0.03, 0.4) }}
+                    className="relative flex justify-center py-2 w-full"
                   >
-                    <div className="flex-1 h-px bg-white/[0.05]" />
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      {ev.minute && <span className="text-[10px] font-mono text-slate-600 tabular-nums">{ev.minute}'</span>}
-                      <span className="text-[9px] font-bold text-slate-500 uppercase tracking-[0.15em]">{ev.text}</span>
-                    </div>
-                    <div className="flex-1 h-px bg-white/[0.05]" />
+                    <span className="relative z-10 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-800/90 border border-slate-700/80 text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em] font-mono shadow-[0_2px_8px_rgba(0,0,0,0.3)] backdrop-blur-sm">
+                      {t(ev.text)} {ev.minute && ev.minute !== 'Elfm.' && `(${ev.minute}')`}
+                    </span>
                   </motion.div>
                 )
               }
 
-              const isLeft = i % 2 === 0
-              const isGoal = ev.type === 'goal' || ev.type === 'penalty'
-              const icon = isGoal ? '⚽' : ev.type === 'red_card' ? '🟥' : '🟨'
+              // Check if team is Home or Away using robust matching
+              const isHome = ev.team && teams.home && (
+                ev.team.toLowerCase().trim() === teams.home.toLowerCase().trim() ||
+                teams.home.toLowerCase().includes(ev.team.toLowerCase().trim()) ||
+                ev.team.toLowerCase().includes(teams.home.toLowerCase().trim())
+              )
 
-              // Running score
+              const isAway = ev.team && teams.away && (
+                ev.team.toLowerCase().trim() === teams.away.toLowerCase().trim() ||
+                teams.away.toLowerCase().includes(ev.team.toLowerCase().trim()) ||
+                ev.team.toLowerCase().includes(teams.away.toLowerCase().trim())
+              )
+
+              // Align to left (Home) or right (Away)
+              const isLeft = isHome ? true : (isAway ? false : (i % 2 === 0))
+
+              const isGoal = ev.type === 'goal' || (ev.type === 'penalty' && ev.text !== 'penaltyMissed')
+              const isMissedPenalty = ev.type === 'penalty' && ev.text === 'penaltyMissed'
+
+              // Running score for goals
               let scoreText = ''
               if (isGoal && teams.home) {
-                const prev = events.slice(0, i).filter(e => e.type === 'goal' || e.type === 'penalty')
-                const hg = prev.filter(e => e.team === teams.home).length + (ev.team === teams.home ? 1 : 0)
-                const ag = prev.filter(e => e.team === teams.away).length + (ev.team === teams.away ? 1 : 0)
+                const prev = events.slice(0, i).filter(e => e.type === 'goal' || (e.type === 'penalty' && e.text !== 'penaltyMissed'))
+                const hg = prev.filter(e => {
+                  return e.team && teams.home && (
+                    e.team.toLowerCase().trim() === teams.home.toLowerCase().trim() ||
+                    teams.home.toLowerCase().includes(e.team.toLowerCase().trim()) ||
+                    e.team.toLowerCase().includes(teams.home.toLowerCase().trim())
+                  )
+                }).length + (isHome ? 1 : 0)
+
+                const ag = prev.filter(e => {
+                  return e.team && teams.away && (
+                    e.team.toLowerCase().trim() === teams.away.toLowerCase().trim() ||
+                    teams.away.toLowerCase().includes(e.team.toLowerCase().trim()) ||
+                    e.team.toLowerCase().includes(teams.away.toLowerCase().trim())
+                  )
+                }).length + (isAway ? 1 : 0)
+
                 scoreText = `${hg}:${ag}`
               }
 
               return (
                 <motion.div
                   key={i}
-                  initial={{ opacity: 0, y: 4 }}
+                  initial={{ opacity: 0, y: 6 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: Math.min(i * 0.04, 0.5) }}
-                  className={`flex items-center gap-3 py-1 ${isLeft ? '' : 'flex-row-reverse'}`}
+                  className="flex items-center w-full min-h-[32px]"
                 >
-                  {/* Score badge (only for goals, in center) */}
-                  {scoreText ? (
-                    <div className="flex-shrink-0 w-12 text-center">
-                      <span className="inline-flex items-center justify-center w-10 h-6 rounded-md bg-white/[0.06] border border-white/[0.08] text-[13px] font-extrabold font-mono text-white/90 tracking-tight tabular-nums">
-                        {scoreText}
-                      </span>
-                    </div>
-                  ) : (
-                    <div className="flex-shrink-0 w-12 text-center">
-                      <span className="text-[10px] font-mono text-slate-600 tabular-nums">{ev.minute}'</span>
-                    </div>
-                  )}
-
-                  {/* Player + icon */}
-                  <div className={`flex-1 min-w-0 ${isLeft ? 'text-right' : 'text-left'}`}>
-                    <div className={`flex items-center gap-2 ${isLeft ? 'justify-end' : 'justify-start'}`}>
-                      {isLeft ? (
-                        <>
-                          <span className={`text-[13px] font-semibold truncate ${
-                            isGoal ? 'text-white' : ev.type === 'red_card' ? 'text-red-300' : 'text-amber-300'
-                          }`}>{ev.player || ev.text}</span>
-                          <span className="text-sm flex-shrink-0">{icon}</span>
-                          <span className={`text-[10px] font-mono tabular-nums flex-shrink-0 ${
-                            isGoal ? 'text-emerald-500/70' : ev.type === 'red_card' ? 'text-red-500/70' : 'text-amber-500/70'
-                          }`}>{ev.minute}'</span>
-                        </>
-                      ) : (
-                        <>
-                          <span className={`text-[10px] font-mono tabular-nums flex-shrink-0 ${
-                            isGoal ? 'text-emerald-500/70' : ev.type === 'red_card' ? 'text-red-500/70' : 'text-amber-500/70'
-                          }`}>{ev.minute}'</span>
-                          <span className="text-sm flex-shrink-0">{icon}</span>
-                          <span className={`text-[13px] font-semibold truncate ${
-                            isGoal ? 'text-white' : ev.type === 'red_card' ? 'text-red-300' : 'text-amber-300'
-                          }`}>{ev.player || ev.text}</span>
-                        </>
-                      )}
-                    </div>
+                  {/* Left Column (Home events) */}
+                  <div className="w-[calc(50%-20px)] flex justify-end items-center pr-3 min-w-0">
+                    {isLeft && (
+                      <div className="flex items-center gap-2 justify-end min-w-0">
+                        {isGoal && scoreText && (
+                          <span className="inline-flex items-center justify-center px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-[11px] font-extrabold font-mono text-emerald-400 tracking-tight tabular-nums flex-shrink-0">
+                            {scoreText}
+                          </span>
+                        )}
+                        {isMissedPenalty && (
+                          <span className="text-[10px] font-bold text-red-400 bg-red-500/10 border border-red-500/20 px-1.5 py-0.5 rounded font-mono uppercase tracking-wider flex-shrink-0">
+                            {t('penaltyMissed')}
+                          </span>
+                        )}
+                        {ev.type === 'penalty' && ev.text === 'penaltyScored' && (
+                          <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5 rounded font-mono uppercase tracking-wider flex-shrink-0">
+                            {t('penaltyScored')}
+                          </span>
+                        )}
+                        <span className={`text-[12px] font-semibold truncate ${
+                          isGoal ? 'text-white' : ev.type === 'red_card' ? 'text-red-300' : ev.type === 'yellow_card' ? 'text-amber-200' : 'text-slate-300'
+                        }`} title={ev.player || ev.text}>
+                          {ev.player || (ev.text.includes('penalty') ? '' : ev.text)}
+                        </span>
+                        {isGoal && <GoalBadge />}
+                        {isMissedPenalty && <MissedBadge />}
+                        {ev.type === 'yellow_card' && (
+                          <div className="w-2.5 h-3.5 rounded-[2px] bg-amber-400 border border-amber-300/30 shadow-[0_0_8px_rgba(245,158,11,0.5)] flex-shrink-0" />
+                        )}
+                        {ev.type === 'red_card' && (
+                          <div className="w-2.5 h-3.5 rounded-[2px] bg-red-500 border border-red-400/30 shadow-[0_0_8px_rgba(239,68,68,0.5)] flex-shrink-0" />
+                        )}
+                      </div>
+                    )}
                   </div>
 
-                  {/* Empty side */}
-                  <div className="w-12 flex-shrink-0" />
+                  {/* Center Column (Timeline node / Minute) */}
+                  <div className="w-[40px] flex-shrink-0 flex justify-center z-10">
+                    <span className={`inline-flex items-center justify-center min-w-[28px] h-[20px] px-1 rounded-full border text-[9px] font-mono font-bold tabular-nums shadow-[0_2px_6px_rgba(0,0,0,0.2)] backdrop-blur-sm ${
+                      isGoal
+                        ? 'bg-emerald-950/90 border-emerald-500/40 text-emerald-400 shadow-[0_0_8px_rgba(16,185,129,0.25)]'
+                        : isMissedPenalty || ev.type === 'red_card'
+                          ? 'bg-red-950/90 border-red-500/40 text-red-400 shadow-[0_0_8px_rgba(239,68,68,0.25)]'
+                          : ev.type === 'yellow_card'
+                            ? 'bg-amber-950/90 border-amber-500/40 text-amber-400 shadow-[0_0_8px_rgba(245,158,11,0.25)]'
+                            : 'bg-slate-800/90 border-slate-700/80 text-slate-400'
+                    }`}>
+                      {ev.minute === 'Elfm.' ? 'Elfm.' : `${ev.minute}'`}
+                    </span>
+                  </div>
+
+                  {/* Right Column (Away events) */}
+                  <div className="w-[calc(50%-20px)] flex justify-start items-center pl-3 min-w-0">
+                    {!isLeft && (
+                      <div className="flex items-center gap-2 justify-start min-w-0">
+                        {ev.type === 'yellow_card' && (
+                          <div className="w-2.5 h-3.5 rounded-[2px] bg-amber-400 border border-amber-300/30 shadow-[0_0_8px_rgba(245,158,11,0.5)] flex-shrink-0" />
+                        )}
+                        {ev.type === 'red_card' && (
+                          <div className="w-2.5 h-3.5 rounded-[2px] bg-red-500 border border-red-400/30 shadow-[0_0_8px_rgba(239,68,68,0.5)] flex-shrink-0" />
+                        )}
+                        {isGoal && <GoalBadge />}
+                        {isMissedPenalty && <MissedBadge />}
+                        <span className={`text-[12px] font-semibold truncate ${
+                          isGoal ? 'text-white' : ev.type === 'red_card' ? 'text-red-300' : ev.type === 'yellow_card' ? 'text-amber-200' : 'text-slate-300'
+                        }`} title={ev.player || ev.text}>
+                          {ev.player || (ev.text.includes('penalty') ? '' : ev.text)}
+                        </span>
+                        {isGoal && scoreText && (
+                          <span className="inline-flex items-center justify-center px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-[11px] font-extrabold font-mono text-emerald-400 tracking-tight tabular-nums flex-shrink-0">
+                            {scoreText}
+                          </span>
+                        )}
+                        {isMissedPenalty && (
+                          <span className="text-[10px] font-bold text-red-400 bg-red-500/10 border border-red-500/20 px-1.5 py-0.5 rounded font-mono uppercase tracking-wider flex-shrink-0">
+                            {t('penaltyMissed')}
+                          </span>
+                        )}
+                        {ev.type === 'penalty' && ev.text === 'penaltyScored' && (
+                          <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5 rounded font-mono uppercase tracking-wider flex-shrink-0">
+                            {t('penaltyScored')}
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </motion.div>
               )
             })}
@@ -246,6 +343,7 @@ export function MatchEvents({ espnId, tournament, isOpen }: {
 export function MatchEventsToggle({ espnId, tournament }: {
   espnId?: string | null; tournament: string
 }) {
+  const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   if (!espnId) return null
 
@@ -253,9 +351,9 @@ export function MatchEventsToggle({ espnId, tournament }: {
     <div>
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-1.5 text-[10px] text-slate-500 hover:text-slate-300 transition-colors font-mono uppercase tracking-wider py-1"
+        className="flex items-center gap-1.5 text-[10px] text-slate-500 hover:text-slate-300 transition-colors font-mono uppercase tracking-wider py-1 cursor-pointer"
       >
-        <span>{open ? 'Details schließen' : 'Spiel-Details'}</span>
+        <span>{open ? t('detailsClose') : t('matchDetails')}</span>
         <motion.span animate={{ rotate: open ? 180 : 0 }} transition={{ duration: 0.2 }}>
           <ChevronDown size={12} />
         </motion.span>
