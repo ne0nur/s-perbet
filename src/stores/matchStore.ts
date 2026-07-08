@@ -14,7 +14,11 @@ export interface Match {
   status: 'upcoming' | 'live' | 'finished' | 'postponed'
   season: number
   tournament?: string
-  spielminute?: string | null  // z.B. "65'" oder "HT"
+  spielminute?: string | null
+  heim_logo?: string | null
+  gast_logo?: string | null
+  venue?: string | null
+  espn_id?: string | null
 }
 
 export interface Tip {

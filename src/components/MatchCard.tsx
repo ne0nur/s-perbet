@@ -10,6 +10,7 @@ import { useMatchStore, type Match } from '../stores/matchStore'
 import { useTournamentStore } from '../stores/tournamentStore'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useSaveState } from './useSaveState'
+import { MatchEventsToggle } from './MatchEvents'
 
 function punkteFarbe(punkte: number): string {
   if (punkte === 4) return 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30'
@@ -220,6 +221,9 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
       <div className="flex items-center justify-between mb-2">
         <span className="text-[11px] font-mono text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
           <span>{formatDatum(match.anpfiff)} · {formatUhrzeit(match.anpfiff)}</span>
+          {match.venue && (
+            <span className="text-[9px] text-slate-600 truncate max-w-[120px]" title={match.venue}>{match.venue}</span>
+          )}
           {match.tournament === 'Champions League' && (
             <span className="text-amber-400 bg-amber-400/10 px-1 py-0.5 rounded text-[9px] font-bold flex items-center gap-1" title="Champions League">
               <img src={`${import.meta.env.BASE_URL}logos/UEFA_Champions_League_logo.png`} alt="CL" className="w-5 h-5 object-contain drop-shadow-[0_0_6px_rgba(255,255,255,0.6)] brightness-110"  loading="lazy" />
@@ -250,7 +254,7 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
         {/* Heim */}
         <div className="flex-1 flex items-center justify-end gap-2">
           <span className="text-xs md:text-sm font-medium text-white line-clamp-2 break-words leading-tight text-right">{match.heim_team}</span>
-          <img src={getTeamLogo(match.heim_team)} alt={match.heim_team}
+          <img src={match.heim_logo || getTeamLogo(match.heim_team)} alt={match.heim_team}
             className="w-11 h-11 object-contain opacity-90 transition-transform duration-300 group-hover/score:scale-110"
             onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
         </div>
@@ -497,6 +501,11 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
           </div>
         )}
       </div>
+
+      {/* Match-Events (nur bei live/finished mit ESPN-Daten, unterhalb des Tipp-Bereichs) */}
+      {(istLive || istVorbei) && match.espn_id && (
+        <MatchEventsToggle espnId={match.espn_id} tournament={match.tournament || 'Süper Lig'} />
+      )}
     </motion.div>
   )
 })

@@ -85,8 +85,12 @@ export interface EspnMatch {
   awayScore: number;
   status: string;
   date: Date;
-  displayClock: string;  // z.B. "65'" oder "HT"
-  isHalftime: boolean;   // ESPN-Status: STATUS_HALFTIME
+  displayClock: string;
+  isHalftime: boolean;
+  homeLogo?: string;
+  awayLogo?: string;
+  venue?: string;
+  espnId?: string;
 }
 
 async function fetchEspnScores(tournament: string, dateStr: string): Promise<EspnMatch[]> {
@@ -150,7 +154,11 @@ async function fetchEspnScores(tournament: string, dateStr: string): Promise<Esp
         status: s,
         date: new Date(ev.date),
         displayClock: halftime ? "HT" : (ev.status?.displayClock || ""),
-        isHalftime: halftime
+        isHalftime: halftime,
+        homeLogo: home.team?.logo || undefined,
+        awayLogo: away.team?.logo || undefined,
+        venue: comp.venue?.fullName || undefined,
+        espnId: String(ev.id || ""),
       });
     }
     return matches;
@@ -257,12 +265,16 @@ Deno.serve(async (req: Request) => {
           let nameUpdated = false;
           const isRealTeam = (n: string) => !n.toLowerCase().includes("winner") && !n.toLowerCase().includes("loser") && !n.toLowerCase().includes("tba") && !n.toLowerCase().includes("tbd");
           
-          let updatePayload: any = {
+          let updatePayload: Record<string, unknown> = {
             tore_heim: e.homeScore, 
             tore_gast: e.awayScore, 
             status: e.status,
-            spielminute: e.displayClock || null
+            spielminute: e.displayClock || null,
+            espn_id: e.espnId || null,
           };
+          if (e.homeLogo) updatePayload.heim_logo = e.homeLogo;
+          if (e.awayLogo) updatePayload.gast_logo = e.awayLogo;
+          if (e.venue) updatePayload.venue = e.venue;
 
           if (isRealTeam(e.homeTeam) && e.homeTeam !== match.heim_team) {
             updatePayload.heim_team = e.homeTeam;
