@@ -140,6 +140,15 @@ export function MatchEvents({ espnId, tournament, isOpen }: {
         }
 
         // Deduplicate phases: keep only meaningful transitions
+        // Remove "Ende" (End Regular Time) when Verlängerung follows
+        const extraTimeIdx = parsed.findIndex(e => e.type === 'phase' && e.text === 'Verlängerung')
+        if (extraTimeIdx >= 0) {
+          for (let i = extraTimeIdx - 1; i >= 0; i--) {
+            if (parsed[i].type === 'phase' && parsed[i].text === 'Ende') {
+              parsed.splice(i, 1); break
+            }
+          }
+        }
         // If Elfmeterschießen: remove all End/Ende n.V. after it
         const shootoutIdx = parsed.findIndex(e => e.type === 'phase' && e.text === 'Elfmeterschießen')
         if (shootoutIdx >= 0) {
