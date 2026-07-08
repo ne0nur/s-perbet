@@ -17,7 +17,7 @@ import { PullToRefresh } from '../components/ui/PullToRefresh'
 
 export function DashboardPage() {
   const { t, language } = useTranslation()
-  const { matches, aktuellerSpieltag, aktuelleSaison, selectedTournament, isLaden, setSpieltag, ladeMatches, initialisiereSpieltag, letztesUpdate, syncLabel, abonnierenRealtimeMatches, abonnierenHeartbeat, starteLiveMatchPoll, stoppeLiveMatchPoll, setSelectedTournament } = useMatchStore()
+  const { matches, aktuellerSpieltag, aktuelleSaison, selectedTournament, isLaden, setSpieltag, ladeMatches, prefetchMatches, initialisiereSpieltag, letztesUpdate, syncLabel, abonnierenRealtimeMatches, abonnierenHeartbeat, starteLiveMatchPoll, stoppeLiveMatchPoll, setSelectedTournament } = useMatchStore()
   const ladeMeineTipps = useTipStore(s => s.ladeMeineTipps)
   const meineTipps = useTipStore(s => s.meineTipps)
   const getTippFuerMatch = useTipStore(s => s.getTippFuerMatch)
@@ -72,6 +72,12 @@ export function DashboardPage() {
     ladeMatches(aktuellerSpieltag)
     ladeMeineTipps(aktuellerSpieltag)
   }, [aktuellerSpieltag, selectedTournament, ladeMatches, ladeMeineTipps])
+
+  // Prefetch Nachbar-Spieltages im Hintergrund — Tab-Wechsel werden instant
+  useEffect(() => {
+    if (aktuellerSpieltag > 1) prefetchMatches(aktuellerSpieltag - 1)
+    if (aktuellerSpieltag < maxSpieltag) prefetchMatches(aktuellerSpieltag + 1)
+  }, [aktuellerSpieltag, maxSpieltag, prefetchMatches])
 
   useEffect(() => {
     let query = supabase.from('matches').select('spieltag').order('spieltag', { ascending: false }).limit(1)
@@ -474,7 +480,13 @@ export function DashboardPage() {
 
       {/* Main Content Area */}
       <main className="flex-1 px-4 md:px-6 lg:px-8 pt-4 md:pt-6 max-w-[1600px] mx-auto w-full relative">
-        {isLaden ? (
+        {/* Subtiler Loading-Balken wenn Cache da ist — keine Skeletons! */}
+        {isLaden && matches.length > 0 && (
+          <div className="absolute top-0 left-0 right-0 h-0.5 bg-surface-container-high overflow-hidden z-10">
+            <div className="h-full bg-primary animate-loading-bar" style={{ width: '30%' }} />
+          </div>
+        )}
+        {isLaden && matches.length === 0 ? (
           <div className="space-y-3">
             {[1,2,3,4].map(i => (
               <div key={i} className="skeleton rounded-xl h-[112px]" style={{ animationDelay: `${(i-1) * 80}ms` }} />

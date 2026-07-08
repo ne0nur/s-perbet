@@ -32,6 +32,7 @@ interface MatchState {
   aktuellerSpieltag: number
   aktuelleSaison: number | null
   selectedTournament: string
+  tournamentSpieltag: Record<string, number>  // Letzten Spieltag pro Turnier merken
   aktivePhase: number | null
   isLaden: boolean
   cacheMatches: Record<number, Match[]>
@@ -42,6 +43,7 @@ interface MatchState {
   heartbeatSub: RealtimeChannel | null
   livePollTimer: ReturnType<typeof setInterval> | null
   ladeMatches: (spieltag: number) => Promise<void>
+  prefetchMatches: (spieltag: number) => Promise<void>  // Hintergrund-Cache füllen
   setSpieltag: (spieltag: number) => void
   setSaison: (saison: number) => void
   setSelectedTournament: (name: string) => Promise<void>
@@ -63,11 +65,12 @@ export const useMatchStore = create<MatchState>()(
   persist(
     (set, get) => ({
       matches: [],
-      aktuellerSpieltag: 1, // Default fallback
+      aktuellerSpieltag: 1,
       aktuelleSaison: null,
       selectedTournament: 'Süper Lig',
+      tournamentSpieltag: {},
       aktivePhase: null,
-      isLaden: true, // true beim ersten Laden, wird von ladeMatches auf false gesetzt
+      isLaden: true,
       cacheMatches: {},
       cacheTimestamps: {},
       letztesUpdate: null,
@@ -152,6 +155,29 @@ export const useMatchStore = create<MatchState>()(
         }
       },
 
+      // Hintergrund-Prefetch: lädt in Cache, OHNE UI zu beeinflussen
+      prefetchMatches: async (spieltag: number) => {
+        const state = get()
+        if (spieltag <= 0) return
+        // Schon gecached? Überspringen
+        if (state.cacheMatches[spieltag]?.length) return
+
+        try {
+          const currentSeason = state.aktuelleSaison
+          let query = supabase.from('matches').select('*').eq('spieltag', spieltag).order('anpfiff', { ascending: true })
+          if (currentSeason) query = query.eq('season', currentSeason)
+          if (state.selectedTournament && spieltag > 0) query = query.eq('tournament', state.selectedTournament)
+
+          const { data } = await query
+          if (data?.length) {
+            set(s => ({
+              cacheMatches: { ...s.cacheMatches, [spieltag]: data as Match[] },
+              cacheTimestamps: { ...s.cacheTimestamps, [spieltag]: Date.now() },
+            }))
+          }
+        } catch { /* silent — prefetch darf nie stören */ }
+      },
+
       setSpieltag: (spieltag: number) => {
         set({ aktuellerSpieltag: spieltag })
       },
@@ -205,9 +231,21 @@ export const useMatchStore = create<MatchState>()(
       },
 
       setSelectedTournament: async (name: string) => {
+        const state = get()
+        // Merke aktuellen Spieltag für altes Turnier
+        const updatedMap = { ...state.tournamentSpieltag, [state.selectedTournament]: state.aktuellerSpieltag }
+        set({ tournamentSpieltag: updatedMap })
+
         set({ selectedTournament: name })
-        const st = await get().smartSelectSpieltag(name)
-        await get().ladeMatches(st)
+        // Stelle letzten Spieltag für neues Turnier wieder her, sonst smart-select
+        const saved = updatedMap[name]
+        if (saved) {
+          set({ aktuellerSpieltag: saved })
+          await get().ladeMatches(saved)
+        } else {
+          const st = await get().smartSelectSpieltag(name)
+          await get().ladeMatches(st)
+        }
       },
 
       getMatchesBySpieltag: (spieltag: number) => {
@@ -500,9 +538,9 @@ export const useMatchStore = create<MatchState>()(
         matches: state.matches,
         aktuellerSpieltag: state.aktuellerSpieltag,
         selectedTournament: state.selectedTournament,
+        tournamentSpieltag: state.tournamentSpieltag,
         cacheMatches: state.cacheMatches,
         cacheTimestamps: state.cacheTimestamps,
-        // letztesUpdate NICHT persistieren — soll immer vom Server-Heartbeat kommen
       }),
     }
   )

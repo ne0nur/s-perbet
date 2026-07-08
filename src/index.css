@@ -535,6 +535,15 @@ body {
   animation: scaleIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
 
+/* Subtile Loading-Bar für Hintergrund-Updates */
+@keyframes loadingBar {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(400%); }
+}
+.animate-loading-bar {
+  animation: loadingBar 1.5s ease-in-out infinite;
+}
+
 /*
    SüperBET Header Logo — Alte Schrift-Effekte + unabhängige Animationen + echtes 3D-Modell
    ============================================
