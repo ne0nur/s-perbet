@@ -92,6 +92,20 @@ export default function App() {
     }
   }, [])
 
+  // Service Worker Update-Listener — Auto-Reload bei neuen Versionen
+  useEffect(() => {
+    if ('serviceWorker' in navigator) {
+      const handleMessage = (event: MessageEvent) => {
+        if (event.data?.type === 'SW_UPDATE') {
+          console.log('🔄 Neue Version erkannt. Lade neu...')
+          window.location.reload()
+        }
+      }
+      navigator.serviceWorker.addEventListener('message', handleMessage)
+      return () => navigator.serviceWorker.removeEventListener('message', handleMessage)
+    }
+  }, [])
+
   // Admin broadcast polling
   const user = useAuthStore(s => s.user)
   useEffect(() => {
