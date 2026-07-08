@@ -101,7 +101,7 @@ function Stepper({ value, onChange, disabled, onValidate }: { value: number; onC
 
 interface MatchCardProps {
   match: Match
-  onNavigate?: () => void
+  onNavigate?: (matchId: string) => void
   className?: string
   trendStats?: { home: number; draw: number; away: number }
   readOnly?: boolean
@@ -263,7 +263,7 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
 
       {/* Teams + Ergebnis */}
       <div
-        onClick={() => onNavigate?.()}
+        onClick={() => onNavigate?.(match.id)}
         className="flex items-center gap-2 mb-3 cursor-pointer group/score hover:bg-surface-container/40 rounded-lg -mx-1 px-1 py-1 transition-colors relative"
       >
         {/* Heim */}

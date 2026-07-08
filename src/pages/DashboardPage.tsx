@@ -53,6 +53,14 @@ export function DashboardPage() {
     return () => window.removeEventListener('resize', handleResize)
   }, [])
 
+  const handleMatchNavigate = useCallback((matchId: string) => {
+    if (isDesktop) {
+      setSelectedMatchId(matchId)
+    } else {
+      navigate(`/match/${matchId}`)
+    }
+  }, [isDesktop, navigate])
+
   // Beim ersten Mount den richtigen Spieltag ermitteln & Realtime-Abo starten\n  useEffect(() => {\n    if (initialized.current) return\n    initialized.current = true\n    initialisiereSpieltag()\n    abonnierenRealtimeMatches()\n    abonnierenHeartbeat()\n  }, [initialisiereSpieltag, abonnierenRealtimeMatches, abonnierenHeartbeat])\n\n  // Reconnect Realtime wenn App aus Hintergrund zurückkommt\n  useEffect(() => {\n    const handleVisibility = () => {\n      if (document.visibilityState === 'visible') {\n        abonnierenRealtimeMatches()\n        abonnierenHeartbeat()\n      }\n    }\n    document.addEventListener('visibilitychange', handleVisibility)\n    return () => document.removeEventListener('visibilitychange', handleVisibility)\n  }, [abonnierenRealtimeMatches, abonnierenHeartbeat])\n\n  // Cleanup beim Unmount\n  useEffect(() => {\n    return () => {\n      const store = useMatchStore.getState()\n      store.cleanup()\n    }\n  }, [])
 
   // Live-Match-Poll: aktualisiert Spielminuten + Scores
@@ -172,9 +180,12 @@ export function DashboardPage() {
     : matches
   const [trendStatsMap, setTrendStatsMap] = useState<Record<string, { home: number, draw: number, away: number }>>({})
 
+  // Memoize match IDs to string to avoid infinite re-fetch loops inside useEffect
+  const matchIdsStr = useMemo(() => anzeigeMatches.map(m => m.id).join(','), [anzeigeMatches])
+
   // Fetch trend stats for displayed matches
   useEffect(() => {
-    const matchIds = anzeigeMatches.map(m => m.id)
+    const matchIds = matchIdsStr.split(',').filter(Boolean)
     if (matchIds.length === 0) return
     
     let isMounted = true
@@ -207,7 +218,7 @@ export function DashboardPage() {
     })
     
     return () => { isMounted = false }
-  }, [anzeigeMatches, trendVersion])  // Group matches by tournament
+  }, [matchIdsStr, trendVersion])  // Group matches by tournament
   
   const matchesByTournament = useMemo(() => {
     const groups: Record<string, typeof anzeigeMatches> = {}
@@ -580,13 +591,7 @@ export function DashboardPage() {
                               <MatchCard
                                 match={match}
                                 trendStats={trendStatsMap[match.id]}
-                                onNavigate={() => {
-                                  if (isDesktop) {
-                                    setSelectedMatchId(match.id)
-                                  } else {
-                                    navigate(`/match/${match.id}`)
-                                  }
-                                }}
+                                onNavigate={handleMatchNavigate}
                                 className={isSelected && isDesktop ? 'ring-1 ring-primary/50 shadow-[0_0_20px_rgba(var(--primary-rgb),0.12)] bg-surface-container-high/70 scale-[1.01]' : ''}
                               />
                             </div>

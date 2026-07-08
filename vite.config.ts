@@ -43,6 +43,26 @@ export default defineConfig({
       }
     })
   ],
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('three') || id.includes('@react-three')) {
+              return 'vendor-3d'
+            }
+            if (id.includes('recharts') || id.includes('d3')) {
+              return 'vendor-charts'
+            }
+            if (id.includes('@supabase')) {
+              return 'vendor-supabase'
+            }
+            return 'vendor-core'
+          }
+        }
+      }
+    }
+  },
   base: process.env.VITE_BASE_PATH || '/',
   server: {
     port: 5174,
