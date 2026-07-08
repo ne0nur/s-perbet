@@ -84,8 +84,14 @@ function getRowStyle(index: number, total: number, config: TournamentConfig | nu
 }
 
 // Generiert dynamische Legenden-Einträge aus der Config
-function buildLegend(config: TournamentConfig, t: (key: string) => string): { color: string; label: string }[] {
+function buildLegend(config: TournamentConfig, t: (key: string) => string, isGrouped: boolean): { color: string; label: string }[] {
   const items: { color: string; label: string }[] = []
+
+  if (isGrouped) {
+    items.push({ color: 'bg-success', label: t('legendGroupQualified') })
+    items.push({ color: 'bg-error', label: t('legendClOut') })
+    return items
+  }
 
   if (config.has_knockout) {
     if (config.ko_direct_spots > 0) items.push({ color: 'bg-success', label: t('legendClDirect') })
@@ -114,6 +120,7 @@ export function StandingsPage() {
   const [selectedTeam, setSelectedTeam] = useState<string | null>(null)
   const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 1024)
   const [viewTournament, setViewTournament] = useState<string>('')
+  const isGrouped = viewTournament === 'World Cup 2026' || viewTournament === 'Champions League'
   const [viewPhase, setViewPhase] = useState<number | 'table'>('table')
   const [availablePhases, setAvailablePhases] = useState<number[]>([])
   const [availableTournaments, setAvailableTournaments] = useState<string[]>([])
@@ -294,7 +301,7 @@ export function StandingsPage() {
     }
   }, [saison, viewTournament, activeConfig, availableSeasons, ladeMatchesTabelle, ladeTabelleHistorisch])
 
-  const legendItems = activeConfig ? buildLegend(activeConfig, t) : []
+  const legendItems = activeConfig ? buildLegend(activeConfig, t, isGrouped) : []
 
   if (isLaden) return (
     <div className="min-h-screen bg-background flex items-center justify-center">
@@ -470,7 +477,9 @@ export function StandingsPage() {
                             // Wenn gruppiert, rücken die ersten beiden pro Gruppe weiter (posColor grün)
                             const posColor = isGrouped ? (index < 2 ? 'text-green-400 font-bold' : 'text-on-surface-variant') : getRowStyle(index, groups[groupName].length, activeConfig).posColor
                             const posBorder = isGrouped ? (index < 2 ? 'border-l-[3px] border-green-500' : '') : getRowStyle(index, groups[groupName].length, activeConfig).posBorder
-                            const rowBg = getRowStyle(index, groups[groupName].length, activeConfig).rowBg
+                            const rowBg = isGrouped
+                              ? (index < 2 ? 'bg-success-container' : (index % 2 === 0 ? '' : 'bg-surface-container-lowest'))
+                              : getRowStyle(index, groups[groupName].length, activeConfig).rowBg
                             const isSelected = selectedTeam === row.team
 
                             return (

@@ -166,11 +166,11 @@ export function getTournamentLogo(tournamentName: string): string {
 }
 
 export function getPunkteKlasse(p: number): string {
-  if (p === 4) return 'text-success drop-shadow-[0_0_6px_rgba(52,211,153,0.35)]'
-  if (p === 3) return 'text-warning drop-shadow-[0_0_6px_rgba(251,191,36,0.35)]'
-  if (p === 2) return 'text-info drop-shadow-[0_0_6px_rgba(56,189,248,0.35)]'
-  if (p === 1) return 'text-tertiary drop-shadow-[0_0_6px_rgba(215,229,255,0.35)]'
-  if (p < 0) return 'text-error drop-shadow-[0_0_6px_rgba(255,180,171,0.35)] font-bold'
+  if (p >= 4) return 'text-green-400 drop-shadow-[0_0_6px_rgba(74,222,128,0.4)]'
+  if (p === 3) return 'text-amber-400 drop-shadow-[0_0_6px_rgba(251,191,36,0.4)]'
+  if (p === 2) return 'text-blue-400 drop-shadow-[0_0_6px_rgba(96,165,250,0.4)]'
+  if (p === 1) return 'text-purple-400 drop-shadow-[0_0_6px_rgba(192,132,252,0.4)]'
+  if (p < 0) return 'text-red-400 drop-shadow-[0_0_6px_rgba(248,113,113,0.4)] font-bold'
   return 'text-on-surface-variant/70'
 }
 

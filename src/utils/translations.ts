@@ -542,6 +542,13 @@ export const translations = {
     editLeagueNamePlaceholder: 'Name der Liga',
     toastLinkCopied: 'Link kopiert!',
     inviteTextTemplate: 'Tritt meiner SüperBET Tipprunde bei! Code: {code} - Link: {link}',
+    ruleHomeError: 'Abweichung Heim',
+    ruleAwayError: 'Abweichung Gast',
+    ruleTotalDistance: 'Tipp-Abweichung',
+    goalsLabel: 'Tore',
+    legendGroupQualified: 'K.o.-Phase (Qualifiziert)',
+    leagueHelperTitle: 'Deine private Liga',
+    leagueHelperDesc: 'Tippe mit Freunden um die Krone! Teile den Einladungscode oder Link, damit andere beitreten und deine Tipprunde starten kann.',
   },
   en: {
     // Nav / General
@@ -1084,6 +1091,13 @@ export const translations = {
     editLeagueNamePlaceholder: 'League Name',
     toastLinkCopied: 'Link copied!',
     inviteTextTemplate: 'Join my SüperBET league! Code: {code} - Link: {link}',
+    ruleHomeError: 'Home team error',
+    ruleAwayError: 'Away team error',
+    ruleTotalDistance: 'Prediction deviation',
+    goalsLabel: 'Goals',
+    legendGroupQualified: 'Knockout Stage (Qualified)',
+    leagueHelperTitle: 'Your Private League',
+    leagueHelperDesc: 'Compete with friends for the crown! Share the invite code or link so others can join and start the competition.',
   },
   tr: {
     // Nav / General
@@ -1626,6 +1640,13 @@ export const translations = {
     editLeagueNamePlaceholder: 'Lig Adı',
     toastLinkCopied: 'Link kopyalandı!',
     inviteTextTemplate: 'SüperBET ligime katıl! Kod: {code} - Link: {link}',
+    ruleHomeError: 'Ev sahibi sapması',
+    ruleAwayError: 'Deplasman sapması',
+    ruleTotalDistance: 'Tahmin sapması',
+    goalsLabel: 'Gol',
+    legendGroupQualified: 'Eleme Aşaması (Katıldı)',
+    leagueHelperTitle: 'Özel Ligin',
+    leagueHelperDesc: 'Arkadaşlarınla taç için yarış! Başkalarının katılması ve rekabetin başlaması için davet kodunu veya bağlantısını paylaş.',
   }
 }
 

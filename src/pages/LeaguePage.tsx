@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuthStore } from '../stores/authStore'
 import { useTournamentStore } from '../stores/tournamentStore'
-import { Users, Copy, Check, Plus, LogIn, X, Trophy, LogOut, Trash2, MoreHorizontal, MessageCircle, Target, Share2, Edit2 } from 'lucide-react'
+import { Users, Copy, Check, Plus, LogIn, X, Trophy, LogOut, Trash2, MoreHorizontal, MessageCircle, Target, Share2, Edit2, Info } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { RivalInspector } from '../components/RivalInspector'
 import { LeagueChat } from '../components/LeagueChat'
@@ -695,6 +695,15 @@ export function LeaguePage() {
                     </div>
                   </div>
                 )}
+                {mitglieder.length <= 1 && (
+                  <div className="p-3.5 bg-primary-container/10 border border-primary-container/20 rounded-xl flex items-start gap-3">
+                    <Info size={16} className="text-primary shrink-0 mt-0.5" />
+                    <div className="space-y-1">
+                      <p className="text-[11px] font-bold text-primary uppercase tracking-wider">{t('leagueHelperTitle')}</p>
+                      <p className="text-[10px] text-on-surface-variant font-mono leading-relaxed">{t('leagueHelperDesc')}</p>
+                    </div>
+                  </div>
+                )}
                 {/* Spieltag-Tabs Segmented Control */}
                 <div ref={scrollContainerRef} className="bg-surface-container/40 border border-white/5 p-0.5 rounded-xl flex items-center gap-1 overflow-x-auto no-scrollbar backdrop-blur-sm -mx-4 md:mx-0 max-w-full">
                   {/* Sticky "Gesamt" Button */}
@@ -1177,6 +1186,14 @@ export function LeaguePage() {
       {/* Keine Liga */}
       {meineLigen.length === 0 && !isLaden && (
         <div className="px-4 md:px-6 lg:px-8 pt-8 max-w-3xl mx-auto w-full animate-page-enter">
+          <div className="p-3.5 bg-primary-container/10 border border-primary-container/20 rounded-xl flex items-start gap-3 mb-5">
+            <Info size={16} className="text-primary shrink-0 mt-0.5" />
+            <div className="space-y-1">
+              <p className="text-[11px] font-bold text-primary uppercase tracking-wider">{t('leagueHelperTitle')}</p>
+              <p className="text-[10px] text-on-surface-variant font-mono leading-relaxed">{t('leagueHelperDesc')}</p>
+            </div>
+          </div>
+
           <div className="bg-surface-container-low border border-surface-container-high rounded-xl p-8 text-center mb-6">
             <div className="w-16 h-16 rounded-full bg-surface-container-high flex items-center justify-center mx-auto mb-4">
               <Users size={28} className="text-on-surface-variant/40" />

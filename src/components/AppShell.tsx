@@ -15,7 +15,7 @@ import { calculateLevelDetails, getLevelBadgeStyle } from '../lib/utils'
 import { LevelBadge } from './ui/LevelBadge'
 import { evaluateAchievements, type TipDetails } from '../utils/achievementEvaluator'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ChevronLeft, ChevronRight, Sparkles, Award, Gift, Rocket, Share2, Table2 } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Sparkles, Award, Gift, Rocket, Share2, Table2, Target, Flame, ThumbsUp, Smile, AlertCircle, Skull } from 'lucide-react'
 import { usePwaStore } from '../stores/pwaStore'
 import { useTranslation } from '../utils/translations'
 import { HeaderLogo } from './HeaderLogo'
@@ -538,19 +538,19 @@ export function AppShell() {
                   {/* === SLIDES 1-7: Punktestufen === */}
                   {onboardingSlide >= 1 && onboardingSlide <= 7 && (() => {
                     const tiers = [
-                      { pts: '+4', color: 'emerald', icon: '🎯', tip: '2:1', res: '2:1',
+                      { pts: '+4', color: 'emerald', icon: Target, iconColor: 'text-success', tip: '2:1', res: '2:1',
                         de: 'Exakter Treffer', en: 'Exact Hit', tr: 'Tam İsabet' },
-                      { pts: '+3', color: 'amber',   icon: '🔥', tip: '4:1', res: '3:1',
+                      { pts: '+3', color: 'amber',   icon: Flame, iconColor: 'text-warning', tip: '4:1', res: '3:1',
                         de: 'Sehr nah dran', en: 'Very Close', tr: 'Çok Yakın' },
-                      { pts: '+2', color: 'blue',    icon: '👍', tip: '2:0', res: '3:1',
+                      { pts: '+2', color: 'blue',    icon: ThumbsUp, iconColor: 'text-info', tip: '2:0', res: '3:1',
                         de: 'Gute Tendenz', en: 'Good Tendency', tr: 'İyi Eğilim' },
-                      { pts: '+1', color: 'purple',  icon: '🤏', tip: '1:0', res: '4:1',
+                      { pts: '+1', color: 'purple',  icon: Sparkles, iconColor: 'text-tertiary', tip: '1:0', res: '4:1',
                         de: 'Weit vorbei', en: 'Far Off', tr: 'Uzak Sapma' },
-                      { pts: '0',  color: 'slate',   icon: '😬', tip: '1:1', res: '2:1',
+                      { pts: '0',  color: 'slate',   icon: Smile, iconColor: 'text-on-surface-variant/50', tip: '1:1', res: '2:1',
                         de: 'Knapp daneben', en: 'Close Miss', tr: 'Kıl Payı' },
-                      { pts: '−1', color: 'red',     icon: '😅', tip: '1:2', res: '2:1',
+                      { pts: '−1', color: 'red',     icon: AlertCircle, iconColor: 'text-error', tip: '1:2', res: '2:1',
                         de: 'Falscher Sieger', en: 'Wrong Winner', tr: 'Yanlış Kazanan' },
-                      { pts: '−2', color: 'red',     icon: '💀', tip: '0:3', res: '2:1',
+                      { pts: '−2', color: 'red',     icon: Skull, iconColor: 'text-error/80', tip: '0:3', res: '2:1',
                         de: 'Komplett daneben', en: 'Complete Miss', tr: 'Tamamen Karavana' },
                     ]
                     const tier = tiers[onboardingSlide - 1]
@@ -565,10 +565,13 @@ export function AppShell() {
                     const c = cMap[tier.color] || cMap.slate
                     const [cBorder, cBg, cText] = c.split(' ')
                     const title = language === 'tr' ? tier.tr : language === 'en' ? tier.en : tier.de
+                    const IconComponent = tier.icon
 
                     return (
                       <div className="space-y-4">
-                        <div className="text-5xl drop-shadow-md mb-1">{tier.icon}</div>
+                        <div className="flex justify-center mb-1 drop-shadow-md">
+                          <IconComponent size={44} className={tier.iconColor} />
+                        </div>
                         <div className={`inline-flex items-center gap-1.5 mx-auto px-5 py-2 rounded-full border shadow-sm ${cBorder} ${cBg}`}>
                           <span className={`text-3xl font-black font-mono leading-none ${cText}`}>{tier.pts}</span>
                           <span className={`text-xs font-mono font-bold leading-none ${cText}`}>{t('onboardingPointsLabel')}</span>

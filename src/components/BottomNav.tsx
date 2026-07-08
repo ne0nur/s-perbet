@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence, LayoutGroup } from 'framer-motion'
-import { HoverTrophyIcon, HoverGlobeIcon, HoverUserIcon, HoverUsersIcon, HoverChartBarIcon } from './icons/HoverIcons'
+import { HoverTrophyIcon, HoverGlobeIcon, HoverUserIcon, HoverShieldCheckIcon, HoverChartBarIcon } from './icons/HoverIcons'
 import { useTranslation } from '../utils/translations'
 
 export function BottomNav() {
@@ -13,7 +13,7 @@ export function BottomNav() {
     { to: '/dashboard', icon: HoverTrophyIcon,   label: t('games') },
     { to: '/tabelle',   icon: HoverChartBarIcon, label: t('table') },
     { to: '/global',    icon: HoverGlobeIcon,    label: t('global') },
-    { to: '/league',    icon: HoverUsersIcon,    label: t('league') },
+    { to: '/league',    icon: HoverShieldCheckIcon, label: t('league') },
     { to: '/profile',   icon: HoverUserIcon,     label: t('profile') },
   ]
 

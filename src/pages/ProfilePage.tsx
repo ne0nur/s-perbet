@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuthStore } from '../stores/authStore'
 import { usePresenceStore } from '../stores/presenceStore'
-import { BookOpen, Sparkles, Download, RefreshCw, Lock } from 'lucide-react'
+import { BookOpen, Sparkles, Download, RefreshCw, Lock, BarChart2, Award, Star, Settings, Shield } from 'lucide-react'
 import { usePwaStore } from '../stores/pwaStore'
 import { useToastStore } from '../stores/toastStore'
 import { calculateLevelDetails, getRangTitelSystem } from '../lib/utils'
@@ -939,7 +939,10 @@ export function ProfilePage() {
         {/* Left Column: User Profile Summary (Sticky on Desktop) */}
         <div className="w-full lg:col-span-4 lg:sticky lg:top-[80px] space-y-6">
           {(() => {
-            const { level, xpCurrent, xpRequired, xpPct } = calculateLevelDetails(profil?.gesamt_punkte || 0, unlockedSet.size, bonusTipps.length)
+            const level = profil?.level || 1
+            const xpCurrent = profil?.xp_current || 0
+            const xpRequired = profil?.xp_required || 8
+            const xpPct = xpRequired > 0 ? (xpCurrent / xpRequired) * 100 : 0
             let levelTitle = ''
             if (profil) {
               const ranks = getRangTitelSystem(language)
@@ -979,57 +982,57 @@ export function ProfilePage() {
           <div className="bg-surface-container/50 border border-white/5 p-1 rounded-2xl flex overflow-x-auto no-scrollbar snap-x snap-mandatory gap-1 backdrop-blur-md">
         <button
           onClick={() => setActiveTab('overview')}
-          className={`shrink-0 snap-start px-3 py-2 rounded-xl text-[10px] md:text-xs font-mono uppercase tracking-wider transition-all duration-200 cursor-pointer text-center whitespace-nowrap ${
+          className={`shrink-0 snap-start px-3 py-2 rounded-xl text-[10px] md:text-xs font-mono uppercase tracking-wider transition-all duration-200 cursor-pointer text-center whitespace-nowrap flex items-center justify-center gap-1.5 ${
             activeTab === 'overview'
               ? 'bg-primary-container text-on-primary-container font-black shadow-[0_2px_10px_rgba(var(--primary-rgb),0.15)] border border-primary/20 scale-[1.01]'
               : 'text-on-surface-variant hover:text-on-surface hover:bg-white/5 border border-transparent'
           }`}
         >
-          📊 {t('profileOverview')}
+          <BarChart2 size={14} /> {t('profileOverview')}
         </button>
         <button
           onClick={() => setActiveTab('achievements')}
-          className={`shrink-0 snap-start relative px-3 py-2 rounded-xl text-[10px] md:text-xs font-mono uppercase tracking-wider transition-all duration-200 cursor-pointer text-center whitespace-nowrap ${
+          className={`shrink-0 snap-start relative px-3 py-2 rounded-xl text-[10px] md:text-xs font-mono uppercase tracking-wider transition-all duration-200 cursor-pointer text-center whitespace-nowrap flex items-center justify-center gap-1.5 ${
             activeTab === 'achievements'
               ? 'bg-primary-container text-on-primary-container font-black shadow-[0_2px_10px_rgba(var(--primary-rgb),0.15)] border border-primary/20 scale-[1.01]'
               : 'text-on-surface-variant hover:text-on-surface hover:bg-white/5 border border-transparent'
           }`}
         >
-          🏆 {t('myAchievements')}
+          <Award size={14} /> {t('myAchievements')}
           {newlyUnlockedCount > 0 && (
             <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-red-500 rounded-full border border-surface-container-high animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.8)]" />
           )}
         </button>
         <button
           onClick={() => setActiveTab('bonus')}
-          className={`shrink-0 snap-start px-3 py-2 rounded-xl text-[10px] md:text-xs font-mono uppercase tracking-wider transition-all duration-200 cursor-pointer text-center whitespace-nowrap ${
+          className={`shrink-0 snap-start px-3 py-2 rounded-xl text-[10px] md:text-xs font-mono uppercase tracking-wider transition-all duration-200 cursor-pointer text-center whitespace-nowrap flex items-center justify-center gap-1.5 ${
             activeTab === 'bonus'
               ? 'bg-primary-container text-on-primary-container font-black shadow-[0_2px_10px_rgba(var(--primary-rgb),0.15)] border border-primary/20 scale-[1.01]'
               : 'text-on-surface-variant hover:text-on-surface hover:bg-white/5 border border-transparent'
           }`}
         >
-          ⭐ {t('bonusTipsTab')}
+          <Star size={14} /> {t('bonusTipsTab')}
         </button>
         <button
           onClick={() => setActiveTab('settings')}
-          className={`shrink-0 snap-start px-3 py-2 rounded-xl text-[10px] md:text-xs font-mono uppercase tracking-wider transition-all duration-200 cursor-pointer text-center whitespace-nowrap ${
+          className={`shrink-0 snap-start px-3 py-2 rounded-xl text-[10px] md:text-xs font-mono uppercase tracking-wider transition-all duration-200 cursor-pointer text-center whitespace-nowrap flex items-center justify-center gap-1.5 ${
             activeTab === 'settings'
               ? 'bg-primary-container text-on-primary-container font-black shadow-[0_2px_10px_rgba(var(--primary-rgb),0.15)] border border-primary/20 scale-[1.01]'
               : 'text-on-surface-variant hover:text-on-surface hover:bg-white/5 border border-transparent'
           }`}
         >
-          ⚙️ {t('profileSettings')}
+          <Settings size={14} /> {t('profileSettings')}
         </button>
         {profil?.is_admin && (
           <button
             onClick={() => setActiveTab('admin')}
-            className={`shrink-0 snap-start px-3 py-2 rounded-xl text-[10px] md:text-xs font-mono uppercase tracking-wider transition-all duration-200 cursor-pointer text-center whitespace-nowrap ${
+            className={`shrink-0 snap-start px-3 py-2 rounded-xl text-[10px] md:text-xs font-mono uppercase tracking-wider transition-all duration-200 cursor-pointer text-center whitespace-nowrap flex items-center justify-center gap-1.5 ${
               activeTab === 'admin'
                 ? 'bg-red-500/20 text-red-400 font-black shadow-[0_2px_10px_rgba(239,68,68,0.15)] border border-red-500/30 scale-[1.01]'
                 : 'text-red-400/60 hover:text-red-400 hover:bg-red-500/5 border border-transparent'
             }`}
           >
-            🛡️ {t('admin')}
+            <Shield size={14} /> {t('admin')}
           </button>
         )}
       </div>
