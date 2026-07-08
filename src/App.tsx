@@ -93,11 +93,20 @@ export default function App() {
     }
   }, [])
 
-  // Service Worker Update-Listener — Auto-Reload bei neuen Versionen
+  // Service Worker Update-Listener — Auto-Reload bei neuen Versionen (debounced)
   useEffect(() => {
     if ('serviceWorker' in navigator) {
       const handleMessage = (event: MessageEvent) => {
         if (event.data?.type === 'SW_UPDATE') {
+          const LAST_RELOAD_KEY = 'sw_last_reload'
+          const now = Date.now()
+          const lastReload = parseInt(sessionStorage.getItem(LAST_RELOAD_KEY) || '0', 10)
+          // Debounce: max 1 Reload alle 30 Sekunden — verhindert Endlos-Loop
+          if (now - lastReload < 30000) {
+            console.log('🔄 SW-Update ignoriert (Debounce)')
+            return
+          }
+          sessionStorage.setItem(LAST_RELOAD_KEY, String(now))
           console.log('🔄 Neue Version erkannt. Lade neu...')
           window.location.reload()
         }
