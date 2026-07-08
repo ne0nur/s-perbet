@@ -98,71 +98,47 @@ export function MatchEvents({ espnId, tournament, isOpen }: {
       )}
 
       {!loading && events.length > 0 && (
-        <div className="relative max-h-[320px] overflow-y-auto py-1">
+        <div className="relative max-h-[480px] overflow-y-auto py-1">
           {/* Center line */}
-          <div className="absolute left-1/2 top-2 bottom-2 w-px bg-white/[0.08] -translate-x-px" />
+          <div className="absolute left-1/2 top-1 bottom-1 w-px bg-white/[0.06] -translate-x-px" />
 
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             {events.map((ev, i) => {
               const isLeft = i % 2 === 0
               const isGoal = ev.type === 'goal' || ev.type === 'penalty'
-              const isCard = ev.type === 'yellow_card' || ev.type === 'red_card'
 
               return (
                 <motion.div
                   key={i}
-                  initial={{ opacity: 0, x: isLeft ? -8 : 8 }}
+                  initial={{ opacity: 0, x: isLeft ? -6 : 6 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: Math.min(i * 0.04, 0.5) }}
-                  className={`flex items-start gap-0 ${isLeft ? '' : 'flex-row-reverse'}`}
+                  transition={{ delay: Math.min(i * 0.03, 0.4) }}
+                  className={`flex items-center ${isLeft ? '' : 'flex-row-reverse'}`}
                 >
-                  {/* Left/Right content */}
-                  <div className="w-[calc(50%-12px)]" />
+                  {/* Side content */}
+                  <div className={`w-[calc(50%-16px)] ${isLeft ? 'text-right pr-3' : 'text-left pl-3'}`}>
+                    <p className={`text-xs font-medium truncate ${
+                      isGoal ? 'text-slate-200' :
+                      ev.type === 'red_card' ? 'text-red-300' : 'text-amber-300'
+                    }`}>
+                      {ev.player || ev.text}
+                    </p>
+                  </div>
 
-                  {/* Center: dot + minute */}
-                  <div className="relative flex flex-col items-center flex-shrink-0 z-10">
-                    <div className={`w-3 h-3 rounded-full border-2 ${
-                      isGoal ? 'bg-emerald-500/30 border-emerald-500' :
-                      ev.type === 'red_card' ? 'bg-red-500/30 border-red-500' :
-                      'bg-amber-500/30 border-amber-400'
-                    }`} />
-                    <span className={`text-[10px] font-bold font-mono mt-2 tabular-nums whitespace-nowrap ${
+                  {/* Center dot + minute */}
+                  <div className="flex-shrink-0 flex flex-col items-center gap-1 z-10 px-1">
+                    <span className={`text-[10px] font-bold font-mono tabular-nums whitespace-nowrap ${
                       isGoal ? 'text-emerald-400' : ev.type === 'red_card' ? 'text-red-400' : 'text-amber-400'
                     }`}>
                       {ev.minute}'
                     </span>
-                    {isGoal && <span className="text-[15px] mt-0.5">⚽</span>}
-                    {isCard && (
-                      <span className={`text-[13px] mt-0.5 ${ev.type === 'red_card' ? '' : ''}`}>
-                        {ev.type === 'red_card' ? '🟥' : '🟨'}
-                      </span>
-                    )}
+                    <span className="text-[14px] leading-none">
+                      {isGoal ? '⚽' : ev.type === 'red_card' ? '🟥' : '🟨'}
+                    </span>
                   </div>
 
-                  {/* Right/Left content */}
-                  <div className={`w-[calc(50%-12px)] ${isLeft ? 'pl-3' : 'pr-3 text-right'}`}>
-                    <div className={`inline-block rounded-lg px-3 py-2 max-w-full ${
-                      isGoal && !isLeft ? 'bg-emerald-500/[0.06] border border-emerald-500/[0.10]' :
-                      isGoal && isLeft ? 'bg-emerald-500/[0.06] border border-emerald-500/[0.10]' :
-                      ev.type === 'red_card' ? 'bg-red-500/[0.05] border border-red-500/[0.10]' :
-                      'bg-amber-500/[0.04] border border-amber-500/[0.08]'
-                    }`}>
-                      <p className="text-[13px] text-white font-medium leading-snug">
-                        {ev.player || ev.text}
-                      </p>
-                      <div className={`flex items-center gap-2 mt-1 ${isLeft ? '' : 'justify-end'}`}>
-                        <span className={`text-[10px] px-1.5 py-0 rounded font-bold uppercase tracking-wider ${
-                          ev.type === 'penalty' ? 'bg-emerald-500/15 text-emerald-300' :
-                          isGoal ? 'bg-emerald-500/15 text-emerald-300' :
-                          ev.type === 'red_card' ? 'bg-red-500/15 text-red-300' :
-                          'bg-amber-500/15 text-amber-300'
-                        }`}>
-                          {ev.type === 'penalty' ? 'Elfmeter' : ev.type === 'goal' ? 'Tor' : ev.type === 'red_card' ? 'Rot' : 'Gelb'}
-                        </span>
-                        <span className="text-[10px] text-slate-600 font-mono">{ev.team}</span>
-                      </div>
-                    </div>
-                  </div>
+                  {/* Empty side */}
+                  <div className="w-[calc(50%-16px)]" />
                 </motion.div>
               )
             })}
