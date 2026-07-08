@@ -5,6 +5,7 @@ import { useSettingsStore } from './stores/settingsStore'
 import { AppShell } from './components/AppShell'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { ErrorBoundary } from './components/ErrorBoundary'
+import { OfflineBanner } from './components/OfflineBanner'
 import { SplashPage } from './pages/SplashPage'
 import { LoginPage } from './pages/LoginPage'
 import { SetPasswordPage } from './pages/SetPasswordPage'
@@ -134,6 +135,7 @@ export default function App() {
   return (
     <ErrorBoundary>
     <HashRouter>
+      <OfflineBanner />
       <Routes>
         <Route path="/" element={<SplashPage />} />
         <Route path="/login" element={<LoginPage />} />
