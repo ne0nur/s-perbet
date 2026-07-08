@@ -119,16 +119,23 @@ export function MatchEvents({ espnId, tournament, isOpen }: {
           }
         }
 
-        // Penalty shootout falls vorhanden
-        for (const team of data.shootout || []) {
-          for (const shot of team.shots || []) {
-            parsed.push({
-              type: 'penalty',
-              minute: 'Elfm.',
-              team: team.team || '',
-              player: shot.player || '',
-              text: shot.didScore ? 'penaltyScored' : 'penaltyMissed',
-            })
+        // Penalty shootout — interleaved (Team A, B, A, B...)
+        const shootout = data.shootout || []
+        if (shootout.length === 2) {
+          const [teamA, teamB] = shootout
+          const maxShots = Math.max(teamA.shots?.length || 0, teamB.shots?.length || 0)
+          for (let s = 0; s < maxShots; s++) {
+            for (const team of [teamA, teamB]) {
+              const shot = team.shots?.[s]
+              if (!shot) continue
+              parsed.push({
+                type: 'penalty',
+                minute: 'Elfm.',
+                team: team.team || '',
+                player: shot.player || '',
+                text: shot.didScore ? 'penaltyScored' : 'penaltyMissed',
+              })
+            }
           }
         }
 
@@ -284,16 +291,12 @@ export function MatchEvents({ espnId, tournament, isOpen }: {
                           </span>
                         )}
                         {isMissedPenalty && <MissedBadge />}
-                        {ev.type === 'penalty' && ev.text === 'penaltyScored' && (
-                          <span className="w-3 h-3 rounded-full bg-success flex-shrink-0" />
-                        )}
                         <span className={`text-[12px] font-semibold truncate ${
                           isGoal ? 'text-white' : ev.type === 'red_card' ? 'text-error/80' : ev.type === 'yellow_card' ? 'text-warning/80' : 'text-on-surface-variant/80'
                         }`} title={ev.player || ev.text}>
                           {shortName(ev.player) || (ev.text.includes('penalty') ? '' : ev.text)}
                         </span>
                         {isGoal && <GoalBadge />}
-                        {isMissedPenalty && <MissedBadge />}
                         {ev.type === 'yellow_card' && (
                           <div className="w-2.5 h-3.5 rounded-[2px] bg-warning border border-warning/30 shadow-[0_0_8px_rgba(var(--warning-rgb),0.4)] flex-shrink-0" />
                         )}
@@ -342,9 +345,6 @@ export function MatchEvents({ espnId, tournament, isOpen }: {
                           </span>
                         )}
                         {isMissedPenalty && <MissedBadge />}
-                        {ev.type === 'penalty' && ev.text === 'penaltyScored' && (
-                          <span className="w-3 h-3 rounded-full bg-success flex-shrink-0" />
-                        )}
                       </div>
                     )}
                   </div>
