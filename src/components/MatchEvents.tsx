@@ -20,12 +20,15 @@ function getLeagueCode(tournament: string): string {
   return ESPN_LEAGUE_MAP[tournament] || 'tur.1'
 }
 
-function mapEspnType(typeId: string): MatchEvent['type'] | null {
-  if (typeId === '28') return 'penalty'     // penalty goal
-  if (typeId === '70') return 'goal'         // normal goal
-  if (typeId === '24') return 'goal'         // own goal (show as goal)
-  if (typeId === '94') return 'yellow_card'
-  if (typeId === '95') return 'red_card'
+function mapEspnType(typeId: string, typeText: string, shortText: string): MatchEvent['type'] | null {
+  // Match by type text pattern — viel zuverlässiger als numerische IDs
+  const t = (typeText || '').toLowerCase()
+  if (t.startsWith('goal')) return 'goal'
+  if (t.includes('penalty') && t.includes('goal')) return 'penalty'
+  if (t === 'yellow card' || t === 'yellow-card') return 'yellow_card'
+  if (t === 'red card' || t === 'red-card') return 'red_card'
+  // Fallback: check text for penalty keywords
+  if (shortText?.toLowerCase().includes('penalty')) return 'penalty'
   return null
 }
 
@@ -50,7 +53,11 @@ export function MatchEvents({ espnId, tournament, isOpen }: {
         const parsed: MatchEvent[] = []
 
         for (const ev of data.keyEvents || []) {
-          const eventType = mapEspnType(String(ev.type?.id || ''))
+          const eventType = mapEspnType(
+            String(ev.type?.id || ''),
+            ev.type?.text || ev.type?.type || '',
+            ev.shortText || ''
+          )
           if (!eventType) continue
           parsed.push({
             type: eventType,
