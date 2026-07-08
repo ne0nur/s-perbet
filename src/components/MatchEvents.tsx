@@ -127,8 +127,18 @@ export function MatchEvents({ espnId, tournament, isOpen }: {
               minute: 'Elfm.',
               team: team.team || '',
               player: shot.player || '',
-              text: shot.didScore ? '✅' : '❌',
+              text: shot.didScore ? 'penaltyScored' : 'penaltyMissed',
             })
+          }
+        }
+
+        // Deduplicate: skip "Ende" if "Ende n.V." exists later
+        const hasEndeNV = parsed.some(e => e.type === 'phase' && e.text === 'Ende n.V.')
+        if (hasEndeNV) {
+          for (let i = parsed.length - 1; i >= 0; i--) {
+            if (parsed[i].type === 'phase' && parsed[i].text === 'Ende') {
+              parsed.splice(i, 1)
+            }
           }
         }
 
