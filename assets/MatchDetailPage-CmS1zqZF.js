@@ -1,0 +1,1 @@
+import{Dt as e,Et as t,mt as n}from"./vendor-core-BBDQ6Yua.js";import{t as r}from"./MatchDetailPanel-OtPSDUms.js";var i=n();function a(){let{id:n}=e(),a=t();return n?(0,i.jsx)(`div`,{className:`min-h-screen bg-background pb-24 max-w-xl mx-auto w-full px-3 pt-4 animate-page-enter`,children:(0,i.jsx)(r,{matchId:n,onClose:()=>a(-1)})}):null}export{a as MatchDetailPage};
