@@ -139,7 +139,17 @@ export function MatchEvents({ espnId, tournament, isOpen }: {
           }
         }
 
-        // Deduplicate: skip "Ende" if "Ende n.V." exists later
+        // Deduplicate phases: keep only meaningful transitions
+        // If Elfmeterschießen: remove all End/Ende n.V. after it
+        const shootoutIdx = parsed.findIndex(e => e.type === 'phase' && e.text === 'Elfmeterschießen')
+        if (shootoutIdx >= 0) {
+          for (let i = parsed.length - 1; i > shootoutIdx; i--) {
+            if (parsed[i].type === 'phase' && (parsed[i].text === 'Ende' || parsed[i].text === 'Ende n.V.')) {
+              parsed.splice(i, 1)
+            }
+          }
+        }
+        // If Ende n.V. exists: remove regular Ende that comes before it
         const hasEndeNV = parsed.some(e => e.type === 'phase' && e.text === 'Ende n.V.')
         if (hasEndeNV) {
           for (let i = parsed.length - 1; i >= 0; i--) {
