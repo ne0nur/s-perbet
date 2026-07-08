@@ -105,9 +105,8 @@ export function LeagueChat({ leagueId }: LeagueChatProps) {
       supabase.removeChannel(channelRef.current)
     }
 
-    const uniqueChannelId = `chat-${leagueId}-${Math.random().toString(36).substring(2, 9)}`
     const channel = supabase
-      .channel(uniqueChannelId)
+      .channel(`league-chat-${leagueId}`)
       .on(
         'postgres_changes',
         {
@@ -120,19 +119,24 @@ export function LeagueChat({ leagueId }: LeagueChatProps) {
           const msg = payload.new as ChatMessage
           let prof = profileCacheRef.current[msg.user_id]
           if (!prof) {
-            const { data: profile } = await supabase
-              .from('profiles')
-              .select('username, avatar_url')
-              .eq('id', msg.user_id)
-              .single()
-            prof = { username: profile?.username || t('unknown'), avatar_url: profile?.avatar_url || null }
+            try {
+              const { data: profile } = await supabase
+                .from('profiles')
+                .select('username, avatar_url')
+                .eq('id', msg.user_id)
+                .maybeSingle()
+              prof = { username: profile?.username || t('unknown'), avatar_url: profile?.avatar_url || null }
+            } catch (err) {
+              console.error('Error fetching profile for realtime chat msg:', err)
+              prof = { username: t('unknown'), avatar_url: null }
+            }
             profileCacheRef.current[msg.user_id] = prof
           }
 
           setNachrichten(prev => [...prev, {
             ...msg,
-            username: prof!.username,
-            avatar_url: prof!.avatar_url,
+            username: prof.username,
+            avatar_url: prof.avatar_url,
           }])
         }
       )
@@ -188,7 +192,7 @@ export function LeagueChat({ leagueId }: LeagueChatProps) {
 
   // ─── Render ────────────────────────────────────────
   return (
-    <div className="bg-surface-container-low border border-surface-container-high rounded-lg overflow-hidden flex flex-col">
+    <div className="bg-surface-container-low border border-surface-container-high rounded-lg overflow-hidden flex flex-col h-full">
       {/* Header */}
       <div className="px-3 py-2.5 border-b border-surface-container-high flex items-center gap-2">
         <MessageCircle size={16} className="text-primary-fixed-dim" />
@@ -200,11 +204,10 @@ export function LeagueChat({ leagueId }: LeagueChatProps) {
         </span>
       </div>
 
-      {/* Nachrichten-Liste — größer: 500px maxHeight */}
+      {/* Nachrichten-Liste */}
       <div
         ref={scrollRef}
-        className="flex-1 overflow-y-auto px-3 py-3 space-y-3"
-        style={{ minHeight: '240px', maxHeight: '500px' }}
+        className="flex-1 overflow-y-auto px-3 py-3 space-y-3 min-h-0"
       >
         {isLaden && (
           <div className="flex items-center justify-center py-8">
