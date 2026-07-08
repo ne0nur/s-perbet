@@ -98,7 +98,7 @@ export function MatchEvents({ espnId, tournament, isOpen }: {
       )}
 
       {!loading && events.length > 0 && (
-        <div className="relative max-h-[480px] overflow-y-auto py-1">
+        <div className="relative py-1">
           {/* Center line */}
           <div className="absolute left-1/2 top-1 bottom-1 w-px bg-white/[0.06] -translate-x-px" />
 
@@ -169,11 +169,10 @@ export function MatchEventsToggle({ espnId, tournament }: {
       <AnimatePresence>
         {open && (
           <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="overflow-hidden"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
           >
             <MatchEvents espnId={espnId} tournament={tournament} isOpen={open} />
           </motion.div>
