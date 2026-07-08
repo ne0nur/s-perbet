@@ -21,6 +21,17 @@ function getLeagueCode(tournament: string): string {
   return ESPN_LEAGUE_MAP[tournament] || 'tur.1'
 }
 
+// Abbreviate player name: "Kai Havertz" → "K. Havertz"
+function shortName(name: string): string {
+  if (!name) return ''
+  const parts = name.trim().split(' ')
+  if (parts.length <= 1) return name
+  // Last name stays full, first names get abbreviated
+  const last = parts.pop()!
+  const firsts = parts.map(p => p.charAt(0) + '.').join(' ')
+  return firsts ? `${firsts} ${last}` : last
+}
+
 function mapEspnType(typeId: string, typeText: string, shortText: string): MatchEvent['type'] | null {
   const t = (typeText || '').toLowerCase()
   if (t.startsWith('goal') || t.startsWith('own goal')) return 'goal'
@@ -108,7 +119,7 @@ export function MatchEvents({ espnId, tournament, isOpen }: {
           }
         }
 
-        // Penalty shootout
+        // Penalty shootout falls vorhanden
         for (const team of data.shootout || []) {
           for (const shot of team.shots || []) {
             parsed.push({
@@ -116,7 +127,7 @@ export function MatchEvents({ espnId, tournament, isOpen }: {
               minute: 'Elfm.',
               team: team.team || '',
               player: shot.player || '',
-              text: shot.didScore ? 'penaltyScored' : 'penaltyMissed',
+              text: shot.didScore ? '✅' : '❌',
             })
           }
         }
@@ -263,19 +274,15 @@ export function MatchEvents({ espnId, tournament, isOpen }: {
                           </span>
                         )}
                         {isMissedPenalty && (
-                          <span className="text-[10px] font-bold text-error bg-error-container border border-error/20 px-1.5 py-0.5 rounded font-mono uppercase tracking-wider flex-shrink-0">
-                            {t('penaltyMissed')}
-                          </span>
+                          <span className="text-sm flex-shrink-0" title={t('penaltyMissed')}>❌</span>
                         )}
                         {ev.type === 'penalty' && ev.text === 'penaltyScored' && (
-                          <span className="text-[10px] font-bold text-success bg-success-container border border-success/20 px-1.5 py-0.5 rounded font-mono uppercase tracking-wider flex-shrink-0">
-                            {t('penaltyScored')}
-                          </span>
+                          <span className="text-sm flex-shrink-0" title={t('penaltyScored')}>✅</span>
                         )}
                         <span className={`text-[12px] font-semibold truncate ${
                           isGoal ? 'text-white' : ev.type === 'red_card' ? 'text-error/80' : ev.type === 'yellow_card' ? 'text-warning/80' : 'text-on-surface-variant/80'
                         }`} title={ev.player || ev.text}>
-                          {ev.player || (ev.text.includes('penalty') ? '' : ev.text)}
+                          {shortName(ev.player) || (ev.text.includes('penalty') ? '' : ev.text)}
                         </span>
                         {isGoal && <GoalBadge />}
                         {isMissedPenalty && <MissedBadge />}
@@ -319,7 +326,7 @@ export function MatchEvents({ espnId, tournament, isOpen }: {
                         <span className={`text-[12px] font-semibold truncate ${
                           isGoal ? 'text-white' : ev.type === 'red_card' ? 'text-error/80' : ev.type === 'yellow_card' ? 'text-warning/80' : 'text-on-surface-variant/80'
                         }`} title={ev.player || ev.text}>
-                          {ev.player || (ev.text.includes('penalty') ? '' : ev.text)}
+                          {shortName(ev.player) || (ev.text.includes('penalty') ? '' : ev.text)}
                         </span>
                         {isGoal && scoreText && (
                           <span className="inline-flex items-center justify-center px-1.5 py-0.5 rounded bg-success-container border border-success/20 text-[11px] font-extrabold font-mono text-success tracking-tight tabular-nums flex-shrink-0">
@@ -327,14 +334,10 @@ export function MatchEvents({ espnId, tournament, isOpen }: {
                           </span>
                         )}
                         {isMissedPenalty && (
-                          <span className="text-[10px] font-bold text-error bg-error-container border border-error/20 px-1.5 py-0.5 rounded font-mono uppercase tracking-wider flex-shrink-0">
-                            {t('penaltyMissed')}
-                          </span>
+                          <span className="text-sm flex-shrink-0" title={t('penaltyMissed')}>❌</span>
                         )}
                         {ev.type === 'penalty' && ev.text === 'penaltyScored' && (
-                          <span className="text-[10px] font-bold text-success bg-success-container border border-success/20 px-1.5 py-0.5 rounded font-mono uppercase tracking-wider flex-shrink-0">
-                            {t('penaltyScored')}
-                          </span>
+                          <span className="text-sm flex-shrink-0" title={t('penaltyScored')}>✅</span>
                         )}
                       </div>
                     )}

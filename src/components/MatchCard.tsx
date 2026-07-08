@@ -224,6 +224,12 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
             : ''
       } ${className}`}
     >
+      {/* Punkte-Badge — oben rechts für fertige Spiele */}
+      {istVorbei && punkte !== null && (
+        <span className={`absolute top-2 right-2 px-2 py-0.5 rounded-full text-[11px] font-bold border transition-all animate-scale-in ${punkteFarbe(punkte)}`}>
+          {punkte > 0 ? `+${punkte}P` : '0P'}
+        </span>
+      )}
 
       {/* Status-Leiste: Datum + Uhrzeit + Stadion */}
       <div className="mb-2">
@@ -260,11 +266,6 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
             {match.spielminute && (
               <span className="text-[10px] text-red-400/50 font-mono">{match.spielminute}</span>
             )}
-          </span>
-        )}
-        {istVorbei && punkte !== null && (
-          <span className={`px-2 py-0.5 rounded-full text-[11px] font-bold border transition-all animate-scale-in ${punkteFarbe(punkte)}`}>
-            {punkte > 0 ? `+${punkte}P` : '0P'}
           </span>
         )}
       </div>
