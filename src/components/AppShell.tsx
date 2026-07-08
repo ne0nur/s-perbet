@@ -77,7 +77,13 @@ export function AppShell() {
     return () => window.removeEventListener('achievements_updated', handleAchUpdate)
   }, [])
 
-  const { level, xpCurrent, xpRequired, xpPct } = calculateLevelDetails(punkte, achievementsCount, bonusTippsCount)
+  const { level: dbLevel, xpCurrent: dbXpCurrent, xpRequired: dbXpRequired, xpPct: dbXpPct } = calculateLevelDetails(punkte, achievementsCount, bonusTippsCount)
+  // DB-Wert hat Vorrang, client-seitige Berechnung als Fallback
+  const [serverLevel, setServerLevel] = useState<number | null>(null)
+  const level = serverLevel ?? dbLevel
+  const xpCurrent = serverLevel !== null ? (dbXpCurrent) : dbXpCurrent
+  const xpRequired = dbXpRequired
+  const xpPct = dbXpPct
   const { initPresence, cleanupPresence } = usePresenceStore()
 
   // ColorBends background — theme-aware color palette
@@ -231,10 +237,11 @@ export function AppShell() {
 
   useEffect(() => {
     if (!user) return
-    supabase.from('profiles').select('gesamt_punkte').eq('id', user.id).single()
+    supabase.from('profiles').select('gesamt_punkte,level').eq('id', user.id).single()
       .then(({ data }) => {
         if (data) {
           setPunkte(data.gesamt_punkte || 0)
+          if (data.level) setServerLevel(data.level)
         }
       })
       
