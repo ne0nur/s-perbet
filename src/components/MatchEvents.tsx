@@ -97,9 +97,11 @@ export function MatchEvents({ espnId, tournament, isOpen }: {
               text: ev.shortText || ev.text || '',
             })
           } else if (phaseLabel) {
+            // Phase events: use minute from event, fallback to previous event's minute
+            const phaseMinute = ev.clock?.displayValue || parsed[parsed.length - 1]?.minute || ''
             parsed.push({
               type: 'phase',
-              minute: ev.clock?.displayValue || '',
+              minute: phaseMinute,
               team: '',
               player: '',
               text: phaseLabel,
@@ -139,36 +141,7 @@ export function MatchEvents({ espnId, tournament, isOpen }: {
           }
         }
 
-        // Deduplicate phases: keep only meaningful transitions
-        // Remove "Ende" (End Regular Time) when Verlängerung follows
-        const extraTimeIdx = parsed.findIndex(e => e.type === 'phase' && e.text === 'Verlängerung')
-        if (extraTimeIdx >= 0) {
-          for (let i = extraTimeIdx - 1; i >= 0; i--) {
-            if (parsed[i].type === 'phase' && parsed[i].text === 'Ende') {
-              parsed.splice(i, 1); break
-            }
-          }
-        }
-        // If Elfmeterschießen: remove all End/Ende n.V. after it
-        const shootoutIdx = parsed.findIndex(e => e.type === 'phase' && e.text === 'Elfmeterschießen')
-        if (shootoutIdx >= 0) {
-          for (let i = parsed.length - 1; i > shootoutIdx; i--) {
-            if (parsed[i].type === 'phase' && (parsed[i].text === 'Ende' || parsed[i].text === 'Ende n.V.')) {
-              parsed.splice(i, 1)
-            }
-          }
-        }
-        // If Ende n.V. exists: remove regular Ende that comes before it
-        const hasEndeNV = parsed.some(e => e.type === 'phase' && e.text === 'Ende n.V.')
-        if (hasEndeNV) {
-          for (let i = parsed.length - 1; i >= 0; i--) {
-            if (parsed[i].type === 'phase' && parsed[i].text === 'Ende') {
-              parsed.splice(i, 1)
-            }
-          }
-        }
-
-        // Sort events chronologically (shootouts at the end)
+        // Sort events — 'Elfm.' goes to end, phases keep their inherited minute
         parsed.sort((a, b) => {
           const getMinVal = (m: string | null | undefined) => {
             if (!m) return 0
