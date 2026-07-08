@@ -1,0 +1,1 @@
+import{ot as e,vt as t,yt as n}from"./vendor-core-CPcSQnn5.js";import{t as r}from"./RivalInspector-CKB1rSFg.js";var i=e();function a(){let{userId:e}=n(),a=t();return e?(0,i.jsx)(`div`,{className:`min-h-screen bg-background px-3 pt-4 pb-24 max-w-xl mx-auto w-full animate-page-enter`,children:(0,i.jsx)(r,{userId:e,onClose:()=>a(-1)})}):null}export{a as RivalAnalysisPage};
