@@ -108,7 +108,7 @@ export function MatchEvents({ espnId, tournament, isOpen }: {
             })
           }
         }
-
+        // Cards from header — insert near 90' zone if no keyEvents have cards
         for (const c of data.header?.competitions?.[0]?.cards || []) {
           for (const detail of c.details || []) {
             parsed.push({
@@ -121,7 +121,7 @@ export function MatchEvents({ espnId, tournament, isOpen }: {
           }
         }
 
-        // Penalty shootout — interleaved (Team A, B, A, B...)
+        // Penalty shootout — append at the end
         const shootout = data.shootout || []
         if (shootout.length === 2) {
           const [teamA, teamB] = shootout
@@ -141,23 +141,9 @@ export function MatchEvents({ espnId, tournament, isOpen }: {
           }
         }
 
-        // Sort events — 'Elfm.' goes to end, phases keep their inherited minute
-        parsed.sort((a, b) => {
-          const getMinVal = (m: string | null | undefined) => {
-            if (!m) return 0
-            if (m === 'Elfm.') return 999
-            const cleaned = String(m).replace(/'/g, '')
-            if (cleaned.includes('+')) {
-              const parts = cleaned.split('+')
-              const base = parseInt(parts[0]) || 0
-              const ext = parseInt(parts[1]) || 0
-              return base + ext / 100
-            }
-            return parseInt(cleaned) || 0
-          }
-          return getMinVal(a.minute) - getMinVal(b.minute)
-        })
-
+        // No sort — keyEvents are already in chronological ESPN order.
+        // Cards from header are appended (rare), penalties at the end.
+        // Phase markers inherit previous event's minute for display only.
         setEvents(parsed)
         setTeams({ home: homeTeam, away: awayTeam })
       } catch { setError(true) }
