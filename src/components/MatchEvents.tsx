@@ -142,8 +142,16 @@ export function MatchEvents({ espnId, tournament, isOpen }: {
         }
 
         // No sort — keyEvents are already in chronological ESPN order.
-        // Cards from header are appended (rare), penalties at the end.
-        // Phase markers inherit previous event's minute for display only.
+        // Remove trailing phases after Elfmeterschießen (End Match etc.)
+        const shootoutStart = parsed.findIndex(e => e.type === 'phase' && e.text === 'Elfmeterschießen')
+        if (shootoutStart >= 0) {
+          // Remove all phase markers after Elfmeterschießen
+          for (let i = parsed.length - 1; i > shootoutStart; i--) {
+            if (parsed[i].type === 'phase') parsed.splice(i, 1)
+          }
+          // Elfmeterschießen: keine Minute anzeigen
+          parsed[shootoutStart].minute = ''
+        }
         setEvents(parsed)
         setTeams({ home: homeTeam, away: awayTeam })
       } catch { setError(true) }
