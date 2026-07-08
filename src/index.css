@@ -1400,5 +1400,5 @@ html {
   to   { stroke-dashoffset: 0; }
 }
 .animate-save-ring {
-  animation: saveProgressRing 1.5s linear forwards;
+  animation: saveProgressRing 1.5s ease-out forwards;
 }

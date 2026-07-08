@@ -140,6 +140,7 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
   const [isSaving, setIsSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [pending, setPending] = useState(false)
+  const [saveTick, setSaveTick] = useState(0)
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const hasChanges = tippHeim !== (eigenerTipp?.tipp_heim ?? 0) || tippGast !== (eigenerTipp?.tipp_gast ?? 0)
 
@@ -158,6 +159,7 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
     if (isKoMatch && tippHeim === tippGast) return
 
     setPending(true)
+    setSaveTick(t => t + 1) // force ring animation restart
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
     saveTimerRef.current = setTimeout(async () => {
       setPending(false)
@@ -419,7 +421,7 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
             >
               {/* Fortschrittsring — füllt sich in 1.5s */}
               {hasChanges && pending && !koDrawWarning && (
-                <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 56 56">
+                <svg key={saveTick} className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 56 56">
                   <circle
                     cx="28" cy="28" r="24"
                     fill="none"
@@ -433,21 +435,24 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
                 </svg>
               )}
 
-              <AnimatePresence mode="sync">
+              <AnimatePresence mode="wait">
                 {!isOnline ? (
-                  <motion.span key="offline" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.12 }}><WifiOff size={16} /></motion.span>
+                  <motion.span key="off" initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }} transition={{ duration: 0.2 }}>
+                    <WifiOff size={16} />
+                  </motion.span>
                 ) : isSaving ? (
-                  <motion.div key="saving" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.12 }} className="w-4 h-4 border-2 border-primary-fixed-dim border-t-transparent rounded-full animate-spin" />
+                  <motion.div key="saving" initial={{ opacity: 0, rotate: -90 }} animate={{ opacity: 1, rotate: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}
+                    className="w-4 h-4 border-2 border-primary-fixed-dim border-t-transparent rounded-full animate-spin" />
                 ) : saved ? (
-                  <motion.span key="saved" initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.8, opacity: 0 }} transition={{ duration: 0.15 }}>
+                  <motion.span key="saved" initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0, opacity: 0 }} transition={{ type: 'spring', stiffness: 400, damping: 20 }}>
                     <Check size={22} className="stroke-[3]" />
                   </motion.span>
                 ) : koDrawWarning ? (
-                  <motion.span key="kodraw" initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} transition={{ duration: 0.15 }}>
+                  <motion.span key="kodraw" initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.8, opacity: 0 }} transition={{ duration: 0.2 }}>
                     <AlertTriangle size={20} className="stroke-[2.5]" />
                   </motion.span>
                 ) : (
-                  <motion.span key="idle" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.12 }} className="opacity-60">
+                  <motion.span key="idle" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }} className="opacity-60">
                     <Check size={18} className="stroke-[2.5]" />
                   </motion.span>
                 )}
