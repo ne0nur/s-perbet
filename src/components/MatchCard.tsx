@@ -5,7 +5,6 @@ import { berechnePunkte } from '../lib/utils'
 import { ChevronRight, Check, Minus, Plus, Lock, WifiOff, AlertTriangle } from 'lucide-react'
 import { useSettingsStore } from '../stores/settingsStore'
 import { useNetworkStore } from '../stores/networkStore'
-import { useToastStore } from '../stores/toastStore'
 import { useTranslation } from '../utils/translations'
 import { useMatchStore, type Match } from '../stores/matchStore'
 import { useTournamentStore } from '../stores/tournamentStore'
@@ -115,7 +114,10 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
   const aktivePhase = useMatchStore(s => s.aktivePhase)
 
   const kickoffTime = new Date(match.anpfiff).getTime()
-  const now = Date.now()
+  const [now, setNow] = useState(Date.now())
+  useEffect(() => {
+    setNow(Date.now())
+  }, [])
   const istVorbei  = match.status === 'finished'
   const istLive    = match.status === 'live' || (match.status === 'upcoming' && kickoffTime < now)
   const istUpcoming = match.status === 'upcoming' && kickoffTime >= now
@@ -148,6 +150,9 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
   useEffect(() => {
     return () => { if (saveTimerRef.current) clearTimeout(saveTimerRef.current) }
   }, [])
+
+  const config = useTournamentStore(s => s.getTournament(match.tournament || 'Süper Lig'))
+  const isKoMatch = config?.has_knockout && match.spieltag > (config.group_stage_matchdays || 38)
 
   // Auto-Save: debounce 1.5s nach letzter Änderung
   // mounted.current verhindert nur das erste Render (Initialisierung vom Store)
@@ -197,9 +202,6 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
   const livePunkte = istLive && eigenerTipp && match.tore_heim != null && match.tore_gast != null
     ? berechnePunkte(eigenerTipp.tipp_heim, eigenerTipp.tipp_gast, match.tore_heim, match.tore_gast)
     : null
-
-  const config = useTournamentStore(s => s.getTournament(match.tournament || 'Süper Lig'))
-  const isKoMatch = config?.has_knockout && match.spieltag > (config.group_stage_matchdays || 38)
 
   const isPlaceholder = (name: string) => /winner|loser|tba|tbd|placeholder/i.test(name)
   const teamsStehenFest = !isPlaceholder(match.heim_team) && !isPlaceholder(match.gast_team)

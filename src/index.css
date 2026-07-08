@@ -160,6 +160,7 @@ body {
   color: #dde2f3;
   font-family: 'Montserrat', system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
+  overscroll-behavior: none; /* PWA: Pull-to-Refresh verhindern */
 }
 
 input, textarea, [contenteditable], .selectable-text {
@@ -407,10 +408,12 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100dvh;
-  min-height: 100vh; /* Fallback */
+  min-height: 100vh;
   padding-bottom: env(safe-area-inset-bottom);
   padding-left: env(safe-area-inset-left);
   padding-right: env(safe-area-inset-right);
+  overscroll-behavior: none; /* PWA: Pull-to-Refresh verhindern */
+  -webkit-tap-highlight-color: transparent; /* iOS: kein grauer Tap-Flash */
 }
 
 /* Fix iOS bouncy scroll backgrounds */
