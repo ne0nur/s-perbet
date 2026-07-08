@@ -55,11 +55,19 @@ export function DashboardPage() {
 
   // Beim ersten Mount den richtigen Spieltag ermitteln & Realtime-Abo starten\n  useEffect(() => {\n    if (initialized.current) return\n    initialized.current = true\n    initialisiereSpieltag()\n    abonnierenRealtimeMatches()\n    abonnierenHeartbeat()\n  }, [initialisiereSpieltag, abonnierenRealtimeMatches, abonnierenHeartbeat])\n\n  // Reconnect Realtime wenn App aus Hintergrund zurückkommt\n  useEffect(() => {\n    const handleVisibility = () => {\n      if (document.visibilityState === 'visible') {\n        abonnierenRealtimeMatches()\n        abonnierenHeartbeat()\n      }\n    }\n    document.addEventListener('visibilitychange', handleVisibility)\n    return () => document.removeEventListener('visibilitychange', handleVisibility)\n  }, [abonnierenRealtimeMatches, abonnierenHeartbeat])\n\n  // Cleanup beim Unmount\n  useEffect(() => {\n    return () => {\n      const store = useMatchStore.getState()\n      store.cleanup()\n    }\n  }, [])
 
-  // Live-Match-Poll: aktualisiert Spielminuten + Scores + grünen Indikator für alle User
+  // Live-Match-Poll: aktualisiert Spielminuten + Scores
   useEffect(() => {
     starteLiveMatchPoll()
     return () => stoppeLiveMatchPoll()
   }, [starteLiveMatchPoll, stoppeLiveMatchPoll])
+
+  // Background-Tip-Poll: alle 60s Tipps lautlos refreshen — keine Ladeindikatoren
+  useEffect(() => {
+    const interval = setInterval(() => {
+      ladeMeineTipps(aktuellerSpieltag, true)
+    }, 60000)
+    return () => clearInterval(interval)
+  }, [aktuellerSpieltag, ladeMeineTipps])
 
   // PWA Badge clearen beim Betreten der App
   useEffect(() => {
@@ -145,6 +153,18 @@ export function DashboardPage() {
     if (!user) return
     ladeSpieltagInfos()
   }, [user, ladeSpieltagInfos])
+
+  // Visibility-Change: Bei Rückkehr zur App Tipps + Trend-Stats lautlos refreshen
+  useEffect(() => {
+    const handleVisible = () => {
+      if (document.visibilityState === 'visible') {
+        ladeMeineTipps(aktuellerSpieltag, true)
+        if (user) ladeSpieltagInfos()
+      }
+    }
+    document.addEventListener('visibilitychange', handleVisible)
+    return () => document.removeEventListener('visibilitychange', handleVisible)
+  }, [aktuellerSpieltag, ladeMeineTipps, ladeSpieltagInfos, user])
 
   // Auto-select first match on desktop when matches list changes
   const anzeigeMatches = filter === 'live'
