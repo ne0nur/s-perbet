@@ -159,17 +159,24 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
     if (isKoMatch && tippHeim === tippGast) return
 
     setPending(true)
+    setSaved(false) // reset saved state on new change
     setSaveTick(t => t + 1) // force ring animation restart
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
     saveTimerRef.current = setTimeout(async () => {
-      setPending(false)
-      setIsSaving(true)
+      // Ring ist abgelaufen → Save beginnt. Spinner erst nach 300ms zeigen
+      const spinnerTimer = setTimeout(() => setIsSaving(true), 300)
       try {
         await tippSpeichern(match.id, tippHeim, tippGast, match.spieltag)
+        clearTimeout(spinnerTimer) // Save war schnell genug — kein Spinner nötig
+        setIsSaving(false)
+        setPending(false)
         setSaved(true)
         setTimeout(() => setSaved(false), 2000)
-      } catch { /* silent */ }
-      setIsSaving(false)
+      } catch {
+        clearTimeout(spinnerTimer)
+        setIsSaving(false)
+        setPending(false)
+      }
     }, 1500)
   }, [tippHeim, tippGast])
 
