@@ -259,7 +259,7 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
     <motion.div 
       whileHover={{ y: -2, scale: 1.01 }}
       transition={{ type: 'spring', stiffness: 350, damping: 25 }}
-      className={`glass-card p-3 lg:p-5 transition-all duration-300 hover:border-white/15 hover:shadow-[0_8px_24px_rgba(0,0,0,0.4)] ${
+      className={`glass-card p-3 lg:px-5 lg:py-3.5 transition-all duration-300 hover:border-white/15 hover:shadow-[0_8px_24px_rgba(0,0,0,0.4)] ${
         istVorbei && punkte !== null 
           ? randFarbe(punkte) 
           : istLive
@@ -269,10 +269,105 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
     >
       {/* Punkte-Badge — oben rechts für fertige Spiele */}
       {istVorbei && punkte !== null && (
-        <span className={`absolute top-2 right-2 px-2 py-0.5 rounded-full text-[11px] font-bold border transition-all animate-scale-in ${punkteFarbe(punkte)}`}>
+        <span className={`absolute top-2 right-2 lg:top-1.5 lg:right-3 px-2 py-0.5 rounded-full text-[11px] lg:text-xs font-bold border transition-all animate-scale-in ${punkteFarbe(punkte)}`}>
           {punkte > 0 ? `+${punkte}P` : '0P'}
         </span>
       )}
+
+      {/* ───────── Desktop Horizontal-Layout (lg+) ───────── */}
+      <div className="hidden lg:flex items-center gap-5 w-full">
+        {/* Datum/Uhrzeit — links, kompakt */}
+        <div className="flex flex-col items-start gap-0.5 shrink-0 min-w-[88px]">
+          <span className="text-sm font-mono text-slate-300 font-semibold uppercase tracking-wider">
+            {formatDatum(match.anpfiff)}
+          </span>
+          <span className="text-xs font-mono text-slate-400 tabular-nums">
+            {formatUhrzeit(match.anpfiff)}
+          </span>
+          {istLive && (
+            <span className="flex items-center gap-1 text-red-400 text-xs font-medium">
+              <span className="live-dot" /> LIVE{match.spielminute && ` ${match.spielminute}`}
+            </span>
+          )}
+        </div>
+
+        {/* Heim — Name + Logo (rechtsbündig) */}
+        <div className="flex-1 flex items-center justify-end gap-3 min-w-0">
+          <span className="text-sm font-medium text-white truncate text-right">{match.heim_team}</span>
+          <img src={match.heim_logo || getTeamLogo(match.heim_team)} alt={match.heim_team}
+            className="w-10 h-10 object-contain opacity-90 shrink-0"
+            onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
+        </div>
+
+        {/* Ergebnis Mitte */}
+        <div className="text-center min-w-[70px] shrink-0 cursor-pointer" onClick={() => onNavigate?.(match.id)}>
+          {(istVorbei || istLive) && match.tore_heim != null && match.tore_gast != null ? (
+            <div className="font-mono text-2xl font-bold text-white tracking-wider">
+              {match.tore_heim}:{match.tore_gast}
+            </div>
+          ) : (
+            <div className="font-mono text-2xl font-bold text-slate-500 tracking-wider">
+              -:-
+            </div>
+          )}
+          {eigenerTipp && !istUpcoming && (
+            <div className="text-[10px] text-slate-500 font-mono">
+              Tipp: {eigenerTipp.tipp_heim}:{eigenerTipp.tipp_gast}
+            </div>
+          )}
+        </div>
+
+        {/* Gast — Logo + Name (linksbündig) */}
+        <div className="flex-1 flex items-center gap-3 min-w-0">
+          <img src={getTeamLogo(match.gast_team)} alt={match.gast_team}
+            className="w-10 h-10 object-contain opacity-90 shrink-0"
+            onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
+          <span className="text-sm font-medium text-white truncate text-left">{match.gast_team}</span>
+        </div>
+
+        {/* Tipp-Stepper + Status — rechts */}
+        <div className="flex items-center gap-3 shrink-0">
+          {kannTippen ? (
+            <>
+              <Stepper value={tippHeim} onChange={setTippHeim} disabled={saveState.status === 'saving' || !isOnline} />
+              <Stepper value={tippGast} onChange={setTippGast} disabled={saveState.status === 'saving' || !isOnline} />
+            </>
+          ) : readOnly && eigenerTipp ? (
+            <div className="flex items-center gap-2 px-2 py-1 rounded-lg bg-surface-container/30">
+              <Lock size={11} className="text-on-surface-variant/30" />
+              <span className="text-xs text-on-surface-variant/60 font-mono">
+                {eigenerTipp.tipp_heim}:{eigenerTipp.tipp_gast}
+              </span>
+              {istLive && livePunkte !== null && (
+                <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-mono font-black border ${
+                  livePunkte === 4 ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30' :
+                  livePunkte === 3 ? 'text-amber-400 bg-amber-500/10 border-amber-500/30' :
+                  livePunkte === 2 ? 'text-blue-400 bg-blue-500/10 border-blue-500/30' :
+                  livePunkte >= 1 ? 'text-purple-400 bg-purple-500/10 border-purple-500/30' :
+                  'text-slate-400 bg-slate-500/10 border-slate-500/30'
+                }`}>
+                  {livePunkte > 0 ? `+${livePunkte}` : livePunkte}
+                </span>
+              )}
+            </div>
+          ) : !istUpcoming && !eigenerTipp ? (
+            <span className="text-[11px] text-on-surface-variant/40 font-mono uppercase tracking-wider">
+              Kein Tipp
+            </span>
+          ) : istUpcoming && !tippsFreigeschaltet ? (
+            <span className="text-[11px] text-amber-400/50 font-mono uppercase tracking-wider flex items-center gap-1.5">
+              <Lock size={11} /> Gesperrt
+            </span>
+          ) : istUpcoming && (!teamsStehenFest || isFuturePhase) ? (
+            <span className="text-[11px] text-on-surface-variant/40 font-mono uppercase tracking-wider flex items-center gap-1.5">
+              <Lock size={11} /> TBD
+            </span>
+          ) : null}
+        </div>
+      </div>
+
+      {/* ───────── Mobile Layout (wie gehabt, gestapelt) ───────── */}
+      <div className="lg:hidden">
 
       {/* Status-Leiste: Datum + Uhrzeit + Stadion */}
       <div className="mb-2">
@@ -568,11 +663,14 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
           </div>
         )}
       </div>
+      </div>{/* end lg:hidden */}
 
-      {/* Match-Events (nur bei live/finished mit ESPN-Daten, unterhalb des Tipp-Bereichs) */}
-      {(istLive || istVorbei) && match.espn_id && (
-        <MatchEventsToggle espnId={match.espn_id} tournament={match.tournament || 'Süper Lig'} />
-      )}
+      {/* Match-Events (mobile only + bei live/finished mit ESPN-Daten) */}
+      <div className="lg:hidden">
+        {(istLive || istVorbei) && match.espn_id && (
+          <MatchEventsToggle espnId={match.espn_id} tournament={match.tournament || 'Süper Lig'} />
+        )}
+      </div>
     </motion.div>
   )
 })

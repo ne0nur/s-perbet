@@ -522,11 +522,6 @@ export function DashboardPage() {
                   return tournamentName === selectedTournament;
                 })
                 .map(([tournamentName, tourneyMatches]) => {
-                  // Dynamic grid: 2 cols for 6 or fewer matches, 3 cols for more
-                  const cols = tourneyMatches.length <= 6 
-                    ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2' 
-                    : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3'
-                  
                   return (
                     <div key={tournamentName} className="mb-8">
                       {/* Tournament header — subtle, desktop-only styling */}
@@ -549,7 +544,8 @@ export function DashboardPage() {
                         />
                         {tournamentName}
                       </h2>
-                      <div className={`grid ${cols} gap-4 xl:gap-5 w-full`}>
+                      {/* Desktop: 1 Spiel pro Reihe (Liste), Mobile: Grid */}
+                      <div className="flex flex-col lg:gap-3 gap-4 xl:gap-4 w-full lg:max-w-none">
                         {tourneyMatches.map((match: Match) => {
                           const isSelected = selectedMatchId === match.id
                           return (
