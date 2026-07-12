@@ -6,6 +6,7 @@ import Dock, { type DockItemData } from './ui/Dock'
 import ShinyText from './ui/ShinyText'
 import { ToastContainer } from './ToastContainer'
 import { useAuthStore } from '../stores/authStore'
+import { useMatchStore } from '../stores/matchStore'
 import { usePresenceStore } from '../stores/presenceStore'
 import { useThemeStore } from '../stores/themeStore'
 import { THEME_PRIMARY, THEME_CONTAINER } from '../lib/themeColors'
@@ -365,18 +366,41 @@ export function AppShell() {
       <NetworkIndicator />
       
       {/* Desktop Top Bar (hidden on mobile) */}
-      <header className="hidden md:flex items-center justify-between px-8 h-16 shrink-0 relative z-20 border-b border-white/[0.03] backdrop-blur-sm">
-        <div className="flex items-center gap-3">
-          {/* Brand Logo — premium shimmer & animated entry */}
-          <HeaderLogo size="md" />
-          <span className="text-sm font-black tracking-tight leading-none uppercase">
-            <ShinyText text="SÜPERBET" speed={3.5} className="font-extrabold" />
-          </span>
-          <span className="text-[7px] font-mono font-bold text-on-surface-variant/35 uppercase tracking-[0.3em] leading-none ml-1 mt-px">
-            PRIVATE TIPPRUNDE
-          </span>
+      <header className="hidden md:flex items-center justify-between px-6 h-14 shrink-0 relative z-20 border-b border-white/[0.03] backdrop-blur-sm">
+        <div className="flex items-center gap-6">
+          {/* Brand Logo — kein Text nötig */}
+          <HeaderLogo size="sm" />
+          {/* Desktop Navigation Tabs */}
+          <nav className="flex items-center gap-1">
+            {sidebarTabs.map(tab => {
+              const Icon = tab.icon
+              const isActive = location.pathname === tab.to
+              return (
+                <button
+                  key={tab.to}
+                  onClick={() => navigate(tab.to)}
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-[10px] font-mono font-bold uppercase tracking-wider transition-all duration-200 ${
+                    isActive
+                      ? 'bg-primary-container/15 text-primary-fixed-dim border border-primary-container/20'
+                      : 'text-on-surface-variant/60 hover:text-on-surface hover:bg-white/[0.03] border border-transparent'
+                  }`}
+                >
+                  <Icon size={15} />
+                  <span>{tab.label}</span>
+                </button>
+              )
+            })}
+          </nav>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
+          {/* Sync Indicator */}
+          <div className="flex items-center gap-1.5 text-[8px] font-mono text-on-surface-variant/40">
+            <span className={`w-1.5 h-1.5 rounded-full ${
+              useMatchStore.getState().syncLabel?.includes('Live') || useMatchStore.getState().syncLabel?.includes('Crunch')
+                ? 'bg-green-500'
+                : 'bg-slate-600'
+            }`} />
+          </div>
           {/* PWA Install */}
           {isInstallable && (
             <button
@@ -388,7 +412,7 @@ export function AppShell() {
                   }))
                 }
               }}
-              className="text-[10px] font-mono font-bold uppercase tracking-wider text-on-surface-variant/60 hover:text-primary-fixed-dim transition-colors px-3 py-1.5 rounded-lg hover:bg-white/[0.03]"
+              className="text-[9px] font-mono font-bold uppercase tracking-wider text-on-surface-variant/50 hover:text-primary-fixed-dim transition-colors px-2.5 py-1.5 rounded-lg hover:bg-white/[0.03]"
             >
               {t('pwaInstallBtn')}
             </button>
@@ -396,19 +420,19 @@ export function AppShell() {
           {/* Share */}
           <button
             onClick={handleShare}
-            className="text-[10px] font-mono font-bold uppercase tracking-wider text-on-surface-variant/60 hover:text-on-surface transition-colors px-3 py-1.5 rounded-lg hover:bg-white/[0.03]"
+            className="text-on-surface-variant/50 hover:text-on-surface transition-colors p-1.5 rounded-lg hover:bg-white/[0.03]"
           >
             <Share2 size={14} />
           </button>
           {/* Profile */}
           <button
             onClick={() => navigate('/profile')}
-            className={`relative flex items-center gap-2.5 px-3 py-1.5 rounded-xl transition-all ${
+            className={`relative flex items-center gap-2 px-2.5 py-1.5 rounded-xl transition-all ${
               location.pathname === '/profile' ? 'bg-primary-container/10 border border-primary-container/20' : 'hover:bg-white/[0.03] border border-transparent'
             }`}
           >
             <div className="relative shrink-0">
-              <div className="w-8 h-8 rounded-full bg-surface-container-high border border-white/10 overflow-hidden flex items-center justify-center">
+              <div className="w-7 h-7 rounded-full bg-surface-container-high border border-white/10 overflow-hidden flex items-center justify-center">
                 {avatarUrl ? (
                   <img src={avatarUrl} alt="" className="w-full h-full object-cover"  loading="lazy" />
                 ) : (
@@ -417,11 +441,11 @@ export function AppShell() {
                   </span>
                 )}
               </div>
-              <LevelBadge level={level} className="absolute -bottom-1 -right-1 z-10 text-[7px] h-3 w-3 rounded-full shadow shadow-black/80 select-none level-digit">
+              <LevelBadge level={level} className="absolute -bottom-1 -right-1 z-10 text-[6px] h-3 w-3 rounded-full shadow shadow-black/80 select-none level-digit">
                 {level}
               </LevelBadge>
             </div>
-            <span className="text-xs font-bold text-on-surface hidden lg:block">{user?.user_metadata?.username || t('myProfile')}</span>
+            <span className="text-[11px] font-bold text-on-surface hidden lg:block">{user?.user_metadata?.username || t('myProfile')}</span>
           </button>
         </div>
       </header>

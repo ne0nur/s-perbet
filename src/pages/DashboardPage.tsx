@@ -234,7 +234,7 @@ export function DashboardPage() {
     if (isDesktop && anzeigeMatches.length > 0) {
       const hasMatch = anzeigeMatches.some(m => m.id === selectedMatchId)
       if (!hasMatch) {
-        setSelectedMatchId(anzeigeMatches[0].id)
+        // Nicht automatisch öffnen — nur bei explizitem Klick
       }
     } else if (!isDesktop) {
       setSelectedMatchId(null)
@@ -463,10 +463,12 @@ export function DashboardPage() {
           )}
 
           {tippsFreigeschaltet && offeneTipps > 0 && (
-            <div className="px-3 py-2 bg-primary-container/10 border border-primary-container/30 rounded-lg flex items-center gap-2 animate-glow-pulse">
-              <span className="text-xs shrink-0">⏳</span>
-              <span className="text-[10px] font-mono font-bold text-primary-fixed-dim whitespace-nowrap">
-                {offeneTipps} {offeneTipps === 1 ? t('openTipSingular') : t('openTipsPlural', { count: offeneTipps })}
+            <div className="px-4 py-2.5 bg-primary-container/5 border border-primary-container/20 rounded-xl flex items-center gap-3 shadow-[0_0_20px_rgba(var(--primary-rgb),0.05)]">
+              <div className="w-6 h-6 rounded-full bg-primary-container/10 flex items-center justify-center">
+                <span className="text-[9px] font-mono font-black text-primary-fixed-dim">{offeneTipps}</span>
+              </div>
+              <span className="text-[11px] font-mono font-bold text-primary-fixed-dim/80 tracking-wide">
+                {offeneTipps === 1 ? t('openTipSingular') : t('openTipsPlural', { count: offeneTipps })}
               </span>
             </div>
           )}
