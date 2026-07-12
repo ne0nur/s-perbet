@@ -46,7 +46,7 @@ function formatUhrzeit(iso: string): string {
   return d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })
 }
 
-// ─── Stepper-Komponente ───────────────────────────────
+// ─── Stepper-Komponente (Touch-optimiert) ─────────────
 function Stepper({ value, onChange, disabled, onValidate }: { value: number; onChange: (v: number) => void; disabled?: boolean; onValidate?: (v: number) => boolean }) {
   const tryChange = (newVal: number) => {
     if (onValidate && !onValidate(newVal)) return
@@ -66,12 +66,12 @@ function Stepper({ value, onChange, disabled, onValidate }: { value: number; onC
         whileTap={{ scale: 0.85 }}
         className="w-11 h-11 rounded-full bg-surface-container-highest border border-surface-container-high flex items-center justify-center text-on-surface-variant
           hover:border-primary-container/40 hover:text-on-surface active:scale-90
-          disabled:opacity-30 transition-all duration-150 cursor-pointer"
+          disabled:opacity-30 transition-all duration-150 cursor-pointer lg:hidden"
       >
         <Minus size={15} />
       </motion.button>
 
-      <div className="w-7 h-11 relative overflow-hidden flex items-center justify-center">
+      <div className="w-7 h-11 relative overflow-hidden flex items-center justify-center lg:hidden">
         <AnimatePresence mode="popLayout">
           <motion.span
             key={value}
@@ -86,6 +86,23 @@ function Stepper({ value, onChange, disabled, onValidate }: { value: number; onC
         </AnimatePresence>
       </div>
 
+      {/* Desktop: input field statt animiertem Number */}
+      <input
+        type="number"
+        min="0"
+        max="20"
+        value={value}
+        onChange={(e) => {
+          const v = parseInt(e.target.value, 10)
+          if (!isNaN(v) && v >= 0 && v <= 20) onChange(v)
+        }}
+        onPointerDown={(e) => e.stopPropagation()}
+        disabled={disabled}
+        className="hidden lg:flex w-12 h-11 rounded-xl bg-surface-container-highest border border-surface-container-high text-center font-mono text-lg font-bold text-on-surface
+          focus:outline-none focus:border-primary-container/60 focus:ring-1 focus:ring-primary-container/30
+          disabled:opacity-30 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+      />
+
       <motion.button
         type="button"
         onPointerDown={(e) => e.stopPropagation()}
@@ -98,10 +115,36 @@ function Stepper({ value, onChange, disabled, onValidate }: { value: number; onC
         whileTap={{ scale: 0.85 }}
         className="w-11 h-11 rounded-full bg-surface-container-highest border border-surface-container-high flex items-center justify-center text-on-surface-variant
           hover:border-primary-container/40 hover:text-on-surface active:scale-90
-          disabled:opacity-30 transition-all duration-150 cursor-pointer"
+          disabled:opacity-30 transition-all duration-150 cursor-pointer lg:hidden"
       >
         <Plus size={15} />
       </motion.button>
+
+      {/* Desktop +/- Buttons (schmaler) */}
+      <div className="hidden lg:flex flex-col gap-0.5">
+        <motion.button
+          type="button"
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={(e) => { e.stopPropagation(); tryChange(Math.min(20, value + 1)); }}
+          disabled={disabled || value === 20}
+          whileTap={{ scale: 0.85 }}
+          className="w-6 h-5 rounded-md bg-surface-container-higher border border-surface-container-high flex items-center justify-center text-[10px] text-on-surface-variant
+            hover:border-primary-container/40 hover:text-on-surface disabled:opacity-30 transition-all cursor-pointer"
+        >
+          ▲
+        </motion.button>
+        <motion.button
+          type="button"
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={(e) => { e.stopPropagation(); tryChange(Math.max(0, value - 1)); }}
+          disabled={disabled || value === 0}
+          whileTap={{ scale: 0.85 }}
+          className="w-6 h-5 rounded-md bg-surface-container-higher border border-surface-container-high flex items-center justify-center text-[10px] text-on-surface-variant
+            hover:border-primary-container/40 hover:text-on-surface disabled:opacity-30 transition-all cursor-pointer"
+        >
+          ▼
+        </motion.button>
+      </div>
     </div>
   )
 }
