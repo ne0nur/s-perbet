@@ -540,7 +540,6 @@ export const useMatchStore = create<MatchState>()(
       name: 'match-store-cache',
       partialize: (state) => ({
         matches: state.matches,
-        aktuellerSpieltag: state.aktuellerSpieltag,
         selectedTournament: state.selectedTournament,
         tournamentSpieltag: state.tournamentSpieltag,
         cacheMatches: state.cacheMatches,

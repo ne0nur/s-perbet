@@ -524,8 +524,8 @@ export function DashboardPage() {
                 .map(([tournamentName, tourneyMatches]) => {
                   // Dynamic grid: 2 cols for 6 or fewer matches, 3 cols for more
                   const cols = tourneyMatches.length <= 6 
-                    ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-2' 
-                    : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'
+                    ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2' 
+                    : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3'
                   
                   return (
                     <div key={tournamentName} className="mb-8">

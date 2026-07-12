@@ -216,7 +216,7 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
     <motion.div 
       whileHover={{ y: -2, scale: 1.01 }}
       transition={{ type: 'spring', stiffness: 350, damping: 25 }}
-      className={`glass-card p-3 transition-all duration-300 hover:border-white/15 hover:shadow-[0_8px_24px_rgba(0,0,0,0.4)] ${
+      className={`glass-card p-3 lg:p-5 transition-all duration-300 hover:border-white/15 hover:shadow-[0_8px_24px_rgba(0,0,0,0.4)] ${
         istVorbei && punkte !== null 
           ? randFarbe(punkte) 
           : istLive
@@ -236,7 +236,7 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             {/* Datum + Uhrzeit */}
-            <span className="text-[11px] font-mono text-slate-300 font-semibold uppercase tracking-wider">
+            <span className="text-[11px] lg:text-sm font-mono text-slate-300 font-semibold uppercase tracking-wider">
               {formatDatum(match.anpfiff)}
             </span>
             <span className="w-0.5 h-3 rounded-full bg-slate-700" />
@@ -254,7 +254,7 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
 
         {/* Stadion — eigene Zeile, vollständig lesbar */}
         {match.venue && (
-          <div className="text-[10px] text-slate-400/70 mt-1 font-mono truncate flex items-center gap-1" title={match.venue}>
+          <div className="text-[10px] lg:text-xs text-slate-400/70 mt-1 font-mono truncate flex items-center gap-1" title={match.venue}>
             <MapPin size={11} className="text-amber-500/70 flex-shrink-0" />
             <span className="truncate">{match.venue}</span>
           </div>
@@ -286,11 +286,11 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
         {/* Ergebnis */}
         <div className="text-center min-w-[72px] relative">
           {(istVorbei || istLive) && match.tore_heim != null && match.tore_gast != null ? (
-            <div className="font-mono text-xl font-bold text-white tracking-wider flex items-center justify-center gap-1">
+            <div className="font-mono text-xl lg:text-2xl font-bold text-white tracking-wider flex items-center justify-center gap-1">
               {match.tore_heim}:{match.tore_gast}
             </div>
           ) : (
-            <div className="font-mono text-lg font-bold tracking-wider text-slate-500">
+            <div className="font-mono text-2xl lg:text-3xl font-bold text-slate-500">
               - : -
             </div>
           )}
