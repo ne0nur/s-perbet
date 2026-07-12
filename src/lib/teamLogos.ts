@@ -36,8 +36,6 @@ const KNOWN_LOGOS = new Set([
   // 2026-27 Aufsteiger / neue Teams
   'erzurum',
   'erzurumbb',
-  'corum',
-  'corumfk',
   'kocaelispor',
   'genclerbirligi',
   'juventus',
@@ -108,8 +106,12 @@ export function getTeamLogo(teamName: string): string {
     clean = 'bodrum'
   } else if (clean === 'fatihkaragumruk') {
     clean = 'karagumruk'
-  } else if (clean === 'amedsk' || clean === 'amed') {
+  } else if (clean === 'amedsk' || clean === 'amed' || clean === 'amedsfk') {
     clean = 'amedspor'
+  } else if (clean === 'erzurumbb' || clean === 'erzurumbuyuksehir') {
+    clean = 'erzurum'
+  } else if (clean === 'corumfk' || clean === 'corum' || clean === 'corumfutbol') {
+    clean = 'corum'
   } else if (clean === 'paris' || clean === 'psg' || clean === 'parissaintgermain') {
     clean = 'parissaintgermain'
   } else if (clean === 'bayern' || clean === 'fcbayernmunchen') {
