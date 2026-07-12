@@ -33,6 +33,13 @@ const KNOWN_LOGOS = new Set([
   'altay',
   'amedspor',
   'amedsk',
+  // 2026-27 Aufsteiger / neue Teams
+  'erzurum',
+  'erzurumbb',
+  'corum',
+  'corumfk',
+  'kocaelispor',
+  'genclerbirligi',
   'juventus',
   'psveindhoven',
   'bscyoungboys',
@@ -142,7 +149,27 @@ export function getTeamLogo(teamName: string): string {
     const base = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl
     return `${base}/logos/${clean}.png`
   }
-  const baseUrl = import.meta.env.BASE_URL || '/'
-  const base = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl
-  return `${base}/logos/unknown.png`
+  // Fallback: SVG mit Team-Initialen statt unknown.png
+  return generateInitialsSvg(teamName)
+}
+
+function generateInitialsSvg(name: string): string {
+  const parts = name.replace(/[^a-zA-Z0-9 ]/g, '').trim().split(/\s+/)
+  let initials = ''
+  if (parts.length >= 2) {
+    initials = (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+  } else {
+    initials = name.slice(0, 2).toUpperCase()
+  }
+  // Konsistente Farbe aus Team-Namen hashen
+  let hash = 0
+  for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash)
+  const hue = Math.abs(hash) % 360
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+    <rect width="100" height="100" rx="20" fill="hsl(${hue},35%,20%)"/>
+    <text x="50" y="50" text-anchor="middle" dominant-baseline="central"
+      font-family="system-ui,sans-serif" font-size="40" font-weight="700"
+      fill="hsl(${hue},35%,80%)">${initials}</text>
+  </svg>`
+  return `data:image/svg+xml,${encodeURIComponent(svg.replace(/\s+/g, ' '))}`
 }

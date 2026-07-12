@@ -202,33 +202,61 @@ berechnePunkte(tippHeim, tippGast, ergebnisHeim, ergebnisGast):
 
 ---
 
-## 6. Sync-Architektur
+## 6. Sync-Architektur — ESPN-only (Selbstläufer)
+
+> Seit 13.07.2026: **ESPN-only.** Kein API-Football mehr, keine externen Keys.
 
 ### Die Kette
 
-1. **S4-Mini** (Android, Termux, 24/7) ruft Edge Function auf: `curl -X POST https://ynkdtqhhnxmpqvdbzzqk.supabase.co/functions/v1/sync-match-results`
-2. **Edge Function** (`sync-match-results`):
-   - Phase 1: ESPN API → Scores in `matches` schreiben
-   - Phase 2: KO-Winner-Propagation (WM-Bracket)
-   - Heartbeat: `app_settings.sync_label` + `last_sync` aktualisieren
-3. **Client** (30s Unified Poll via `starteLiveMatchPoll`):
-   - Holt `matches` + `app_settings` PARALLEL
-   - `letztesUpdate` = `Date.now()` (NICHT `app_settings.last_sync`!)
-   - `syncLabel` = aus `app_settings`
+```
+GitHub Actions (sync-scores.yml) ── oder ── S4-Mini (Termux)
+    │  curl POST /functions/v1/sync-match-results (service_role)
+    ▼
+Edge Function sync-match-results (ESPN-only)
+    │
+    ├── Phase 0: Season sicherstellen (seasons Tabelle)
+    ├── Phase 1: ESPN Fixtures + Scores
+    │   ├── Kalender von ESPN holen (Spieltag → Datum)
+    │   ├── Alle ESPN Events abrufen
+    │   ├── CREATE neue Matches (falls nicht in DB)
+    │   └── UPDATE Scores für existierende Matches
+    ├── Phase 2: Time-based Fallback (upcoming→live→finished)
+    ├── Phase 3: Smart-Intervall für nächsten Sync
+    └── Phase 4: Heartbeat (last_sync + sync_label)
+    │
+    ▼
+Supabase PostgreSQL ── Trigger: punkteberechnung
+    │
+    ▼
+App (React) ── Zustand Stores via Realtime
+```
 
-### Live-Indikatoren (MÜSSEN SYNCHRON SEIN!)
+### GitHub Actions Cron
 
-- 🟢 **Grüner Indikator (Header):** "zuletzt aktualisiert (HH:MM:SS)" + syncLabel (Live/Crunch/Halbzeit)
-- 🔴 **Roter Indikator (MatchCard):** Pulsierender Punkt + "LIVE" + Spielminute
-- ⚠️ **NIE zwei separate Polls!** → ein Intervall, ein Fetch-Zyklus
-- Heartbeat-Realtime: Nur `syncLabel` updaten, NIE `letztesUpdate`
+| Cron | Frequenz | Zweck |
+|------|----------|-------|
+| `*/10 8-23 * * 5,6,7` | Alle 10 Min (Wochenende) | Live-Scores + neue Fixtures |
+| `*/15 * * * 1-4` | Alle 15 Min (Wochentage) | Live-Scores |
+| `0 2 * * *` | Täglich 02:00 UTC | Fixture-Refresh (ganze Saison) |
 
-### Smart Sync (dynamische Intervalle)
+### ESPN API Endpunkte
 
-- Live-Spiele: 90s
-- Keine Live-Spiele: 450s
-- Pre-Kickoff (<5 Min): 90–120s
-- Halbzeit: max. 2× mit 480s, dann 90s
+| Turnier | ESPN Code | Kalender |
+|---------|-----------|----------|
+| Süper Lig | `tur.1` | 34 Spieltage (Aug–Mai) |
+| Champions League | `uefa.champions` | Ligaphase + KO |
+| World Cup 2026 | `fifa.world` | Gruppen + KO |
+
+### Entfernte Abhängigkeiten (archiviert in `scripts/archiv/`)
+
+| Datei | Grund |
+|-------|-------|
+| `import_fixtures.js` | API-Football Key nicht mehr nötig |
+| `sync_scores.js` | Edge Function macht alles |
+| `sync_loop.sh` | Nie deployed (Platzhalter-Keys) |
+| `sync_dynamic.sh` | Nie deployed (Platzhalter-Keys) |
+| `sync_wm_smart.sh` | Nie deployed (Platzhalter-Keys) |
+| `sync-fixtures.yml` | Ersetzt durch ESPN Fixture-Import in Edge Function |
 
 ---
 

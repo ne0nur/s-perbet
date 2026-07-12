@@ -1,18 +1,15 @@
-name: Live-Scores Sync — WM 2026 Optimized
-
+name: ESPN Sync — Alle Turniere
 on:
   schedule:
-    - cron: '*/20 15-16 * * *'   # Vorlauf (6 calls)
-    - cron: '*/8 17-22 * * *'    # LIVE Hauptspiele (45 calls)
-    - cron: '*/20 23 * * *'      # Pause zwischen Fenstern (3 calls)
-    - cron: '*/8 0-2 * * *'      # LIVE Nachtspiele (23 calls)
+    - cron: '*/10 8-23 * * 5,6,7'
+    - cron: '*/15 0-7,0-23 * * 1-4'
+    - cron: '0 2 * * *'
   workflow_dispatch:
-
 jobs:
   sync:
     runs-on: ubuntu-latest
     steps:
-      - name: Sync Scores + Bracket Propagation
+      - name: Sync Scores + Fixtures
         env:
           SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
@@ -22,6 +19,5 @@ jobs:
             -H "Authorization: Bearer ${SERVICE_ROLE_KEY}" \
             -H "Content-Type: application/json")
           echo "HTTP ${HTTP_CODE}"
-          python3 -c "import json; d=json.load(open('/tmp/sync-result.json')); print(d.get('message','')); print('Score:', d.get('scoreUpdates',0), 'Bracket:', d.get('bracketUpdates',0))" 2>/dev/null || cat /tmp/sync-result.json | head -c 500
-          echo
+          python3 -m json.tool /tmp/sync-result.json 2>/dev/null | head -20
           [ "${HTTP_CODE}" = "200" ] || echo "::warning::Sync returned ${HTTP_CODE}"

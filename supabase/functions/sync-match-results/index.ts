@@ -1,5 +1,5 @@
 // supabase/functions/sync-match-results/index.ts
-// Edge Function: Sync scores + propagate KO winners through bracket
+// ESPN-only Sync Engine: Fixtures + Live-Scores für SüperBET
 // Deploy: supabase functions deploy sync-match-results --no-verify-jwt
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -12,8 +12,6 @@ const ESPN_LEAGUE_MAP: Record<string, string> = {
   "Champions League": "uefa.champions",
   "World Cup 2026": "fifa.world",
 };
-
-// Local bracket propagation removed in favor of API dynamic fetching.
 
 interface MatchRow {
   id: string;
@@ -38,7 +36,7 @@ interface UpdateResult {
   oldStatus: string;
   newStatus: string;
   score?: string;
-  source: "espn" | "time" | "bracket";
+  source: "espn" | "time" | "bracket" | "fixture";
 }
 
 const CORS_HEADERS = {
@@ -70,15 +68,12 @@ function getDateStr(date: Date): string {
   start.setDate(start.getDate() - 2);
   const end = new Date(date);
   end.setDate(end.getDate() + 1);
-  
   const y1 = start.getFullYear();
   const m1 = String(start.getMonth() + 1).padStart(2, "0");
   const d1 = String(start.getDate()).padStart(2, "0");
-  
   const y2 = end.getFullYear();
   const m2 = String(end.getMonth() + 1).padStart(2, "0");
   const d2 = String(end.getDate()).padStart(2, "0");
-  
   return `${y1}${m1}${d1}-${y2}${m2}${d2}`;
 }
 
@@ -97,79 +92,106 @@ export interface EspnMatch {
   espnId?: string;
 }
 
-async function fetchEspnScores(tournament: string, dateStr: string): Promise<EspnMatch[]> {
+// ─── ESPN Fixture / Calendar Fetch ──────────────────────────
+
+interface LeagueCalendar {
+  calendar: string[];        // ISO date strings for each matchday
+  seasonYear: number;        // e.g. 2026
+  seasonName: string;        // e.g. "2026-27 Turkish Super Lig"
+}
+
+async function fetchLeagueCalendar(tournament: string): Promise<LeagueCalendar | null> {
+  const code = ESPN_LEAGUE_MAP[tournament];
+  if (!code) return null;
+  try {
+    const res = await fetch(`http://site.api.espn.com/apis/site/v2/sports/soccer/${code}/scoreboard`);
+    if (!res.ok) return null;
+    const data = await res.json();
+    const league = data.leagues?.[0];
+    if (!league) return null;
+    return {
+      calendar: league.calendar || [],
+      seasonYear: league.season?.year || 2026,
+      seasonName: league.season?.displayName || "",
+    };
+  } catch { return null; }
+}
+
+function spieltagFromDate(dateStr: string, calendar: string[]): number {
+  const matchDate = new Date(dateStr);
+  for (let i = 0; i < calendar.length; i++) {
+    const calDate = new Date(calendar[i]);
+    const nextCalDate = i < calendar.length - 1
+      ? new Date(calendar[i + 1])
+      : new Date(calDate.getTime() + 7 * 86400000);
+    // Spieltag = Woche: Alle Spiele zwischen calendar[i] und calendar[i+1]
+    // gehören zu diesem Spieltag (auch wenn sie auf Fr/Sa/Mo fallen)
+    if (matchDate >= calDate && matchDate < nextCalDate) return i + 1;
+  }
+  return 1;
+}
+
+// Fetch events from ESPN for a given tournament and date range
+async function fetchEspnEvents(tournament: string, dateStr: string): Promise<any[]> {
   const code = ESPN_LEAGUE_MAP[tournament];
   if (!code) return [];
   try {
     const res = await fetch(`http://site.api.espn.com/apis/site/v2/sports/soccer/${code}/scoreboard?dates=${dateStr}`);
     if (!res.ok) return [];
     const data = await res.json();
-    const matches: EspnMatch[] = [];
-    for (const ev of data.events || []) {
-      const comp = ev.competitions[0];
-      const home = comp.competitors.find((c: any) => c.homeAway === "home");
-      const away = comp.competitors.find((c: any) => c.homeAway === "away");
-      if (!home || !away) continue;
-      
-      let hScore = parseInt(home.score || "0", 10);
-      let aScore = parseInt(away.score || "0", 10);
-      
-      // Elfmeterschießen dazuaddieren
-      if (home.shootoutScore) hScore += home.shootoutScore;
-      if (away.shootoutScore) aScore += away.shootoutScore;
-
-      let s = "upcoming";
-      let halftime = false;
-      const statusType = ev.status.type;
-      const sn = statusType.name;
-      const isCompleted = statusType.completed === true;
-      const state = statusType.state; // "pre" | "in" | "post"
-
-      // ─── DEFINITIVE: ESPN's state/completed fields ───
-      // "post" = match over (full time, no matter the label)
-      // "completed" = true → match is done
-      // These are the SOURCE OF TRUTH. status.name is just a display label.
-      if (isCompleted || state === "post") {
-        // Always map to finished — ESPN says it's done.
-        // STATUS_FULL_TIME → regulation finished (normal)
-        // STATUS_FINAL_AET → after extra time
-        // STATUS_FINAL → penalty shootout or group stage finish
-        s = "finished";
-      }
-      // ─── LIVE STATES (only if not completed) ───
-      else if (sn.includes("PENALTY")) {
-        s = "live"; // Penalties in progress
-      } else if (sn.includes("HALFTIME") || sn.includes("HALF_TIME")) {
-        s = "live"; halftime = true;
-      } else if (sn.includes("EXTRA_TIME") || sn.includes("OVERTIME") || sn.includes("IN_PROGRESS") || sn.includes("HALF") || sn.includes("FULL_TIME")) {
-        s = "live"; // These only reach here if completed=false / state≠"post"
-      }
-      // ─── POSTPONED ───
-      else if (sn.includes("POSTPONED") || sn.includes("CANCELED")) {
-        s = "postponed";
-      }
-      // else: stays "upcoming" (STATUS_SCHEDULED or unknown)
-      
-      matches.push({
-        homeTeam: home.team?.name || "TBA",
-        awayTeam: away.team?.name || "TBA",
-        homeScore: hScore,
-        awayScore: aScore,
-        status: s,
-        date: new Date(ev.date),
-        displayClock: halftime ? "HT" : (ev.status?.displayClock || ""),
-        isHalftime: halftime,
-        homeLogo: home.team?.logo || undefined,
-        awayLogo: away.team?.logo || undefined,
-        venue: comp.venue?.fullName || undefined,
-        espnId: String(ev.id || ""),
-      });
-    }
-    return matches;
+    return data.events || [];
   } catch { return []; }
 }
 
-// ─── Main Handler ──────────────────────────────────────────────
+function parseEspnEvent(ev: any): EspnMatch | null {
+  const comp = ev.competitions?.[0];
+  if (!comp) return null;
+  const home = comp.competitors?.find((c: any) => c.homeAway === "home");
+  const away = comp.competitors?.find((c: any) => c.homeAway === "away");
+  if (!home || !away) return null;
+
+  let hScore = parseInt(home.score || "0", 10);
+  let aScore = parseInt(away.score || "0", 10);
+  if (home.shootoutScore) hScore += home.shootoutScore;
+  if (away.shootoutScore) aScore += away.shootoutScore;
+
+  let s = "upcoming";
+  let halftime = false;
+  const statusType = ev.status?.type || {};
+  const sn = (statusType.name || "").toUpperCase();
+  const isCompleted = statusType.completed === true;
+  const state = statusType.state || "";
+
+  if (isCompleted || state === "post") {
+    s = "finished";
+  } else if (sn.includes("PENALTY")) {
+    s = "live";
+  } else if (sn.includes("HALFTIME") || sn.includes("HALF_TIME")) {
+    s = "live"; halftime = true;
+  } else if (sn.includes("EXTRA_TIME") || sn.includes("OVERTIME") || sn.includes("IN_PROGRESS") || sn.includes("HALF") || sn.includes("FULL_TIME")) {
+    s = "live";
+  } else if (sn.includes("POSTPONED") || sn.includes("CANCELED")) {
+    s = "postponed";
+  }
+
+  return {
+    homeTeam: home.team?.name || "TBA",
+    awayTeam: away.team?.name || "TBA",
+    homeScore: hScore,
+    awayScore: aScore,
+    status: s,
+    date: new Date(ev.date),
+    displayClock: halftime ? "HT" : (ev.status?.displayClock || ""),
+    isHalftime: halftime,
+    homeLogo: home.team?.logo || undefined,
+    awayLogo: away.team?.logo || undefined,
+    venue: comp.venue?.fullName || undefined,
+    espnId: String(ev.id || ""),
+  };
+}
+
+// ─── Main Handler ──────────────────────────────────────────
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { status: 204, headers: CORS_HEADERS });
@@ -186,18 +208,14 @@ Deno.serve(async (req: Request) => {
 
     let adminClient: ReturnType<typeof createClient>;
 
-    // Prüfe, ob der Token ein Service-Role-Key ist, indem wir eine Tabelle testen,
-    // die NUR für authentifizierte User (oder Service Role) lesbar ist.
-    // profiles hat RLS: nur authentifizierte Nutzer — Anon-Key fliegt raus.
+    // Check if token is service_role key
     const testClient = createClient(SUPABASE_URL, token);
     const { data: testData, error: testError } = await testClient
       .from("profiles").select("id").limit(1);
 
     if (!testError && testData && testData.length > 0) {
-      // Service-Role-Key (oder Admin-User) → automatisierter Aufruf
       adminClient = testClient;
     } else {
-      // User-JWT → Admin-Check
       const userClient = createClient(SUPABASE_URL, Deno.env.get("SUPABASE_ANON_KEY")!, {
         global: { headers: { Authorization: authHeader } },
       });
@@ -211,117 +229,241 @@ Deno.serve(async (req: Request) => {
       adminClient = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
     }
 
-    // ─── Phase 1: Score Sync ───
     const now = new Date();
-    const { data: matches, error: fetchError } = await adminClient
+    let scoreUpdates = 0;
+    let bracketUpdates = 0;
+    let fixtureCreations = 0;
+    const stats: Record<string, { checked: number; updated: number; espn: number; time: number; created: number }> = {};
+
+    // ─── Phase 0: Ensure current season exists ───
+    const currentSeasonYear = 2026; // hardcoded for now, could be dynamic
+    // Ensure seasons table has this year
+    await adminClient.from("seasons").upsert({
+      id: currentSeasonYear,
+      name: `Saison ${currentSeasonYear}/${String(currentSeasonYear + 1).slice(2)}`,
+      is_current: true,
+      is_finished: false,
+    }, { onConflict: "id" });
+
+    // ─── Phase 1: ESPN-only Fixture Import + Score Sync ───
+    // For each tournament:
+    //   1. Fetch calendar (matchday date mapping)
+    //   2. Fetch ESPN events for a wide window around today
+    //   3. For each event, create if missing, update if exists
+
+    const tournaments = Object.keys(ESPN_LEAGUE_MAP);
+
+    for (const tournament of tournaments) {
+      stats[tournament] = { checked: 0, updated: 0, espn: 0, time: 0, created: 0 };
+      const code = ESPN_LEAGUE_MAP[tournament];
+      if (!code) continue;
+
+      // Fetch calendar for spieltag mapping
+      // ⚠️ Hinweis: ESPN's Kalender zeigt aktuell ALLE Spiele eines Spieltags
+      // auf dem Sonntag (20:00 TR). Echte Anstoßzeiten (Fr/Sa/So/Mo) werden
+      // von der TFF erst ~2-3 Wochen vorher veröffentlicht. ESPN updated dann
+      // automatisch — die Edge Function verteilt korrekt auf Spieltag-Wochen.
+      const leagueCal = await fetchLeagueCalendar(tournament);
+      if (!leagueCal) {
+        console.warn(`⚠️ Kein Kalender für ${tournament}`);
+        continue;
+      }
+      const calendar = leagueCal.calendar;
+      const season = leagueCal.seasonYear || currentSeasonYear;
+
+      // Fetch ESPN events for a broader window: last 3 days to next 60 days
+      const startRange = new Date(now);
+      startRange.setDate(startRange.getDate() - 3);
+      const endRange = new Date(now);
+      endRange.setDate(endRange.getDate() + 60);
+      const dateStr = getDateStr(now);
+      // Extended range: go 3 days back and 60 days forward
+      const y1 = startRange.getFullYear();
+      const m1 = String(startRange.getMonth() + 1).padStart(2, "0");
+      const d1 = String(startRange.getDate()).padStart(2, "0");
+      const y2 = endRange.getFullYear();
+      const m2 = String(endRange.getMonth() + 1).padStart(2, "0");
+      const d2 = String(endRange.getDate()).padStart(2, "0");
+      const extendedDateStr = `${y1}${m1}${d1}-${y2}${m2}${d2}`;
+
+      const events = await fetchEspnEvents(tournament, extendedDateStr);
+      if (events.length === 0) {
+        console.log(`📭 Keine ESPN Events für ${tournament} im Fenster`);
+        continue;
+      }
+      console.log(`📥 ${events.length} ESPN Events für ${tournament}`);
+
+      // Parse to EspnMatch array
+      const espnMatches: (EspnMatch & { dateStr: string })[] = [];
+      for (const ev of events) {
+        const parsed = parseEspnEvent(ev);
+        if (parsed) {
+          espnMatches.push({ ...parsed, dateStr: parsed.date.toISOString() });
+        }
+      }
+
+      // Get existing DB matches for this tournament (by espn_id)
+      const { data: existingMatches } = await adminClient
+        .from("matches")
+        .select("id, espn_id, heim_team, gast_team, status, tore_heim, tore_gast, spielminute, heim_logo, gast_logo, venue")
+        .eq("tournament", tournament)
+        .eq("season", season)
+        .not("espn_id", "is", null);
+
+      const existingByEspnId = new Map<string, any>();
+      if (existingMatches) {
+        for (const m of existingMatches) {
+          if (m.espn_id) existingByEspnId.set(m.espn_id, m);
+        }
+      }
+
+      // Also get matches WITHOUT espn_id for name-based matching
+      const { data: unnamedMatches } = await adminClient
+        .from("matches")
+        .select("id, heim_team, gast_team, spieltag")
+        .eq("tournament", tournament)
+        .eq("season", season)
+        .is("espn_id", null);
+
+      // ─── Process each ESPN event: Create or Update ───
+      for (const em of espnMatches) {
+        stats[tournament].checked++;
+
+        // 1. Check by espn_id
+        const existing = em.espnId ? existingByEspnId.get(em.espnId) : null;
+
+        if (existing) {
+          // ── Existing match: Update scores (legacy behavior) ──
+          const nameUpdated = false;
+          const updatePayload: Record<string, unknown> = {
+            tore_heim: em.homeScore,
+            tore_gast: em.awayScore,
+            status: em.status,
+            spielminute: em.displayClock || null,
+          };
+          if (em.homeLogo && !existing.heim_logo) updatePayload.heim_logo = em.homeLogo;
+          if (em.awayLogo && !existing.gast_logo) updatePayload.gast_logo = em.awayLogo;
+          if (em.venue && !existing.venue) updatePayload.venue = em.venue;
+
+          const hasChanges = existing.status !== em.status
+            || existing.tore_heim !== em.homeScore
+            || existing.tore_gast !== em.awayScore
+            || (em.displayClock && existing.spielminute !== em.displayClock)
+            || (em.homeLogo && !existing.heim_logo)
+            || (em.awayLogo && !existing.gast_logo)
+            || (em.venue && !existing.venue);
+
+          if (hasChanges) {
+            const { error: ue } = await adminClient.from("matches").update(updatePayload).eq("id", existing.id);
+            if (!ue) {
+              scoreUpdates++;
+              stats[tournament].updated++;
+              stats[tournament].espn++;
+              const sc = `${em.homeScore}:${em.awayScore}`;
+              results.push({
+                match: `${em.homeTeam} vs ${em.awayTeam}`,
+                oldStatus: existing.status,
+                newStatus: em.status,
+                score: sc,
+                source: "espn",
+              });
+            }
+          }
+        } else {
+          // ── NEW match: Create fixture from ESPN data ──
+          // First check by name (in case it exists without espn_id)
+          let nameMatch = false;
+          if (unnamedMatches) {
+            const matchDay = spieltagFromDate(em.date.toISOString(), calendar);
+            for (const nm of unnamedMatches) {
+              if (nm.spieltag === matchDay &&
+                  cleanName(nm.heim_team) === cleanName(em.homeTeam) &&
+                  cleanName(nm.gast_team) === cleanName(em.awayTeam)) {
+                nameMatch = true;
+                // Update this match with espn_id and scores
+                const updatePayload: Record<string, unknown> = {
+                  espn_id: em.espnId,
+                  tore_heim: em.homeScore,
+                  tore_gast: em.awayScore,
+                  status: em.status,
+                  spielminute: em.displayClock || null,
+                };
+                if (em.homeLogo) updatePayload.heim_logo = em.homeLogo;
+                if (em.awayLogo) updatePayload.gast_logo = em.awayLogo;
+                if (em.venue) updatePayload.venue = em.venue;
+                await adminClient.from("matches").update(updatePayload).eq("id", nm.id);
+                scoreUpdates++;
+                stats[tournament].updated++;
+                stats[tournament].espn++;
+                results.push({
+                  match: `${em.homeTeam} vs ${em.awayTeam}`,
+                  oldStatus: "needs_espn_link",
+                  newStatus: em.status,
+                  score: `${em.homeScore}:${em.awayScore}`,
+                  source: "fixture",
+                });
+                break;
+              }
+            }
+          }
+
+          if (!nameMatch) {
+            // Truly new: Insert into DB
+            const spieltag = spieltagFromDate(em.date.toISOString(), calendar);
+            const { error: ie } = await adminClient.from("matches").insert({
+              spieltag,
+              heim_team: em.homeTeam,
+              gast_team: em.awayTeam,
+              anpfiff: em.date.toISOString(),
+              tore_heim: em.homeScore,
+              tore_gast: em.awayScore,
+              status: em.status,
+              tournament,
+              season,
+              spielminute: em.displayClock || null,
+              heim_logo: em.homeLogo || null,
+              gast_logo: em.awayLogo || null,
+              venue: em.venue || null,
+              espn_id: em.espnId || null,
+            });
+            if (!ie) {
+              fixtureCreations++;
+              stats[tournament].created++;
+              results.push({
+                match: `${em.homeTeam} vs ${em.awayTeam}`,
+                oldStatus: "new",
+                newStatus: em.status,
+                score: em.homeScore > 0 || em.awayScore > 0 ? `${em.homeScore}:${em.awayScore}` : undefined,
+                source: "fixture",
+              });
+            } else {
+              console.error(`❌ Insert fehlgeschlagen: ${em.homeTeam} vs ${em.awayTeam}: ${ie.message}`);
+            }
+          }
+        }
+      }
+    }
+
+    // ─── Phase 2: Time-based fallback for matches already in DB ───
+    const { data: dbMatches, error: fetchError } = await adminClient
       .from("matches").select("*")
       .or('status.in.(upcoming,live),and(status.eq.finished,tore_heim.is.null),and(status.eq.finished,anpfiff.gte.' + new Date(Date.now() - 5*60*60*1000).toISOString() + ')')
       .order("anpfiff", { ascending: true });
 
-    if (fetchError) return eresp({ error: fetchError.message }, 500);
+    if (fetchError) console.error("Fetch error:", fetchError.message);
 
-    let scoreUpdates = 0;
-    let bracketUpdates = 0;
-    const stats: Record<string, { checked: number; updated: number; espn: number; time: number }> = {};
-
-    if (matches && matches.length > 0) {
-      const matchList = matches as MatchRow[];
-      const uniqueDates = [...new Set(matchList.map(m => getDateStr(new Date(m.anpfiff))))];
-      const uniqueTournaments = [...new Set(matchList.map(m => m.tournament || "Süper Lig"))];
-      const espnCache = new Map<string, EspnMatch[]>();
-
-      for (const ds of uniqueDates) {
-        for (const t of uniqueTournaments) {
-          const ck = `${t}_${ds}`;
-          if (!espnCache.has(ck)) espnCache.set(ck, await fetchEspnScores(t, ds));
-        }
-      }
-
+    if (dbMatches && dbMatches.length > 0) {
+      const matchList = dbMatches as MatchRow[];
       for (const match of matchList) {
         const kickoff = new Date(match.anpfiff);
         const hours = (now.getTime() - kickoff.getTime()) / (1000 * 60 * 60);
-        const tourney = match.tournament || "Unbekannt";
-        stats[tourney] ??= { checked: 0, updated: 0, espn: 0, time: 0 };
-        stats[tourney].checked++;
-
-        const apiMatches = espnCache.get(`${tourney}_${getDateStr(kickoff)}`) || [];
-        
-        let e: EspnMatch | undefined;
-        
-        // 1. Try exact name match
-        e = apiMatches.find(am => cleanName(am.homeTeam) === cleanName(match.heim_team) && cleanName(am.awayTeam) === cleanName(match.gast_team));
-        
-        // 2. Fallback: Fuzzy time match (closest match within 12 hours)
-        // Only try fuzzy match for knockout phase matches (spieltag >= 4 for World Cup)
-        if (!e && match.spieltag >= 4) { 
-          let closestDiff = 12 * 60 * 60 * 1000;
-          for (const am of apiMatches) {
-            const diff = Math.abs(kickoff.getTime() - am.date.getTime());
-            if (diff <= closestDiff) {
-              closestDiff = diff;
-              e = am;
-            }
-          }
-        }
-
-        if (e) {
-          // If we found a match via fuzzy mapping, update the names if they differ and are real teams!
-          let nameUpdated = false;
-          const isRealTeam = (n: string) => !n.toLowerCase().includes("winner") && !n.toLowerCase().includes("loser") && !n.toLowerCase().includes("tba") && !n.toLowerCase().includes("tbd");
-          
-          let updatePayload: Record<string, unknown> = {
-            tore_heim: e.homeScore, 
-            tore_gast: e.awayScore, 
-            status: e.status,
-            spielminute: e.displayClock || null,
-            espn_id: e.espnId || null,
-          };
-          if (e.homeLogo) updatePayload.heim_logo = e.homeLogo;
-          if (e.awayLogo) updatePayload.gast_logo = e.awayLogo;
-          if (e.venue) updatePayload.venue = e.venue;
-
-          if (isRealTeam(e.homeTeam) && e.homeTeam !== match.heim_team) {
-            updatePayload.heim_team = e.homeTeam;
-            nameUpdated = true;
-          }
-          if (isRealTeam(e.awayTeam) && e.awayTeam !== match.gast_team) {
-            updatePayload.gast_team = e.awayTeam;
-            nameUpdated = true;
-          }
-
-          // Update wenn: Status/Score geändert ODER neue ESPN-Daten vorhanden (Logos/Venue)
-          const hasNewEspnData = !match.heim_logo && (e.homeLogo || e.awayLogo || e.venue || e.espnId);
-          if (hasNewEspnData || nameUpdated || match.status !== e.status || match.tore_heim !== e.homeScore || match.tore_gast !== e.awayScore || match.spielminute !== e.displayClock) {
-            const { error: ue } = await adminClient.from("matches").update(updatePayload).eq("id", match.id);
-            if (!ue) {
-              match.status = e.status;
-              match.tore_heim = e.homeScore;
-              match.tore_gast = e.awayScore;
-              match.spielminute = e.displayClock;
-              if (nameUpdated) {
-                bracketUpdates++;
-                match.heim_team = updatePayload.heim_team || match.heim_team;
-                match.gast_team = updatePayload.gast_team || match.gast_team;
-              }
-              scoreUpdates++; stats[tourney].updated++; stats[tourney].espn++;
-              const oldName = nameUpdated ? ` (war: ${match.heim_team} vs ${match.gast_team})` : '';
-              results.push({ match: `${match.heim_team} vs ${match.gast_team}${oldName}`, oldStatus: match.status, newStatus: e.status, score: `${e.homeScore}:${e.awayScore}`, source: "espn" });
-            }
-          }
-        }
 
         let ns: string | null = null;
-        // Time-based fallback NUR wenn kein ESPN-Match gefunden wurde ODER ESPN "upcoming" sagt
-        const hasEspnData = !!e;
+        // Time-based fallback: upcoming → live
         if (match.status === "upcoming" && hours >= -0.25) ns = "live";
-        // LIVE → FINISHED:
-        // (a) >3.5h → Spiel garantiert vorbei (inkl. Verlängerung+Elfmeter+30min Puffer)
-        // (b) >2.5h + kein ESPN-Daten
-        // (c) >2.5h + Scores vorhanden → Spiel gelaufen, ESPN hängt (z.B. STATUS_FULL_TIME ohne FINAL)
+        // live → finished (various heuristics)
         if (match.status === "live") {
           if (hours > 3.5) {
-            ns = "finished";
-          } else if (hours > 2.5 && !hasEspnData) {
             ns = "finished";
           } else if (hours > 2.5 && match.tore_heim !== null && match.tore_gast !== null) {
             ns = "finished";
@@ -333,64 +475,25 @@ Deno.serve(async (req: Request) => {
           const { error: ue } = await adminClient.from("matches").update({ status: ns }).eq("id", match.id);
           if (!ue) {
             match.status = ns;
-            scoreUpdates++; stats[tourney].updated++; stats[tourney].time++;
+            scoreUpdates++;
             results.push({ match: `${match.heim_team} vs ${match.gast_team}`, oldStatus: match.status, newStatus: ns, source: "time" });
           }
         }
       }
     }
 
-    const details = results.map(r => {
-      let icon = r.source === "espn" ? "🌐" : r.source === "time" ? "⏱️" : "🏆";
-      let sc = r.score ? ` [${r.score}]` : "";
-      return `${icon} ${r.match}: ${r.oldStatus} → ${r.newStatus}${sc}`;
-    });
-
     // ─── Phase 3: Smart Next-Sync Calculation ───
-    let nextSync = 1800; // default: 30 min (kein Spiel aktiv)
+    let nextSync = 1800; // default 30 min
     let nextSyncLabel = "💤 Kein Spiel aktiv";
 
-    if (matches && matches.length > 0) {
-      const matchList = matches as MatchRow[];
-      const liveMatch = matchList.find(m => m.status === "live");
-
+    if (dbMatches && dbMatches.length > 0) {
+      const liveMatch = dbMatches.find(m => m.status === "live");
       if (liveMatch) {
-        // ☕ Halbzeit-Erkennung via ESPN (spielminute = "HT") — Counter: max. 2× 8min
         const isHalftime = liveMatch.spielminute === "HT";
-        let halbzeitCount = 0;
-
         if (isHalftime) {
-          try {
-            const { data: hzData } = await adminClient.from('app_settings')
-              .select('value').eq('key', 'halbzeit_count').single();
-            if (hzData?.value) {
-              const [savedMatchId, savedCount] = hzData.value.split(':');
-              if (savedMatchId === liveMatch.id) {
-                halbzeitCount = parseInt(savedCount) || 0;
-              }
-            }
-          } catch (e) { /* ignore */ }
-
-          halbzeitCount++;
-          if (halbzeitCount >= 3) {
-            nextSync = 90;
-            nextSyncLabel = "⚽ Live (Halbzeit-Counter überschritten)";
-          } else {
-            nextSync = 480; // 8 Minuten
-            nextSyncLabel = `☕ Halbzeit — ESPN (${halbzeitCount}/2)`;
-            try {
-              await adminClient.from('app_settings').upsert({
-                key: 'halbzeit_count',
-                value: `${liveMatch.id}:${halbzeitCount}`
-              });
-            } catch (e) { /* ignore */ }
-          }
+          nextSync = 480;
+          nextSyncLabel = "☕ Halbzeit";
         } else {
-          // Nicht Halbzeit → Counter löschen
-          try {
-            await adminClient.from('app_settings').delete().eq('key', 'halbzeit_count');
-          } catch (e) { /* ignore */ }
-
           const kickoff = new Date(liveMatch.anpfiff);
           const elapsedMin = (now.getTime() - kickoff.getTime()) / 60000;
           if (elapsedMin >= 80 && elapsedMin <= 130) {
@@ -402,109 +505,64 @@ Deno.serve(async (req: Request) => {
           }
         }
       } else {
-        // Kein Live-Spiel → schaue wann nächstes Match anpfiff
-        const upcoming = matchList
+        const upcoming = dbMatches
           .filter(m => m.status === "upcoming")
           .sort((a, b) => new Date(a.anpfiff).getTime() - new Date(b.anpfiff).getTime());
-        
         if (upcoming.length > 0) {
           const nextMatch = upcoming[0];
           const nextKickoff = new Date(nextMatch.anpfiff);
           const minsUntil = (nextKickoff.getTime() - now.getTime()) / 60000;
           if (minsUntil > 0 && minsUntil < 30) {
-            nextSync = Math.max(90, Math.floor(minsUntil * 60)); // mindestens 90s
+            nextSync = Math.max(90, Math.floor(minsUntil * 60));
             nextSyncLabel = `⏰ Kickoff in ${Math.round(minsUntil)} Min`;
           } else if (minsUntil <= 0) {
             nextSync = 90;
-            nextSyncLabel = "⏰ Kickoff imminent — wechsle auf Live";
+            nextSyncLabel = "⏰ Kickoff imminent";
           } else {
             nextSync = Math.min(1800, Math.floor(minsUntil * 30));
             nextSyncLabel = `⏳ Nächster Kickoff in ${Math.round(minsUntil)} Min`;
-          }
-          
-          // ─── Phase 5: Push Notifications (Max once every 48 hours) ───
-          if (minsUntil > 0 && minsUntil <= 60) {
-            try {
-              const { data: pushSettings } = await adminClient
-                .from('app_settings')
-                .select('value')
-                .eq('key', 'last_push_time')
-                .single();
-              
-              const lastPushTime = pushSettings?.value ? parseInt(pushSettings.value) : 0;
-              const hoursSinceLastPush = (now.getTime() - lastPushTime) / (1000 * 60 * 60);
-              
-              if (hoursSinceLastPush >= 48) {
-                // Get all users who have subscriptions
-                const { data: subs } = await adminClient.from('push_subscriptions').select('user_id');
-                if (subs && subs.length > 0) {
-                  const uniqueUserIds = [...new Set(subs.map(s => s.user_id))];
-                  
-                  // Fire and forget push notification
-                  fetch(`${SUPABASE_URL}/functions/v1/send-push`, {
-                    method: 'POST',
-                    headers: {
-                      'Authorization': `Bearer ${SERVICE_ROLE_KEY}`,
-                      'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                      userIds: uniqueUserIds,
-                      title: '⚽ Spieltag startet gleich!',
-                      body: `${nextMatch.heim_team} vs ${nextMatch.gast_team} startet bald. Hast du schon getippt?`,
-                      url: '/'
-                    })
-                  }).catch(e => console.error('Error triggering send-push:', e));
-                  
-                  // Update last_push_time
-                  await adminClient.from('app_settings').upsert({
-                    key: 'last_push_time',
-                    value: now.getTime().toString()
-                  });
-                  
-                  console.log(`Push triggered for ${uniqueUserIds.length} users. Match: ${nextMatch.heim_team} vs ${nextMatch.gast_team}`);
-                }
-              }
-            } catch (err) {
-              console.error('Push Notification Trigger Error:', err);
-            }
           }
         }
       }
     }
 
-    // ─── Phase 4: Trigger Level Update ───
+    // ─── Phase 4: Heartbeat ───
+    try {
+      const serviceClient = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
+      await serviceClient.from('app_settings').upsert({ key: 'last_sync', value: new Date().toISOString() });
+      await serviceClient.from('app_settings').upsert({ key: 'sync_label', value: nextSyncLabel });
+    } catch (e) {
+      console.error("Heartbeat write failed:", e);
+    }
+
+    // ─── Phase 5: Trigger Level Update ───
     if (scoreUpdates > 0 || bracketUpdates > 0) {
       try {
-        // Trigger the update-user-levels edge function to recalculate XP and Levels
         await fetch(`${SUPABASE_URL}/functions/v1/update-user-levels`, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${SERVICE_ROLE_KEY}`,
-            'Content-Type': 'application/json'
-          }
+            'Content-Type': 'application/json',
+          },
         });
       } catch (e) {
         console.error("Failed to trigger update-user-levels", e);
       }
     }
 
-    // ─── Heartbeat: Always write last_sync + sync_label so clients know the sync is alive ───
-    // Nutze immer Service-Role-Client — unabhängig vom Aufrufer — damit der Heartbeat nie ausfällt
-    try {
-      const serviceClient = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
-      await serviceClient.from('app_settings').upsert({ key: 'last_sync', value: new Date().toISOString() })
-      await serviceClient.from('app_settings').upsert({ key: 'sync_label', value: nextSyncLabel })
-    } catch (e) {
-      console.error("Heartbeat write failed:", e)
-    }
+    const details = results.map(r => {
+      let icon = r.source === "espn" ? "🌐" : r.source === "time" ? "⏱️" : r.source === "fixture" ? "🆕" : "🏆";
+      let sc = r.score ? ` [${r.score}]` : "";
+      return `${icon} ${r.match}: ${r.oldStatus} → ${r.newStatus}${sc}`;
+    });
 
     return ok({
       success: true,
-      message: `${scoreUpdates} Scores + ${bracketUpdates} Bracket aktualisiert`,
+      message: `${scoreUpdates} Score-Updates, ${fixtureCreations} neue Fixtures`,
       scoreUpdates,
+      fixtureCreations,
       bracketUpdates,
-      checked: matches?.length || 0,
-      tournaments: stats,
+      stats,
       details,
       duration_ms: Date.now() - startTime,
       nextSyncSeconds: nextSync,
