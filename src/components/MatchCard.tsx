@@ -100,6 +100,7 @@ function Stepper({ value, onChange, disabled, onValidate }: { value: number; onC
           if (e.key === 'ArrowUp') { e.preventDefault(); tryChange(Math.min(20, value + 1)) }
           if (e.key === 'ArrowDown') { e.preventDefault(); tryChange(Math.max(0, value - 1)) }
         }}
+        onFocus={(e) => e.target.select()}
         onPointerDown={(e) => e.stopPropagation()}
         disabled={disabled}
         className="hidden lg:block w-12 h-10 rounded-xl bg-white/[0.04] border border-white/[0.06] text-center font-mono text-lg font-semibold text-white
@@ -131,12 +132,13 @@ function Stepper({ value, onChange, disabled, onValidate }: { value: number; onC
 interface MatchCardProps {
   match: Match
   onNavigate?: (matchId: string) => void
+  onTipSaved?: (matchId: string) => void
   className?: string
   trendStats?: { home: number; draw: number; away: number }
   readOnly?: boolean
 }
 
-export const MatchCard = memo(function MatchCard({ match, onNavigate, className = '', trendStats, readOnly = false }: MatchCardProps) {
+export const MatchCard = memo(function MatchCard({ match, onNavigate, onTipSaved, className = '', trendStats, readOnly = false }: MatchCardProps) {
   const eigenerTipp = useTipStore(s => s.meineTipps.find(t => t.match_id === match.id))
   const tippSpeichern = useTipStore(s => s.tippSpeichern)
   const tippsFreigeschaltet = useSettingsStore(s => s.tippsFreigeschaltet)
@@ -202,6 +204,7 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
         await tippSpeichern(match.id, tippHeim, tippGast, match.spieltag)
         saveState.markSaveDone()
         setTimeout(() => saveState.reset(), 2000)
+        onTipSaved?.(match.id)
       } catch {
         saveState.markSaveError()
       }

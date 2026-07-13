@@ -549,11 +549,22 @@ export function DashboardPage() {
                         {tourneyMatches.map((match: Match) => {
                           const isSelected = selectedMatchId === match.id
                           return (
-                            <div key={match.id} id={`match-card-${match.id}`} className="stagger-in">
+                            <div key={match.id} id={`match-card-${match.id}`} 
+                              className={`stagger-in${match.status === 'upcoming' ? ' match-card-open' : ''}`}
+                              data-match-id={match.id} data-spieltag={match.spieltag}>
                               <MatchCard
                                 match={match}
                                 trendStats={trendStatsMap[match.id]}
                                 onNavigate={handleMatchNavigate}
+                                onTipSaved={(savedMatchId) => {
+                                  // Auto-Advance: nächstes offenes Match fokussieren
+                                  const cards = document.querySelectorAll<HTMLElement>(`[data-spieltag="${aktuellerSpieltag}"].match-card-open`)
+                                  let found = false
+                                  for (const card of cards) {
+                                    if (found) { (card.querySelector('input[type="number"]') as HTMLElement)?.focus(); break }
+                                    if (card.dataset.matchId === savedMatchId) found = true
+                                  }
+                                }}
                                 className={isSelected && isDesktop ? 'ring-1 ring-primary/50 shadow-[0_0_20px_rgba(var(--primary-rgb),0.12)] bg-surface-container-high/70 scale-[1.01]' : ''}
                               />
                             </div>
