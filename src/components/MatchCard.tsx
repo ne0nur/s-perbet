@@ -321,19 +321,61 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
               {kannTippen ? (
                 <div className="flex items-center gap-1 shrink-0">
                   <Stepper value={tippHeim} onChange={setTippHeim} disabled={saveState.status === 'saving' || !isOnline} />
-                  <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 transition-all duration-200 ${
-                    !isOnline ? 'bg-red-500/10 border border-red-500/20 text-red-400' :
-                    saveState.status === 'saving' ? 'bg-primary-container/10 border border-primary-container/20' :
-                    saveState.status === 'saved' ? 'bg-green-500/20 border border-green-500/40 text-green-400' :
-                    saveState.status === 'kodraw' ? 'bg-amber-500/10 border border-amber-500/40 text-amber-400' :
-                    hasChanges ? 'bg-amber-500/5 border border-amber-500/30 text-amber-400' :
-                    'bg-green-500/10 border border-green-500/20 text-green-400/70'
-                  }`}>
-                    {!isOnline ? <WifiOff size={10} /> :
-                     saveState.status === 'saving' ? <span className="w-2.5 h-2.5 border-2 border-primary-fixed-dim border-t-transparent rounded-full animate-spin" /> :
-                     saveState.status === 'saved' ? <Check size={12} className="stroke-[3]" /> :
-                     saveState.status === 'kodraw' ? <AlertTriangle size={10} className="stroke-[2.5]" /> :
-                     <Check size={10} className="stroke-[2.5] opacity-60" />}
+                  {/* Desktop Status-Indikator (Mini + animiert) */}
+                  <div
+                    className={`relative flex-shrink-0 w-7 h-7 flex items-center justify-center rounded-full transition-all duration-200 ${
+                      !isOnline
+                        ? 'bg-red-500/10 border border-red-500/20 text-red-400'
+                        : saveState.status === 'saving'
+                          ? 'bg-primary-container/10 border border-primary-container/20 text-primary-fixed-dim'
+                          : saveState.status === 'saved'
+                            ? 'bg-green-500/20 border border-green-500/40 text-green-400'
+                            : saveState.status === 'kodraw'
+                              ? 'bg-amber-500/10 border border-amber-500/40 text-amber-400'
+                              : hasChanges
+                                ? saveState.status === 'dirty'
+                                  ? 'bg-amber-500/5 border border-amber-500/30 text-amber-400'
+                                  : 'bg-primary-container/10 border border-primary-container/20 text-primary-fixed-dim'
+                                : 'bg-green-500/10 border border-green-500/20 text-green-400/70'
+                    }`}
+                  >
+                    {/* Fortschrittsring — füllt sich in 1.5s (Desktop Mini) */}
+                    {hasChanges && saveState.status === 'dirty' && (
+                      <svg key={saveState.tick} className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 28 28">
+                        <circle
+                          cx="14" cy="14" r="11"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2.5"
+                          strokeLinecap="round"
+                          strokeDasharray={2 * Math.PI * 11}
+                          className="text-amber-400 animate-save-ring"
+                        />
+                      </svg>
+                    )}
+
+                    <AnimatePresence mode="wait">
+                      {!isOnline ? (
+                        <motion.span key="off" initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }} transition={{ duration: 0.15 }}>
+                          <WifiOff size={11} />
+                        </motion.span>
+                      ) : saveState.status === 'saving' ? (
+                        <motion.div key="saving" initial={{ opacity: 0, rotate: -90 }} animate={{ opacity: 1, rotate: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }}
+                          className="w-3 h-3 border-2 border-primary-fixed-dim border-t-transparent rounded-full animate-spin" />
+                      ) : saveState.status === 'saved' ? (
+                        <motion.span key="saved" initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0, opacity: 0 }} transition={{ type: 'spring', stiffness: 400, damping: 20 }}>
+                          <Check size={13} className="stroke-[3]" />
+                        </motion.span>
+                      ) : saveState.status === 'kodraw' ? (
+                        <motion.span key="kodraw" initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.8, opacity: 0 }} transition={{ duration: 0.15 }}>
+                          <AlertTriangle size={11} className="stroke-[2.5]" />
+                        </motion.span>
+                      ) : (
+                        <motion.span key="idle" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.1 }} className="opacity-60">
+                          <Check size={11} className="stroke-[2.5]" />
+                        </motion.span>
+                      )}
+                    </AnimatePresence>
                   </div>
                   <Stepper value={tippGast} onChange={setTippGast} disabled={saveState.status === 'saving' || !isOnline} />
                 </div>
