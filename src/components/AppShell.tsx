@@ -503,12 +503,11 @@ export function AppShell() {
         </main>
       </div>
 
-      {/* Desktop Floating Dock (hidden on mobile) — REMOVED: Nav is in header */}
-            {/* Mobile Bottom Nav */}
+      {/* Mobile Bottom Nav */}
             <div className="md:hidden">
               <BottomNav />
             </div>
-      <ToastContainer />
+            <ToastContainer />
 
       {showOnboarding && (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-4 pt-[calc(1rem+env(safe-area-inset-top,0px))] pb-[calc(1rem+env(safe-area-inset-bottom,0px))]">
