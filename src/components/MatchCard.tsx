@@ -271,10 +271,12 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, onTipSaved
                     </span>
                   )}
                 </div>
-                {match.venue && (
+                {match.venue ? (
                   <span className="text-[10px] font-mono text-white/15 truncate max-w-[160px]" title={match.venue}>
                     {match.venue}
                   </span>
+                ) : (
+                  <span className="text-[10px] font-mono text-white/0 select-none">_</span>
                 )}
 
               </div>
@@ -299,19 +301,23 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, onTipSaved
                     <div className="text-[9px] text-slate-500 font-mono leading-none -mt-0.5">{eigenerTipp.tipp_heim}:{eigenerTipp.tipp_gast}</div>
                   )}
                 </div>
-                {/* Trend-Bar */}
-                {trendStats && (trendStats.home > 0 || trendStats.draw > 0 || trendStats.away > 0) && (
-                  <div className="flex items-center gap-1.5 w-full max-w-[100px]">
-                    <div className="flex h-[2px] rounded-full overflow-hidden bg-white/5 flex-1">
-                      <div className="h-full bg-blue-400/60" style={{ width: `${(trendStats.home / (trendStats.home + trendStats.draw + trendStats.away)) * 100}%` }} />
-                      <div className="h-full bg-white/20" style={{ width: `${(trendStats.draw / (trendStats.home + trendStats.draw + trendStats.away)) * 100}%` }} />
-                      <div className="h-full bg-rose-400/60" style={{ width: `${(trendStats.away / (trendStats.home + trendStats.draw + trendStats.away)) * 100}%` }} />
-                    </div>
-                    <span className="text-[10px] font-mono text-white/30">
-                      {Math.round((trendStats.home / (trendStats.home + trendStats.draw + trendStats.away)) * 100)}%
-                    </span>
-                  </div>
-                )}
+                {/* Trend-Bar — immer gleiche Höhe, auch wenn keine Daten */}
+                <div className="flex items-center gap-1.5 w-full max-w-[100px] min-h-[16px]">
+                  {trendStats && (trendStats.home > 0 || trendStats.draw > 0 || trendStats.away > 0) ? (
+                    <>
+                      <div className="flex h-[2px] rounded-full overflow-hidden bg-white/5 flex-1">
+                        <div className="h-full bg-blue-400/60" style={{ width: `${(trendStats.home / (trendStats.home + trendStats.draw + trendStats.away)) * 100}%` }} />
+                        <div className="h-full bg-white/20" style={{ width: `${(trendStats.draw / (trendStats.home + trendStats.draw + trendStats.away)) * 100}%` }} />
+                        <div className="h-full bg-rose-400/60" style={{ width: `${(trendStats.away / (trendStats.home + trendStats.draw + trendStats.away)) * 100}%` }} />
+                      </div>
+                      <span className="text-[10px] font-mono text-white/30">
+                        {Math.round((trendStats.home / (trendStats.home + trendStats.draw + trendStats.away)) * 100)}%
+                      </span>
+                    </>
+                  ) : (
+                    <span className="text-[10px] font-mono text-white/5">—</span>
+                  )}
+                </div>
               </div>
 
               {/* Gast */}
