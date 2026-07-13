@@ -2,7 +2,6 @@ import { useState, useEffect, useMemo } from 'react'
 import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { BottomNav } from './BottomNav'
 import ColorBends from './ui/ColorBends'
-import Dock, { type DockItemData } from './ui/Dock'
 import { ToastContainer } from './ToastContainer'
 import { useAuthStore } from '../stores/authStore'
 import { useMatchStore } from '../stores/matchStore'
@@ -344,20 +343,12 @@ export function AppShell() {
   const tabName = tabNames[location.pathname] || ''
 
   const sidebarTabs = [
-    { to: '/dashboard', icon: HoverTrophyIcon,  label: t('games') },
-    { to: '/tabelle',   icon: Table2,           label: t('table') },
-    { to: '/global',    icon: HoverChartBarIcon, label: t('global') },
-    { to: '/league',    icon: HoverUsersIcon,   label: t('league') },
-    { to: '/profile',   icon: HoverUserIcon,    label: t('profile') },
-  ]
-
-  const dockItems: DockItemData[] = [
-    { icon: <HoverTrophyIcon size={22} />,   label: t('games'),   onClick: () => navigate('/dashboard'), active: location.pathname === '/dashboard' },
-    { icon: <Table2 size={22} />,            label: t('table'),   onClick: () => navigate('/tabelle'),   active: location.pathname === '/tabelle' },
-    { icon: <HoverGlobeIcon size={22} />,    label: t('global'),  onClick: () => navigate('/global'),    active: location.pathname === '/global' },
-    { icon: <HoverUsersIcon size={22} />,    label: t('league'),  onClick: () => navigate('/league'),    active: location.pathname === '/league' },
-    { icon: <HoverUserIcon size={22} />,     label: t('profile'), onClick: () => navigate('/profile'),   active: location.pathname === '/profile' },
-  ]
+      { to: '/dashboard', icon: HoverTrophyIcon,  label: t('games') },
+      { to: '/tabelle',   icon: Table2,           label: t('table') },
+      { to: '/global',    icon: HoverChartBarIcon, label: t('global') },
+      { to: '/league',    icon: HoverUsersIcon,   label: t('league') },
+      { to: '/profile',   icon: HoverUserIcon,    label: t('profile') },
+    ]
 
   return (
     <div className="h-[100dvh] w-full bg-background flex flex-col overflow-hidden select-none" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
@@ -512,17 +503,11 @@ export function AppShell() {
         </main>
       </div>
 
-      {/* Desktop Floating Dock (hidden on mobile) */}
-      <div className="hidden md:block fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
-        <Dock
-          items={dockItems}
-          magnification={68}
-          distance={180}
-          baseItemSize={48}
-        />
-      </div>
-
-      <BottomNav />
+      {/* Desktop Floating Dock (hidden on mobile) — REMOVED: Nav is in header */}
+            {/* Mobile Bottom Nav */}
+            <div className="md:hidden">
+              <BottomNav />
+            </div>
       <ToastContainer />
 
       {showOnboarding && (
