@@ -276,9 +276,9 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
 
             {/* ───────── Desktop Horizontal-Layout (lg+) — alles in EINER Zeile ───────── */}
             <div className="hidden lg:flex flex-col w-full">
-            <div className="flex items-center gap-3 w-full">
+            <div className="flex items-stretch gap-3 w-full min-h-[44px]">
               {/* Datum Uhrzeit + Stadion */}
-              <div className="flex flex-col items-start shrink-0 min-w-0 leading-tight">
+              <div className="flex flex-col items-start justify-center shrink-0 min-w-0 leading-tight">
                 <div className="flex items-center gap-1.5">
                   <span className="text-sm font-mono text-slate-300 font-semibold uppercase tracking-wider whitespace-nowrap">
                     {formatDatum(match.anpfiff)}
@@ -306,7 +306,7 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
               </div>
 
               {/* Ergebnis + Trend-Bar */}
-              <div className="flex flex-col items-center gap-0.5 shrink-0">
+              <div className="flex flex-col items-center justify-center gap-0.5 shrink-0">
                 <div className="text-center min-w-[64px] cursor-pointer" onClick={() => onNavigate?.(match.id)}>
                   {(istVorbei || istLive) && match.tore_heim != null && match.tore_gast != null ? (
                     <div className="font-mono text-xl font-bold text-white tracking-wider">{match.tore_heim}:{match.tore_gast}</div>
