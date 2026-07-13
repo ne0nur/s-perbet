@@ -545,7 +545,7 @@ export function DashboardPage() {
                         {tournamentName}
                       </h2>
                       {/* Desktop: 1 Spiel pro Reihe (Liste), Mobile: Grid */}
-                      <div className="flex flex-col lg:gap-3 gap-4 xl:gap-4 w-full lg:max-w-none">
+                      <div className="flex flex-col lg:gap-2 gap-4 w-full lg:max-w-4xl lg:mx-auto">
                         {tourneyMatches.map((match: Match) => {
                           const isSelected = selectedMatchId === match.id
                           return (

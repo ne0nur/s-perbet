@@ -98,7 +98,7 @@ function Stepper({ value, onChange, disabled, onValidate }: { value: number; onC
         }}
         onPointerDown={(e) => e.stopPropagation()}
         disabled={disabled}
-        className="hidden lg:flex w-8 h-7 rounded bg-surface-container-highest border border-surface-container-high text-center font-mono text-xs font-bold text-on-surface
+        className="hidden lg:flex w-10 h-9 rounded bg-surface-container-highest border border-surface-container-high text-center font-mono text-sm font-bold text-on-surface
           focus:outline-none focus:border-primary-container/60
           disabled:opacity-30 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
       />
@@ -128,7 +128,7 @@ function Stepper({ value, onChange, disabled, onValidate }: { value: number; onC
           onClick={(e) => { e.stopPropagation(); tryChange(Math.min(20, value + 1)); }}
           disabled={disabled || value === 20}
           whileTap={{ scale: 0.85 }}
-          className="w-5 h-[13px] rounded-sm bg-surface-container-higher border border-surface-container-high flex items-center justify-center text-[7px] text-on-surface-variant
+          className="w-6 h-4 rounded-sm bg-surface-container-higher border border-surface-container-high flex items-center justify-center text-[8px] text-on-surface-variant
             hover:border-primary-container/40 hover:text-on-surface disabled:opacity-30 transition-all cursor-pointer"
         >
           ▲
@@ -139,7 +139,7 @@ function Stepper({ value, onChange, disabled, onValidate }: { value: number; onC
           onClick={(e) => { e.stopPropagation(); tryChange(Math.max(0, value - 1)); }}
           disabled={disabled || value === 0}
           whileTap={{ scale: 0.85 }}
-          className="w-5 h-[13px] rounded-sm bg-surface-container-higher border border-surface-container-high flex items-center justify-center text-[7px] text-on-surface-variant
+          className="w-6 h-4 rounded-sm bg-surface-container-higher border border-surface-container-high flex items-center justify-center text-[8px] text-on-surface-variant
             hover:border-primary-container/40 hover:text-on-surface disabled:opacity-30 transition-all cursor-pointer"
         >
           ▼
@@ -259,7 +259,7 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
     <motion.div 
       whileHover={{ y: -2, scale: 1.01 }}
       transition={{ type: 'spring', stiffness: 350, damping: 25 }}
-      className={`glass-card p-3 lg:px-3 lg:py-1.5 transition-all duration-200 hover:border-white/15 ${
+      className={`glass-card p-3 lg:px-4 lg:py-2 transition-all duration-200 hover:border-white/15 ${
         istVorbei && punkte !== null 
           ? randFarbe(punkte) 
           : istLive
@@ -276,56 +276,56 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
 
             {/* ───────── Desktop Horizontal-Layout (lg+) — alles in EINER Zeile ───────── */}
             <div className="hidden lg:flex flex-col w-full">
-            <div className="flex items-center gap-2 w-full">
-              {/* Datum Uhrzeit + Stadion — kompakt */}
+            <div className="flex items-center gap-3 w-full">
+              {/* Datum Uhrzeit + Stadion */}
               <div className="flex flex-col items-start shrink-0 min-w-0 leading-tight">
                 <div className="flex items-center gap-1.5">
-                  <span className="text-[11px] font-mono text-slate-300 font-semibold uppercase tracking-wider whitespace-nowrap">
+                  <span className="text-sm font-mono text-slate-300 font-semibold uppercase tracking-wider whitespace-nowrap">
                     {formatDatum(match.anpfiff)}
                   </span>
-                  <span className="text-[9px] font-mono text-slate-400">{formatUhrzeit(match.anpfiff)}</span>
+                  <span className="text-xs font-mono text-slate-400">{formatUhrzeit(match.anpfiff)}</span>
                   {istLive && (
-                    <span className="flex items-center gap-1 text-red-400 text-[10px] font-medium whitespace-nowrap">
+                    <span className="flex items-center gap-1 text-red-400 text-xs font-medium whitespace-nowrap">
                       <span className="live-dot" /> LIVE{match.spielminute}
                     </span>
                   )}
                 </div>
                 {match.venue && (
-                  <span className="text-[8px] font-mono text-slate-500/60 truncate max-w-[120px]" title={match.venue}>
+                  <span className="text-[10px] font-mono text-slate-500/60 truncate max-w-[160px]" title={match.venue}>
                     {match.venue}
                   </span>
                 )}
               </div>
 
               {/* Heim */}
-              <div className="flex-1 flex items-center justify-end gap-1.5 min-w-0">
-                <span className="text-xs font-medium text-white truncate text-right">{match.heim_team}</span>
+              <div className="flex-1 flex items-center justify-end gap-2 min-w-0">
+                <span className="text-sm font-medium text-white truncate text-right">{match.heim_team}</span>
                 <img src={match.heim_logo || getTeamLogo(match.heim_team)} alt=""
-                  className="w-6 h-6 object-contain opacity-90 shrink-0"
+                  className="w-7 h-7 object-contain opacity-90 shrink-0"
                   onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
               </div>
 
               {/* Ergebnis + Trend-Bar */}
               <div className="flex flex-col items-center gap-0.5 shrink-0">
-                <div className="text-center min-w-[60px] cursor-pointer" onClick={() => onNavigate?.(match.id)}>
+                <div className="text-center min-w-[64px] cursor-pointer" onClick={() => onNavigate?.(match.id)}>
                   {(istVorbei || istLive) && match.tore_heim != null && match.tore_gast != null ? (
-                    <div className="font-mono text-lg font-bold text-white tracking-wider">{match.tore_heim}:{match.tore_gast}</div>
+                    <div className="font-mono text-xl font-bold text-white tracking-wider">{match.tore_heim}:{match.tore_gast}</div>
                   ) : (
-                    <div className="font-mono text-lg font-bold text-slate-500 tracking-wider">-:-</div>
+                    <div className="font-mono text-xl font-bold text-slate-500 tracking-wider">-:-</div>
                   )}
                   {eigenerTipp && !istUpcoming && (
-                    <div className="text-[8px] text-slate-500 font-mono leading-none -mt-0.5">{eigenerTipp.tipp_heim}:{eigenerTipp.tipp_gast}</div>
+                    <div className="text-[9px] text-slate-500 font-mono leading-none -mt-0.5">{eigenerTipp.tipp_heim}:{eigenerTipp.tipp_gast}</div>
                   )}
                 </div>
-                {/* Trend-Bar (Schwarmintelligenz) — kompakt unter Score */}
+                {/* Trend-Bar */}
                 {trendStats && (trendStats.home > 0 || trendStats.draw > 0 || trendStats.away > 0) && (
-                  <div className="flex items-center gap-1 w-full max-w-[80px]">
-                    <div className="flex h-[2px] rounded-full overflow-hidden bg-surface-container-high flex-1">
+                  <div className="flex items-center gap-1 w-full max-w-[90px]">
+                    <div className="flex h-[3px] rounded-full overflow-hidden bg-surface-container-high flex-1">
                       <div className="h-full bg-blue-500/80" style={{ width: `${(trendStats.home / (trendStats.home + trendStats.draw + trendStats.away)) * 100}%` }} />
                       <div className="h-full bg-slate-400/80" style={{ width: `${(trendStats.draw / (trendStats.home + trendStats.draw + trendStats.away)) * 100}%` }} />
                       <div className="h-full bg-rose-500/80" style={{ width: `${(trendStats.away / (trendStats.home + trendStats.draw + trendStats.away)) * 100}%` }} />
                     </div>
-                    <span className="text-[7px] font-mono text-slate-500/60 whitespace-nowrap">
+                    <span className="text-[9px] font-mono text-slate-500/60 whitespace-nowrap">
                       {Math.round((trendStats.home / (trendStats.home + trendStats.draw + trendStats.away)) * 100)}%
                     </span>
                   </div>
@@ -333,11 +333,11 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
               </div>
 
               {/* Gast */}
-              <div className="flex-1 flex items-center gap-1.5 min-w-0">
+              <div className="flex-1 flex items-center gap-2 min-w-0">
                 <img src={getTeamLogo(match.gast_team)} alt=""
-                  className="w-6 h-6 object-contain opacity-90 shrink-0"
+                  className="w-7 h-7 object-contain opacity-90 shrink-0"
                   onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
-                <span className="text-xs font-medium text-white truncate text-left">{match.gast_team}</span>
+                <span className="text-sm font-medium text-white truncate text-left">{match.gast_team}</span>
               </div>
 
               {/* Tipp */}
@@ -346,7 +346,7 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
                   <Stepper value={tippHeim} onChange={setTippHeim} disabled={saveState.status === 'saving' || !isOnline} />
                   {/* Desktop Status-Indikator (Mini + animiert) */}
                   <div
-                    className={`relative flex-shrink-0 w-7 h-7 flex items-center justify-center rounded-full transition-all duration-200 ${
+                    className={`relative flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full transition-all duration-200 ${
                       !isOnline
                         ? 'bg-red-500/10 border border-red-500/20 text-red-400'
                         : saveState.status === 'saving'
@@ -364,9 +364,9 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
                   >
                     {/* Fortschrittsring — füllt sich in 1.5s (Desktop Mini) */}
                     {hasChanges && saveState.status === 'dirty' && (
-                      <svg key={saveState.tick} className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 28 28">
+                      <svg key={saveState.tick} className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 32 32">
                         <circle
-                          cx="14" cy="14" r="11"
+                          cx="16" cy="16" r="13"
                           fill="none"
                           stroke="currentColor"
                           strokeWidth="2.5"
@@ -403,13 +403,13 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
                   <Stepper value={tippGast} onChange={setTippGast} disabled={saveState.status === 'saving' || !isOnline} />
                 </div>
               ) : (
-                <div className="shrink-0 min-w-[90px] flex items-center justify-end">
+                <div className="shrink-0 min-w-[100px] flex items-center justify-end">
                   {readOnly && eigenerTipp ? (
-                    <div className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-surface-container/30">
-                      <Lock size={8} className="text-on-surface-variant/30" />
-                      <span className="text-[10px] text-on-surface-variant/60 font-mono">{eigenerTipp.tipp_heim}:{eigenerTipp.tipp_gast}</span>
+                    <div className="flex items-center gap-1.5 px-2 py-1 rounded bg-surface-container/30">
+                      <Lock size={10} className="text-on-surface-variant/30" />
+                      <span className="text-xs text-on-surface-variant/60 font-mono">{eigenerTipp.tipp_heim}:{eigenerTipp.tipp_gast}</span>
                       {istLive && livePunkte !== null && (
-                        <span className={`px-1 py-0.5 rounded-full text-[8px] font-mono font-black border ${
+                        <span className={`px-1.5 py-0.5 rounded-full text-[9px] font-mono font-black border ${
                           livePunkte === 4 ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30' :
                           livePunkte === 3 ? 'text-amber-400 bg-amber-500/10 border-amber-500/30' :
                           'text-slate-400 bg-slate-500/10 border-slate-500/30'
@@ -426,7 +426,7 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
 
               {/* Punkte-Badge inline statt absolut */}
               {istVorbei && punkte !== null && (
-                <span className={`shrink-0 px-2 py-0.5 rounded-full text-[10px] font-bold border ${punkteFarbe(punkte)}`}>
+                <span className={`shrink-0 px-2.5 py-0.5 rounded-full text-xs font-bold border ${punkteFarbe(punkte)}`}>
                   {punkte > 0 ? `+${punkte}P` : '0P'}
                 </span>
               )}
