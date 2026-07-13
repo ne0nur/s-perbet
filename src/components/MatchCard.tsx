@@ -86,7 +86,7 @@ function Stepper({ value, onChange, disabled, onValidate }: { value: number; onC
         </AnimatePresence>
       </div>
 
-      {/* Desktop: input field statt animiertem Number */}
+      {/* Desktop: clean number input — kein ▲/▼, direkt tippen oder Pfeiltasten */}
       <input
         type="number"
         min="0"
@@ -96,10 +96,14 @@ function Stepper({ value, onChange, disabled, onValidate }: { value: number; onC
           const v = parseInt(e.target.value, 10)
           if (!isNaN(v) && v >= 0 && v <= 20) onChange(v)
         }}
+        onKeyDown={(e) => {
+          if (e.key === 'ArrowUp') { e.preventDefault(); tryChange(Math.min(20, value + 1)) }
+          if (e.key === 'ArrowDown') { e.preventDefault(); tryChange(Math.max(0, value - 1)) }
+        }}
         onPointerDown={(e) => e.stopPropagation()}
         disabled={disabled}
-        className="hidden lg:flex w-10 h-9 rounded bg-surface-container-highest border border-surface-container-high text-center font-mono text-sm font-bold text-on-surface
-          focus:outline-none focus:border-primary-container/60
+        className="hidden lg:block w-12 h-10 rounded-xl bg-white/[0.04] border border-white/[0.06] text-center font-mono text-lg font-semibold text-white
+          focus:outline-none focus:border-white/20 focus:bg-white/[0.06] transition-all duration-200
           disabled:opacity-30 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
       />
 
@@ -119,32 +123,6 @@ function Stepper({ value, onChange, disabled, onValidate }: { value: number; onC
       >
         <Plus size={15} />
       </motion.button>
-
-      {/* Desktop +/- Buttons (schmaler) */}
-      <div className="hidden lg:flex flex-col gap-px">
-        <motion.button
-          type="button"
-          onPointerDown={(e) => e.stopPropagation()}
-          onClick={(e) => { e.stopPropagation(); tryChange(Math.min(20, value + 1)); }}
-          disabled={disabled || value === 20}
-          whileTap={{ scale: 0.85 }}
-          className="w-6 h-4 rounded-sm bg-surface-container-higher border border-surface-container-high flex items-center justify-center text-[8px] text-on-surface-variant
-            hover:border-primary-container/40 hover:text-on-surface disabled:opacity-30 transition-all cursor-pointer"
-        >
-          ▲
-        </motion.button>
-        <motion.button
-          type="button"
-          onPointerDown={(e) => e.stopPropagation()}
-          onClick={(e) => { e.stopPropagation(); tryChange(Math.max(0, value - 1)); }}
-          disabled={disabled || value === 0}
-          whileTap={{ scale: 0.85 }}
-          className="w-6 h-4 rounded-sm bg-surface-container-higher border border-surface-container-high flex items-center justify-center text-[8px] text-on-surface-variant
-            hover:border-primary-container/40 hover:text-on-surface disabled:opacity-30 transition-all cursor-pointer"
-        >
-          ▼
-        </motion.button>
-      </div>
     </div>
   )
 }
@@ -259,11 +237,11 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
     <motion.div 
       whileHover={{ y: -2, scale: 1.01 }}
       transition={{ type: 'spring', stiffness: 350, damping: 25 }}
-      className={`glass-card p-3 lg:px-4 lg:py-2 transition-all duration-200 hover:border-white/15 ${
+      className={`p-3 lg:px-4 lg:py-2.5 rounded-2xl border border-white/[0.03] bg-gradient-to-b from-white/[0.03] to-white/[0.01] transition-all duration-300 hover:bg-white/[0.05] ${
         istVorbei && punkte !== null 
-          ? randFarbe(punkte) 
+          ? punkte === 4 ? 'ring-[0.5px] ring-emerald-500/30' : ''
           : istLive
-            ? liveGlowKlasse() 
+            ? 'ring-[0.5px] ring-red-500/20'
             : ''
       } ${className}`}
     >
@@ -280,10 +258,10 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
               {/* Datum Uhrzeit + Stadion */}
               <div className="flex flex-col items-start justify-center shrink-0 min-w-0 leading-tight">
                 <div className="flex items-center gap-1.5">
-                  <span className="text-sm font-mono text-slate-300 font-semibold uppercase tracking-wider whitespace-nowrap">
+                  <span className="text-sm font-mono text-white/60 font-semibold uppercase tracking-wider whitespace-nowrap">
                     {formatDatum(match.anpfiff)}
                   </span>
-                  <span className="text-xs font-mono text-slate-400">{formatUhrzeit(match.anpfiff)}</span>
+                  <span className="text-xs font-mono text-white/30">{formatUhrzeit(match.anpfiff)}</span>
                   {istLive && (
                     <span className="flex items-center gap-1 text-red-400 text-xs font-medium whitespace-nowrap">
                       <span className="live-dot" /> LIVE{match.spielminute}
@@ -291,15 +269,16 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
                   )}
                 </div>
                 {match.venue && (
-                  <span className="text-[10px] font-mono text-slate-500/60 truncate max-w-[160px]" title={match.venue}>
+                  <span className="text-[10px] font-mono text-white/15 truncate max-w-[160px]" title={match.venue}>
                     {match.venue}
                   </span>
                 )}
+
               </div>
 
               {/* Heim */}
               <div className="flex-1 flex items-center justify-end gap-2 min-w-0">
-                <span className="text-sm font-medium text-white truncate text-right">{match.heim_team}</span>
+                <span className="text-sm font-medium text-white/80 truncate text-right">{match.heim_team}</span>
                 <img src={match.heim_logo || getTeamLogo(match.heim_team)} alt=""
                   className="w-7 h-7 object-contain opacity-90 shrink-0"
                   onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
@@ -319,13 +298,13 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
                 </div>
                 {/* Trend-Bar */}
                 {trendStats && (trendStats.home > 0 || trendStats.draw > 0 || trendStats.away > 0) && (
-                  <div className="flex items-center gap-1 w-full max-w-[90px]">
-                    <div className="flex h-[3px] rounded-full overflow-hidden bg-surface-container-high flex-1">
-                      <div className="h-full bg-blue-500/80" style={{ width: `${(trendStats.home / (trendStats.home + trendStats.draw + trendStats.away)) * 100}%` }} />
-                      <div className="h-full bg-slate-400/80" style={{ width: `${(trendStats.draw / (trendStats.home + trendStats.draw + trendStats.away)) * 100}%` }} />
-                      <div className="h-full bg-rose-500/80" style={{ width: `${(trendStats.away / (trendStats.home + trendStats.draw + trendStats.away)) * 100}%` }} />
+                  <div className="flex items-center gap-1.5 w-full max-w-[100px]">
+                    <div className="flex h-[2px] rounded-full overflow-hidden bg-white/5 flex-1">
+                      <div className="h-full bg-blue-400/60" style={{ width: `${(trendStats.home / (trendStats.home + trendStats.draw + trendStats.away)) * 100}%` }} />
+                      <div className="h-full bg-white/20" style={{ width: `${(trendStats.draw / (trendStats.home + trendStats.draw + trendStats.away)) * 100}%` }} />
+                      <div className="h-full bg-rose-400/60" style={{ width: `${(trendStats.away / (trendStats.home + trendStats.draw + trendStats.away)) * 100}%` }} />
                     </div>
-                    <span className="text-[9px] font-mono text-slate-500/60 whitespace-nowrap">
+                    <span className="text-[10px] font-mono text-white/30">
                       {Math.round((trendStats.home / (trendStats.home + trendStats.draw + trendStats.away)) * 100)}%
                     </span>
                   </div>
@@ -337,65 +316,41 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
                 <img src={getTeamLogo(match.gast_team)} alt=""
                   className="w-7 h-7 object-contain opacity-90 shrink-0"
                   onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
-                <span className="text-sm font-medium text-white truncate text-left">{match.gast_team}</span>
+                <span className="text-sm font-medium text-white/80 truncate text-left">{match.gast_team}</span>
               </div>
 
               {/* Tipp */}
               {kannTippen ? (
-                <div className="flex items-center gap-1 shrink-0">
+                <div className="flex items-center gap-2 shrink-0">
                   <Stepper value={tippHeim} onChange={setTippHeim} disabled={saveState.status === 'saving' || !isOnline} />
-                  {/* Desktop Status-Indikator (Mini + animiert) */}
-                  <div
-                    className={`relative flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full transition-all duration-200 ${
-                      !isOnline
-                        ? 'bg-red-500/10 border border-red-500/20 text-red-400'
-                        : saveState.status === 'saving'
-                          ? 'bg-primary-container/10 border border-primary-container/20 text-primary-fixed-dim'
-                          : saveState.status === 'saved'
-                            ? 'bg-green-500/20 border border-green-500/40 text-green-400'
-                            : saveState.status === 'kodraw'
-                              ? 'bg-amber-500/10 border border-amber-500/40 text-amber-400'
-                              : hasChanges
-                                ? saveState.status === 'dirty'
-                                  ? 'bg-amber-500/5 border border-amber-500/30 text-amber-400'
-                                  : 'bg-primary-container/10 border border-primary-container/20 text-primary-fixed-dim'
-                                : 'bg-green-500/10 border border-green-500/20 text-green-400/70'
-                    }`}
-                  >
-                    {/* Fortschrittsring — füllt sich in 1.5s (Desktop Mini) */}
+                  {/* Desktop Status — clean, kein Border, kein Background */}
+                  <div className="relative w-6 h-6 flex items-center justify-center shrink-0">
                     {hasChanges && saveState.status === 'dirty' && (
-                      <svg key={saveState.tick} className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 32 32">
-                        <circle
-                          cx="16" cy="16" r="13"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2.5"
-                          strokeLinecap="round"
-                          strokeDasharray={2 * Math.PI * 11}
-                          className="text-amber-400 animate-save-ring"
-                        />
+                      <svg key={saveState.tick} className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"
+                          strokeDasharray={2 * Math.PI * 9}
+                          className="text-amber-400/70 animate-save-ring" />
                       </svg>
                     )}
-
                     <AnimatePresence mode="wait">
                       {!isOnline ? (
                         <motion.span key="off" initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }} transition={{ duration: 0.15 }}>
-                          <WifiOff size={11} />
+                          <WifiOff size={12} className="text-red-400/70" />
                         </motion.span>
                       ) : saveState.status === 'saving' ? (
-                        <motion.div key="saving" initial={{ opacity: 0, rotate: -90 }} animate={{ opacity: 1, rotate: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }}
-                          className="w-3 h-3 border-2 border-primary-fixed-dim border-t-transparent rounded-full animate-spin" />
+                        <motion.div key="saving" initial={{ opacity: 0, rotate: -90 }} animate={{ opacity: 1, rotate: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.12 }}
+                          className="w-3 h-3 border-[1.5px] border-primary-fixed-dim/60 border-t-transparent rounded-full animate-spin" />
                       ) : saveState.status === 'saved' ? (
                         <motion.span key="saved" initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0, opacity: 0 }} transition={{ type: 'spring', stiffness: 400, damping: 20 }}>
-                          <Check size={13} className="stroke-[3]" />
+                          <Check size={14} className="stroke-[2.5] text-emerald-400" />
                         </motion.span>
                       ) : saveState.status === 'kodraw' ? (
                         <motion.span key="kodraw" initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.8, opacity: 0 }} transition={{ duration: 0.15 }}>
-                          <AlertTriangle size={11} className="stroke-[2.5]" />
+                          <AlertTriangle size={12} className="text-amber-400/70" />
                         </motion.span>
                       ) : (
-                        <motion.span key="idle" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.1 }} className="opacity-60">
-                          <Check size={11} className="stroke-[2.5]" />
+                        <motion.span key="idle" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.1 }}>
+                          <Check size={12} className="stroke-[2] text-white/20" />
                         </motion.span>
                       )}
                     </AnimatePresence>
@@ -403,16 +358,16 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
                   <Stepper value={tippGast} onChange={setTippGast} disabled={saveState.status === 'saving' || !isOnline} />
                 </div>
               ) : (
-                <div className="shrink-0 min-w-[100px] flex items-center justify-end">
+                <div className="shrink-0 min-w-[90px] flex items-center justify-end">
                   {readOnly && eigenerTipp ? (
-                    <div className="flex items-center gap-1.5 px-2 py-1 rounded bg-surface-container/30">
-                      <Lock size={10} className="text-on-surface-variant/30" />
-                      <span className="text-xs text-on-surface-variant/60 font-mono">{eigenerTipp.tipp_heim}:{eigenerTipp.tipp_gast}</span>
+                    <div className="flex items-center gap-2">
+                      <Lock size={10} className="text-white/10" />
+                      <span className="text-sm font-mono text-white/30">{eigenerTipp.tipp_heim}:{eigenerTipp.tipp_gast}</span>
                       {istLive && livePunkte !== null && (
-                        <span className={`px-1.5 py-0.5 rounded-full text-[9px] font-mono font-black border ${
-                          livePunkte === 4 ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30' :
-                          livePunkte === 3 ? 'text-amber-400 bg-amber-500/10 border-amber-500/30' :
-                          'text-slate-400 bg-slate-500/10 border-slate-500/30'
+                        <span className={`text-xs font-mono font-semibold ${
+                          livePunkte === 4 ? 'text-emerald-400' :
+                          livePunkte === 3 ? 'text-amber-400' :
+                          'text-slate-500'
                         }`}>
                           {livePunkte > 0 ? `+${livePunkte}` : livePunkte}
                         </span>
@@ -426,7 +381,13 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
 
               {/* Punkte-Badge inline statt absolut */}
               {istVorbei && punkte !== null && (
-                <span className={`shrink-0 px-2.5 py-0.5 rounded-full text-xs font-bold border ${punkteFarbe(punkte)}`}>
+                <span className={`shrink-0 text-xs font-mono font-semibold ${
+                  punkte === 4 ? 'text-emerald-400' :
+                  punkte === 3 ? 'text-amber-400' :
+                  punkte === 2 ? 'text-blue-400' :
+                  punkte >= 1 ? 'text-purple-400' :
+                  'text-slate-500'
+                }`}>
                   {punkte > 0 ? `+${punkte}P` : '0P'}
                 </span>
               )}
