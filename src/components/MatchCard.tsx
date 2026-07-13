@@ -98,8 +98,8 @@ function Stepper({ value, onChange, disabled, onValidate }: { value: number; onC
         }}
         onPointerDown={(e) => e.stopPropagation()}
         disabled={disabled}
-        className="hidden lg:flex w-9 h-8 rounded-md bg-surface-container-highest border border-surface-container-high text-center font-mono text-sm font-bold text-on-surface
-          focus:outline-none focus:border-primary-container/60 focus:ring-1 focus:ring-primary-container/30
+        className="hidden lg:flex w-8 h-7 rounded bg-surface-container-highest border border-surface-container-high text-center font-mono text-xs font-bold text-on-surface
+          focus:outline-none focus:border-primary-container/60
           disabled:opacity-30 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
       />
 
@@ -259,7 +259,7 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
     <motion.div 
       whileHover={{ y: -2, scale: 1.01 }}
       transition={{ type: 'spring', stiffness: 350, damping: 25 }}
-      className={`glass-card p-3 lg:px-4 lg:py-2.5 transition-all duration-300 hover:border-white/15 hover:shadow-[0_8px_24px_rgba(0,0,0,0.4)] ${
+      className={`glass-card p-3 lg:px-3 lg:py-1.5 transition-all duration-200 hover:border-white/15 ${
         istVorbei && punkte !== null 
           ? randFarbe(punkte) 
           : istLive
@@ -275,7 +275,7 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
       )}
 
             {/* ───────── Desktop Horizontal-Layout (lg+) — alles in EINER Zeile ───────── */}
-            <div className="hidden lg:flex items-center gap-3 w-full">
+            <div className="hidden lg:flex items-center gap-2 w-full">
               {/* Datum Uhrzeit LIVE — alles horizontal */}
               <div className="flex items-center gap-1.5 shrink-0 min-w-0">
                 <span className="text-[11px] font-mono text-slate-300 font-semibold uppercase tracking-wider whitespace-nowrap">
@@ -293,7 +293,7 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
               <div className="flex-1 flex items-center justify-end gap-1.5 min-w-0">
                 <span className="text-xs font-medium text-white truncate text-right">{match.heim_team}</span>
                 <img src={match.heim_logo || getTeamLogo(match.heim_team)} alt=""
-                  className="w-7 h-7 object-contain opacity-90 shrink-0"
+                  className="w-6 h-6 object-contain opacity-90 shrink-0"
                   onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
               </div>
 
@@ -312,16 +312,16 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
               {/* Gast */}
               <div className="flex-1 flex items-center gap-1.5 min-w-0">
                 <img src={getTeamLogo(match.gast_team)} alt=""
-                  className="w-7 h-7 object-contain opacity-90 shrink-0"
+                  className="w-6 h-6 object-contain opacity-90 shrink-0"
                   onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
                 <span className="text-xs font-medium text-white truncate text-left">{match.gast_team}</span>
               </div>
 
               {/* Tipp */}
               {kannTippen ? (
-                <div className="flex items-center gap-1.5 shrink-0">
+                <div className="flex items-center gap-1 shrink-0">
                   <Stepper value={tippHeim} onChange={setTippHeim} disabled={saveState.status === 'saving' || !isOnline} />
-                  <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 transition-all duration-200 ${
+                  <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 transition-all duration-200 ${
                     !isOnline ? 'bg-red-500/10 border border-red-500/20 text-red-400' :
                     saveState.status === 'saving' ? 'bg-primary-container/10 border border-primary-container/20' :
                     saveState.status === 'saved' ? 'bg-green-500/20 border border-green-500/40 text-green-400' :
