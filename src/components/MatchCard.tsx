@@ -98,7 +98,7 @@ function Stepper({ value, onChange, disabled, onValidate }: { value: number; onC
         }}
         onPointerDown={(e) => e.stopPropagation()}
         disabled={disabled}
-        className="hidden lg:flex w-12 h-11 rounded-xl bg-surface-container-highest border border-surface-container-high text-center font-mono text-lg font-bold text-on-surface
+        className="hidden lg:flex w-9 h-8 rounded-md bg-surface-container-highest border border-surface-container-high text-center font-mono text-sm font-bold text-on-surface
           focus:outline-none focus:border-primary-container/60 focus:ring-1 focus:ring-primary-container/30
           disabled:opacity-30 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
       />
@@ -121,14 +121,14 @@ function Stepper({ value, onChange, disabled, onValidate }: { value: number; onC
       </motion.button>
 
       {/* Desktop +/- Buttons (schmaler) */}
-      <div className="hidden lg:flex flex-col gap-0.5">
+      <div className="hidden lg:flex flex-col gap-px">
         <motion.button
           type="button"
           onPointerDown={(e) => e.stopPropagation()}
           onClick={(e) => { e.stopPropagation(); tryChange(Math.min(20, value + 1)); }}
           disabled={disabled || value === 20}
           whileTap={{ scale: 0.85 }}
-          className="w-6 h-5 rounded-md bg-surface-container-higher border border-surface-container-high flex items-center justify-center text-[10px] text-on-surface-variant
+          className="w-5 h-[13px] rounded-sm bg-surface-container-higher border border-surface-container-high flex items-center justify-center text-[7px] text-on-surface-variant
             hover:border-primary-container/40 hover:text-on-surface disabled:opacity-30 transition-all cursor-pointer"
         >
           ▲
@@ -139,7 +139,7 @@ function Stepper({ value, onChange, disabled, onValidate }: { value: number; onC
           onClick={(e) => { e.stopPropagation(); tryChange(Math.max(0, value - 1)); }}
           disabled={disabled || value === 0}
           whileTap={{ scale: 0.85 }}
-          className="w-6 h-5 rounded-md bg-surface-container-higher border border-surface-container-high flex items-center justify-center text-[10px] text-on-surface-variant
+          className="w-5 h-[13px] rounded-sm bg-surface-container-higher border border-surface-container-high flex items-center justify-center text-[7px] text-on-surface-variant
             hover:border-primary-container/40 hover:text-on-surface disabled:opacity-30 transition-all cursor-pointer"
         >
           ▼
@@ -259,7 +259,7 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
     <motion.div 
       whileHover={{ y: -2, scale: 1.01 }}
       transition={{ type: 'spring', stiffness: 350, damping: 25 }}
-      className={`glass-card p-3 lg:px-5 lg:py-3.5 transition-all duration-300 hover:border-white/15 hover:shadow-[0_8px_24px_rgba(0,0,0,0.4)] ${
+      className={`glass-card p-3 lg:px-4 lg:py-2.5 transition-all duration-300 hover:border-white/15 hover:shadow-[0_8px_24px_rgba(0,0,0,0.4)] ${
         istVorbei && punkte !== null 
           ? randFarbe(punkte) 
           : istLive
@@ -267,104 +267,105 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
             : ''
       } ${className}`}
     >
-      {/* Punkte-Badge — oben rechts für fertige Spiele */}
+      {/* Punkte-Badge — mobile oben rechts, desktop inline */}
       {istVorbei && punkte !== null && (
-        <span className={`absolute top-2 right-2 lg:top-1.5 lg:right-3 px-2 py-0.5 rounded-full text-[11px] lg:text-xs font-bold border transition-all animate-scale-in ${punkteFarbe(punkte)}`}>
+        <span className={`lg:hidden absolute top-2 right-2 px-2 py-0.5 rounded-full text-[11px] font-bold border transition-all animate-scale-in ${punkteFarbe(punkte)}`}>
           {punkte > 0 ? `+${punkte}P` : '0P'}
         </span>
       )}
 
-      {/* ───────── Desktop Horizontal-Layout (lg+) ───────── */}
-      <div className="hidden lg:flex items-center gap-5 w-full">
-        {/* Datum/Uhrzeit — links, kompakt */}
-        <div className="flex flex-col items-start gap-0.5 shrink-0 min-w-[88px]">
-          <span className="text-sm font-mono text-slate-300 font-semibold uppercase tracking-wider">
-            {formatDatum(match.anpfiff)}
-          </span>
-          <span className="text-xs font-mono text-slate-400 tabular-nums">
-            {formatUhrzeit(match.anpfiff)}
-          </span>
-          {istLive && (
-            <span className="flex items-center gap-1 text-red-400 text-xs font-medium">
-              <span className="live-dot" /> LIVE{match.spielminute && ` ${match.spielminute}`}
-            </span>
-          )}
-        </div>
+            {/* ───────── Desktop Horizontal-Layout (lg+) — alles in EINER Zeile ───────── */}
+            <div className="hidden lg:flex items-center gap-3 w-full">
+              {/* Datum Uhrzeit LIVE — alles horizontal */}
+              <div className="flex items-center gap-1.5 shrink-0 min-w-0">
+                <span className="text-[11px] font-mono text-slate-300 font-semibold uppercase tracking-wider whitespace-nowrap">
+                  {formatDatum(match.anpfiff)}
+                </span>
+                <span className="text-[9px] font-mono text-slate-400">{formatUhrzeit(match.anpfiff)}</span>
+                {istLive && (
+                  <span className="flex items-center gap-1 text-red-400 text-[10px] font-medium whitespace-nowrap">
+                    <span className="live-dot" /> LIVE{match.spielminute}
+                  </span>
+                )}
+              </div>
 
-        {/* Heim — Name + Logo (rechtsbündig) */}
-        <div className="flex-1 flex items-center justify-end gap-3 min-w-0">
-          <span className="text-sm font-medium text-white truncate text-right">{match.heim_team}</span>
-          <img src={match.heim_logo || getTeamLogo(match.heim_team)} alt={match.heim_team}
-            className="w-10 h-10 object-contain opacity-90 shrink-0"
-            onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
-        </div>
+              {/* Heim */}
+              <div className="flex-1 flex items-center justify-end gap-1.5 min-w-0">
+                <span className="text-xs font-medium text-white truncate text-right">{match.heim_team}</span>
+                <img src={match.heim_logo || getTeamLogo(match.heim_team)} alt=""
+                  className="w-7 h-7 object-contain opacity-90 shrink-0"
+                  onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
+              </div>
 
-        {/* Ergebnis Mitte */}
-        <div className="text-center min-w-[70px] shrink-0 cursor-pointer" onClick={() => onNavigate?.(match.id)}>
-          {(istVorbei || istLive) && match.tore_heim != null && match.tore_gast != null ? (
-            <div className="font-mono text-2xl font-bold text-white tracking-wider">
-              {match.tore_heim}:{match.tore_gast}
-            </div>
-          ) : (
-            <div className="font-mono text-2xl font-bold text-slate-500 tracking-wider">
-              -:-
-            </div>
-          )}
-          {eigenerTipp && !istUpcoming && (
-            <div className="text-[10px] text-slate-500 font-mono">
-              Tipp: {eigenerTipp.tipp_heim}:{eigenerTipp.tipp_gast}
-            </div>
-          )}
-        </div>
+              {/* Ergebnis */}
+              <div className="text-center min-w-[60px] shrink-0 cursor-pointer" onClick={() => onNavigate?.(match.id)}>
+                {(istVorbei || istLive) && match.tore_heim != null && match.tore_gast != null ? (
+                  <div className="font-mono text-lg font-bold text-white tracking-wider">{match.tore_heim}:{match.tore_gast}</div>
+                ) : (
+                  <div className="font-mono text-lg font-bold text-slate-500 tracking-wider">-:-</div>
+                )}
+                {eigenerTipp && !istUpcoming && (
+                  <div className="text-[8px] text-slate-500 font-mono leading-none -mt-0.5">{eigenerTipp.tipp_heim}:{eigenerTipp.tipp_gast}</div>
+                )}
+              </div>
 
-        {/* Gast — Logo + Name (linksbündig) */}
-        <div className="flex-1 flex items-center gap-3 min-w-0">
-          <img src={getTeamLogo(match.gast_team)} alt={match.gast_team}
-            className="w-10 h-10 object-contain opacity-90 shrink-0"
-            onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
-          <span className="text-sm font-medium text-white truncate text-left">{match.gast_team}</span>
-        </div>
+              {/* Gast */}
+              <div className="flex-1 flex items-center gap-1.5 min-w-0">
+                <img src={getTeamLogo(match.gast_team)} alt=""
+                  className="w-7 h-7 object-contain opacity-90 shrink-0"
+                  onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
+                <span className="text-xs font-medium text-white truncate text-left">{match.gast_team}</span>
+              </div>
 
-        {/* Tipp-Stepper + Status — rechts */}
-        <div className="flex items-center gap-3 shrink-0">
-          {kannTippen ? (
-            <>
-              <Stepper value={tippHeim} onChange={setTippHeim} disabled={saveState.status === 'saving' || !isOnline} />
-              <Stepper value={tippGast} onChange={setTippGast} disabled={saveState.status === 'saving' || !isOnline} />
-            </>
-          ) : readOnly && eigenerTipp ? (
-            <div className="flex items-center gap-2 px-2 py-1 rounded-lg bg-surface-container/30">
-              <Lock size={11} className="text-on-surface-variant/30" />
-              <span className="text-xs text-on-surface-variant/60 font-mono">
-                {eigenerTipp.tipp_heim}:{eigenerTipp.tipp_gast}
-              </span>
-              {istLive && livePunkte !== null && (
-                <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-mono font-black border ${
-                  livePunkte === 4 ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30' :
-                  livePunkte === 3 ? 'text-amber-400 bg-amber-500/10 border-amber-500/30' :
-                  livePunkte === 2 ? 'text-blue-400 bg-blue-500/10 border-blue-500/30' :
-                  livePunkte >= 1 ? 'text-purple-400 bg-purple-500/10 border-purple-500/30' :
-                  'text-slate-400 bg-slate-500/10 border-slate-500/30'
-                }`}>
-                  {livePunkte > 0 ? `+${livePunkte}` : livePunkte}
+              {/* Tipp */}
+              {kannTippen ? (
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <Stepper value={tippHeim} onChange={setTippHeim} disabled={saveState.status === 'saving' || !isOnline} />
+                  <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 transition-all duration-200 ${
+                    !isOnline ? 'bg-red-500/10 border border-red-500/20 text-red-400' :
+                    saveState.status === 'saving' ? 'bg-primary-container/10 border border-primary-container/20' :
+                    saveState.status === 'saved' ? 'bg-green-500/20 border border-green-500/40 text-green-400' :
+                    saveState.status === 'kodraw' ? 'bg-amber-500/10 border border-amber-500/40 text-amber-400' :
+                    hasChanges ? 'bg-amber-500/5 border border-amber-500/30 text-amber-400' :
+                    'bg-green-500/10 border border-green-500/20 text-green-400/70'
+                  }`}>
+                    {!isOnline ? <WifiOff size={10} /> :
+                     saveState.status === 'saving' ? <span className="w-2.5 h-2.5 border-2 border-primary-fixed-dim border-t-transparent rounded-full animate-spin" /> :
+                     saveState.status === 'saved' ? <Check size={12} className="stroke-[3]" /> :
+                     saveState.status === 'kodraw' ? <AlertTriangle size={10} className="stroke-[2.5]" /> :
+                     <Check size={10} className="stroke-[2.5] opacity-60" />}
+                  </div>
+                  <Stepper value={tippGast} onChange={setTippGast} disabled={saveState.status === 'saving' || !isOnline} />
+                </div>
+              ) : (
+                <div className="shrink-0 min-w-[90px] flex items-center justify-end">
+                  {readOnly && eigenerTipp ? (
+                    <div className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-surface-container/30">
+                      <Lock size={8} className="text-on-surface-variant/30" />
+                      <span className="text-[10px] text-on-surface-variant/60 font-mono">{eigenerTipp.tipp_heim}:{eigenerTipp.tipp_gast}</span>
+                      {istLive && livePunkte !== null && (
+                        <span className={`px-1 py-0.5 rounded-full text-[8px] font-mono font-black border ${
+                          livePunkte === 4 ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30' :
+                          livePunkte === 3 ? 'text-amber-400 bg-amber-500/10 border-amber-500/30' :
+                          'text-slate-400 bg-slate-500/10 border-slate-500/30'
+                        }`}>
+                          {livePunkte > 0 ? `+${livePunkte}` : livePunkte}
+                        </span>
+                      )}
+                    </div>
+                  ) : (
+                    <span className="text-[9px] text-on-surface-variant/40 font-mono">–</span>
+                  )}
+                </div>
+              )}
+
+              {/* Punkte-Badge inline statt absolut */}
+              {istVorbei && punkte !== null && (
+                <span className={`shrink-0 px-2 py-0.5 rounded-full text-[10px] font-bold border ${punkteFarbe(punkte)}`}>
+                  {punkte > 0 ? `+${punkte}P` : '0P'}
                 </span>
               )}
             </div>
-          ) : !istUpcoming && !eigenerTipp ? (
-            <span className="text-[11px] text-on-surface-variant/40 font-mono uppercase tracking-wider">
-              Kein Tipp
-            </span>
-          ) : istUpcoming && !tippsFreigeschaltet ? (
-            <span className="text-[11px] text-amber-400/50 font-mono uppercase tracking-wider flex items-center gap-1.5">
-              <Lock size={11} /> Gesperrt
-            </span>
-          ) : istUpcoming && (!teamsStehenFest || isFuturePhase) ? (
-            <span className="text-[11px] text-on-surface-variant/40 font-mono uppercase tracking-wider flex items-center gap-1.5">
-              <Lock size={11} /> TBD
-            </span>
-          ) : null}
-        </div>
-      </div>
 
       {/* ───────── Mobile Layout (wie gehabt, gestapelt) ───────── */}
       <div className="lg:hidden">
