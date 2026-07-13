@@ -275,16 +275,24 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
       )}
 
             {/* ───────── Desktop Horizontal-Layout (lg+) — alles in EINER Zeile ───────── */}
-            <div className="hidden lg:flex items-center gap-2 w-full">
-              {/* Datum Uhrzeit LIVE — alles horizontal */}
-              <div className="flex items-center gap-1.5 shrink-0 min-w-0">
-                <span className="text-[11px] font-mono text-slate-300 font-semibold uppercase tracking-wider whitespace-nowrap">
-                  {formatDatum(match.anpfiff)}
-                </span>
-                <span className="text-[9px] font-mono text-slate-400">{formatUhrzeit(match.anpfiff)}</span>
-                {istLive && (
-                  <span className="flex items-center gap-1 text-red-400 text-[10px] font-medium whitespace-nowrap">
-                    <span className="live-dot" /> LIVE{match.spielminute}
+            <div className="hidden lg:flex flex-col w-full">
+            <div className="flex items-center gap-2 w-full">
+              {/* Datum Uhrzeit + Stadion — kompakt */}
+              <div className="flex flex-col items-start shrink-0 min-w-0 leading-tight">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[11px] font-mono text-slate-300 font-semibold uppercase tracking-wider whitespace-nowrap">
+                    {formatDatum(match.anpfiff)}
+                  </span>
+                  <span className="text-[9px] font-mono text-slate-400">{formatUhrzeit(match.anpfiff)}</span>
+                  {istLive && (
+                    <span className="flex items-center gap-1 text-red-400 text-[10px] font-medium whitespace-nowrap">
+                      <span className="live-dot" /> LIVE{match.spielminute}
+                    </span>
+                  )}
+                </div>
+                {match.venue && (
+                  <span className="text-[8px] font-mono text-slate-500/60 truncate max-w-[120px]" title={match.venue}>
+                    {match.venue}
                   </span>
                 )}
               </div>
@@ -297,15 +305,30 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
                   onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
               </div>
 
-              {/* Ergebnis */}
-              <div className="text-center min-w-[60px] shrink-0 cursor-pointer" onClick={() => onNavigate?.(match.id)}>
-                {(istVorbei || istLive) && match.tore_heim != null && match.tore_gast != null ? (
-                  <div className="font-mono text-lg font-bold text-white tracking-wider">{match.tore_heim}:{match.tore_gast}</div>
-                ) : (
-                  <div className="font-mono text-lg font-bold text-slate-500 tracking-wider">-:-</div>
-                )}
-                {eigenerTipp && !istUpcoming && (
-                  <div className="text-[8px] text-slate-500 font-mono leading-none -mt-0.5">{eigenerTipp.tipp_heim}:{eigenerTipp.tipp_gast}</div>
+              {/* Ergebnis + Trend-Bar */}
+              <div className="flex flex-col items-center gap-0.5 shrink-0">
+                <div className="text-center min-w-[60px] cursor-pointer" onClick={() => onNavigate?.(match.id)}>
+                  {(istVorbei || istLive) && match.tore_heim != null && match.tore_gast != null ? (
+                    <div className="font-mono text-lg font-bold text-white tracking-wider">{match.tore_heim}:{match.tore_gast}</div>
+                  ) : (
+                    <div className="font-mono text-lg font-bold text-slate-500 tracking-wider">-:-</div>
+                  )}
+                  {eigenerTipp && !istUpcoming && (
+                    <div className="text-[8px] text-slate-500 font-mono leading-none -mt-0.5">{eigenerTipp.tipp_heim}:{eigenerTipp.tipp_gast}</div>
+                  )}
+                </div>
+                {/* Trend-Bar (Schwarmintelligenz) — kompakt unter Score */}
+                {trendStats && (trendStats.home > 0 || trendStats.draw > 0 || trendStats.away > 0) && (
+                  <div className="flex items-center gap-1 w-full max-w-[80px]">
+                    <div className="flex h-[2px] rounded-full overflow-hidden bg-surface-container-high flex-1">
+                      <div className="h-full bg-blue-500/80" style={{ width: `${(trendStats.home / (trendStats.home + trendStats.draw + trendStats.away)) * 100}%` }} />
+                      <div className="h-full bg-slate-400/80" style={{ width: `${(trendStats.draw / (trendStats.home + trendStats.draw + trendStats.away)) * 100}%` }} />
+                      <div className="h-full bg-rose-500/80" style={{ width: `${(trendStats.away / (trendStats.home + trendStats.draw + trendStats.away)) * 100}%` }} />
+                    </div>
+                    <span className="text-[7px] font-mono text-slate-500/60 whitespace-nowrap">
+                      {Math.round((trendStats.home / (trendStats.home + trendStats.draw + trendStats.away)) * 100)}%
+                    </span>
+                  </div>
                 )}
               </div>
 
@@ -407,7 +430,8 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, className 
                   {punkte > 0 ? `+${punkte}P` : '0P'}
                 </span>
               )}
-            </div>
+            </div>{/* end inner flex-row */}
+            </div>{/* end outer flex-col */}
 
       {/* ───────── Mobile Layout (wie gehabt, gestapelt) ───────── */}
       <div className="lg:hidden">
