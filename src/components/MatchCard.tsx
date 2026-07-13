@@ -289,17 +289,18 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, onTipSaved
                   onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
               </div>
 
-              {/* Ergebnis + Trend-Bar */}
-              <div className="flex flex-col items-center justify-center gap-0.5 shrink-0">
+              {/* Ergebnis + Trend-Bar — immer gleiche Zusammensetzung für gleiche Score-Höhe */}
+              <div className="flex flex-col items-center justify-center shrink-0">
                 <div className="text-center min-w-[64px] cursor-pointer" onClick={() => onNavigate?.(match.id)}>
                   {(istVorbei || istLive) && match.tore_heim != null && match.tore_gast != null ? (
                     <div className="font-mono text-xl font-bold text-white tracking-wider">{match.tore_heim}:{match.tore_gast}</div>
                   ) : (
                     <div className="font-mono text-xl font-bold text-slate-500 tracking-wider">-:-</div>
                   )}
-                  {eigenerTipp && !istUpcoming && (
-                    <div className="text-[9px] text-slate-500 font-mono leading-none -mt-0.5">{eigenerTipp.tipp_heim}:{eigenerTipp.tipp_gast}</div>
-                  )}
+                  {/* Tipp unter Score — immer da, unsichtbar wenn nicht gesetzt */}
+                  <div className={`text-[9px] font-mono leading-none -mt-0.5 ${eigenerTipp && !istUpcoming ? 'text-slate-500' : 'text-transparent select-none'}`}>
+                    {eigenerTipp && !istUpcoming ? `${eigenerTipp.tipp_heim}:${eigenerTipp.tipp_gast}` : '0:0'}
+                  </div>
                 </div>
                 {/* Trend-Bar — immer gleiche Höhe, auch wenn keine Daten */}
                 <div className="flex items-center gap-1.5 w-full max-w-[100px] min-h-[16px]">
