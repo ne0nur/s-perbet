@@ -526,6 +526,101 @@ Deno.serve(async (req: Request) => {
       }
     }
 
+    // ─── Phase 3.5: Bracket Placeholder Resolution ───
+    // ESPN liefert oft "Semifinal 1 Winner/Loser" statt echter Teamnamen.
+    // Löst sie auf, indem Ergebnisse der Vorrunde analysiert werden.
+    {
+      const { data: bracketMatches } = await adminClient
+        .from("matches")
+        .select("id, spieltag, heim_team, gast_team, status, tore_heim, tore_gast, anpfiff, tournament, season")
+        .order("tournament, spieltag, anpfiff");
+
+      if (bracketMatches) {
+        const PLACEHOLDER = /\b(?:winner|loser|tbd|tba|placeholder)\b/i;
+        const BRACKET_PATTERN = /(?:semifinal|sf|quarterfinal|qf|round\s+\d+)\s+(\d+)\s+(winner|loser)/i;
+
+        // Group by tournament
+        const byTournament: Record<string, typeof bracketMatches> = {};
+        for (const m of bracketMatches) {
+          if (!byTournament[m.tournament]) byTournament[m.tournament] = [];
+          byTournament[m.tournament].push(m);
+        }
+
+        for (const [, tMatches] of Object.entries(byTournament)) {
+          const placeholderMatches = tMatches.filter(m =>
+            PLACEHOLDER.test(m.heim_team) || PLACEHOLDER.test(m.gast_team)
+          );
+          if (placeholderMatches.length === 0) continue;
+
+          // Group placeholder matches by spieltag, sorted by date
+          const bySpieltag: Record<number, typeof placeholderMatches> = {};
+          for (const pm of placeholderMatches) {
+            if (!bySpieltag[pm.spieltag]) bySpieltag[pm.spieltag] = [];
+            bySpieltag[pm.spieltag].push(pm);
+          }
+
+          for (const [spStr, pms] of Object.entries(bySpieltag)) {
+            const spieltag = Number(spStr);
+            const prevRound = tMatches
+              .filter(m => m.spieltag === spieltag - 1)
+              .sort((a, b) => new Date(a.anpfiff).getTime() - new Date(b.anpfiff).getTime());
+
+            if (prevRound.length === 0) continue;
+            if (!prevRound.every(m => m.status === "finished")) continue;
+
+            pms.sort((a, b) => new Date(a.anpfiff).getTime() - new Date(b.anpfiff).getTime());
+
+            for (const pm of pms) {
+              let h = pm.heim_team, g = pm.gast_team;
+
+              for (let i = 0; i < prevRound.length; i++) {
+                const pr = prevRound[i];
+                const num = i + 1;
+                const reNum = `(${num}|0${num})`;
+                // Match "Semifinal N Winner", "SF N Winner", "Winner SF N" etc.
+                const winRe = new RegExp(
+                  `(?:semifinal|sf)\\s*${reNum}\\s*(?:match\\s*)?winner|winner\\s*(?:of\\s*)?(?:semifinal|sf)\\s*${reNum}`,
+                  "i"
+                );
+                const loseRe = new RegExp(
+                  `(?:semifinal|sf)\\s*${reNum}\\s*(?:match\\s*)?loser|loser\\s*(?:of\\s*)?(?:semifinal|sf)\\s*${reNum}`,
+                  "i"
+                );
+
+                if (winRe.test(h)) {
+                  const winner = (pr.tore_heim ?? 0) > (pr.tore_gast ?? 0) ? pr.heim_team : pr.gast_team;
+                  h = winner;
+                }
+                if (loseRe.test(h)) {
+                  const loser = (pr.tore_heim ?? 0) > (pr.tore_gast ?? 0) ? pr.gast_team : pr.heim_team;
+                  h = loser;
+                }
+                if (winRe.test(g)) {
+                  const winner = (pr.tore_heim ?? 0) > (pr.tore_gast ?? 0) ? pr.heim_team : pr.gast_team;
+                  g = winner;
+                }
+                if (loseRe.test(g)) {
+                  const loser = (pr.tore_heim ?? 0) > (pr.tore_gast ?? 0) ? pr.gast_team : pr.heim_team;
+                  g = loser;
+                }
+              }
+
+              if (h !== pm.heim_team || g !== pm.gast_team) {
+                bracketUpdates++;
+                await adminClient.from("matches").update({ heim_team: h, gast_team: g }).eq("id", pm.id);
+                results.push({
+                  match: `${pm.heim_team} vs ${pm.gast_team} → ${h} vs ${g}`,
+                  oldStatus: "placeholder",
+                  newStatus: pm.status,
+                  source: "bracket",
+                });
+              }
+            }
+          }
+        }
+      }
+    }
+
     // ─── Phase 4: Heartbeat ───
     try {
       const serviceClient = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
