@@ -287,7 +287,7 @@ export function LeaguePage() {
     const rows: MitgliedRow[] = profiles.map((p) => {
       return {
         id: p.id, username: p.username, avatar_url: p.avatar_url || null, 
-        gesamt_punkte: seasonPoints[p.id] || 0,
+        gesamt_punkte: seasonPoints[p.id] || p.gesamt_punkte || 0,
         global_punkte: p.gesamt_punkte || 0,
         achievements_count: p.achievements_count || 0,
         level: p.level || 1,
