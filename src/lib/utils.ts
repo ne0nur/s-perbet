@@ -6,6 +6,7 @@ import { useTournamentStore } from '../stores/tournamentStore'
  * 3P = Richtige Tordifferenz (oder exaktes Unentschieden)
  * 2P = Richtige Tendenz (richtiger Sieger)
  * 0P = Daneben
+ * Hinweis: Gesamtpunkte werden in der DB bei -5 gecappt (Migration 046)
  */
 export function berechnePunkte(
   tippHeim: number, tippGast: number,
