@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, memo } from 'react'
+import { useState, useEffect, useRef, useMemo, memo } from 'react'
 import { useTipStore } from '../stores/tipStore'
 import { getTeamLogo } from '../lib/teamLogos'
 import { berechnePunkte } from '../lib/utils'
@@ -234,7 +234,23 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, onTipSaved
   
   const isFuturePhase = isKoMatch && (aktivePhase === null || match.spieltag > aktivePhase)
 
-  const kannTippen = !readOnly && istUpcoming && tippsFreigeschaltet && teamsStehenFest && !isFuturePhase
+  // 🎯 NEU: Prüfe ob alle Spiele der VORHERIGEN Runde beendet sind (KO-Turniere)
+  // ESPN liefert oft echte Teamnamen für KO-Runden, bevor die Vorgänger-Runde fertig ist.
+  // Nur wenn alle Vorgänger-Spiele 'finished' sind, sind Teams wirklich bekannt.
+  const matches = useMatchStore(s => s.matches)
+  const prevRoundComplete = useMemo(() => {
+    if (!isKoMatch) return true
+    const prevSpieltag = match.spieltag - 1
+    if (prevSpieltag < (config?.group_stage_matchdays || 1) + 1) return true // vor KO-Phase egal
+    const prevMatches = matches.filter(m =>
+      m.spieltag === prevSpieltag &&
+      m.tournament === match.tournament
+    )
+    if (prevMatches.length === 0) return true
+    return prevMatches.every(m => m.status === 'finished')
+  }, [isKoMatch, match.spieltag, match.tournament, matches, config])
+
+  const kannTippen = !readOnly && istUpcoming && tippsFreigeschaltet && teamsStehenFest && !isFuturePhase && prevRoundComplete
 
   return (
     <motion.div 
@@ -537,14 +553,14 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, onTipSaved
                   </span>
                 )}
               </div>
-            ) : istUpcoming && isFuturePhase ? (
+            ) : istUpcoming && (isFuturePhase || !prevRoundComplete) ? (
               <div className="flex items-center justify-center gap-2 py-1.5 px-2 text-center">
                 <Lock size={12} className="text-on-surface-variant/50 flex-shrink-0" />
                 <span className="text-[10px] text-on-surface-variant/50 font-mono uppercase tracking-wider">
                   {language === 'tr' ? 'Önceki tur henüz bitmedi' : language === 'en' ? 'Previous round not finished' : 'Vorherige Runde läuft noch'}
                 </span>
               </div>
-            ) : istUpcoming && !teamsStehenFest ? (
+            ) : istUpcoming && !teamsStehenFest && prevRoundComplete ? (
               <div className="flex items-center justify-center gap-2 py-1.5 px-2 text-center">
                 <Lock size={12} className="text-on-surface-variant/50 flex-shrink-0" />
                 <span className="text-[10px] text-on-surface-variant/50 font-mono uppercase tracking-wider">
@@ -572,15 +588,15 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, onTipSaved
         )}
 
         {/* FALL A2: Teams in KO-Phase stehen noch nicht fest oder Phase gesperrt */}
-        {!readOnly && istUpcoming && tippsFreigeschaltet && (!teamsStehenFest || isFuturePhase) && (
+        {!readOnly && istUpcoming && tippsFreigeschaltet && (!teamsStehenFest || isFuturePhase || !prevRoundComplete) && (
           <div className="flex items-center justify-center gap-2 py-1.5 px-2 text-center">
             <Lock size={12} className="text-on-surface-variant/50 flex-shrink-0" />
             <span className="text-[10px] text-on-surface-variant/50 font-mono uppercase tracking-wider">
               {language === 'tr' 
-                ? (isFuturePhase ? 'Önceki tur henüz bitmedi' : 'Takımlar henüz belli değil')
+                ? (isFuturePhase || !prevRoundComplete ? 'Önceki tur henüz bitmedi' : 'Takımlar henüz belli değil')
                 : language === 'en' 
-                  ? (isFuturePhase ? 'Previous round not finished' : 'Teams not decided yet')
-                  : (isFuturePhase ? 'Vorherige Runde läuft noch' : 'Teams stehen noch nicht fest')}
+                  ? (isFuturePhase || !prevRoundComplete ? 'Previous round not finished' : 'Teams not decided yet')
+                  : (isFuturePhase || !prevRoundComplete ? 'Vorherige Runde läuft noch' : 'Teams stehen noch nicht fest')}
             </span>
           </div>
         )}
