@@ -240,8 +240,20 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, onTipSaved
   const matches = useMatchStore(s => s.matches)
   const prevRoundComplete = useMemo(() => {
     if (!isKoMatch) return true
-    const prevSpieltag = match.spieltag - 1
-    if (prevSpieltag < (config?.group_stage_matchdays || 1) + 1) return true // vor KO-Phase egal
+    
+    // Finde alle Spieltage dieses Turniers
+    const tourneySpieltage = [...new Set(
+      matches.filter(m => m.tournament === match.tournament).map(m => m.spieltag)
+    )].sort((a, b) => a - b)
+    const maxSpieltag = tourneySpieltage[tourneySpieltage.length - 1]
+    
+    // Finale (höchster Spieltag) hängt von spieltag-2 ab (Halbfinale),
+    // nicht von spieltag-1 (3. Platz Spiel — paralleler Ast im Turnierbaum)
+    const prevSpieltag = match.spieltag === maxSpieltag
+      ? match.spieltag - 2
+      : match.spieltag - 1
+    
+    if (prevSpieltag < (config?.group_stage_matchdays || 1) + 1) return true
     const prevMatches = matches.filter(m =>
       m.spieltag === prevSpieltag &&
       m.tournament === match.tournament
