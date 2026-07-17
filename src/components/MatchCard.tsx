@@ -231,21 +231,24 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, onTipSaved
 
   const isPlaceholder = (name: string) => /winner|loser|tba|tbd|placeholder/i.test(name)
   const teamsStehenFest = !isPlaceholder(match.heim_team) && !isPlaceholder(match.gast_team)
-  
-  const isFuturePhase = isKoMatch && (aktivePhase === null || match.spieltag > aktivePhase)
 
-  // 🎯 NEU: Prüfe ob alle Spiele der VORHERIGEN Runde beendet sind (KO-Turniere)
+  // Finde den höchsten Spieltag im Turnier (für Finale-Speziallogik)
+  const matches = useMatchStore(s => s.matches)
+  const tourneySpieltage = useMemo(() => [...new Set(
+    matches.filter(m => m.tournament === match.tournament).map(m => m.spieltag)
+  )].sort((a, b) => a - b), [matches, match.tournament])
+  const maxSpieltag = tourneySpieltage[tourneySpieltage.length - 1]
+
+  // Finale (höchster Spieltag) vergleicht effektiven Spieltag -1,
+  // weil der 3. Platz (spieltag-1) ein paralleler Ast ist, kein Vorgänger
+  const effectiveSpieltag = match.spieltag === maxSpieltag ? match.spieltag - 1 : match.spieltag
+  const isFuturePhase = isKoMatch && (aktivePhase === null || effectiveSpieltag > aktivePhase)
+
+  // 🎯 Prüfe ob alle Spiele der VORHERIGEN Runde beendet sind (KO-Turniere)
   // ESPN liefert oft echte Teamnamen für KO-Runden, bevor die Vorgänger-Runde fertig ist.
   // Nur wenn alle Vorgänger-Spiele 'finished' sind, sind Teams wirklich bekannt.
-  const matches = useMatchStore(s => s.matches)
   const prevRoundComplete = useMemo(() => {
     if (!isKoMatch) return true
-    
-    // Finde alle Spieltage dieses Turniers
-    const tourneySpieltage = [...new Set(
-      matches.filter(m => m.tournament === match.tournament).map(m => m.spieltag)
-    )].sort((a, b) => a - b)
-    const maxSpieltag = tourneySpieltage[tourneySpieltage.length - 1]
     
     // Finale (höchster Spieltag) hängt von spieltag-2 ab (Halbfinale),
     // nicht von spieltag-1 (3. Platz Spiel — paralleler Ast im Turnierbaum)
@@ -260,7 +263,7 @@ export const MatchCard = memo(function MatchCard({ match, onNavigate, onTipSaved
     )
     if (prevMatches.length === 0) return true
     return prevMatches.every(m => m.status === 'finished')
-  }, [isKoMatch, match.spieltag, match.tournament, matches, config])
+  }, [isKoMatch, match.spieltag, match.tournament, matches, config, maxSpieltag])
 
   const kannTippen = !readOnly && istUpcoming && tippsFreigeschaltet && teamsStehenFest && !isFuturePhase && prevRoundComplete
 
