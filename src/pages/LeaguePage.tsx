@@ -154,7 +154,19 @@ export function LeaguePage() {
       const meta: Record<string, { mitglieder: number; rang: number }> = {}
       for (const liga of ligenData) {
         const { count } = await supabase.from('league_members').select('*', { count: 'exact', head: true }).eq('league_id', liga.id)
-        meta[liga.id] = { mitglieder: count || 0, rang: 0 }
+        // Rang des Users in dieser Liga ermitteln
+        let rang = 0
+        const { data: members } = await supabase.from('league_members').select('user_id').eq('league_id', liga.id)
+        if (members && members.length > 0) {
+          const memberIds = members.map(m => m.user_id)
+          const { data: profiles } = await supabase.from('profiles').select('id, gesamt_punkte').in('id', memberIds)
+          if (profiles) {
+            const sorted = profiles.sort((a, b) => (b.gesamt_punkte || 0) - (a.gesamt_punkte || 0))
+            const meinRang = sorted.findIndex(p => p.id === user.id)
+            rang = meinRang >= 0 ? meinRang + 1 : 0
+          }
+        }
+        meta[liga.id] = { mitglieder: count || 0, rang }
       }
       setLigaMeta(meta)
     }
