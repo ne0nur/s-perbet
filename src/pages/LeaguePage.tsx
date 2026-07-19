@@ -1084,102 +1084,144 @@ export function LeaguePage() {
       {meineLigen.length > 0 && !aktiveLiga && !isLaden && (
         <div className="px-4 md:px-6 lg:px-8 pt-6 md:pt-8 max-w-3xl mx-auto w-full animate-page-enter">
 
-          <div className="space-y-2 mb-4">
-            {meineLigen.map(liga => {
-              const meta = ligaMeta[liga.id]
-              return (
-                <button key={liga.id} onClick={() => {
-                  setAktiveLiga(liga)
-                  setViewTournament('Alle')
-                }}
-                  className="w-full card-lift bg-surface-container-low border border-surface-container-high rounded-lg p-4 text-left group">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-bold text-on-surface">{liga.name}</span>
-                    <span className="text-[10px] font-mono text-on-surface-variant/50 uppercase tracking-wider">#{meta?.rang || '–'}</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-1.5">
-                      <Users size={12} className="text-on-surface-variant/40" />
-                      <span className="text-[10px] font-mono text-on-surface-variant/60">{meta?.mitglieder || 0} {t('members')}</span>
-                    </div>
-                    <span className="text-[10px] font-mono text-primary-fixed-dim opacity-0 group-hover:opacity-100 transition-opacity">{t('showArrow')}</span>
-                  </div>
-                </button>
-              )
-            })}
-          </div>
+          {/* ─── 1. Liga beitreten — prominent, oben ─── */}
+          <div className="mb-5 relative overflow-hidden rounded-2xl border border-primary/30 bg-gradient-to-br from-primary-container/20 via-surface-container-low to-surface-container-low backdrop-blur-sm shadow-[0_4px_20px_rgba(var(--primary-rgb),0.08)]">
+            {/* Dekorativer Glow */}
+            <div className="absolute -top-12 -right-12 w-32 h-32 rounded-full bg-primary/15 blur-3xl pointer-events-none" />
+            <div className="absolute -bottom-8 -left-8 w-24 h-24 rounded-full bg-primary/10 blur-2xl pointer-events-none" />
 
-          {/* Aktionen */}
-          <div className="space-y-2">
-            <div className="bg-surface-container-low border border-surface-container-high rounded-lg p-4 space-y-3">
-              <span className="text-sm text-on-surface font-medium">{t('joinLeagueTitle')}</span>
+            <div className="relative p-4 md:p-5">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-7 h-7 rounded-lg bg-primary/20 flex items-center justify-center shrink-0">
+                  <LogIn size={14} className="text-primary" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h2 className="text-sm font-extrabold text-on-surface leading-tight">{t('joinLeagueTitle')}</h2>
+                  <p className="text-[10px] text-on-surface-variant/70 font-mono leading-tight mt-0.5">{t('leagueHelperDesc')}</p>
+                </div>
+              </div>
               <div className="flex gap-2">
                 <input value={beitrittsCode} onChange={e => setBeitrittsCode(e.target.value)} placeholder={t('inviteCodeLabel')}
-                  className="flex-1 bg-surface-container-lowest border border-surface-container-high rounded-lg px-3 py-2 font-mono text-sm text-on-surface uppercase focus:border-primary focus:outline-none" />
+                  className="flex-1 bg-surface-container-lowest/80 border border-surface-container-high rounded-xl px-3.5 py-2.5 font-mono text-sm text-on-surface uppercase tracking-wider placeholder:normal-case placeholder:tracking-normal placeholder:text-on-surface-variant/40 focus:border-primary focus:outline-none transition-colors" />
                 <button onClick={handleBeitreten} disabled={!beitrittsCode.trim()}
-                  className="bg-primary-container text-on-primary-container px-3 py-2 rounded-lg font-mono text-xs font-bold uppercase tracking-wider hover:opacity-90 disabled:opacity-30"><LogIn size={16} /></button>
+                  className="btn-press bg-primary-container text-on-primary-container px-4 py-2.5 rounded-xl font-mono text-xs font-bold uppercase tracking-wider hover:opacity-90 disabled:opacity-30 flex items-center gap-1.5 shadow-sm">
+                  <LogIn size={14} />
+                  <span className="hidden sm:inline">{t('joinLeagueBtn')}</span>
+                </button>
               </div>
             </div>
-
-            <AnimatePresence mode="wait">
-              {!zeigeErstellen ? (
-                <motion.button 
-                   key="btn"
-                  initial={{opacity:0, y:-10}} animate={{opacity:1, y:0}} exit={{opacity:0, y:-10}}
-                  onClick={() => setZeigeErstellen(true)}
-                  className="w-full bg-surface-container-low border border-surface-container-high rounded-xl p-4 flex items-center justify-center gap-3 hover:bg-surface-container transition-colors text-on-surface text-sm font-medium shadow-sm"
-                >
-                  <div className="bg-primary/20 p-1.5 rounded-full"><Plus size={16} className="text-primary" /></div>
-                  {t('createLeagueTitle')}
-                </motion.button>
-              ) : (
-                <motion.div 
-                  key="form"
-                  initial={{opacity:0, height:0}} animate={{opacity:1, height:'auto'}} exit={{opacity:0, height:0}}
-                  className="bg-surface-container-low border border-surface-container-high rounded-xl p-5 space-y-5 shadow-lg overflow-hidden"
-                >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <span className="text-base text-on-surface font-bold block">{t('createLeagueTitle')}</span>
-                      <span className="text-xs text-on-surface-variant">{t('newLeagueDesc')}</span>
-                    </div>
-                    <button onClick={() => setZeigeErstellen(false)} className="text-on-surface-variant hover:text-on-surface bg-surface-container p-1.5 rounded-full"><X size={16} /></button>
-                  </div>
-                  
-                  <div>
-                    <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2 block">{t('leagueName')}</label>
-                    <input value={neueLigaName} onChange={e => setNeueLigaName(e.target.value)} placeholder={t('leagueNamePlaceholder')} maxLength={20}
-                      className="w-full bg-surface-container-lowest border-2 border-surface-container-high rounded-xl px-4 py-3 text-sm text-on-surface focus:border-primary focus:outline-none transition-colors" autoFocus />
-                  </div>
-                  
-                  <div>
-                    <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2 block">{t('includedTournaments')}</label>
-                    <div className="grid grid-cols-2 gap-3">
-                      {tournamentConfigs.map(tc => (
-                        <motion.div
-                          key={tc.id}
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                          onClick={() => {
-                            if (neueLigaTurniere.includes(tc.name)) setNeueLigaTurniere(neueLigaTurniere.filter(t => t !== tc.name))
-                            else setNeueLigaTurniere([...neueLigaTurniere, tc.name])
-                          }}
-                          className={`flex flex-col items-center justify-center p-3 rounded-xl border-2 cursor-pointer transition-colors relative overflow-hidden ${neueLigaTurniere.includes(tc.name) ? 'border-primary bg-primary/10' : 'border-surface-container-high bg-surface-container-lowest hover:border-surface-variant'}`}
-                        >
-                          {neueLigaTurniere.includes(tc.name) && <div className="absolute top-2 right-2 w-4 h-4 bg-primary rounded-full flex items-center justify-center text-on-primary"><Check size={10} strokeWidth={4} /></div>}
-                          <span className="text-2xl mb-2 filter drop-shadow-md">{tc.emoji}</span>
-                          <span className={`text-xs font-bold text-center ${neueLigaTurniere.includes(tc.name) ? 'text-primary' : 'text-on-surface'}`}>{tc.name}</span>
-                        </motion.div>
-                      ))}
-                    </div>
-                  </div>
-                  
-                  <button onClick={handleLigaErstellen} disabled={!neueLigaName.trim() || neueLigaTurniere.length === 0}
-                    className="bg-primary-container text-on-primary-container w-full py-3.5 rounded-xl font-mono text-sm font-bold uppercase tracking-wider shadow hover:opacity-90 transition-opacity disabled:opacity-30 disabled:shadow-none mt-2">{t('createLeagueBtn')}</button>
-                </motion.div>
-              )}
-            </AnimatePresence>
           </div>
+
+          {/* ─── 2. Meine Ligen ─── */}
+          <div className="mb-5">
+            <div className="flex items-center gap-2 mb-2.5 px-1">
+              <Trophy size={12} className="text-primary-fixed-dim" />
+              <h3 className="text-[10px] font-mono font-bold uppercase tracking-wider text-on-surface-variant/80">{t('myLeagues')}</h3>
+            </div>
+            <div className="space-y-2">
+              {meineLigen.map(liga => {
+                const meta = ligaMeta[liga.id]
+                const rang = meta?.rang
+                const rangColor = rang === 1 ? 'text-amber-400' : rang === 2 ? 'text-slate-300' : rang === 3 ? 'text-amber-600' : 'text-on-surface-variant/50'
+                return (
+                  <button key={liga.id} onClick={() => {
+                    setAktiveLiga(liga)
+                    setViewTournament('Alle')
+                  }}
+                    className="w-full card-lift bg-surface-container-low border border-surface-container-high rounded-xl p-3.5 text-left group hover:border-primary/30 transition-colors">
+                    <div className="flex items-center justify-between gap-3">
+                      {/* Links: Name + Meta */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5 mb-1">
+                          <span className="text-sm font-bold text-on-surface truncate">{liga.name}</span>
+                          {liga.creator_id === user?.id && <span title={t('leagueCreator')} className="text-[10px]">👑</span>}
+                        </div>
+                        <div className="flex items-center gap-2.5">
+                          <div className="flex items-center gap-1">
+                            <Users size={11} className="text-on-surface-variant/40" />
+                            <span className="text-[10px] font-mono text-on-surface-variant/60">{meta?.mitglieder || 0} {t('members')}</span>
+                          </div>
+                          {liga.active_tournaments && liga.active_tournaments.length > 0 && (
+                            <span className="text-[10px] font-mono text-on-surface-variant/40 truncate">· {liga.active_tournaments.join(', ')}</span>
+                          )}
+                        </div>
+                      </div>
+                      {/* Rechts: Rang Badge */}
+                      <div className="flex items-center gap-2 shrink-0">
+                        <div className={`flex items-center gap-1 px-2 py-1 rounded-lg bg-surface-container/60 border border-white/5 ${rangColor}`}>
+                          <span className="text-[9px] font-mono font-bold uppercase tracking-wider opacity-70">{t('rank')}</span>
+                          <span className="text-sm font-mono font-black">#{rang || '–'}</span>
+                        </div>
+                        <span className="text-on-surface-variant/30 group-hover:text-primary group-hover:translate-x-0.5 transition-all">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+                        </span>
+                      </div>
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
+          {/* ─── 3. Liga erstellen (sekundär, dezenter) ─── */}
+          <AnimatePresence mode="wait">
+            {!zeigeErstellen ? (
+              <motion.button 
+                key="btn"
+                initial={{opacity:0, y:-10}} animate={{opacity:1, y:0}} exit={{opacity:0, y:-10}}
+                onClick={() => setZeigeErstellen(true)}
+                className="w-full bg-surface-container-low/60 border border-dashed border-surface-container-high rounded-xl p-4 flex items-center justify-center gap-3 hover:bg-surface-container hover:border-primary/30 transition-colors text-on-surface-variant hover:text-on-surface text-sm font-medium"
+              >
+                <div className="bg-primary/15 p-1.5 rounded-full group-hover:bg-primary/25 transition-colors"><Plus size={16} className="text-primary" /></div>
+                {t('createLeagueTitle')}
+              </motion.button>
+            ) : (
+              <motion.div 
+                key="form"
+                initial={{opacity:0, height:0}} animate={{opacity:1, height:'auto'}} exit={{opacity:0, height:0}}
+                className="bg-surface-container-low border border-surface-container-high rounded-xl p-5 space-y-5 shadow-lg overflow-hidden"
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="text-base text-on-surface font-bold block">{t('createLeagueTitle')}</span>
+                    <span className="text-xs text-on-surface-variant">{t('newLeagueDesc')}</span>
+                  </div>
+                  <button onClick={() => setZeigeErstellen(false)} className="text-on-surface-variant hover:text-on-surface bg-surface-container p-1.5 rounded-full"><X size={16} /></button>
+                </div>
+                
+                <div>
+                  <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2 block">{t('leagueName')}</label>
+                  <input value={neueLigaName} onChange={e => setNeueLigaName(e.target.value)} placeholder={t('leagueNamePlaceholder')} maxLength={20}
+                    className="w-full bg-surface-container-lowest border-2 border-surface-container-high rounded-xl px-4 py-3 text-sm text-on-surface focus:border-primary focus:outline-none transition-colors" autoFocus />
+                </div>
+                
+                <div>
+                  <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2 block">{t('includedTournaments')}</label>
+                  <div className="grid grid-cols-2 gap-3">
+                    {tournamentConfigs.map(tc => (
+                      <motion.div
+                        key={tc.id}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => {
+                          if (neueLigaTurniere.includes(tc.name)) setNeueLigaTurniere(neueLigaTurniere.filter(t => t !== tc.name))
+                          else setNeueLigaTurniere([...neueLigaTurniere, tc.name])
+                        }}
+                        className={`flex flex-col items-center justify-center p-3 rounded-xl border-2 cursor-pointer transition-colors relative overflow-hidden ${neueLigaTurniere.includes(tc.name) ? 'border-primary bg-primary/10' : 'border-surface-container-high bg-surface-container-lowest hover:border-surface-variant'}`}
+                      >
+                        {neueLigaTurniere.includes(tc.name) && <div className="absolute top-2 right-2 w-4 h-4 bg-primary rounded-full flex items-center justify-center text-on-primary"><Check size={10} strokeWidth={4} /></div>}
+                        <span className="text-2xl mb-2 filter drop-shadow-md">{tc.emoji}</span>
+                        <span className={`text-xs font-bold text-center ${neueLigaTurniere.includes(tc.name) ? 'text-primary' : 'text-on-surface'}`}>{tc.name}</span>
+                      </motion.div>
+                    ))}
+                  </div>
+                </div>
+                
+                <button onClick={handleLigaErstellen} disabled={!neueLigaName.trim() || neueLigaTurniere.length === 0}
+                  className="bg-primary-container text-on-primary-container w-full py-3.5 rounded-xl font-mono text-sm font-bold uppercase tracking-wider shadow hover:opacity-90 transition-opacity disabled:opacity-30 disabled:shadow-none mt-2">{t('createLeagueBtn')}</button>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       )}
 
