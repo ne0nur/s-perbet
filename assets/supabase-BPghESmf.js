@@ -1,0 +1,1 @@
+import"./vendor-supabase-BjCF_lrU.js";throw Error(`Supabase-Konfiguration fehlt. Prüfe .env Datei.`);export{e as t};var e;
