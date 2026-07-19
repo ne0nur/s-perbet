@@ -37,12 +37,26 @@ export function DashboardPage() {
   // Turniere verschwinden NIE — die Liste kommt immer aus tournament_configs
   const tournamentConfigs = useTournamentStore(s => s.tournaments)
   const availableTournaments = useMemo(() => {
-    if (tournamentConfigs.length > 0) {
-      return tournamentConfigs.map(t => t.name)
-    }
-    // Fallback während DB-Ladephase — NIE leer
-    return ['Süper Lig', 'Champions League', 'World Cup 2026']
-  }, [tournamentConfigs])
+    // Sortiere Turniere nach 'letztem Match' — aktuellste zuerst
+    const names = tournamentConfigs.length > 0
+      ? tournamentConfigs.map(t => t.name)
+      : ['Süper Lig', 'Champions League', 'World Cup 2026']
+    
+    // Ermittle Max-Spieltag pro Turnier aus den aktuellen Matches
+    const maxStPerTournament: Record<string, number> = {}
+    matches.forEach(m => {
+      const t = m.tournament || 'Süper Lig'
+      if (!maxStPerTournament[t] || (m.spieltag && m.spieltag > maxStPerTournament[t])) {
+        maxStPerTournament[t] = m.spieltag
+      }
+    })
+    
+    return [...names].sort((a, b) => {
+      const sa = maxStPerTournament[a] || 0
+      const sb = maxStPerTournament[b] || 0
+      return sb - sa
+    })
+  }, [tournamentConfigs, matches])
 
   // Responsive Check
   useEffect(() => {
@@ -61,9 +75,41 @@ export function DashboardPage() {
     }
   }, [isDesktop, navigate])
 
-  // Beim ersten Mount den richtigen Spieltag ermitteln & Realtime-Abo starten\n  useEffect(() => {\n    if (initialized.current) return\n    initialized.current = true\n    initialisiereSpieltag()\n    abonnierenRealtimeMatches()\n    abonnierenHeartbeat()\n  }, [initialisiereSpieltag, abonnierenRealtimeMatches, abonnierenHeartbeat])\n\n  // Reconnect Realtime wenn App aus Hintergrund zurückkommt\n  useEffect(() => {\n    const handleVisibility = () => {\n      if (document.visibilityState === 'visible') {\n        abonnierenRealtimeMatches()\n        abonnierenHeartbeat()\n      }\n    }\n    document.addEventListener('visibilitychange', handleVisibility)\n    return () => document.removeEventListener('visibilitychange', handleVisibility)\n  }, [abonnierenRealtimeMatches, abonnierenHeartbeat])\n\n  // Cleanup beim Unmount\n  useEffect(() => {\n    return () => {\n      const store = useMatchStore.getState()\n      store.cleanup()\n    }\n  }, [])
+  // Beim ersten Mount den richtigen Spieltag ermitteln & Realtime-Abo starten
+  useEffect(() => {
+    if (initialized.current) return
+    initialized.current = true
+    // Warte auf initialisiereSpieltag bevor Matches geladen werden
+    ;(async () => {
+      await initialisiereSpieltag()
+      const store = useMatchStore.getState()
+      store.ladeMatches(store.aktuellerSpieltag || 1)
+    })()
+    abonnierenRealtimeMatches()
+    abonnierenHeartbeat()
+  }, [initialisiereSpieltag, abonnierenRealtimeMatches, abonnierenHeartbeat])
 
-  // Live-Match-Poll: aktualisiert Spielminuten + Scores
+  // Reconnect Realtime wenn App aus Hintergrund zurückkommt
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        abonnierenRealtimeMatches()
+        abonnierenHeartbeat()
+      }
+    }
+    document.addEventListener('visibilitychange', handleVisibility)
+    return () => document.removeEventListener('visibilitychange', handleVisibility)
+  }, [abonnierenRealtimeMatches, abonnierenHeartbeat])
+
+  // Cleanup beim Unmount
+  useEffect(() => {
+    return () => {
+      const store = useMatchStore.getState()
+      store.cleanup()
+    }
+  }, [])
+
+  // Live-Match-Poll
   useEffect(() => {
     starteLiveMatchPoll()
     return () => stoppeLiveMatchPoll()

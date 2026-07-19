@@ -165,8 +165,22 @@ export function StandingsPage() {
         .from('matches').select('*').eq('season', targetSeason).order('anpfiff', { ascending: true })
       if (error) throw error
 
-      // Aktives Turnier setzen (beim ersten Laden)
-      const activeTournament = tournament || availableTournaments[0] || 'Süper Lig'
+      // Aktives Turnier: das mit dem aktuellsten finished/live Match
+      let activeTournament = tournament
+      if (!activeTournament && matchesData && matchesData.length > 0) {
+        const lastPerTournament: Record<string, number> = {}
+        matchesData.forEach(m => {
+          const t = m.tournament || 'Süper Lig'
+          const spieltag = m.spieltag || 0
+          if (!lastPerTournament[t] || (m.status === 'finished' || m.status === 'live') && spieltag > (lastPerTournament[t] || 0)) {
+            lastPerTournament[t] = spieltag
+          }
+        })
+        // Sortiere Turniere nach höchstem Spieltag
+        const sorted = Object.entries(lastPerTournament).sort(([,a], [,b]) => b - a)
+        activeTournament = sorted[0]?.[0] || availableTournaments[0] || 'Süper Lig'
+      }
+      activeTournament = activeTournament || availableTournaments[0] || 'Süper Lig'
 
       const tournamentMatches = (matchesData || []).filter(
         m => m.spieltag !== 999 && m.heim_team !== 'LIGA' && m.gast_team !== 'CHAT' &&
