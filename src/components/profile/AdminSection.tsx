@@ -4,6 +4,7 @@ import { supabase } from '../../lib/supabase'
 import { useTranslation } from '../../utils/translations'
 import { useAuthStore } from '../../stores/authStore'
 import { TippsFreigabeToggle } from './TippsFreigabeToggle'
+import { SaisonAdminPanel } from './SaisonAdminPanel'
 import type { Match } from '../../stores/matchStore'
 
 interface League {
@@ -30,8 +31,8 @@ interface AdminSectionProps {
   adminMsg: { type: 'success' | 'error'; text: string } | null
   setAdminMsg: (msg: { type: 'success' | 'error'; text: string } | null) => void
   createdUsersList: { username: string; password: string }[]
-  adminTab: 'overview' | 'create' | 'manage_users' | 'manage_leagues' | 'manage_matches' | 'push_test'
-  setAdminTab: (tab: 'overview' | 'create' | 'manage_users' | 'manage_leagues' | 'manage_matches' | 'push_test') => void
+  adminTab: 'overview' | 'create' | 'manage_users' | 'manage_leagues' | 'manage_matches' | 'push_test' | 'saison'
+  setAdminTab: (tab: 'overview' | 'create' | 'manage_users' | 'manage_leagues' | 'manage_matches' | 'push_test' | 'saison') => void
   adminCreateSubTab: 'manual' | 'auto'
   setAdminCreateSubTab: (tab: 'manual' | 'auto') => void
   copiedIndex: number | null
@@ -359,6 +360,14 @@ export function AdminSection({
             }`}
           >
             Push Test
+          </button>
+          <button
+            onClick={() => { setAdminTab('saison'); setAdminMsg(null); }}
+            className={`px-2 py-1 text-[9px] font-mono uppercase tracking-wider rounded-md transition-all whitespace-nowrap ${
+              adminTab === 'saison' ? 'bg-primary-container/20 text-primary border border-primary-container/30 font-bold' : 'text-on-surface-variant/60 hover:text-on-surface'
+            }`}
+          >
+            Saison
           </button>
         </div>
       </div>
@@ -727,6 +736,8 @@ export function AdminSection({
             </div>
           </div>
         )}
+
+        {adminTab === 'saison' && <SaisonAdminPanel />}
 
         {adminMsg && (
           <div className={`flex items-start gap-2 p-2 rounded-lg text-[10px] font-mono leading-tight ${adminMsg.type === 'success' ? 'bg-success-container text-success' : 'bg-error/10 text-error'}`}>

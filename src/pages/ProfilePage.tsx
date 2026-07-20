@@ -135,7 +135,7 @@ export function ProfilePage() {
   const [allLeagues, setAllLeagues] = useState<{ id: string; name: string }[]>([])
   const [batchCount, setBatchCount] = useState<number>(1)
   const [createdUsersList, setCreatedUsersList] = useState<{ username: string; password: string }[]>([])
-  const [adminTab, setAdminTab] = useState<'overview' | 'create' | 'manage_users' | 'manage_leagues' | 'manage_matches' | 'push_test'>('overview')
+  const [adminTab, setAdminTab] = useState<'overview' | 'create' | 'manage_users' | 'manage_leagues' | 'manage_matches' | 'push_test' | 'saison'>('overview')
   const [adminCreateSubTab, setAdminCreateSubTab] = useState<'manual' | 'auto'>('manual')
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null)
   const [totalUsers, setTotalUsers] = useState<number>(0)
