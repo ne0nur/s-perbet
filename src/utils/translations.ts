@@ -175,6 +175,7 @@ export const translations = {
     
     // Global / Leaderboard
     globalRanklist: 'Globale Bestenliste',
+    currentSeason: 'Aktuelle Saison',
     communityStats: 'Community-Stats',
     statsDescription: 'Hier siehst du die globalen Kennzahlen aller Tipper.',
     totalPlayers: 'Tipper',
@@ -724,6 +725,7 @@ export const translations = {
     
     // Global / Leaderboard
     globalRanklist: 'Global Leaderboard',
+    currentSeason: 'Current Season',
     communityStats: 'Community Stats',
     statsDescription: 'Here you see the global stats of all players.',
     totalPlayers: 'Players',
@@ -1273,6 +1275,7 @@ export const translations = {
     
     // Global / Leaderboard
     globalRanklist: 'Genel Sıralama',
+    currentSeason: 'Bu Sezon',
     communityStats: 'Topluluk İstatistikleri',
     statsDescription: 'Tüm tahmincilerin genel istatistiklerini buradan görebilirsiniz.',
     totalPlayers: 'Tahminciler',

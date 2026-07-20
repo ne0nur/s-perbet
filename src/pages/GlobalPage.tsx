@@ -434,6 +434,10 @@ export function GlobalPage() {
   const [avgPoints, setAvgPoints] = useState(0)
   const [remainingPoints, setRemainingPoints] = useState(0)
   
+  // Season filter
+  const [selectedSeason, setSelectedSeason] = useState<number | 'current'>('current')
+  const [availableSeasons, setAvailableSeasons] = useState<{id:number;name:string}[]>([])
+  
   // Bonus stats — dynamisch nach Turnier gruppiert
   const [bonusStatsByTournament, setBonusStatsByTournament] = useState<Record<string, BonusQuestionStats[]>>({})
   
@@ -470,7 +474,8 @@ export function GlobalPage() {
   const ladeGlobalDaten = useCallback(async () => {
     setIsLaden(true)
     try {
-      const seasonKey = useMatchStore.getState().aktuelleSaison || 2026
+      const currentSeason = useMatchStore.getState().aktuelleSaison || 2026
+      const seasonKey = selectedSeason === 'current' ? currentSeason : selectedSeason
 
       // Cache SOFORT anzeigen (Stale-While-Revalidate), aber IMMER frisch von DB laden
       const cachedRangliste = getCached<RanglisteEintrag[]>(CACHE_KEYS.leaderboard(seasonKey))
@@ -480,7 +485,43 @@ export function GlobalPage() {
 
       // 1. Leaderboard — IMMER frisch von DB (RPC oder Fallback)
       let rawRangData: any[] | null = null
-      try {
+      
+      // Historische Saison: aus profile_seasons laden
+      if (selectedSeason !== 'current') {
+        try {
+          const { data } = await supabase
+            .from('profile_seasons')
+            .select('user_id, gesamt_punkte, achievements_count, level')
+            .eq('season', selectedSeason)
+            .order('gesamt_punkte', { ascending: false })
+            .limit(50)
+          if (data && data.length > 0) {
+            // User-Infos dazuladen
+            const uids = data.map(d => d.user_id)
+            const { data: pdata } = await supabase
+              .from('profiles')
+              .select('id,username,avatar_url')
+              .in('id', uids)
+            const profileMap = new Map((pdata || []).map(p => [p.id, p]))
+            rawRangData = data.map(d => ({
+              id: d.user_id,
+              username: profileMap.get(d.user_id)?.username || '?',
+              avatar_url: profileMap.get(d.user_id)?.avatar_url || null,
+              gesamt_punkte: d.gesamt_punkte,
+              achievements_count: d.achievements_count,
+              level: d.level || 1,
+              trend: 0
+            }))
+          }
+        } catch (e) {
+          // profile_seasons existiert nicht (Migration noch nicht angewendet)
+          console.warn('profile_seasons not available, falling back to current data', e)
+        }
+      }
+      
+      // Fallback: aktuelles Ranking (aktuelle Saison oder wenn historisch nicht klappt)
+      if (!rawRangData) {
+        try {
         const { data, error } = await supabase.rpc('get_ranking_with_trend')
         if (!error && data) {
           rawRangData = data
@@ -502,6 +543,7 @@ export function GlobalPage() {
           rawRangData = fallbackData.map((d: any) => ({ ...d, trend: 0 }))
         }
       }
+      }  // ← schließt if(!rawRangData) von Zeile 523
 
       let rangData: RanglisteEintrag[] = []
       if (rawRangData && rawRangData.length > 0) {
@@ -699,6 +741,21 @@ export function GlobalPage() {
           <div className="hidden lg:flex items-center gap-2 mb-2 px-1">
             <Trophy size={16} className="text-primary-fixed-dim" />
             <h2 className="text-sm font-mono font-bold text-on-surface uppercase tracking-wider">{t('globalRanklist')}</h2>
+            <div className="ml-auto">
+              <select
+                value={selectedSeason === 'current' ? 'current' : selectedSeason}
+                onChange={(e) => {
+                  const val = e.target.value
+                  setSelectedSeason(val === 'current' ? 'current' : Number(val))
+                }}
+                className="bg-surface-container border border-surface-container-high rounded-lg px-2 py-0.5 text-[10px] font-mono text-on-surface-variant hover:text-on-surface focus:outline-none focus:border-primary-container cursor-pointer transition-colors"
+              >
+                <option value="current">{t('currentSeason')}</option>
+                {availableSeasons.filter(s => !s.name.includes('/' + String(useMatchStore.getState().aktuelleSaison || 2026).slice(2))).map(s => (
+                  <option key={s.id} value={s.id}>{s.name}</option>
+                ))}
+              </select>
+            </div>
           </div>
           <LeaderboardSection
             rangliste={rangliste}
